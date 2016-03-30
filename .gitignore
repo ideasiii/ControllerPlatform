@@ -5,6 +5,7 @@
 *.obj
 */.deps
 .cproject
+ControlCenter/.cproject
 
 # Compiled Dynamic libraries
 *.so
