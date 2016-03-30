@@ -4,6 +4,7 @@
 *.o
 *.obj
 */.deps
+.cproject
 
 # Compiled Dynamic libraries
 *.so
