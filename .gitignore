@@ -3,10 +3,7 @@
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
+*/.deps
 
 # Compiled Dynamic libraries
 *.so
@@ -26,3 +23,81 @@
 *.exe
 *.out
 *.app
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+# =========================
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+*/bin/
+bin/
+
+# Project
+ControllerClient/extLibs/libpng-1.6.18/.deps/
+ControllerClient/extLibs/libpng-1.6.18/Makefile
+ControllerClient/extLibs/libpng-1.6.18/arm/.deps/
+ControllerClient/extLibs/libpng-1.6.18/config.h
+ControllerClient/extLibs/libpng-1.6.18/config.log
+ControllerClient/extLibs/libpng-1.6.18/config.status
+ControllerClient/extLibs/libpng-1.6.18/contrib/libtests/.deps/
+ControllerClient/extLibs/libpng-1.6.18/contrib/libtests/.dirstamp
+ControllerClient/extLibs/libpng-1.6.18/contrib/tools/.deps/
+ControllerClient/extLibs/libpng-1.6.18/contrib/tools/.dirstamp
+ControllerClient/extLibs/libpng-1.6.18/libpng-config
+ControllerClient/extLibs/libpng-1.6.18/libpng.pc
+ControllerClient/extLibs/libpng-1.6.18/libtool
+ControllerClient/extLibs/libpng-1.6.18/stamp-h1
+ControllerClient/extLibs/qrencode-3.4.4/.deps/
+ControllerClient/extLibs/qrencode-3.4.4/Makefile
+ControllerClient/extLibs/qrencode-3.4.4/config.h
+ControllerClient/extLibs/qrencode-3.4.4/config.log
+ControllerClient/extLibs/qrencode-3.4.4/config.status
+ControllerClient/extLibs/qrencode-3.4.4/libqrencode.pc
+ControllerClient/extLibs/qrencode-3.4.4/libtool
+ControllerClient/extLibs/qrencode-3.4.4/qrencode.1
+ControllerClient/extLibs/qrencode-3.4.4/stamp-h1
+ControllerClient/extLibs/qrencode-3.4.4/tests/.deps/
+ControllerClient/extLibs/qrencode-3.4.4/tests/Makefile
+
