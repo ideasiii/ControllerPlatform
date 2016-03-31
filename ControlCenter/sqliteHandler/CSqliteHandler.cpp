@@ -23,9 +23,9 @@ CSqliteHandler* CSqliteHandler::m_instance = 0;
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
 	int i;
-	for ( i = 0; i < argc ; i++ )
+	for (i = 0; i < argc; i++)
 	{
-		_DBG( "[Sqlite] %s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL" );
+		_DBG("[Sqlite] %s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
 	}
 	return 0;
 }
@@ -41,19 +41,20 @@ CSqliteHandler::~CSqliteHandler()
 
 int CSqliteHandler::openControllerDB(const char *dbPath)
 {
-	int rc = sqlite3_open( dbPath, &dbController );
+	int rc = sqlite3_open(dbPath, &dbController);
 	int nRet = FALSE;
 
-	if ( rc )
+	if (rc)
 	{
-		_DBG( "[Sqlite] Can't open controller database: %s", sqlite3_errmsg( dbController ) )
+		_DBG("[Sqlite] Can't open controller database: %s", sqlite3_errmsg(dbController))
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened Controller database successfully" )
-		sqlExec( dbController, "DROP TABLE controller;" );
-		const char *sql = "CREATE TABLE IF NOT EXISTS controller(id CHAR(50) NOT NULL, status INT NOT NULL, socket_fd INT NOT NULL, created_date DATE, updated_date DATE );";
-		if ( SQLITE_OK == sqlExec( dbController, sql ) )
+		_DBG("[Sqlite] Opened Controller database successfully")
+		sqlExec(dbController, "DROP TABLE controller;");
+		const char *sql =
+				"CREATE TABLE IF NOT EXISTS controller(id CHAR(50) NOT NULL, status INT NOT NULL, socket_fd INT NOT NULL, created_date DATE, updated_date DATE );";
+		if ( SQLITE_OK == sqlExec(dbController, sql))
 		{
 			nRet = TRUE;
 		}
@@ -63,18 +64,19 @@ int CSqliteHandler::openControllerDB(const char *dbPath)
 }
 int CSqliteHandler::openUserDB(const char *dbPath)
 {
-	int rc = sqlite3_open( dbPath, &dbUser );
+	int rc = sqlite3_open(dbPath, &dbUser);
 	int nRet = FALSE;
 
-	if ( rc )
+	if (rc)
 	{
-		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbUser ) )
+		_DBG("[Sqlite] Can't open user database: %s", sqlite3_errmsg(dbUser))
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened user database successfully" )
-		const char *sql = "CREATE TABLE IF NOT EXISTS user(mac CHAR(20) NOT NULL, account CHAR(20), password CHAR(20), token CHAR(50), created_date DATE );";
-		if ( SQLITE_OK == sqlExec( dbUser, sql ) )
+		_DBG("[Sqlite] Opened user database successfully")
+		const char *sql =
+				"CREATE TABLE IF NOT EXISTS user(mac CHAR(20) NOT NULL, account CHAR(20), password CHAR(20), token CHAR(50), created_date DATE );";
+		if ( SQLITE_OK == sqlExec(dbUser, sql))
 		{
 			nRet = TRUE;
 		}
@@ -85,19 +87,19 @@ int CSqliteHandler::openUserDB(const char *dbPath)
 
 int CSqliteHandler::openIdeasDB(const char *dbPath)
 {
-	int rc = sqlite3_open( dbPath, &dbIdeas );
+	int rc = sqlite3_open(dbPath, &dbIdeas);
 	int nRet = FALSE;
 
-	if ( rc )
+	if (rc)
 	{
-		_DBG( "[Sqlite] Can't open ideas database: %s", sqlite3_errmsg( dbIdeas ) )
+		_DBG("[Sqlite] Can't open ideas database: %s", sqlite3_errmsg(dbIdeas))
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened ideas database successfully" )
+		_DBG("[Sqlite] Opened ideas database successfully")
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS user(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE DEFAULT (datetime('now','localtime')), PRIMARY KEY(id) );";
-		if ( SQLITE_OK == sqlExec( dbIdeas, sql ) )
+		if ( SQLITE_OK == sqlExec(dbIdeas, sql))
 		{
 			nRet = TRUE;
 		}
@@ -108,18 +110,19 @@ int CSqliteHandler::openIdeasDB(const char *dbPath)
 
 int CSqliteHandler::openMdmDB(const char *dbPath)
 {
-	int rc = sqlite3_open( dbPath, &dbMdm );
+	int rc = sqlite3_open(dbPath, &dbMdm);
 	int nRet = FALSE;
 
-	if ( rc )
+	if (rc)
 	{
-		_DBG( "[Sqlite] Can't open mdm database: %s", sqlite3_errmsg( dbMdm ) )
+		_DBG("[Sqlite] Can't open mdm database: %s", sqlite3_errmsg(dbMdm))
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened mdm database successfully" )
-		const char *sql = "CREATE TABLE IF NOT EXISTS `user` (`account`	TEXT NOT NULL,	`password`	TEXT NOT NULL,	`token`	TEXT NOT NULL UNIQUE,	`group`	INTEGER);";
-		if ( SQLITE_OK == sqlExec( dbMdm, sql ) )
+		_DBG("[Sqlite] Opened mdm database successfully")
+		const char *sql =
+				"CREATE TABLE IF NOT EXISTS `user` (`account`	TEXT NOT NULL,	`password`	TEXT NOT NULL,	`token`	TEXT NOT NULL UNIQUE,	`group`	INTEGER);";
+		if ( SQLITE_OK == sqlExec(dbMdm, sql))
 		{
 			nRet = TRUE;
 		}
@@ -130,22 +133,22 @@ int CSqliteHandler::openMdmDB(const char *dbPath)
 
 void CSqliteHandler::close()
 {
-	sqlite3_close( dbIdeas );
-	sqlite3_close( dbController );
-	sqlite3_close( dbUser );
-	sqlite3_close( dbMdm );
+	sqlite3_close(dbIdeas);
+	sqlite3_close(dbController);
+	sqlite3_close(dbUser);
+	sqlite3_close(dbMdm);
 
 	dbIdeas = 0;
 	dbController = 0;
 	dbUser = 0;
 	dbMdm = 0;
 
-	_DBG( "[Sqlite] Closed database successfully" )
+	_DBG("[Sqlite] Closed database successfully")
 }
 
 CSqliteHandler* CSqliteHandler::getInstance()
 {
-	if ( !m_instance )
+	if (!m_instance)
 	{
 		m_instance = new CSqliteHandler();
 	}
@@ -156,8 +159,8 @@ CSqliteHandler* CSqliteHandler::getInstance()
 int CSqliteHandler::controllerSqlExec(const char *szSql)
 {
 	int nRet = FAIL;
-	nRet = sqlExec( dbController, szSql );
-	if ( SQLITE_OK == nRet )
+	nRet = sqlExec(dbController, szSql);
+	if ( SQLITE_OK == nRet)
 		nRet = SUCCESS;
 	return nRet;
 }
@@ -165,8 +168,8 @@ int CSqliteHandler::controllerSqlExec(const char *szSql)
 int CSqliteHandler::ideasSqlExec(const char *szSql)
 {
 	int nRet = FAIL;
-	nRet = sqlExec( dbIdeas, szSql );
-	if ( SQLITE_OK == nRet )
+	nRet = sqlExec(dbIdeas, szSql);
+	if ( SQLITE_OK == nRet)
 		nRet = SUCCESS;
 	return nRet;
 }
@@ -174,8 +177,8 @@ int CSqliteHandler::ideasSqlExec(const char *szSql)
 int CSqliteHandler::mdmSqlExec(const char *szSql)
 {
 	int nRet = FAIL;
-	nRet = sqlExec( dbMdm, szSql );
-	if ( SQLITE_OK == nRet )
+	nRet = sqlExec(dbMdm, szSql);
+	if ( SQLITE_OK == nRet)
 		nRet = SUCCESS;
 	return nRet;
 }
@@ -183,88 +186,91 @@ int CSqliteHandler::mdmSqlExec(const char *szSql)
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql)
 {
 	char *zErrMsg = 0;
-	_DBG( "[Sqlite] SQL exec: %s", szSql )
-	int rc = sqlite3_exec( db, szSql, callback, 0, &zErrMsg );
-	if ( rc != SQLITE_OK )
+	_DBG("[Sqlite] SQL exec: %s", szSql)
+	int rc = sqlite3_exec(db, szSql, callback, 0, &zErrMsg);
+	if (rc != SQLITE_OK)
 	{
-		_DBG( "[Sqlite] SQL error: %s\n", zErrMsg )
-		sqlite3_free( zErrMsg );
+		_DBG("[Sqlite] SQL error: %s\n", zErrMsg)
+		sqlite3_free(zErrMsg);
 	}
 	else
 	{
-		_DBG( "[Sqlite] SQL exec successfully : %s", szSql );
+		_DBG("[Sqlite] SQL exec successfully : %s", szSql);
 	}
 
 	return rc;
 }
 
-int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue)
+int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *szColume,
+		std::list<std::string> &listValue)
 {
-	string strSql = "SELECT " + string( szColume ) + " FROM " + string( szTable ) + ";";
+	string strSql = "SELECT " + string(szColume) + " FROM " + string(szTable) + ";";
 
 	sqlite3_stmt * stmt;
-	sqlite3_prepare( dbController, strSql.c_str(), strSql.size() + 1, &stmt, NULL ); //preparing the statement
+	sqlite3_prepare(dbController, strSql.c_str(), strSql.size() + 1, &stmt, NULL); //preparing the statement
 
 	int s;
 	int row = 0;
 
-	while ( 1 )
+	while (1)
 	{
-		s = sqlite3_step( stmt );
-		if ( s == SQLITE_ROW )
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
 		{
 			const unsigned char * text;
-			text = sqlite3_column_text( stmt, 0 );
-			listValue.push_back( string( (const char*) text ) );
+			text = sqlite3_column_text(stmt, 0);
+			listValue.push_back(string((const char*) text));
 			++row;
 		}
-		else if ( s == SQLITE_DONE )
+		else if (s == SQLITE_DONE)
 		{
 			break;
 		}
 		else
 		{
-			_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
 			break;
 		}
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 	return row;
 }
 
-int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue, const char *szValue)
+int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *szColume,
+		std::list<std::string> &listValue, const char *szValue)
 {
-	string strSql = "SELECT " + string( szColume ) + " FROM " + string( szTable ) + " WHERE " + string( szColume ) + " = " + string( szValue ) + ";";
+	string strSql = "SELECT " + string(szColume) + " FROM " + string(szTable) + " WHERE " + string(szColume) + " = "
+			+ string(szValue) + ";";
 
 	sqlite3_stmt * stmt;
-	sqlite3_prepare( dbController, strSql.c_str(), strSql.size() + 1, &stmt, NULL ); //preparing the statement
+	sqlite3_prepare(dbController, strSql.c_str(), strSql.size() + 1, &stmt, NULL); //preparing the statement
 
 	int s;
 	int row = 0;
 
-	while ( 1 )
+	while (1)
 	{
-		s = sqlite3_step( stmt );
-		if ( s == SQLITE_ROW )
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
 		{
 			const unsigned char * text;
-			text = sqlite3_column_text( stmt, 0 );
-			listValue.push_back( string( (const char*) text ) );
+			text = sqlite3_column_text(stmt, 0);
+			listValue.push_back(string((const char*) text));
 			++row;
 		}
-		else if ( s == SQLITE_DONE )
+		else if (s == SQLITE_DONE)
 		{
 			break;
 		}
 		else
 		{
-			_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
 			break;
 		}
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 	return row;
 }
 
@@ -275,28 +281,28 @@ int CSqliteHandler::getControllerColumeValueInt(const char *szSql, std::list<int
 	int s = -1;
 	int nValue = -1;
 
-	sqlite3_prepare( dbController, szSql, strlen( szSql ) + 1, &stmt, NULL );
+	sqlite3_prepare(dbController, szSql, strlen(szSql) + 1, &stmt, NULL);
 
-	while ( 1 )
+	while (1)
 	{
-		s = sqlite3_step( stmt );
-		if ( s == SQLITE_ROW )
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
 		{
-			nValue = sqlite3_column_int( stmt, nColumeIndex );
-			listValue.push_back( nValue );
+			nValue = sqlite3_column_int(stmt, nColumeIndex);
+			listValue.push_back(nValue);
 			++row;
 		}
 		else
 		{
-			if ( s != SQLITE_DONE )
+			if (s != SQLITE_DONE)
 			{
-				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+				_DBG("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 
 	return row;
 }
@@ -309,35 +315,35 @@ int CSqliteHandler::ideasSqlExec(const char *szSql, list<string> &listValue, int
 	int nValue = -1;
 	const unsigned char * text;
 
-	sqlite3_prepare( dbIdeas, szSql, strlen( szSql ) + 1, &stmt, NULL );
+	sqlite3_prepare(dbIdeas, szSql, strlen(szSql) + 1, &stmt, NULL);
 
-	while ( 1 )
+	while (1)
 	{
-		s = sqlite3_step( stmt );
-		if ( s == SQLITE_ROW )
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
 		{
-			text = sqlite3_column_text( stmt, nColumeIndex );
-			listValue.push_back( string( (const char*) text ) );
+			text = sqlite3_column_text(stmt, nColumeIndex);
+			listValue.push_back(string((const char*) text));
 			++row;
 		}
 		else
 		{
-			if ( s != SQLITE_DONE )
+			if (s != SQLITE_DONE)
 			{
-				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+				_DBG("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 
 	return row;
 }
 
 int CSqliteHandler::mdmSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex)
 {
-	return sqlExec( dbMdm, szSql, listValue, nColumeIndex );
+	return sqlExec(dbMdm, szSql, listValue, nColumeIndex);
 }
 
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql, std::list<std::string> &listValue, int nColumeIndex)
@@ -348,70 +354,78 @@ int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql, std::list<std::strin
 	int nValue = -1;
 	const unsigned char * text;
 
-	sqlite3_prepare( db, szSql, strlen( szSql ) + 1, &stmt, NULL );
+	sqlite3_prepare(db, szSql, strlen(szSql) + 1, &stmt, NULL);
 
-	while ( 1 )
+	while (1)
 	{
-		s = sqlite3_step( stmt );
-		if ( s == SQLITE_ROW )
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
 		{
-			text = sqlite3_column_text( stmt, nColumeIndex );
-			listValue.push_back( string( (const char*) text ) );
+			text = sqlite3_column_text(stmt, nColumeIndex);
+			listValue.push_back(string((const char*) text));
 			++row;
 		}
 		else
 		{
-			if ( s != SQLITE_DONE )
+			if (s != SQLITE_DONE)
 			{
-				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+				_DBG("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 
 	return row;
 }
 
+int CSqliteHandler::getAppIdCount(const std::string strAppId)
+{
+	string strSql = "select count(*) from app where app_id = '" + strAppId + "';";
+
+	sqlite3_stmt * stmt;
+	sqlite3_prepare(dbUser, strSql.c_str(), strSql.size() + 1, &stmt, NULL);
+}
 bool CSqliteHandler::getUserAuth(std::string strMAC)
 {
 	string strSql = "SELECT mac FROM user WHERE mac = '" + strMAC + "';";
 
 	sqlite3_stmt * stmt;
-	sqlite3_prepare( dbUser, strSql.c_str(), strSql.size() + 1, &stmt, NULL ); //preparing the statement
+	sqlite3_prepare(dbUser, strSql.c_str(), strSql.size() + 1, &stmt, NULL); //preparing the statement
 
 	int s;
 	bool brow = false;
 
-	s = sqlite3_step( stmt );
-	if ( s == SQLITE_ROW )
+	s = sqlite3_step(stmt);
+	if (s == SQLITE_ROW)
 	{
 		brow = true;
 	}
-	else if ( s == SQLITE_DONE )
+	else if (s == SQLITE_DONE)
 	{
 
 	}
 	else
 	{
-		_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+		_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
 	}
 
-	sqlite3_finalize( stmt );
+	sqlite3_finalize(stmt);
 	return brow;
 }
 
-int CSqliteHandler::insertUserData(std::string strMAC, std::string strAccount, std::string strPassword, std::string strToken)
+int CSqliteHandler::insertUserData(std::string strMAC, std::string strAccount, std::string strPassword,
+		std::string strToken)
 {
-	if ( getUserAuth( strMAC ) )
+	if (getUserAuth(strMAC))
 		return TRUE;
 
 	int nRet = FALSE;
-	string strSql = "INSERT INTO user(mac, account, password, token, created_date) values('" + strMAC + "','" + strAccount + "','" + strPassword + "','" + strToken
-			+ "',datetime());";
+	string strSql = "INSERT INTO user(mac, account, password, token, created_date) values('" + strMAC + "','"
+			+ strAccount + "','" + strPassword + "','" + strToken + "',datetime());";
 
-	if ( SQLITE_OK == sqlExec( dbUser, strSql.c_str() ) )
+	if ( SQLITE_OK == sqlExec(dbUser, strSql.c_str()))
 	{
 		nRet = TRUE;
 	}
@@ -420,13 +434,13 @@ int CSqliteHandler::insertUserData(std::string strMAC, std::string strAccount, s
 
 int CSqliteHandler::updateUserAccount(std::string strMAC, std::string strAccount)
 {
-	if ( !getUserAuth( strMAC ) )
+	if (!getUserAuth(strMAC))
 		return FALSE;
 
 	int nRet = FALSE;
 	string strSql = "UPDATE user SET account = '" + strAccount + "' WHERE mac = '" + strMAC + "';";
 
-	if ( SQLITE_OK == sqlExec( dbUser, strSql.c_str() ) )
+	if ( SQLITE_OK == sqlExec(dbUser, strSql.c_str()))
 	{
 		nRet = TRUE;
 	}

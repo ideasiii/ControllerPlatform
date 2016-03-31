@@ -29,6 +29,7 @@ class CJsonHandler;
 class CAccessLog;
 class CSerApi;
 class CMdmHandler;
+class CAuthentication;
 
 class CControlCenter: public CObject
 {
@@ -62,6 +63,7 @@ class CControlCenter: public CObject
 		int cmpMdmLogin(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpMdmOperate(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData);
+		int cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData);
 
 		/** Send CMP Request **/
 		int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
@@ -89,6 +91,7 @@ class CControlCenter: public CObject
 		CSerApi *serapi;
 		CMdmHandler *mdm;
 		std::vector<int> vEnquireLink;
+		CAuthentication* authentication;
 
 		typedef int (CControlCenter::*MemFn)(int, int, int, const void *);
 		MemFn cmpRequest[MAX_FUNC_POINT];

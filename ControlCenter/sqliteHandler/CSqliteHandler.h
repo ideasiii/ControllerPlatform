@@ -31,12 +31,14 @@ class CSqliteHandler
 		int sqlExec(sqlite3 *db, const char *szSql);
 		int sqlExec(sqlite3 *db, const char *szSql, std::list<std::string> &listValue, int nColumeIndex);
 		int getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue);
-		int getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue, const char *szValue);
+		int getControllerColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue,
+				const char *szValue);
 		int getControllerColumeValueInt(const char *szSql, std::list<int> &listValue, int nColumeIndex);
 		int insertUserData(std::string strMAC, std::string strAccount, std::string strPassword, std::string strToken);
 		int updateUserAccount(std::string strMAC, std::string strAccount);
 		bool getUserAuth(std::string strMAC);
 		void close();
+		int getAppIdCount(const std::string strAppId);
 
 	private:
 		explicit CSqliteHandler();
