@@ -38,7 +38,7 @@ class CSqliteHandler
 		int updateUserAccount(std::string strMAC, std::string strAccount);
 		bool getUserAuth(std::string strMAC);
 		void close();
-		int getAppIdCount(const std::string strAppId);
+		bool isAppIdExist(const std::string strAppId);
 
 	private:
 		explicit CSqliteHandler();

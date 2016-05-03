@@ -24,6 +24,7 @@ class CCmpTest
 		void cmpMdmOperate();
 		void cmpPowerState();
 		void cmpPowerSet();
+		void cmpAuthentication();
 		int sendRequest(const int nCommandId, void *pRespBuf);
 		void connectCenter(const std::string strIP, const int nPort);
 

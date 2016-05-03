@@ -99,6 +99,7 @@ struct CMP_PACKET
 #define STATUS_RPPSTAFAIL							0x00000012		//Get Power State Fail
 #define STATUS_RSIGINFAIL							0x00000013		//SER API Sign in Fail
 #define STATUS_RMDMLOGINFAIL				0x00000014		//MDM Login Fail, no token
+#define STATUS_RAUTHFAIL							0x00000015		//Authentication Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 #define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
@@ -106,9 +107,13 @@ struct CMP_PACKET
 /*
  * Service Type
  */
-#define TYPE_MOBILE_TRACKER					1
-#define TYPE_POWER_STATION					2
-#define TYPE_SDK_TRACKER							3
+#define TYPE_MOBILE_SERVICE									1
+#define TYPE_POWER_CHARGE_SERVICE					2
+#define TYPE_SDK_SERVICE											3
+#define TYPE_TRACKER_SERVICE									4
+#define TYPE_TRACKER_APPLIENCE								5
+#define TYPE_TRACKER_TOY											6
+#define TYPE_TRACKER_IOT											7
 
 template<typename T, typename U>
 class create_map
@@ -134,45 +139,55 @@ class create_map
 
 };
 
-static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack" )( bind_request, "bind_request" )( bind_response, "bind_response" )(
-authentication_request, "authentication_request" )( authentication_response, "authentication_response" )( access_log_request, "access_log_request" )( access_log_response,
-		"access_log_response" )( enquire_link_request, "enquire_link_request" )( enquire_link_response, "enquire_link_response" )( unbind_request, "unbind_request" )(
-unbind_response, "unbind_response" )( update_request, "update_request" )( update_response, "update_response" )( reboot_request, "reboot_request" )( reboot_response,
-		"reboot_response" )( config_request, "config_request" )( config_response, "config_response" )( power_port_set_request, "power_port_request" )( power_port_set_response,
-		"power_port_response" )( power_port_state_request, "power_port_state_request" )( power_port_state_response, "power_port_state_response" )( initial_request,
-		"initial_request" )( initial_response, "initial_response" )( sign_up_request, "sign_up_request" )( sign_up_response, "sign_up_response" )( mdm_login_request,
-		"mdm_login_request" )( mdm_login_response, "mdm_login_response" )( mdm_operate_request, "mdm_operate_request" )( mdm_operate_response, "mdm_operate_response" )(
-sdk_tracker_request, "sdk_tracker_request" )( sdk_tracker_response, "sdk_tracker_response" );
+static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack")( bind_request,
+		"bind_request")( bind_response, "bind_response")(
+authentication_request, "authentication_request")( authentication_response, "authentication_response")(
+access_log_request, "access_log_request")( access_log_response, "access_log_response")( enquire_link_request,
+		"enquire_link_request")( enquire_link_response, "enquire_link_response")( unbind_request, "unbind_request")(
+unbind_response, "unbind_response")( update_request, "update_request")( update_response, "update_response")(
+reboot_request, "reboot_request")( reboot_response, "reboot_response")( config_request, "config_request")(
+config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
+		"power_port_response")( power_port_state_request, "power_port_state_request")( power_port_state_response,
+		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
+sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")( mdm_login_request, "mdm_login_request")(
+mdm_login_response, "mdm_login_response")( mdm_operate_request, "mdm_operate_request")(
+mdm_operate_response, "mdm_operate_response")(
+sdk_tracker_request, "sdk_tracker_request")( sdk_tracker_response, "sdk_tracker_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
-( STATUS_ROK, "No Error" )( STATUS_RINVMSGLEN, "Message Length is invalid" )( STATUS_RINVCMDLEN,
-		"Command Length is invalid" )( STATUS_RINVCMDID, "Invalid Command ID" )( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command" )( STATUS_RALYBND,
-		"Already in Bound State" )( STATUS_RSYSERR, "System Error" )(
-STATUS_RBINDFAIL, "Bind Failed" )( STATUS_RPPSFAIL, "Power Port Setting Fail" )( STATUS_RINVBODY, "Invalid Packet Body Data" )( STATUS_RINVCTRLID, "Invalid Controller ID" )(
-STATUS_RINVJSON, "Invalid JSON Data" )( STATUS_ROPERATE, "MDM operate notify" )( STATUS_RMDMLOGINFAIL, "MDM Login fail, no token" );
+( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
+		"Message Length is invalid")( STATUS_RINVCMDLEN, "Command Length is invalid")( STATUS_RINVCMDID,
+		"Invalid Command ID")( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command")( STATUS_RALYBND,
+		"Already in Bound State")( STATUS_RSYSERR, "System Error")(
+STATUS_RBINDFAIL, "Bind Failed")( STATUS_RPPSFAIL, "Power Port Setting Fail")( STATUS_RINVBODY,
+		"Invalid Packet Body Data")( STATUS_RINVCTRLID, "Invalid Controller ID")(
+STATUS_RINVJSON, "Invalid JSON Data")( STATUS_ROPERATE, "MDM operate notify")( STATUS_RMDMLOGINFAIL,
+		"MDM Login fail, no token")(STATUS_RAUTHFAIL, "Authentication Fail");
 
-inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, const char *szLogPath = 0, int nClienFD = 0)
+inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc,
+		const char *szLogPath = 0, int nClienFD = 0)
 {
 
 	char szCmd[48];
 	char szSta[32];
-	memset( szCmd, 0, sizeof(szCmd) );
-	memset( szSta, 0, sizeof(szSta) );
+	memset(szCmd, 0, sizeof(szCmd));
+	memset(szSta, 0, sizeof(szSta));
 
-	strcpy( szCmd, mapCommand[nCommand].c_str() );
-	strcpy( szSta, mapStatus[nStatus].c_str() );
+	strcpy(szCmd, mapCommand[nCommand].c_str());
+	strcpy(szSta, mapStatus[nStatus].c_str());
 
-	std::time_t t = std::time( NULL );
+	std::time_t t = std::time( NULL);
 	char mbstr[100];
-	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
 
 	char szLog[255];
-	sprintf( szLog, "%s-%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd, szSta, nSequence, nLength, nClienFD );
+	sprintf(szLog, "%s-%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd,
+			szSta, nSequence, nLength, nClienFD);
 
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
+	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog);
 #endif
 
 #ifdef LOG
@@ -183,16 +198,16 @@ inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, c
 
 inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath)
 {
-	std::time_t t = std::time( NULL );
+	std::time_t t = std::time( NULL);
 	char mbstr[100];
-	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
+	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
 
 	char szLog[MAX_DATA_LEN];
-	sprintf( szLog, "%s-%s : %-20s", mbstr, szDesc, szMsg );
+	sprintf(szLog, "%s-%s : %-20s", mbstr, szDesc, szMsg);
 #ifdef DEBUG
 	printf("[DEBUG] %s\n" ,szLog);
 #else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
+	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog);
 #endif
 
 #ifdef LOG
@@ -203,11 +218,11 @@ inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPa
 
 inline void printLog(string strMsg, string strDesc, string strLogPath)
 {
-	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
+	printLog(strMsg.c_str(), strDesc.c_str(), strLogPath.c_str());
 }
 
 inline void log(string strMsg, string strDesc)
 {
 	extern string extStrLogPath;
-	printLog( strMsg.c_str(), strDesc.c_str(), extStrLogPath.c_str() );
+	printLog(strMsg.c_str(), strDesc.c_str(), extStrLogPath.c_str());
 }

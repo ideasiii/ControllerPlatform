@@ -7,6 +7,7 @@
 
 #include "CAuthentication.h"
 #include "CSqliteHandler.h"
+#include "packet.h"
 
 using namespace std;
 
@@ -37,6 +38,18 @@ bool CAuthentication::authorization(const int nServiceType, const std::string st
 {
 	bool bAuth = false;
 
+	switch (nServiceType)
+	{
+		case TYPE_MOBILE_SERVICE:
+			break;
+		case TYPE_POWER_CHARGE_SERVICE:
+			break;
+		case TYPE_SDK_SERVICE:
+			bAuth = sqlite->isAppIdExist(strData);
+			break;
+		case TYPE_TRACKER_SERVICE:
+			break;
+	}
 	return bAuth;
 }
 

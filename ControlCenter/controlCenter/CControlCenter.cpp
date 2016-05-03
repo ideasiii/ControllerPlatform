@@ -495,8 +495,19 @@ int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, 
 #endif
 
 		int nType = -1;
+		bool bAuth = false;
 		convertFromString(nType, rData["type"]);
-
+		bAuth = authentication->authorization(nType, rData["data"]);
+		if (bAuth)
+		{
+			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+			log("APP ID:" + rData["data"] + " Authorization", "[Center Authentication]");
+		}
+		else
+		{
+			sendCommand(nSocket, nCommand, STATUS_RAUTHFAIL, nSequence, true);
+			log("APP ID:" + rData["data"] + " Not Authorization", "[Center Authentication]");
+		}
 	}
 	else
 	{
@@ -514,7 +525,7 @@ int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, cons
 	if (0 < nRet && rData.isValidKey("data"))
 	{
 		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
-		string strOID = accessLog->insertLog( TYPE_SDK_TRACKER, rData["data"]);
+		string strOID = accessLog->insertLog( TYPE_SDK_SERVICE, rData["data"]);
 		if (strOID.empty())
 		{
 			printLog("Insert SDK Tracker Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath);

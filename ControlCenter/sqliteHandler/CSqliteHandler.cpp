@@ -15,8 +15,8 @@ using namespace std;
 
 static sqlite3 *dbController = 0;
 static sqlite3 *dbUser = 0;
-static sqlite3 *dbIdeas = 0;				// For Ideas SDK
-static sqlite3 *dbMdm = 0;				// For SER MDM
+static sqlite3 *dbIdeas = 0;				// For MORE SDK
+static sqlite3 *dbMdm = 0;				// For MORE MDM
 
 CSqliteHandler* CSqliteHandler::m_instance = 0;
 
@@ -380,12 +380,29 @@ int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql, std::list<std::strin
 	return row;
 }
 
-int CSqliteHandler::getAppIdCount(const std::string strAppId)
+bool CSqliteHandler::isAppIdExist(const std::string strAppId)
 {
+	bool bExist = false;
+	int nState = -1;
+	const unsigned char * text;
 	string strSql = "select count(*) from app where app_id = '" + strAppId + "';";
 
 	sqlite3_stmt * stmt;
-	sqlite3_prepare(dbUser, strSql.c_str(), strSql.size() + 1, &stmt, NULL);
+	sqlite3_prepare(dbIdeas, strSql.c_str(), strSql.size() + 1, &stmt, NULL);
+	nState = sqlite3_step(stmt);
+	switch (nState)
+	{
+		case SQLITE_ROW:
+			text = sqlite3_column_text(stmt, 1);
+			_DBG("[Sqlite] get App Id count: %s", text)
+			break;
+		case SQLITE_DONE:
+			break;
+		default:
+			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str())
+			break;
+	}
+	return bExist;
 }
 bool CSqliteHandler::getUserAuth(std::string strMAC)
 {

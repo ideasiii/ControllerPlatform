@@ -23,13 +23,23 @@ CInitial::~CInitial()
 string CInitial::getInitData(const int nType)
 {
 	string strData;
-	switch ( nType )
+	switch (nType)
 	{
-		case TYPE_MOBILE_TRACKER:
+		case TYPE_MOBILE_SERVICE:
 			strData =
 					"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 6607	}]}";
 			break;
-		case TYPE_POWER_STATION:
+		case TYPE_POWER_CHARGE_SERVICE:
+			strData =
+					"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 6607	}]}";
+			break;
+		case TYPE_SDK_SERVICE:
+			strData =
+					"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 6607	}]}";
+			break;
+		case TYPE_TRACKER_SERVICE:
+			strData =
+					"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 6607	}]}";
 			break;
 	}
 	return strData;
