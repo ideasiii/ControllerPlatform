@@ -316,8 +316,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			nBody_len += 1;
 			break;
 		case access_log_request:
-			net_type = htonl(TYPE_MOBILE_SERVICE);
-			memcpy(pIndex, (const char*) &net_type, TRACKER_APPLIANCE);
+			net_type = htonl(TRACKER_APPLIANCE);
+			memcpy(pIndex, (const char*) &net_type, 4);
 			pIndex += 4;
 			nBody_len += 4;
 			memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
