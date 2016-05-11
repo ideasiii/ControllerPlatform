@@ -14,7 +14,7 @@
 #include "memory.h"
 
 CObject::CObject() :
-		messageHandler( new CMessageHandler )
+		messageHandler(new CMessageHandler)
 {
 	// TODO Auto-generated constructor stub
 }
@@ -22,6 +22,7 @@ CObject::CObject() :
 CObject::~CObject()
 {
 	// TODO Auto-generated destructor stub
+	clearMessage();
 	delete messageHandler;
 }
 
@@ -29,10 +30,10 @@ int CObject::initMessage(int nKey)
 {
 	int nRet;
 
-	nRet = messageHandler->init( nKey );
-	if ( -1 == nRet )
+	nRet = messageHandler->init(nKey);
+	if (-1 == nRet)
 	{
-		throwException( "Create message queue fail" );
+		throwException("Create message queue fail");
 	}
 	return nRet;
 }
@@ -42,34 +43,34 @@ int CObject::run(int nRecvEvent)
 	int nRecv;
 	MESSAGE_BUF *msgbuf;
 
-	if ( -1 == messageHandler->getMsqid() )
+	if (-1 == messageHandler->getMsqid())
 	{
-		_DBG( "invalid msqid, not init msq" );
+		_DBG("invalid msqid, not init msq");
 		return -1;
 	}
 
-	if ( 0 >= nRecvEvent )
+	if (0 >= nRecvEvent)
 	{
-		_DBG( "invalid receive event id" );
+		_DBG("invalid receive event id");
 		return -1;
 	}
 
 	msgbuf = new MESSAGE_BUF;
 	void * pdata;
 	pdata = msgbuf;
-	messageHandler->setRecvEvent( nRecvEvent );
+	messageHandler->setRecvEvent(nRecvEvent);
 
-	_DBG( "[Message] Message Service Start Run , Event ID:%d", nRecvEvent )
-	while ( 1 )
+	_DBG("[Message] Message Service Start Run , Event ID:%d", nRecvEvent)
+	while (1)
 	{
-		memset( msgbuf, 0, sizeof(MESSAGE_BUF) );
+		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
 
-		nRecv = messageHandler->recvMessage( &pdata );
-		if ( 0 < nRecv )
+		nRecv = messageHandler->recvMessage(&pdata);
+		if (0 < nRecv)
 		{
-			onReceiveMessage( msgbuf->mtype, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData );
+			onReceiveMessage(msgbuf->mtype, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}
-		else if ( -2 == nRecv )
+		else if (-2 == nRecv)
 		{
 			/**
 			 * get SIGINT
@@ -78,20 +79,20 @@ int CObject::run(int nRecvEvent)
 		}
 		else
 		{
-			_DBG( "receive message fail" );
-			sleep( 5 );
+			_DBG("receive message fail");
+			sleep(5);
 		}
 	}
 
 	delete msgbuf;
 
-	_DBG( "[Object] message loop end" );
+	_DBG("[Object] message loop end");
 	return 0;
 }
 
 int CObject::sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	return messageHandler->sendMessage( nEvent, nCommand, nId, nDataLen, pData );
+	return messageHandler->sendMessage(nEvent, nCommand, nId, nDataLen, pData);
 }
 
 void CObject::clearMessage()
@@ -103,10 +104,10 @@ void CObject::throwException(const char * szMsg)
 {
 	std::string strMsg;
 
-	if ( szMsg )
+	if (szMsg)
 	{
-		strMsg = std::string( szMsg );
-		throw CException( strMsg );
+		strMsg = std::string(szMsg);
+		throw CException(strMsg);
 	}
 }
 

@@ -35,7 +35,7 @@ int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
  */
 int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
-	controller->receiveClientCMP(nSocketFD, nDataLen, pData);
+	controller->onClientCMP(nSocketFD, nDataLen, pData);
 	return 0;
 }
 
@@ -86,7 +86,8 @@ int Controller::init(std::string strConf)
 
 	if (!strPort.empty())
 	{
-		int nPort = atoi(strPort.c_str());
+		int nPort = -1;
+		convertFromString(nPort, strPort);
 		return startServer(nPort);
 	}
 
@@ -95,6 +96,7 @@ int Controller::init(std::string strConf)
 
 void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
+	_DBG("[Controller] Receive Message from Message Queue")
 	switch (nCommand)
 	{
 		case EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE:
@@ -109,7 +111,7 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 int Controller::startServer(const int nPort)
 {
 	/** Run socket server for CMP **/
-	//cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
+	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
 	if (0 >= nPort)
 	{
 		_DBG("Mongodb Controller Start Fail, Invalid Port:%d", nPort)
@@ -230,16 +232,11 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[Controller Recv]", G_LOG_PATH.c_str(), nClientFD);
 
-	if (access_log_request != cmpHeader.command_id)
+	if (access_log_request == cmpHeader.command_id)
 	{
-		sendCommandtoClient(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
+		cmpAccessLog(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
 		return;
 	}
 
-	cmpAccessLog(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
-}
-
-void Controller::receiveClientCMP(int nClientFD, int nDataLen, const void *pData)
-{
-	onClientCMP(nClientFD, nDataLen, pData);
+	sendCommandtoClient(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
 }

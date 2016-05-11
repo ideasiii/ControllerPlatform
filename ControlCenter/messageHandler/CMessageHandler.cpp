@@ -52,7 +52,7 @@ int CMessageHandler::init(const long lkey)
 	else
 	{
 		nMsqid = msgget( lkey, msgflg );
-
+		_DBG("[Message] Get messages queue, key: %d id: %d", (int )lkey, nMsqid);
 		if ( -1 == nMsqid )
 		{
 			perror( "msgget" );

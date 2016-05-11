@@ -48,3 +48,9 @@ lsof | grep controlCenter
 
 # Use apt-get to install mongodb
 apt-get install mongodb-dev libmongo-client-dev
+
+[IPC]
+#list IPC
+ipcs -q
+#remove IPC
+ipcrm -q [msq_id]

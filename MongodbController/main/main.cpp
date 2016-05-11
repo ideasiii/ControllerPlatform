@@ -127,7 +127,7 @@ void PSigHander(int signo)
 		return;
 	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
-	closeMessage();
+	//closeMessage();
 	sleep(3);
 	kill(child_pid, SIGKILL);
 }
@@ -161,7 +161,10 @@ void runService(int argc, char* argv[])
 	_DBG("Config file is:%s", strConf.c_str())
 	Controller *controller = Controller::getInstance();
 
-	if (controller->init(strConf) && -1 != controller->initMessage( MSG_ID))
+	int nMsgId = controller->initMessage( MSG_ID);
+	_DBG("[Mongodb Controller] Init Message Queue, Message Id: %d", nMsgId)
+
+	if (controller->init(strConf) && -1 != nMsgId)
 	{
 		_DBG("<============= Mongodb Controller Service Start Run =============>")
 		controller->run( EVENT_FILTER_CONTROLLER);

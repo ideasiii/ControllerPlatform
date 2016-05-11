@@ -15,7 +15,7 @@
 #include "common.h"
 
 CMessageHandler::CMessageHandler() :
-		msqid( -1 ), m_nEvent( -1 )
+		msqid(-1), m_nEvent(-1)
 {
 	buf_length = sizeof(struct MESSAGE_BUF) - sizeof(long);
 }
@@ -27,17 +27,17 @@ CMessageHandler::~CMessageHandler()
 
 void CMessageHandler::close()
 {
-	if ( -1 == msqid )
+	if (-1 == msqid)
 	{
-		_DBG( "[Message] close message fail, invalid meqid" );
+		_DBG("[Message] close message fail, invalid meqid");
 		return;
 	}
-	if ( msgctl( msqid, IPC_RMID, NULL ) == -1 )
+	if (msgctl(msqid, IPC_RMID, NULL) == -1)
 	{
-		perror( "msgctl" );
+		perror("msgctl");
 	}
 
-	_DBG( "[Message] message queue close" );
+	_DBG("[Message] message id: %d closed", msqid);
 }
 
 int CMessageHandler::init(const long lkey)
@@ -45,17 +45,22 @@ int CMessageHandler::init(const long lkey)
 	int nMsqid;
 	int msgflg = IPC_CREAT | 0666;
 
-	if ( 0 >= lkey )
+	if (0 >= lkey)
 	{
 		nMsqid = -1;
 	}
 	else
 	{
-		nMsqid = msgget( lkey, msgflg );
-
-		if ( -1 == nMsqid )
+		nMsqid = msgget((key_t) lkey, msgflg);
+		_DBG("[Message] Get messages queue, key: %d id: %d", (int )lkey, nMsqid);
+		if (nMsqid == 0)
 		{
-			perror( "msgget" );
+			printf(" Got msgid == 0!!, errono = %d\n", errno);
+		}
+
+		if (-1 == nMsqid)
+		{
+			perror("msgget");
 		}
 		else
 		{
@@ -64,27 +69,28 @@ int CMessageHandler::init(const long lkey)
 			 */
 			struct msqid_ds ds;
 
-			memset( &ds, 0, sizeof(struct msqid_ds) );
-			if ( msgctl( nMsqid, IPC_STAT, &ds ) )
+			memset(&ds, 0, sizeof(struct msqid_ds));
+			if (msgctl(nMsqid, IPC_STAT, &ds))
 			{
-				_ERR( "[Message] msgctl(msqid=%d, IPC_STAT, ...) failed: " "%s (errno=%d)\n", nMsqid, strerror(errno), errno );
+				_ERR("[Message] msgctl(msqid=%d, IPC_STAT, ...) failed: " "%s (errno=%d)\n", nMsqid, strerror(errno),
+						errno);
 			}
 			else
 			{
-				_DBG( "[Message] Queue size = %lu", ds.msg_qbytes );
+				_DBG("[Message] Queue size = %lu", ds.msg_qbytes);
 				ds.msg_qbytes = 1024 * 1024 * 8;
-				if ( msgctl( nMsqid, IPC_SET, &ds ) )
+				if (msgctl(nMsqid, IPC_SET, &ds))
 				{
 					fprintf( stderr, "msgctl(msqid=%d, IPC_SET, ...) failed "
 							"(msg_perm.uid=%u,"
 							"msg_perm.cuid=%u): "
-							"%s (errno=%d)\n", nMsqid, ds.msg_perm.uid, ds.msg_perm.cuid, strerror( errno ), errno );
+							"%s (errno=%d)\n", nMsqid, ds.msg_perm.uid, ds.msg_perm.cuid, strerror( errno), errno);
 				}
 			}
 		}
 	}
 
-	setMsqid( nMsqid );
+	setMsqid(nMsqid);
 
 	return nMsqid;
 
@@ -101,16 +107,16 @@ int CMessageHandler::sendMessage(int nType, int nCommand, unsigned long int nId,
 	pBuf->nCommand = nCommand;
 	pBuf->nId = nId;
 
-	memset( pBuf->cData, 0, sizeof(pBuf->cData) );
-	if ( NULL != pData && 0 < nDataLen )
+	memset(pBuf->cData, 0, sizeof(pBuf->cData));
+	if ( NULL != pData && 0 < nDataLen)
 	{
-		memcpy( pBuf->cData, pData, nDataLen );
+		memcpy(pBuf->cData, pData, nDataLen);
 		pBuf->nDataLen = nDataLen;
 	}
 
-	if ( -1 == msgsnd( getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0 ) )
+	if (-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
 	{
-		perror( "msgsnd" );
+		perror("msgsnd");
 		nRet = -1;
 	}
 	else
@@ -127,25 +133,25 @@ int CMessageHandler::recvMessage(void **pbuf)
 {
 	ssize_t recvSize = 0;
 
-	if ( NULL == *pbuf )
+	if ( NULL == *pbuf)
 		return -1;
 
-	if ( -1 == getRecvEvent() )
+	if (-1 == getRecvEvent())
 	{
-		_DBG( "invalid receive event id, not set" );
+		_DBG("invalid receive event id, not set");
 		return -1;
 	}
 
-	recvSize = msgrcv( getMsqid(), *pbuf, getBufLength(), getRecvEvent(), 0 );
+	recvSize = msgrcv(getMsqid(), *pbuf, getBufLength(), getRecvEvent(), 0);
 
-	if ( 0 > recvSize )
+	if (0 > recvSize)
 	{
-		if ( errno == EINTR )
+		if ( errno == EINTR)
 		{
-			_DBG( "[Message] get EINTR" );
+			_DBG("[Message] get EINTR");
 			return -2;
 		}
-		perror( "msgrcv" );
+		perror("msgrcv");
 		return -1;
 	}
 
