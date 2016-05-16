@@ -25,5 +25,5 @@ class LogHandler
 		std::string mstrLogPath;
 };
 
-extern void log(const char* format, ...);
+extern void _log(const char* format, ...);
 

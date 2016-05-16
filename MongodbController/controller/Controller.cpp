@@ -169,17 +169,17 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 		string strOID = insertLog(nType, rData["data"]);
 		if (!strOID.empty())
 		{
-			log("[Mongodb Controller] Insert DB Success, OID=%s: type=%s data=%s", strOID.c_str(),
+			_log("[Mongodb Controller] Insert DB Success, OID=%s: type=%s data=%s", strOID.c_str(),
 					rData["type"].c_str(), rData["data"].c_str());
 		}
 		else
 		{
-			log("[Mongodb Controller] Insert DB Fail, type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+			_log("[Mongodb Controller] Insert DB Fail, type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 		}
 	}
 	else
 	{
-		log("[Mongodb Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		_log("[Mongodb Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
 	rData.clear();
 	return 0;
@@ -212,7 +212,7 @@ std::string Controller::insertLog(const int nType, std::string strData)
 			strOID = mongodb->insert("access", "iot", strData);
 			break;
 		default:
-			log("[Mongodb Controller] Insert Access log fail, unknow service type: %d", nType);
+			_log("[Mongodb Controller] Insert Access log fail, unknow service type: %d", nType);
 			break;
 	}
 	return strOID;
@@ -238,8 +238,8 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-//	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-//			"[Controller Recv]", G_LOG_PATH.c_str(), nClientFD);
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Mongodb Controller]", nClientFD);
 
 	if (access_log_request == cmpHeader.command_id)
 	{

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <list>
+#include "LogHandler.h"
 
 using namespace std;
 /*
@@ -164,10 +165,8 @@ STATUS_RBINDFAIL, "Bind Failed")( STATUS_RPPSFAIL, "Power Port Setting Fail")( S
 STATUS_RINVJSON, "Invalid JSON Data")( STATUS_ROPERATE, "MDM operate notify")( STATUS_RMDMLOGINFAIL,
 		"MDM Login fail, no token")(STATUS_RAUTHFAIL, "Authentication Fail");
 
-inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc,
-		const char *szLogPath = 0, int nClienFD = 0)
+inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, int nClienFD = 0)
 {
-
 	char szCmd[48];
 	char szSta[32];
 	memset(szCmd, 0, sizeof(szCmd));
@@ -176,53 +175,6 @@ inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, c
 	strcpy(szCmd, mapCommand[nCommand].c_str());
 	strcpy(szSta, mapStatus[nStatus].c_str());
 
-	std::time_t t = std::time( NULL);
-	char mbstr[100];
-	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-
-	char szLog[255];
-	sprintf(szLog, "%s-%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd,
-			szSta, nSequence, nLength, nClienFD);
-
-#ifdef DEBUG
-	printf("[DEBUG] %s\n" ,szLog);
-#else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog);
-#endif
-
-#ifdef LOG
-	extern list<string> extListLog;
-	extListLog.push_back( szLog );
-#endif
-}
-
-inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath)
-{
-	std::time_t t = std::time( NULL);
-	char mbstr[100];
-	std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-
-	char szLog[MAX_DATA_LEN];
-	sprintf(szLog, "%s-%s : %-20s", mbstr, szDesc, szMsg);
-#ifdef DEBUG
-	printf("[DEBUG] %s\n" ,szLog);
-#else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog);
-#endif
-
-#ifdef LOG
-	extern list<string> extListLog;
-	extListLog.push_back( szLog );
-#endif
-}
-
-inline void printLog(string strMsg, string strDesc, string strLogPath)
-{
-	printLog(strMsg.c_str(), strDesc.c_str(), strLogPath.c_str());
-}
-
-inline void log(string strMsg, string strDesc)
-{
-	extern string extStrLogPath;
-	printLog(strMsg.c_str(), strDesc.c_str(), extStrLogPath.c_str());
+	_log("%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", szDesc, szCmd, szSta, nSequence,
+			nLength, nClienFD);
 }

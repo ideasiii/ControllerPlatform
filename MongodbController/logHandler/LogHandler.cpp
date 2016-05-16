@@ -104,7 +104,7 @@ void LogHandler::run()
 	}
 }
 
-void log(const char* format, ...)
+void _log(const char* format, ...)
 {
 	char szLog[2048];
 	char dest[2000];
