@@ -228,7 +228,6 @@ int CSocketServer::runClientHandler(int nClientFD)
 
 int CSocketServer::runSMSHandler(int nClientFD)
 {
-	int nFD;
 	int result = 0;
 	char szTmp[16];
 	int nTotalLen = 0;
@@ -267,8 +266,6 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			cmpHeader.command_status = htonl( STATUS_ROK);
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
-			socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-			_DBG("[Socket Server] CMP Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
@@ -277,6 +274,10 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				result = socketrecv(nClientFD, nBodyLen, &pBody, clientSockaddr);
 				if (result != nBodyLen)
 				{
+					cmpHeader.command_status = htonl( STATUS_RINVMSGLEN);
+					socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+					_DBG("[Socket Server] CMP Response Sequence:%d Socket FD:%d  STATUS_RINVMSGLEN", nSequence,
+							nClientFD);
 					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
 					{
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
@@ -288,21 +289,21 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				}
 				else
 				{
+					socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+					_DBG("[Socket Server] CMP Response Sequence:%d Socket FD:%d  STATUS_ROK", nSequence, nClientFD);
 					if (externalEvent.isValid())
 					{
-						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen,
-								&cmpPacket);
+						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nClientFD,
+								nTotalLen, &cmpPacket);
 					}
-					else
-					{
-						ServerReceive(nFD, nTotalLen, &cmpPacket);
-					}
-					continue;
 				}
 			}
 		}
 		else
 		{
+			cmpHeader.command_status = htonl( STATUS_RINVMSGLEN);
+			socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+			_DBG("[Socket Server] CMP Response Sequence:%d Socket FD:%d  STATUS_RINVMSGLEN", nSequence, nClientFD);
 			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
 			{
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);

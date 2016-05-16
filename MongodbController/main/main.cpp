@@ -16,6 +16,9 @@
 #include "common.h"
 #include "event.h"
 #include "Controller.h"
+#include "LogHandler.h"
+#include "Config.h"
+#include "utility.h"
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -23,15 +26,15 @@ pid_t child_pid = -1; //Global
 int Watching();
 void CSigHander(int signo);
 void PSigHander(int signo);
-void closeMessage();
 void runService(int argc, char* argv[]);
 void options(int argc, char **argv);
 
 int main(int argc, char* argv[])
 {
-	Watching();
 
+	Watching();
 	// child process run service
+
 	runService(argc, argv);
 
 	return EXIT_SUCCESS;
@@ -76,7 +79,6 @@ int Watching()
 		signal( SIGPIPE, SIG_IGN);
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
-		closeMessage();
 
 		if (w == -1)
 		{
@@ -127,20 +129,34 @@ void PSigHander(int signo)
 		return;
 	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
-	//closeMessage();
+
 	sleep(3);
 	kill(child_pid, SIGKILL);
 }
 
-/**
- * clean message queue
- */
-void closeMessage()
+std::string getConfName(std::string strParam)
 {
-	CMessageHandler *messageHandler = new CMessageHandler;
-	messageHandler->init( MSG_ID);
-	messageHandler->close();
-	delete messageHandler;
+	std::string strProcessName;
+	std::string strArgv;
+	std::string strConf;
+
+	strArgv = strParam;
+	size_t found = strArgv.find_last_of("/\\");
+	strProcessName = strArgv.substr(++found);
+	strConf = strProcessName + ".conf";
+	_DBG("Config file is:%s", strConf.c_str())
+
+	return strConf;
+}
+
+int getPort(std::string strPort)
+{
+	int nPort = -1;
+	if (!strPort.empty())
+	{
+		convertFromString(nPort, strPort);
+	}
+	return nPort;
 }
 
 /**
@@ -148,29 +164,44 @@ void closeMessage()
  */
 void runService(int argc, char* argv[])
 {
-	options(argc, argv);
-	std::string strArgv;
 	std::string strConf;
+	std::string strLogPath = "/data/opt/tomcat/webapps/logs/mongodbController.log";
+	int nServerPort = 27027;
 
-	strArgv = argv[0];
+	options(argc, argv);
 
-	size_t found = strArgv.find_last_of("/\\");
-	std::string strProcessName = strArgv.substr(++found);
+	/** get config file  name **/
+	strConf = getConfName(argv[0]);
+	if (!strConf.empty())
+	{
+		Config *config = new Config();
+		if ( FALSE != config->loadConfig(strConf))
+		{
+			strLogPath = config->getValue("LOG", "log");
+			nServerPort = getPort(config->getValue("SERVER", "port"));
+		}
+		else
+		{
+			_DBG("Load Config File Fail:%s", strConf.c_str());
+		}
+		delete config;
+	}
 
-	strConf = strProcessName + ".conf";
-	_DBG("Config file is:%s", strConf.c_str())
+	/** Run Log Agent **/
+	LogHandler *logAgent = LogHandler::getInstance();
+	logAgent->setLogPath(strLogPath);
+
+	/** Run Mongodb Controller **/
 	Controller *controller = Controller::getInstance();
 
-	int nMsgId = controller->initMessage( MSG_ID);
-	_DBG("[Mongodb Controller] Init Message Queue, Message Id: %d", nMsgId)
-
-	if (controller->init(strConf) && -1 != nMsgId)
+	if (-1 != controller->initMessage( MSG_ID) && controller->startServer(nServerPort))
 	{
 		_DBG("<============= Mongodb Controller Service Start Run =============>")
 		controller->run( EVENT_FILTER_CONTROLLER);
 		_DBG("<============= Mongodb Controller Service Stop Run =============>")
 		controller->stopServer();
 	}
+	delete logAgent;
 	_DBG("[Process] child process exit");
 }
 

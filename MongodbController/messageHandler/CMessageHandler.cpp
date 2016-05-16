@@ -55,7 +55,7 @@ int CMessageHandler::init(const long lkey)
 		_DBG("[Message] Get messages queue, key: %d id: %d", (int )lkey, nMsqid);
 		if (nMsqid == 0)
 		{
-			printf(" Got msgid == 0!!, errono = %d\n", errno);
+			_DBG("[Message] Get messages queue Error, key: %d errno: %d", (int )lkey, errno);
 		}
 
 		if (-1 == nMsqid)

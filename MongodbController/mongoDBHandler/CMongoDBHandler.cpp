@@ -14,6 +14,8 @@
 #include <mongo/client/dbclient.h>
 #include "common.h"
 #include "CMongoDBHandler.h"
+#include "utility.h"
+#include "packet.h"
 
 #ifndef verify
 #define verify(x) MONGO_verify(x)
@@ -136,6 +138,8 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 		b.append( it->first, it->second );
 	}
 
+	b.append( "record_state", 0 );
+	b.append( "create_date", currentDateTime() );
 	BSONObj p = b.obj();
 	DBconn->insert( strCon, p );
 }
@@ -147,29 +151,45 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 
 	string strCon = strDB + "." + strCollection;
 	BSONObjBuilder b;
-	BSONObj p = b.append( strColumn, strValue ).obj();
+	b.append( strColumn, strValue );
+	b.append( "record_state", 0 );
+	b.append( "create_date", currentDateTime() );
+	BSONObj p = b.obj();
 	DBconn->insert( strCon, p );
 }
 
-int CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strJSON)
+string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strJSON)
 {
+	string strId;
+
 	if ( !isValid() )
-		return FAIL;
+		return strId;
 
 	string strCon = strDB + "." + strCollection;
+	BSONObj bson = mongo::fromjson( strJSON );
 
 	try
 	{
-		BSONObj bson = mongo::fromjson( strJSON );
+		BSONObjBuilder tempJson;
+		tempJson.genOID();
+		tempJson.appendElements( bson );
+		tempJson.append( "record_state", 0 );
+		tempJson.append( "create_date", currentDateTime() );
+		bson = tempJson.obj();
 		DBconn->insert( strCon, bson );
+		BSONElement oi;
+		bson.getObjectID( oi );
+		OID oid = oi.__oid();
+		strId = oid.toString();
 	}
 	catch ( const exception &e )
 	{
 		_DBG( "[Mongodb] Insert Data Fail, Error:%s", e.what() );
-		return FAIL;
+		return strId;
 	}
-	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), strJSON.c_str() )
-	return SUCCESS;
+	_DBG( "[Mongodb] Insert Data to :%s Data:%s", strCon.c_str(), bson.toString().c_str() )
+	log( bson.toString(), "[Mongodb] insert" );
+	return strId;
 }
 
 bool CMongoDBHandler::isValid()
@@ -217,8 +237,6 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		{
 			bsonobj = cursor->next();
 			listJSON.push_back( bsonobj.jsonString() );
-			//cout << bsonobj.jsonString() << endl;
-			//cout << bsonobj.toString() << endl;
 		}
 
 	}

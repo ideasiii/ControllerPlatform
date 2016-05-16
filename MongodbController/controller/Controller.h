@@ -32,10 +32,10 @@ class Controller: public CObject
 
 	private:
 		Controller();
-		void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
 		int sendCommandtoClient(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
 		int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
+		std::string insertLog(const int nType, std::string strData);
 
 	private:
 		CSocketServer *cmpServer;		// controller message protocol server

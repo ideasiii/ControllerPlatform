@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <syslog.h>
 
-static std::string G_LOG_PATH;
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -83,7 +81,7 @@ extern "C"
 
 	__attribute__ ((unused)) static bool isValidStr(const char *szStr, int nMaxSize)
 	{
-		if ( (0 != szStr) && 0 < ((int) strlen( szStr )) && nMaxSize > ((int) strlen( szStr )) )
+		if ((0 != szStr) && 0 < ((int) strlen(szStr)) && nMaxSize > ((int) strlen(szStr)))
 			return true;
 		else
 			return false;

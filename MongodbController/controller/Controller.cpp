@@ -17,6 +17,8 @@
 #include "IReceiver.h"
 #include <map>
 #include "CMongoDBHandler.h"
+#include "LogHandler.h"
+#include "packet.h"
 
 using namespace std;
 
@@ -62,7 +64,6 @@ Controller* Controller::getInstance()
 
 int Controller::init(std::string strConf)
 {
-
 	/** Load config file **/
 	Config *config = new Config();
 	if ( FALSE == config->loadConfig(strConf))
@@ -71,14 +72,6 @@ int Controller::init(std::string strConf)
 		delete config;
 		return FALSE;
 	}
-
-	G_LOG_PATH = config->getValue("LOG", "log");
-	if (G_LOG_PATH.empty())
-	{
-		G_LOG_PATH = "/data/opt/tomcat/webapps/logs/mongodbController.log";
-	}
-	mkdirp(G_LOG_PATH);
-	_DBG("[Mongodb Controller] Log Path:%s", G_LOG_PATH.c_str());
 
 	/** Server init and start **/
 	string strPort = config->getValue("SERVER", "port");
@@ -96,14 +89,13 @@ int Controller::init(std::string strConf)
 
 void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	_DBG("[Controller] Receive Message from Message Queue")
 	switch (nCommand)
 	{
 		case EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE:
 			onClientCMP(nId, nDataLen, pData);
 			break;
 		default:
-			printLog("unknow message command", "[Mongodb Controller]", G_LOG_PATH);
+			//		printLog("unknow message command", "[Mongodb Controller]", G_LOG_PATH);
 			break;
 	}
 }
@@ -124,6 +116,7 @@ int Controller::startServer(const int nPort)
 		return FALSE;
 	}
 
+	mongodb->connectDB("127.0.0.1", "27017");
 	return TRUE;
 }
 
@@ -154,33 +147,8 @@ int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int 
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 	nRet = cmpServer->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", G_LOG_PATH.c_str(), nSocket);
+//	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", G_LOG_PATH.c_str(), nSocket);
 	return nRet;
-}
-
-void Controller::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
-{
-	switch (nCommand)
-	{
-		case generic_nack:
-			break;
-		case bind_response:
-			break;
-		case authentication_response:
-			break;
-		case access_log_response:
-			break;
-		case unbind_response:
-			break;
-		case update_response:
-			break;
-		case reboot_response:
-			break;
-		case config_response:
-			break;
-		case power_port_response:
-			break;
-	}
 }
 
 int Controller::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
@@ -196,17 +164,58 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-		_DBG("[Mongodb Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(),
-				nSocket)
-		sendCommandtoClient(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		int nType = -1;
+		convertFromString(nType, rData["type"]);
+		string strOID = insertLog(nType, rData["data"]);
+		if (!strOID.empty())
+		{
+			log("[Mongodb Controller] Insert DB Success, OID=%s: type=%s data=%s", strOID.c_str(),
+					rData["type"].c_str(), rData["data"].c_str());
+		}
+		else
+		{
+			log("[Mongodb Controller] Insert DB Fail, type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+		}
 	}
 	else
 	{
-		_DBG("[Mongodb Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket)
-		sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		log("[Mongodb Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
 	rData.clear();
 	return 0;
+}
+
+std::string Controller::insertLog(const int nType, std::string strData)
+{
+	string strOID;
+	switch (nType)
+	{
+		case TYPE_MOBILE_SERVICE:
+			strOID = mongodb->insert("access", "mobile", strData);
+			break;
+		case TYPE_POWER_CHARGE_SERVICE:
+			strOID = mongodb->insert("access", "power", strData);
+			break;
+		case TYPE_SDK_SERVICE:
+			strOID = mongodb->insert("access", "sdk", strData);
+			break;
+		case TYPE_TRACKER_SERVICE:
+			strOID = mongodb->insert("access", "tracker", strData);
+			break;
+		case TYPE_TRACKER_APPLIENCE:
+			strOID = mongodb->insert("access", "applience", strData);
+			break;
+		case TYPE_TRACKER_TOY:
+			strOID = mongodb->insert("access", "toy", strData);
+			break;
+		case TYPE_TRACKER_IOT:
+			strOID = mongodb->insert("access", "iot", strData);
+			break;
+		default:
+			log("[Mongodb Controller] Insert Access log fail, unknow service type: %d", nType);
+			break;
+	}
+	return strOID;
 }
 
 /**
@@ -229,14 +238,12 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Controller Recv]", G_LOG_PATH.c_str(), nClientFD);
+//	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+//			"[Controller Recv]", G_LOG_PATH.c_str(), nClientFD);
 
 	if (access_log_request == cmpHeader.command_id)
 	{
 		cmpAccessLog(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
 		return;
 	}
-
-	sendCommandtoClient(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
 }

@@ -8,7 +8,8 @@ export MODULES=global_inc \
 			 objectHandler	\
 			 mongoDBHandler \
 			 socketHandler	\
-			 threadHandler
+			 threadHandler \
+			 logHandler
 			 
 			 
 export EXT_MODULES=extInclude
