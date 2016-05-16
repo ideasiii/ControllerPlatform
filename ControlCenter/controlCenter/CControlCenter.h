@@ -24,7 +24,6 @@ class CSocketServer;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
-class CMongoDBHandler;
 class CJsonHandler;
 class CAccessLog;
 class CSerApi;
@@ -86,7 +85,6 @@ class CControlCenter: public CObject
 		CSqliteHandler *sqlite;
 		CThreadHandler *tdEnquireLink;
 		CThreadHandler *tdExportLog;
-		CMongoDBHandler *mongodb;
 		CAccessLog *accessLog;
 		CSerApi *serapi;
 		CMdmHandler *mdm;

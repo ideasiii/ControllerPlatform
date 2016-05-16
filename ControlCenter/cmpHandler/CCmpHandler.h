@@ -1,5 +1,5 @@
 /*
- * CWmpHandler.h
+ * CCmpHandler.h
  *
  *  Created on: 2015年10月21日
  *      Author: Louis Ju
@@ -16,7 +16,7 @@ using namespace std;
 class CCmpHandler
 {
 	public:
-		CCmpHandler();
+		static CCmpHandler* getInstance();
 		virtual ~CCmpHandler();
 		int getCommand(const void *pData);
 		int getLength(const void *pData);
@@ -30,6 +30,9 @@ class CCmpHandler
 		int parseBody(int nCommand, const void *pData, CDataHandler<std::string> &rData);
 		bool isAckPacket(int nCommand);
 		int parseBody(const void *pData, vector<string> &vData);
+
+	private:
+		CCmpHandler();
 
 };
 

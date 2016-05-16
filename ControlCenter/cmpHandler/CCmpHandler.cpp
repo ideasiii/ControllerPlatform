@@ -14,6 +14,8 @@
 #include "packet.h"
 #include "CDataHandler.cpp"
 
+static CCmpHandler* cmpHandler = 0;
+
 CCmpHandler::CCmpHandler()
 {
 
@@ -22,6 +24,15 @@ CCmpHandler::CCmpHandler()
 CCmpHandler::~CCmpHandler()
 {
 
+}
+
+CCmpHandler* CCmpHandler::getInstance()
+{
+	if (0 == cmpHandler)
+	{
+		cmpHandler = new CCmpHandler();
+	}
+	return cmpHandler;
 }
 
 int CCmpHandler::getCommand(const void *pData)

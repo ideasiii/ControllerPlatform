@@ -226,3 +226,12 @@ inline void log(string strMsg, string strDesc)
 	extern string extStrLogPath;
 	printLog(strMsg.c_str(), strDesc.c_str(), extStrLogPath.c_str());
 }
+
+static int msnSequence = 0x00000000;
+__attribute__ ((unused)) static int getSequence()
+{
+	++msnSequence;
+	if (0x7FFFFFFF <= msnSequence)
+		msnSequence = 0x00000001;
+	return msnSequence;
+}

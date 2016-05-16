@@ -62,10 +62,10 @@ class CSocket
 		bool checkSocketFD(int nSocketFD);
 		char *getMac(const char *iface);
 		int getIfAddress();
+		int isValidSocketFD();
 
 	private:
 		void setLastError(int nErrNo);
-		int isValidSocketFD();
 		void setSocketStyle(int nStyle);
 
 	private:

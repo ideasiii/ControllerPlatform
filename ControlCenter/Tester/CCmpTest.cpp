@@ -21,15 +21,6 @@
 #include "packet.h"
 #include "utility.h"
 
-static int msnSequence = 0x00000000;
-static int getSequence()
-{
-	++msnSequence;
-	if (0x7FFFFFFF <= msnSequence)
-		msnSequence = 0x00000001;
-	return msnSequence;
-}
-
 #define TRACKER_MOBILE		1
 #define TRACKER_CHARGIN		2
 #define TRACKER_MORE_SDK	3

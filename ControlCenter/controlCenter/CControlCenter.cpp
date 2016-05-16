@@ -30,15 +30,6 @@ using namespace std;
 
 static CControlCenter * controlcenter = 0;
 
-static int msnSequence = 0x00000000;
-static int getSequence()
-{
-	++msnSequence;
-	if (0x7FFFFFFF <= msnSequence)
-		msnSequence = 0x00000001;
-	return msnSequence;
-}
-
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
 
@@ -46,8 +37,8 @@ void *threadEnquireLinkRequest(void *argv);
 void *threadExportLog(void *argv);
 
 CControlCenter::CControlCenter() :
-		CObject(), cmpServer(new CSocketServer), cmpParser(new CCmpHandler), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(
-				new CThreadHandler), tdExportLog(new CThreadHandler), mongodb(CMongoDBHandler::getInstance()), accessLog(
+		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
+				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), accessLog(
 				CAccessLog::getInstance()), serapi(CSerApi::getInstance()), mdm(CMdmHandler::getInstance()), authentication(
 				CAuthentication::getInstance())
 {
@@ -153,7 +144,10 @@ int CControlCenter::init(std::string strConf)
 	}
 	_DBG("[Center] Open Sqlite DB mdm Success")
 
-	mongodb->connectDB("127.0.0.1", "27017");
+	if (-1 != accessLog->connectDB("127.0.0.1", 27027))
+	{
+		_DBG("[Center] Connect Mongodb Controller Success");
+	}
 
 	tdExportLog->createThread(threadExportLog, this);
 	return TRUE;
@@ -430,17 +424,18 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 
 		int nType = -1;
 		convertFromString(nType, rData["type"]);
-		string strOID = accessLog->insertLog(nType, rData["data"]);
-		if (strOID.empty())
-		{
-			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-			printLog("Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath);
-		}
-		else
-		{
-			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
-			printLog("Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath);
-		}
+		//string strOID = accessLog->insertLog(nType, rData["data"]);
+		accessLog->cmpAccessLogRequest(rData["type"], rData["data"]);
+//		if (strOID.empty())
+//		{
+//			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+//			printLog("Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath);
+//		}
+//		else
+//		{
+//			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+//			printLog("Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath);
+//		}
 	}
 	else
 	{
