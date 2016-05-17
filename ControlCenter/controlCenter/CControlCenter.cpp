@@ -36,6 +36,24 @@ void *threadEnquireLinkRequest(void *argv);
 /** Export Log to file**/
 void *threadExportLog(void *argv);
 
+/**
+ * Define Socket Client ReceiveFunction
+ */
+int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
+{
+	//controlcenter->receiveCenterCMP(nSocketFD, nDataLen, pData);
+	return 0;
+}
+
+/**
+ *  Define Socket Server Receive Function
+ */
+int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
+{
+	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
+	return 0;
+}
+
 CControlCenter::CControlCenter() :
 		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
 				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), accessLog(
