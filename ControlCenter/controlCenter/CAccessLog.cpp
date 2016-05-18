@@ -72,8 +72,7 @@ string CAccessLog::insertLog(const int nType, string strData)
 			strOID = mongodb->insert("access", "iot", strData);
 			break;
 		default:
-			//strOID = mongodb->insert("access", "unknow", strData);
-			log("Insert Access log fail, unknow service type", "[AccessLog]");
+			_log("Insert Access log fail, unknow service type: %d", nType);
 			break;
 	}
 	return strOID;
@@ -116,7 +115,7 @@ int CAccessLog::cmpAccessLogRequest(string strType, string strLog)
 	nRet = mongoClient->socketSend(mongoClient->getSocketfd(), &packet, nTotal_len);
 	if (nRet != nTotal_len)
 	{
-		_DBG("[Center] send access log fail, socket FD: %d", mongoClient->getSocketfd());
+		_log("[Center] send access log fail, socket FD: %d", mongoClient->getSocketfd());
 	}
 
 	return nRet;

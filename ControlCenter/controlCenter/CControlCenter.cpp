@@ -33,9 +33,6 @@ static CControlCenter * controlcenter = 0;
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
 
-/** Export Log to file**/
-void *threadExportLog(void *argv);
-
 /**
  * Define Socket Client ReceiveFunction
  */
@@ -173,21 +170,16 @@ int CControlCenter::init(std::string strConf)
 
 void CControlCenter::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-//	_DBG( "[Controller] Receive Message : event=%d command=%d id=%lu data_len=%d", nEvent, nCommand, nId, nDataLen );
-
-	string strLog;
-
 	switch (nCommand)
 	{
 		case EVENT_COMMAND_SOCKET_CONTROL_CENTER_RECEIVE:
 			onCMP(nId, nDataLen, pData);
 			break;
 		case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
-			_DBG("[Center] Socket Client FD:%d Close", (int ) nId)
+			_log("[Center] Socket Client FD:%d Close", (int) nId);
 			break;
 		default:
-			strLog = "unknow message command";
-			printLog(strLog, "[Center]", mConfig.strLogPath);
+			_log("[Center] Unknow message command: %d", nCommand);
 			break;
 	}
 }
@@ -258,7 +250,7 @@ int CControlCenter::sendCommand(int nSocket, int nCommand, int nStatus, int nSeq
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 	nRet = cmpServer->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Center Send]", mConfig.strLogPath.c_str(), nSocket);
+	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Center Send]", nSocket);
 	return nRet;
 }
 
@@ -281,8 +273,6 @@ void CControlCenter::ackPacket(int nClientSocketFD, int nCommand, const void * p
 				if (nClientSocketFD == *it)
 				{
 					vEnquireLink.erase(it);
-					strLog = "Keep alive Socket FD = " + ConvertToString(*it);
-					printLog(strLog, "[Center]", mConfig.strLogPath);
 					break;
 				}
 			}
@@ -514,12 +504,10 @@ int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, 
 		if (bAuth)
 		{
 			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
-			log("APP ID:" + rData["data"] + " Authorization", "[Center Authentication]");
 		}
 		else
 		{
 			sendCommand(nSocket, nCommand, STATUS_RAUTHFAIL, nSequence, true);
-			log("APP ID:" + rData["data"] + " Not Authorization", "[Center Authentication]");
 		}
 	}
 	else
@@ -538,15 +526,7 @@ int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, cons
 	if (0 < nRet && rData.isValidKey("data"))
 	{
 		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
-		string strOID = accessLog->insertLog( TYPE_SDK_SERVICE, rData["data"]);
-		if (strOID.empty())
-		{
-			printLog("Insert SDK Tracker Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath);
-		}
-		else
-		{
-			printLog("Insert SDK Tracker Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath);
-		}
+
 	}
 	else
 	{
@@ -563,9 +543,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-#ifdef TRACE_BODY
-		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
+		_log("[Center] cmpSignup Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 
 		CSignup *signup = new CSignup();
 		signup->setLogPath(mConfig.strLogPath);
@@ -581,7 +559,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	}
 	else
 	{
-		_DBG("[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket)
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -594,9 +572,8 @@ int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const 
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("account") && rData.isValidKey("password"))
 	{
-#ifdef TRACE_BODY
-		printLog( rData["account"] + "," + rData["password"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
+		_log("[Center] cmpMdmLogin Body: account=%s password=%s", rData["account"].c_str(), rData["password"].c_str());
+
 		string strToken = trim(mdm->login(rData["account"], rData["password"]));
 		rData.clear();
 		if (strToken.empty())
@@ -608,7 +585,7 @@ int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const 
 	}
 	else
 	{
-		_DBG("[Center] MDM Login Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] MDM Login Fail, Invalid Body Parameters Socket FD:%d", nSocket)
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 
@@ -621,14 +598,12 @@ int CControlCenter::cmpMdmOperate(int nSocket, int nCommand, int nSequence, cons
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("token"))
 	{
-#ifdef TRACE_BODY
-		printLog( rData["token"] , "[Center Recv Body]", mConfig.strLogPath);
-#endif
+		_log("[Center] cmpMdmOperate Body: token=%s ", rData["token"].c_str());
 		nRet = cmpResponse(nSocket, mdm_login_response, nSequence, "opreate_json");
 	}
 	else
 	{
-		_DBG("[Center] MDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] MDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket)
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -674,18 +649,13 @@ int CControlCenter::cmpResponse(const int nSocket, const int nCommandId, const i
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 
 	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Center]", mConfig.strLogPath.c_str(), nSocket);
+	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Center] cmpResponse", nSocket);
 
 	string strLog;
 	if (0 >= nRet)
 	{
-		strLog = "CMP Response fail, socket:" + ConvertToString(nSocket);
+		_log("[Center] cmpResponse Fail socket: %d", nSocket);
 	}
-	else
-	{
-		strLog = "CMP Response success, data:" + ConvertToString(szData);
-	}
-	printLog(strLog.c_str(), "[Center]", mConfig.strLogPath.c_str());
 
 	return nRet;
 }
@@ -721,8 +691,6 @@ int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::s
 
 	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 
-	string strMsg = "Power Port Request to SocketFD:" + ConvertToString(nSocket);
-	printLog(strMsg, "[Center]", mConfig.strLogPath);
 	return nRet;
 }
 
@@ -749,8 +717,6 @@ int CControlCenter::cmpPowerPortStateRequest(int nSocket, std::string strWire)
 
 	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 
-	string strMsg = "Power Port State Request to SocketFD:" + ConvertToString(nSocket);
-	printLog(strMsg, "[Center]", mConfig.strLogPath);
 	return nRet;
 }
 
@@ -772,7 +738,7 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Center Recv]", mConfig.strLogPath.c_str(), nClientFD);
+			"[Center Recv]", nClientFD);
 
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
@@ -791,51 +757,7 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 
 }
 
-void CControlCenter::runExportLog()
-{
-	extern string extStrLogPath;
-	extern list<string> extListLog;
 
-	std::time_t t;
-	char mbstr[100];
-	string strLog;
-	FILE *pstream;
-	int nCount = 0;
-	int i = 0;
-	char szPath[255];
-
-	if (!extStrLogPath.empty())
-	{
-		while (1)
-		{
-			t = std::time( NULL);
-			memset(mbstr, 0, 100);
-			std::strftime(mbstr, 100, "%Y-%m-%d", std::localtime(&t));
-
-			tdExportLog->threadSleep(10);
-			nCount = extListLog.size();
-			for (i = 0; i < nCount; ++i)
-			{
-				strLog = *(extListLog.begin());
-				extListLog.pop_front();
-
-				memset(szPath, 0, 255);
-				sprintf(szPath, "%s.%s", extStrLogPath.c_str(), mbstr);
-				pstream = fopen(szPath, "a");
-				if ( NULL != pstream)
-				{
-					fprintf(pstream, "%s\n", strLog.c_str());
-					fflush(pstream);
-					fclose(pstream);
-				}
-				else
-				{
-					printf("[Error] Log file path open fail!!\n");
-				}
-			}
-		}
-	}
-}
 
 void CControlCenter::runEnquireLinkRequest()
 {
@@ -857,16 +779,13 @@ void CControlCenter::runEnquireLinkRequest()
 				strSql = "DELETE FROM controller WHERE socket_fd = " + ConvertToString(*it) + ";";
 				sqlite->controllerSqlExec(strSql.c_str());
 				close(*it);
-				strLog = "Dropped connection, Close socket file descriptor filedes = " + ConvertToString(*it);
-				printLog(strLog, "[Center]", mConfig.strLogPath);
+				_log("[Center] Dropped connection, Close socket file descriptor filedes: %d", *it);
 			}
 		}
 		vEnquireLink.clear();
 
 		if (0 < getBindSocket(listValue))
 		{
-			strLog = "Run Enquire Link Request";
-			printLog(strLog, "[Center]", mConfig.strLogPath);
 			for (list<int>::iterator i = listValue.begin(); i != listValue.end(); ++i)
 			{
 				nSocketFD = *i;
@@ -895,12 +814,5 @@ void *threadEnquireLinkRequest(void *argv)
 {
 	CControlCenter* ss = reinterpret_cast<CControlCenter*>(argv);
 	ss->runEnquireLinkRequest();
-	return NULL;
-}
-
-void *threadExportLog(void *argv)
-{
-	CControlCenter* ss = reinterpret_cast<CControlCenter*>(argv);
-	ss->runExportLog();
 	return NULL;
 }

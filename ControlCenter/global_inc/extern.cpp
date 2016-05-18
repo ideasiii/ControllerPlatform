@@ -11,8 +11,6 @@
 using namespace std;
 
 /**
- * Log path
+ * Log list
  */
-string extStrLogPath;
 volatile list<string> extListLog;
-

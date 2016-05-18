@@ -267,6 +267,13 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 
+			if ( enquire_link_request == nCommand)
+			{
+				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+				continue;
+			}
+
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if (0 < nBodyLen && access_log_request == nCommand)

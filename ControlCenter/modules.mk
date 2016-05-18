@@ -13,6 +13,7 @@ export MODULES=global_inc \
 			 httpHandler \
 			 jsonHandler \
 			 serApiHandler \
-			 mdmHandler
+			 mdmHandler \
+			 logHandler
 			 
 export EXT_MODULES=extInclude

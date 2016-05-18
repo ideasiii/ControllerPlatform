@@ -585,7 +585,7 @@ void Controller::runEnquireLinkRequest()
 		}
 		listValue.clear();
 
-		/**  Check Control Center COnnection **/
+		/**  Check Control Center Connection **/
 		if ( !cmpClient->isValidSocketFD() )
 		{
 			_DBG( "[Controller] Control Center Disconnect will reconnect" )
