@@ -14,7 +14,7 @@
 using namespace std;
 
 CSignup::CSignup() :
-		sqlite( CSqliteHandler::getInstance() )
+		sqlite(CSqliteHandler::getInstance())
 {
 
 }
@@ -28,121 +28,114 @@ int CSignup::insert(string strJSON)
 {
 	int nRet = INSERT_FAIL;
 
-	if ( strJSON.empty() )
+	if (strJSON.empty())
 		return nRet;
 
 	cJSON *root;
-	root = cJSON_Parse( strJSON.c_str() );
+	root = cJSON_Parse(strJSON.c_str());
 
-	if ( root )
+	if (root)
 	{
-		cJSON *tag = cJSON_GetObjectItem( root, "id" );
-		if ( tag && (cJSON_String == tag->type) )
+		cJSON *tag = cJSON_GetObjectItem(root, "id");
+		if (tag && (cJSON_String == tag->type))
 		{
-			if ( isExist( tag->valuestring ) )
+			if (isExist(tag->valuestring))
 			{
-				_DBG( "Sign up id :%s is Existed.", tag->valuestring )
+				_DBG("Sign up id :%s is Existed.", tag->valuestring)
 				return RECORD_EXIST;
 			}
 			string strId = tag->valuestring;
-			tag = cJSON_GetObjectItem( root, "app_id" );
-			if ( tag && (cJSON_String == tag->type) )
+			tag = cJSON_GetObjectItem(root, "app_id");
+			if (tag && (cJSON_String == tag->type))
 			{
 				string strAppId = tag->valuestring;
 				string strMac, strOs, strPhone, strFbId, strFbName, strFbEmail, strFbAccount, strGAccount, strTAccount;
-				if ( cJSON_GetObjectItem( root, "mac" ) && (cJSON_String == cJSON_GetObjectItem( root, "mac" )->type) )
+				if (cJSON_GetObjectItem(root, "mac") && (cJSON_String == cJSON_GetObjectItem(root, "mac")->type))
 				{
-					strMac = cJSON_GetObjectItem( root, "mac" )->valuestring;
+					strMac = cJSON_GetObjectItem(root, "mac")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "os" ) && (cJSON_String == cJSON_GetObjectItem( root, "os" )->type) )
+				if (cJSON_GetObjectItem(root, "os") && (cJSON_String == cJSON_GetObjectItem(root, "os")->type))
 				{
-					strOs = cJSON_GetObjectItem( root, "os" )->valuestring;
+					strOs = cJSON_GetObjectItem(root, "os")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "phone" ) && (cJSON_String == cJSON_GetObjectItem( root, "phone" )->type) )
+				if (cJSON_GetObjectItem(root, "phone") && (cJSON_String == cJSON_GetObjectItem(root, "phone")->type))
 				{
-					strPhone = cJSON_GetObjectItem( root, "phone" )->valuestring;
+					strPhone = cJSON_GetObjectItem(root, "phone")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_id" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_id" )->type) )
+				if (cJSON_GetObjectItem(root, "fb_id") && (cJSON_String == cJSON_GetObjectItem(root, "fb_id")->type))
 				{
-					strFbId = cJSON_GetObjectItem( root, "fb_id" )->valuestring;
+					strFbId = cJSON_GetObjectItem(root, "fb_id")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_name" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_name" )->type) )
+				if (cJSON_GetObjectItem(root, "fb_name")
+						&& (cJSON_String == cJSON_GetObjectItem(root, "fb_name")->type))
 				{
-					strFbName = cJSON_GetObjectItem( root, "fb_name" )->valuestring;
+					strFbName = cJSON_GetObjectItem(root, "fb_name")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_email" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_email" )->type) )
+				if (cJSON_GetObjectItem(root, "fb_email")
+						&& (cJSON_String == cJSON_GetObjectItem(root, "fb_email")->type))
 				{
-					strFbEmail = cJSON_GetObjectItem( root, "fb_email" )->valuestring;
+					strFbEmail = cJSON_GetObjectItem(root, "fb_email")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "fb_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "fb_account" )->type) )
+				if (cJSON_GetObjectItem(root, "fb_account")
+						&& (cJSON_String == cJSON_GetObjectItem(root, "fb_account")->type))
 				{
-					strFbAccount = cJSON_GetObjectItem( root, "fb_account" )->valuestring;
+					strFbAccount = cJSON_GetObjectItem(root, "fb_account")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "g_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "g_account" )->type) )
+				if (cJSON_GetObjectItem(root, "g_account")
+						&& (cJSON_String == cJSON_GetObjectItem(root, "g_account")->type))
 				{
-					strGAccount = cJSON_GetObjectItem( root, "g_account" )->valuestring;
+					strGAccount = cJSON_GetObjectItem(root, "g_account")->valuestring;
 				}
 
-				if ( cJSON_GetObjectItem( root, "t_account" ) && (cJSON_String == cJSON_GetObjectItem( root, "t_account" )->type) )
+				if (cJSON_GetObjectItem(root, "t_account")
+						&& (cJSON_String == cJSON_GetObjectItem(root, "t_account")->type))
 				{
-					strTAccount = cJSON_GetObjectItem( root, "t_account" )->valuestring;
+					strTAccount = cJSON_GetObjectItem(root, "t_account")->valuestring;
 				}
 
-				string strSQL = "INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('" + strId + "','" + strAppId + "','"
-						+ strMac + "','" + strOs + "','" + strPhone + "','" + strFbId + "','" + strFbName + "','" + strFbEmail + "','" + strFbAccount + "','" + strGAccount + "','"
-						+ strTAccount + "');";
+				string strSQL =
+						"INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
+								+ strId + "','" + strAppId + "','" + strMac + "','" + strOs + "','" + strPhone + "','"
+								+ strFbId + "','" + strFbName + "','" + strFbEmail + "','" + strFbAccount + "','"
+								+ strGAccount + "','" + strTAccount + "');";
 
-				if ( SUCCESS == sqlite->ideasSqlExec( strSQL.c_str() ) )
+				if ( SUCCESS == sqlite->ideasSqlExec(strSQL.c_str()))
 				{
 					nRet = INSERT_SUCCESS;
 				}
 			}
 			else
 			{
-				if ( !strLogPath.empty() )
-				{
-					printLog( "Invalid app_id , " + strJSON, "[Sign up Parse Fail]", strLogPath );
-				}
+				_log("[Sign uo] Invalid app_id: %s", strJSON.c_str());
 			}
 		}
 		else
 		{
-			if ( !strLogPath.empty() )
-			{
-				printLog( "Invalid id , " + strJSON, "[Sign up Parse Fail]", strLogPath );
-			}
+			_log("[Sign up] Parse Fail, Invalid ID: %s", strJSON.c_str());
 		}
-		cJSON_Delete( root );
+		cJSON_Delete(root);
 	}
 	else
 	{
-		if ( !strLogPath.empty() )
-		{
-			printLog( strJSON, "[Sign up Parse Fail]", strLogPath );
-		}
+		_log("[Sign up] Parse Fail");
 	}
 
 	return nRet;
-}
-
-void CSignup::setLogPath(std::string strPath)
-{
-	strLogPath = strPath;
 }
 
 bool CSignup::isExist(std::string strId)
 {
 	string strSQL = "SELECT id FROM user WHERE id = '" + strId + "';";
 	list<string> listValue;
-	int nRow = sqlite->ideasSqlExec( strSQL.c_str(), listValue, 0 );
-	if ( 0 < nRow )
+	int nRow = sqlite->ideasSqlExec(strSQL.c_str(), listValue, 0);
+	if (0 < nRow)
 		return true;
 	return false;
 }

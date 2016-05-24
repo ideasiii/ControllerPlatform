@@ -270,7 +270,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			if ( enquire_link_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+				_log("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 				continue;
 			}
 
@@ -283,14 +283,14 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				{
 					cmpHeader.command_status = htonl( STATUS_RINVMSGLEN);
 					socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-					_DBG("[Socket Server] CMP Response Sequence:%d Socket FD:%d  STATUS_RINVMSGLEN", nSequence,
+					_log("[Socket Server] CMP Response Sequence:%d Socket FD:%d  STATUS_RINVMSGLEN", nSequence,
 							nClientFD);
 					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
 					{
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 					}
 					socketClose(nClientFD);
-					_DBG("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
 							result);
 					break;
 				}

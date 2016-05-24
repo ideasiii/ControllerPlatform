@@ -14,12 +14,6 @@
 
 #define MAX_FUNC_POINT		256
 
-typedef struct
-{
-		std::string strLogPath;
-		std::string strServerPort;
-} CONFIG;
-
 class CSocketServer;
 class CCmpHandler;
 class CSqliteHandler;
@@ -36,10 +30,9 @@ class CControlCenter: public CObject
 		virtual ~CControlCenter();
 		static CControlCenter* getInstance();
 		int init(std::string strConf);
-		int startServer();
+		int startServer(const int nPort);
 		void stopServer();
 		void runEnquireLinkRequest();
-		void runExportLog();
 
 	protected:
 		void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -79,7 +72,6 @@ class CControlCenter: public CObject
 		int cmpEnquireLinkRequest(const int nSocketFD);
 
 	private:
-		CONFIG mConfig;
 		CSocketServer *cmpServer;
 		CCmpHandler *cmpParser;
 		CSqliteHandler *sqlite;

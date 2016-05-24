@@ -17,7 +17,6 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
-#include "CMongoDBHandler.h"
 #include "CAccessLog.h"
 #include "CInitial.h"
 #include "CSignup.h"
@@ -100,28 +99,10 @@ int CControlCenter::init(std::string strConf)
 		return FALSE;
 	}
 
-	mConfig.strLogPath = config->getValue("LOG", "log");
-	mConfig.strServerPort = config->getValue("CENTER", "port");
 	string strControllerDB = config->getValue("SQLITE", "db_controller");
 	string strIdeasDB = config->getValue("SQLITE", "db_ideas");
 	string strMdmDB = config->getValue("SQLITE", "db_mdm");
 	delete config;
-
-	if (mConfig.strLogPath.empty())
-	{
-		mConfig.strLogPath = "/data/logs/center.log";
-	}
-	mkdirp(mConfig.strLogPath);
-	_DBG("[Center] Log Path:%s", mConfig.strLogPath.c_str());
-
-	extern string extStrLogPath;
-	extStrLogPath = mConfig.strLogPath;
-
-	if (mConfig.strServerPort.empty())
-	{
-		mConfig.strServerPort = "6607";
-	}
-	_DBG("[Center] Server Port:%s", mConfig.strServerPort.c_str());
 
 	if (strControllerDB.empty())
 	{
@@ -164,7 +145,6 @@ int CControlCenter::init(std::string strConf)
 		_DBG("[Center] Connect Mongodb Controller Success");
 	}
 
-	tdExportLog->createThread(threadExportLog, this);
 	return TRUE;
 }
 
@@ -184,30 +164,17 @@ void CControlCenter::onReceiveMessage(int nEvent, int nCommand, unsigned long in
 	}
 }
 
-int CControlCenter::startServer()
+int CControlCenter::startServer(const int nPort)
 {
+	if (0 >= nPort)
+		return FALSE;
 	/** Run socket server for CMP **/
 	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROL_CENTER, EVENT_COMMAND_SOCKET_CONTROL_CENTER_RECEIVE);
 	cmpServer->setClientDisconnectCommand( EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT);
 
-	if (!mConfig.strServerPort.empty())
+	if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
 	{
-		int nPort = atoi(mConfig.strServerPort.c_str());
-		if (0 >= nPort)
-		{
-			_DBG("CMP Server Start Fail, Invalid Port:%s", mConfig.strServerPort.c_str())
-			return FALSE;
-		}
-		/** Start TCP/IP socket listen **/
-		if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
-		{
-			_DBG("CMP Server Socket Create Fail")
-			return FALSE;
-		}
-	}
-	else
-	{
-		_DBG("CMP Server Start Fail, Invalid Port Config")
+		_DBG("CMP Server Socket Create Fail")
 		return FALSE;
 	}
 
@@ -426,9 +393,7 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-#ifdef TRACE_BODY
-		printLog( rData["type"] + "," + rData["data"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
+		_log("[Center] Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 
 		int nType = -1;
 		convertFromString(nType, rData["type"]);
@@ -460,16 +425,14 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type"))
 	{
-#ifdef TRACE_BODY
-		printLog( rData["type"], "[Center Recv Body]", mConfig.strLogPath);
-#endif
+		_log("[Center] Receive Body: type=%s ", rData["type"].c_str());
 		CInitial *init = new CInitial();
 		int nType = 0;
 		convertFromString(nType, rData["type"]);
 		string strData = init->getInitData(nType);
 		if (strData.empty())
 		{
-			_DBG("[Center] Initial Fail, Can't get initial data Socket FD:%d", nSocket)
+			_log("[Center] Initial Fail, Can't get initial data Socket FD:%d", nSocket);
 			sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
 		}
 		else
@@ -480,7 +443,7 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	}
 	else
 	{
-		_DBG("[Center] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -493,10 +456,7 @@ int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, 
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-#ifdef TRACE_BODY
-		log( rData["type"] + "," + rData["data"], "[Center Recv Body]");
-#endif
-
+		_log("[Center] Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 		int nType = -1;
 		bool bAuth = false;
 		convertFromString(nType, rData["type"]);
@@ -512,7 +472,7 @@ int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, 
 	}
 	else
 	{
-		_DBG("[Center] Authentication Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] Authentication Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -530,7 +490,7 @@ int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, cons
 	}
 	else
 	{
-		_DBG("[Center] SDK Tracker Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] SDK Tracker Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -546,7 +506,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 		_log("[Center] cmpSignup Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 
 		CSignup *signup = new CSignup();
-		signup->setLogPath(mConfig.strLogPath);
+
 		if (INSERT_FAIL != signup->insert(rData["data"]))
 		{
 			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
@@ -559,7 +519,7 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	}
 	else
 	{
-		_log("[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -585,7 +545,7 @@ int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const 
 	}
 	else
 	{
-		_log("[Center] MDM Login Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] MDM Login Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 
@@ -603,7 +563,7 @@ int CControlCenter::cmpMdmOperate(int nSocket, int nCommand, int nSequence, cons
 	}
 	else
 	{
-		_log("[Center] MDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Center] MDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -756,8 +716,6 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 			pPacket);
 
 }
-
-
 
 void CControlCenter::runEnquireLinkRequest()
 {

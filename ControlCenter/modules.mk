@@ -9,7 +9,6 @@ export MODULES=global_inc \
 			 dataHandler	\
 			 cmpHandler	\
 			 sqliteHandler	\
-			 mongoDBHandler	\
 			 httpHandler \
 			 jsonHandler \
 			 serApiHandler \

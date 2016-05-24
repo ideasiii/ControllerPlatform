@@ -19,6 +19,7 @@
 #include "event.h"
 #include "LogHandler.h"
 #include "Config.h"
+#include "utility.h"
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -150,6 +151,7 @@ void closeMessage()
 void runService(int argc, char* argv[])
 {
 	std::string strLogPath = "/data/opt/tomcat/webapps/logs/mongodbController.log";
+	int nServerPort = 6607;
 
 	options(argc, argv);
 
@@ -170,6 +172,7 @@ void runService(int argc, char* argv[])
 		if ( FALSE != config->loadConfig(strConf))
 		{
 			strLogPath = config->getValue("LOG", "log");
+			convertFromString(nServerPort, config->getValue("SERVER", "port"));
 		}
 		delete config;
 	}
@@ -182,7 +185,7 @@ void runService(int argc, char* argv[])
 
 	if (controlCenter->init(strConf) && -1 != controlCenter->initMessage( MSG_ID))
 	{
-		if (controlCenter->startServer())
+		if (controlCenter->startServer(nServerPort))
 		{
 			_DBG("<============= Service Start Run =============>")
 			controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
