@@ -299,14 +299,14 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d", nClientFD);
+			_log("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 		else
 		{
 			socketSend(nClientFD, "Control Center: Please use CMP to communicate\r\n",
 					strlen("Control Center: Please use CMP to communicate\r\n"));
-			_DBG("[Socket Server] Send Message: Please use CMP to communicate")
+			_log("[Socket Server] Send Message: Please use CMP to communicate");
 
 			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
 			{
@@ -314,7 +314,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			}
 
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result);
+			_log("[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result);
 			break;
 		}
 
@@ -374,7 +374,7 @@ void CSocketServer::runSocketAccept()
 		}
 		else
 		{
-			_DBG("socket server accept fail");
+			_log("socket server accept fail");
 			sleep(3);
 		}
 	}
@@ -422,13 +422,13 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 			//clientHandler((int) nId);
 			break;
 		case EVENT_COMMAND_THREAD_EXIT:
-			_DBG("[Socket Server] Receive Thread Join, Thread ID: %d   #######################", (int )nId)
+			_log("[Socket Server] Receive Thread Join, Thread ID: %d", (int) nId);
 			threadHandler->threadJoin(nId);
 			break;
 		case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 			break;
 		default:
-			_DBG("[Socket Server] unknow message command")
+			_log("[Socket Server] unknow message command");
 			break;
 	}
 }

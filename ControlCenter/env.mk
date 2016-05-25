@@ -4,12 +4,12 @@
 # Author: Louis Ju
 #####################################
 
-export VERSION=v0.0.0.2
+export VERSION=v0.0.0.3
 export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 #####################################
 # Version module controle
-# Build Debug version use: -DDEBUG -DTRACE
+# Build Debug version use: -DDEBUG
 # Build Release version use: -DRELEASE
 #####################################
-export LOG=-DDEBUG -DTRACE_BODY -DLOG
+export LOG=-DDEBUG 

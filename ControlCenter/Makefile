@@ -23,15 +23,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
-			-I/usr/include/mongo \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lmongoclient \
-			-lboost_thread \
-			-lboost_system \
-			-lboost_filesystem \
-			-lboost_regex \
-			-lboost_program_options \
 			-lsqlite3
 					
 vpath %.cpp $(SRC_DIR)
@@ -47,7 +40,7 @@ endef
 
 .IGNORE: clean cleanAll
 
-all: checkdirs package-u lib bin/$(TARGET)
+all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
@@ -86,11 +79,7 @@ clean:
 	@rm -rf $(DIR_APP_ROOT)log
 
 cleanAll: clean
-	@rm -rf $(DIR_APP_ROOT)userDB/*
-	@rm -rf $(DIR_APP_ROOT)deviceDB/*
-	@rm -rf $(DIR_APP_ROOT)configDB/*
-	@rm -rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build
-	@rm -rf $(DIR_APP_ROOT)libs/*
+	@rm -rf $(DIR_APP_ROOT)libs
 	
 mk_debug:
 	@echo "\n"
@@ -116,13 +105,6 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
-	@echo "\n"
-	
-mongoDB:
-	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install;
-	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
-	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
-	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

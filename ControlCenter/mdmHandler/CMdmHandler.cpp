@@ -9,13 +9,14 @@
 #include "CMdmHandler.h"
 #include "CSqliteHandler.h"
 #include "common.h"
+#include "LogHandler.h"
 
 using namespace std;
 
 static CMdmHandler *mInstance = 0;
 
-CMdmHandler::CMdmHandler()
-		: sqlite(CSqliteHandler::getInstance())
+CMdmHandler::CMdmHandler() :
+		sqlite(CSqliteHandler::getInstance())
 {
 
 }
@@ -44,7 +45,7 @@ std::string CMdmHandler::login(std::string strAccount, std::string strPassword)
 	if (0 < nRow)
 	{
 		strToken = listValue.front();
-		_DBG("[MDM] Get token:%s account:%s password:%s", strToken.c_str(), strAccount.c_str(), strPassword.c_str())
+		_log("[MDM] Get token:%s account:%s password:%s", strToken.c_str(), strAccount.c_str(), strPassword.c_str());
 	}
 	return strToken;
 }
@@ -54,7 +55,8 @@ std::string CMdmHandler::operate(std::string strToken, std::string strDeviceId)
 	string strOperate;
 // select * from mdmOperate where token = '123456789' and ((strftime('%s',datetime('now','localtime')) - strftime('%s',create_date) )<3600) #less one hour
 
-	string strSQL = "select id from mdmOperate where token = '" + strToken + "' and strftime('%J',datetime('now')) - strftime('%J',create_date) >1";
+	string strSQL = "select id from mdmOperate where token = '" + strToken
+			+ "' and strftime('%J',datetime('now')) - strftime('%J',create_date) >1";
 	return strOperate;
 }
 

@@ -139,10 +139,11 @@ void PSigHander(int signo)
  */
 void closeMessage()
 {
-	CMessageHandler *messageHandler = new CMessageHandler;
-	messageHandler->init( MSG_ID);
-	messageHandler->close();
-	delete messageHandler;
+	int nMsqId = CMessageHandler::registerMsq(MSG_ID);
+	if (0 < nMsqId)
+	{
+		CMessageHandler::closeMsg(nMsqId);
+	}
 }
 
 /**
@@ -164,7 +165,7 @@ void runService(int argc, char* argv[])
 	std::string strProcessName = strArgv.substr(++found);
 
 	strConf = strProcessName + ".conf";
-	_DBG("Config file is:%s", strConf.c_str())
+	_DBG("Config file is:%s", strConf.c_str());
 
 	if (!strConf.empty())
 	{
@@ -187,9 +188,9 @@ void runService(int argc, char* argv[])
 	{
 		if (controlCenter->startServer(nServerPort))
 		{
-			_DBG("<============= Service Start Run =============>")
+			_DBG("<============= Service Start Run =============>");
 			controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
-			_DBG("<============= Service Stop Run =============>")
+			_DBG("<============= Service Stop Run =============>");
 			controlCenter->stopServer();
 		}
 	}

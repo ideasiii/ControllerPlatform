@@ -9,6 +9,7 @@
 #include "CThreadHandler.h"
 #include "IReceiver.h"
 #include "packet.h"
+#include "LogHandler.h"
 
 int CSocketClient::m_nInternalEventFilter = 6789;
 
@@ -222,13 +223,13 @@ void CSocketClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 	{
 		case EVENT_COMMAND_THREAD_EXIT:
 			threadHandler->threadJoin(nId);
-			_DBG("[Socket Client] Thread Join:%d", (int )nId)
+			_log("[Socket Client] Thread Join:%d", (int) nId);
 			break;
 		case EVENT_COMMAND_SOCKET_RECEIVE:
-			_DBG("[Socket Client] Receive CMP , SocketFD:%d", (int )nId)
+			_log("[Socket Client] Receive CMP , SocketFD:%d", (int) nId);
 			break;
 		default:
-			_DBG("[Socket Server] unknow message command")
+			_log("[Socket Server] unknow message command");
 			break;
 	}
 }

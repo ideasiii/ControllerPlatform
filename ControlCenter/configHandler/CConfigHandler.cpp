@@ -10,6 +10,7 @@
 #include <string.h>
 #include "CConfigHandler.h"
 #include "common.h"
+#include "utility.h"
 
 #define MAX_SECTION		50
 #define MAX_NAME		50
@@ -17,15 +18,15 @@
 
 inline char *rstrip(char* s)
 {
-	char *p = s + strlen( s );
-	while ( p > s && isspace( *--p ) )
+	char *p = s + strlen(s);
+	while (p > s && isspace(*--p))
 		*p = '\0';
 	return s;
 }
 
 inline char *lstrip(const char *s)
 {
-	while ( *s && isspace( *s ) )
+	while (*s && isspace(*s))
 		++s;
 	return (char*) s;
 }
@@ -40,23 +41,24 @@ CConfigHandler::~CConfigHandler()
 
 }
 
-int CConfigHandler::parse(const char *szFileName, int (*handler)(void *, const char *, const char *, const char *), void *object)
+int CConfigHandler::parse(const char *szFileName, int (*handler)(void *, const char *, const char *, const char *),
+		void *object)
 {
 	int nRet = -1;
 	FILE *pstream;
 
-	if ( isValidStr( szFileName, 255 ) )
+	if (isValidStr(szFileName, 255))
 	{
-		pstream = fopen( szFileName, "r" );
+		pstream = fopen(szFileName, "r");
 
-		if ( pstream )
+		if (pstream)
 		{
-			nRet = parseFile( pstream, handler, object );
-			fclose( pstream );
+			nRet = parseFile(pstream, handler, object);
+			fclose(pstream);
 		}
 		else
 		{
-			_DBG( "open config file %s fail", szFileName );
+			_DBG("open config file %s fail", szFileName);
 		}
 	}
 
@@ -64,7 +66,8 @@ int CConfigHandler::parse(const char *szFileName, int (*handler)(void *, const c
 
 }
 
-int CConfigHandler::parseFile(FILE *pFile, int (*handler)(void *, const char *, const char *, const char *), void *object)
+int CConfigHandler::parseFile(FILE *pFile, int (*handler)(void *, const char *, const char *, const char *),
+		void *object)
 {
 	char line[MAX_LINE];
 	char section[MAX_SECTION];
@@ -75,31 +78,31 @@ int CConfigHandler::parseFile(FILE *pFile, int (*handler)(void *, const char *, 
 	char *chr;
 	int lineno = 0;
 
-	memset( line, 0, sizeof(line) );
+	memset(line, 0, sizeof(line));
 
-	while ( fgets( line, MAX_LINE, pFile ) != NULL )
+	while (fgets(line, MAX_LINE, pFile) != NULL)
 	{
 		start = line;
-		start = lstrip( rstrip( start ) );
+		start = lstrip(rstrip(start));
 
-		if ( *start == ';' || *start == '#' || 0 >= strlen( start ) )
+		if (*start == ';' || *start == '#' || 0 >= strlen(start))
 		{
-			memset( line, 0, sizeof(line) );
+			memset(line, 0, sizeof(line));
 			continue;
 		}
 
 		/**
 		 * [section] line
 		 */
-		chr = strchr( line, '[' );
-		if ( chr )
+		chr = strchr(line, '[');
+		if (chr)
 		{
-			end = strchr( chr + 1, ']' );
-			if ( end )
+			end = strchr(chr + 1, ']');
+			if (end)
 			{
 				*end = '\0';
-				memset( section, 0, sizeof(section) );
-				strcpy( section, chr + 1 );
+				memset(section, 0, sizeof(section));
+				strcpy(section, chr + 1);
 			}
 			continue;
 		}
@@ -107,14 +110,14 @@ int CConfigHandler::parseFile(FILE *pFile, int (*handler)(void *, const char *, 
 		/**
 		 * name = value
 		 */
-		end = strchr( line, '=' );
-		if ( end && strlen( section ) )
+		end = strchr(line, '=');
+		if (end && strlen(section))
 		{
 			*end = '\0';
-			name = lstrip( rstrip( start ) );
-			value = lstrip( end + 1 );
-			rstrip( value );
-			handler( object, section, name, value );
+			name = lstrip(rstrip(start));
+			value = lstrip(end + 1);
+			rstrip(value);
+			handler(object, section, name, value);
 			++lineno;
 		}
 	}

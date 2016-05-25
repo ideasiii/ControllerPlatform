@@ -10,6 +10,7 @@
 #include <ctime>
 #include "CSqliteHandler.h"
 #include "common.h"
+#include "LogHandler.h"
 
 using namespace std;
 
@@ -46,11 +47,10 @@ int CSqliteHandler::openControllerDB(const char *dbPath)
 
 	if (rc)
 	{
-		_DBG("[Sqlite] Can't open controller database: %s", sqlite3_errmsg(dbController))
+		_log("[Sqlite] Can't open controller database: %s", sqlite3_errmsg(dbController));
 	}
 	else
 	{
-		_DBG("[Sqlite] Opened Controller database successfully")
 		sqlExec(dbController, "DROP TABLE controller;");
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS controller(id CHAR(50) NOT NULL, status INT NOT NULL, socket_fd INT NOT NULL, created_date DATE, updated_date DATE );";
@@ -69,11 +69,10 @@ int CSqliteHandler::openUserDB(const char *dbPath)
 
 	if (rc)
 	{
-		_DBG("[Sqlite] Can't open user database: %s", sqlite3_errmsg(dbUser))
+		_log("[Sqlite] Can't open user database: %s", sqlite3_errmsg(dbUser));
 	}
 	else
 	{
-		_DBG("[Sqlite] Opened user database successfully")
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS user(mac CHAR(20) NOT NULL, account CHAR(20), password CHAR(20), token CHAR(50), created_date DATE );";
 		if ( SQLITE_OK == sqlExec(dbUser, sql))
@@ -92,11 +91,10 @@ int CSqliteHandler::openIdeasDB(const char *dbPath)
 
 	if (rc)
 	{
-		_DBG("[Sqlite] Can't open ideas database: %s", sqlite3_errmsg(dbIdeas))
+		_log("[Sqlite] Can't open ideas database: %s", sqlite3_errmsg(dbIdeas));
 	}
 	else
 	{
-		_DBG("[Sqlite] Opened ideas database successfully")
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS user(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE DEFAULT (datetime('now','localtime')), PRIMARY KEY(id) );";
 		if ( SQLITE_OK == sqlExec(dbIdeas, sql))
@@ -115,11 +113,10 @@ int CSqliteHandler::openMdmDB(const char *dbPath)
 
 	if (rc)
 	{
-		_DBG("[Sqlite] Can't open mdm database: %s", sqlite3_errmsg(dbMdm))
+		_log("[Sqlite] Can't open mdm database: %s", sqlite3_errmsg(dbMdm));
 	}
 	else
 	{
-		_DBG("[Sqlite] Opened mdm database successfully")
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS `user` (`account`	TEXT NOT NULL,	`password`	TEXT NOT NULL,	`token`	TEXT NOT NULL UNIQUE,	`group`	INTEGER);";
 		if ( SQLITE_OK == sqlExec(dbMdm, sql))
@@ -142,8 +139,6 @@ void CSqliteHandler::close()
 	dbController = 0;
 	dbUser = 0;
 	dbMdm = 0;
-
-	_DBG("[Sqlite] Closed database successfully")
 }
 
 CSqliteHandler* CSqliteHandler::getInstance()
@@ -186,16 +181,12 @@ int CSqliteHandler::mdmSqlExec(const char *szSql)
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql)
 {
 	char *zErrMsg = 0;
-	_DBG("[Sqlite] SQL exec: %s", szSql)
+	_log("[Sqlite] SQL exec: %s", szSql);
 	int rc = sqlite3_exec(db, szSql, callback, 0, &zErrMsg);
 	if (rc != SQLITE_OK)
 	{
-		_DBG("[Sqlite] SQL error: %s\n", zErrMsg)
+		_log("[Sqlite] SQL exec error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
-	}
-	else
-	{
-		_DBG("[Sqlite] SQL exec successfully : %s", szSql);
 	}
 
 	return rc;
@@ -228,7 +219,7 @@ int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *sz
 		}
 		else
 		{
-			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
+			_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
 			break;
 		}
 	}
@@ -265,7 +256,7 @@ int CSqliteHandler::getControllerColumeValue(const char *szTable, const char *sz
 		}
 		else
 		{
-			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
+			_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
 			break;
 		}
 	}
@@ -296,7 +287,7 @@ int CSqliteHandler::getControllerColumeValueInt(const char *szSql, std::list<int
 		{
 			if (s != SQLITE_DONE)
 			{
-				_DBG("[Sqlite] SQL:%s exec fail", szSql);
+				_log("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
@@ -330,7 +321,7 @@ int CSqliteHandler::ideasSqlExec(const char *szSql, list<string> &listValue, int
 		{
 			if (s != SQLITE_DONE)
 			{
-				_DBG("[Sqlite] SQL:%s exec fail", szSql);
+				_log("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
@@ -369,7 +360,7 @@ int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql, std::list<std::strin
 		{
 			if (s != SQLITE_DONE)
 			{
-				_DBG("[Sqlite] SQL:%s exec fail", szSql);
+				_log("[Sqlite] SQL:%s exec fail", szSql);
 			}
 			break;
 		}
@@ -394,12 +385,12 @@ bool CSqliteHandler::isAppIdExist(const std::string strAppId)
 	{
 		case SQLITE_ROW:
 			text = sqlite3_column_text(stmt, 1);
-			_DBG("[Sqlite] get App Id count: %s", text)
+			_log("[Sqlite] get App Id count: %s", text);
 			break;
 		case SQLITE_DONE:
 			break;
 		default:
-			_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str())
+			_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
 			break;
 	}
 	return bExist;
@@ -425,7 +416,7 @@ bool CSqliteHandler::getUserAuth(std::string strMAC)
 	}
 	else
 	{
-		_DBG("[Sqlite] SQL:%s exec fail", strSql.c_str());
+		_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
 	}
 
 	sqlite3_finalize(stmt);

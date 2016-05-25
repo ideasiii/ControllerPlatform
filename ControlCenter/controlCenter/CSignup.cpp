@@ -41,7 +41,7 @@ int CSignup::insert(string strJSON)
 		{
 			if (isExist(tag->valuestring))
 			{
-				_DBG("Sign up id :%s is Existed.", tag->valuestring)
+				_DBG("Sign up id :%s is Existed.", tag->valuestring);
 				return RECORD_EXIST;
 			}
 			string strId = tag->valuestring;

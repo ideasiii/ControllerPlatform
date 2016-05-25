@@ -13,6 +13,7 @@
 #include "common.h"
 #include "packet.h"
 #include "CDataHandler.cpp"
+#include "LogHandler.h"
 
 static CCmpHandler* cmpHandler = 0;
 
@@ -272,13 +273,13 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 	}
 	else
 	{
-		_ERR("CMP body length error")
+		_log("[CMP Parser]CMP body length error");
 		nRet = -1;
 	}
 
 	if (-1 == nRet)
 	{
-		_ERR("parse CMP body fail")
+		_log("[CMP Parser] parse CMP body fail");
 	}
 	else
 	{

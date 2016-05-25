@@ -13,6 +13,7 @@
 #include <linux/if_link.h>
 #include <ifaddrs.h>
 #include "CSocket.h"
+#include "LogHandler.h"
 
 #define FLAGS	MSG_NOSIGNAL // send & recv flag
 CSocket::CSocket() :
@@ -72,13 +73,11 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 				_DBG("[Socket] set sin_addr = %s", szIP);
 			}
 			inAddr.sin_port = htons(m_nPort);
-			_DBG("[Socket] listen port = %d", m_nPort)
-			;
+			_DBG("[Socket] listen port = %d", m_nPort);
 			break;
 		default:
 			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			_DBG("[Socket] Unknown socket type")
-			;
+			_DBG("[Socket] Unknown socket type");
 			return -1;
 			break;
 	}
@@ -102,13 +101,11 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 		case SOCK_DGRAM:
 			m_nSocketFD = socket(nSocketType, SOCK_DGRAM, IPPROTO_UDP);
 			if (-1 != m_nSocketFD)
-				_DBG("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD)
-			;
+				_DBG("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
 			break;
 		default:
 			m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-			_DBG("[Socket] create stream socket")
-			;
+			_DBG("[Socket] create stream socket");
 			break;
 	}
 
@@ -345,7 +342,7 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 	{
 		case SOCK_STREAM: /*virtual circuit*/
 			nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
-			_DBG("[Socket] socket recv: %d", nResult)
+			_log("[Socket] socket recv: %d", nResult);
 			break;
 		case SOCK_DGRAM: /*datagram*/
 			if (0 != pClientSockaddr)
@@ -355,8 +352,8 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 				nResult = recvfrom(nSockFD, *pBuf, BUF_SIZE, FLAGS, (sockaddr *) pClientSockaddr, &slen);
 				if (0 < nResult)
 				{
-					_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
-							ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
+					_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
+							ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
 				}
 			}
 			break;
@@ -385,7 +382,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 	{
 		case SOCK_STREAM: /*virtual circuit*/
 			nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
-			_DBG("[Socket] socket recv: %d", nResult)
+			_log("[Socket] socket recv: %d", nResult);
 			break;
 		case SOCK_DGRAM: /*datagram*/
 			if (0 != pClientSockaddr)
@@ -525,7 +522,7 @@ int CSocket::socketAccept()
 			nResult = accept(getSocketfd(), (struct sockaddr *) &inClientAddr, &sLen);
 			break;
 		default:
-			_DBG("socket type: %d", nSocketType)
+			_DBG("socket type: %d", nSocketType);
 			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
 			nResult = -1;
 			break;
