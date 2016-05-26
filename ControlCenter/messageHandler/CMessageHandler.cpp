@@ -195,7 +195,7 @@ int CMessageHandler::registerMsq(const long lkey)
 	{
 		nMsqid = msgget(lkey, msgflg);
 
-		if (0 >= nMsqid)
+		if (0 >= nMsqid && 17 != errno)
 		{
 			_log("[Message] message queue init fail, msqid=%d error=%s errorno=%d", nMsqid, strerror(errno),
 			errno);

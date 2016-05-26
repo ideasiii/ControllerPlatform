@@ -259,17 +259,17 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
+
+			memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+			nCommandResp = generic_nack | nCommand;
+			cmpHeader.command_id = htonl(nCommandResp);
+			cmpHeader.command_status = htonl( STATUS_ROK);
+			cmpHeader.sequence_number = htonl(nSequence);
+			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
+
 			if ( enquire_link_request == nCommand)
 			{
-				_DBG("[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nClientFD);
-				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-				nCommandResp = generic_nack | nCommand;
-				cmpHeader.command_id = htonl(nCommandResp);
-				cmpHeader.command_status = htonl( STATUS_ROK);
-				cmpHeader.sequence_number = htonl(nSequence);
-				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 				continue;
 			}
 
@@ -290,6 +290,11 @@ int CSocketServer::runSMSHandler(int nClientFD)
 							result);
 					break;
 				}
+			}
+
+			if (access_log_request == nCommand)
+			{
+				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
 			}
 		}
 		else if (0 >= result)

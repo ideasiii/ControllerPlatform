@@ -68,7 +68,7 @@ void CCmpTest::connectCenter(const std::string strIP, const int nPort)
 		return;
 	}
 
-	_DBG("TCP Socket connect success")
+	_DBG("TCP Socket connect success");
 }
 
 void CCmpTest::cmpInitialRequest()
@@ -203,7 +203,7 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 
 	if (-1 == mSocket)
 	{
-		_DBG("TCP Socket invalid")
+		_DBG("TCP Socket invalid");
 		return nRet;
 	}
 

@@ -21,6 +21,8 @@
 #include "Config.h"
 #include "utility.h"
 
+using namespace std;
+
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
 
@@ -33,10 +35,14 @@ void options(int argc, char **argv);
 
 int main(int argc, char* argv[])
 {
+
+	// parent process run process monitor
 	Watching();
 
 	// child process run service
 	runService(argc, argv);
+
+	closeMessage();
 
 	return EXIT_SUCCESS;
 }
@@ -53,6 +59,7 @@ int Watching()
 
 	do
 	{
+		_DBG("[Process] Fork Child Process...");
 		child_pid = fork();
 		if (child_pid == -1)
 		{
@@ -79,7 +86,6 @@ int Watching()
 		signal( SIGPIPE, SIG_IGN);
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
-		closeMessage();
 
 		if (w == -1)
 		{
@@ -101,6 +107,10 @@ int Watching()
 		else if (WIFCONTINUED(status))
 		{
 			_DBG("[Process] continued\n");
+		}
+		else
+		{
+			_DBG("[Process] receive signal: %d\n", status);
 		}
 		sleep(3);
 	}
@@ -129,7 +139,6 @@ void PSigHander(int signo)
 		return;
 	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
-	closeMessage();
 	sleep(3);
 	kill(child_pid, SIGKILL);
 }
@@ -151,7 +160,10 @@ void closeMessage()
  */
 void runService(int argc, char* argv[])
 {
-	std::string strLogPath = "/data/opt/tomcat/webapps/logs/mongodbController.log";
+
+	LogHandler *logAgent = LogHandler::getInstance();
+	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
+
 	int nServerPort = 6607;
 
 	options(argc, argv);
@@ -165,22 +177,18 @@ void runService(int argc, char* argv[])
 	std::string strProcessName = strArgv.substr(++found);
 
 	strConf = strProcessName + ".conf";
-	_DBG("Config file is:%s", strConf.c_str());
+	_log("Config file is:%s", strConf.c_str());
 
 	if (!strConf.empty())
 	{
 		Config *config = new Config();
 		if ( FALSE != config->loadConfig(strConf))
 		{
-			strLogPath = config->getValue("LOG", "log");
+			logAgent->setLogPath(config->getValue("LOG", "log"));
 			convertFromString(nServerPort, config->getValue("SERVER", "port"));
 		}
 		delete config;
 	}
-
-	/** Run Log Agent **/
-	LogHandler *logAgent = LogHandler::getInstance();
-	logAgent->setLogPath(strLogPath);
 
 	CControlCenter *controlCenter = CControlCenter::getInstance();
 
@@ -195,8 +203,8 @@ void runService(int argc, char* argv[])
 		}
 	}
 
+	_log("[Process] child process exit");
 	delete logAgent;
-	_DBG("[Process] child process exit");
 }
 
 /**
