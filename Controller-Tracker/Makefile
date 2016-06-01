@@ -11,7 +11,6 @@ include modules.mk
 TARGET    := controller-tracker
 CC        := g++
 LD        := g++
-STD11     := #-std=c++11
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
@@ -19,7 +18,6 @@ SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdi
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
-EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
@@ -38,7 +36,7 @@ vpath %.cpp $(SRC_DIR)
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(STD11) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
 	@echo -ne '###### $1 Object Build Done. ######\n'
 	@echo "\n"
 endef
@@ -95,7 +93,6 @@ mk_debug:
 	@echo 'Source Director : '$(SRC_DIR)"\n"
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
-	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
 	
 package-s:
 	yum -y install sqlite-devel.x86_64
