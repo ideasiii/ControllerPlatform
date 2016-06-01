@@ -10,7 +10,5 @@ export MODULES=global_inc \
 			 cmpHandler \
 			 sqliteHandler \
 			 httpHandler \
-			 jsonHandler \
-			 serApiHandler
+			 jsonHandler
 
-export EXT_MODULES=extInclude
