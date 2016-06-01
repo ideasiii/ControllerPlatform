@@ -54,7 +54,7 @@ void LogHandler::setLogPath(std::string strPath)
 	{
 		mstrLogPath = strPath;
 		mkdirp(mstrLogPath);
-		_DBG("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
+		_log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
 	}
 }
 

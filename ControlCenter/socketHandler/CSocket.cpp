@@ -19,14 +19,12 @@
 CSocket::CSocket() :
 		m_nSocketType( AF_INET), m_nSocketFD(-1), m_nPort(-1), m_nLastError(0), m_nSocketStyle( SOCK_STREAM)
 {
-	// TODO Auto-generated constructor stub
 	memset(szPath, 0, sizeof(szPath));
 	memset(szIP, 0, sizeof(szIP));
 }
 
 CSocket::~CSocket()
 {
-	// TODO Auto-generated destructor stub
 	socketClose();
 }
 
@@ -60,7 +58,6 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 			if (0 >= strlen(szIP))
 			{
 				inAddr.sin_addr.s_addr = INADDR_ANY;
-				_DBG("[Socket] set sin_addr = INADDR_ANY");
 			}
 			else
 			{
@@ -69,15 +66,11 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 					perror("inet_aton");
 					return -1;
 				}
-
-				_DBG("[Socket] set sin_addr = %s", szIP);
 			}
 			inAddr.sin_port = htons(m_nPort);
-			_DBG("[Socket] listen port = %d", m_nPort);
 			break;
 		default:
 			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			_DBG("[Socket] Unknown socket type");
 			return -1;
 			break;
 	}
@@ -91,21 +84,21 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 			m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
 			if ( AF_UNIX == nSocketType && -1 != m_nSocketFD)
 			{
-				_DBG("[Socket] create doamin socket success , socket FD = %d", m_nSocketFD);
+				_log("[Socket] create doamin socket success , socket FD = %d", m_nSocketFD);
 			}
 			if ( AF_INET == nSocketType && -1 != m_nSocketFD)
 			{
-				_DBG("[Socket] create TCP socket success , socket FD = %d", m_nSocketFD);
+				_log("[Socket] create TCP socket success , socket FD = %d", m_nSocketFD);
 			}
 			break;
 		case SOCK_DGRAM:
 			m_nSocketFD = socket(nSocketType, SOCK_DGRAM, IPPROTO_UDP);
 			if (-1 != m_nSocketFD)
-				_DBG("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
+				_log("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
 			break;
 		default:
 			m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-			_DBG("[Socket] create stream socket");
+			_log("[Socket] create stream socket");
 			break;
 	}
 
@@ -170,7 +163,6 @@ int CSocket::setInetSocket(const char * szAddr, short nPort)
 	{
 		strcpy(szIP, szAddr);
 		m_nPort = nPort;
-		_DBG("set address=%s port=%d", szIP, m_nPort);
 		return 0;
 	}
 
@@ -208,7 +200,7 @@ int CSocket::connectServer()
 			server = gethostbyname((const char *) szIP);
 			if (server == NULL)
 			{
-				_DBG("ERROR, no such host");
+				_log("[Socket] ERROR, no such host");
 				return -1;
 			}
 			bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -217,7 +209,7 @@ int CSocket::connectServer()
 			server->h_length);
 			serv_addr.sin_port = htons(m_nPort);
 			nResult = connect(getSocketfd(),(struct sockaddr *)&serv_addr,sizeof(serv_addr));
-			_DBG("connect to: IP=%s port=%d", szIP, m_nPort);
+			_log("connect to: IP=%s port=%d", szIP, m_nPort);
 			break;
 			default:
 			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
@@ -326,8 +318,8 @@ int CSocket::socketSend(struct sockaddr_in &rSocketAddr, const void* pBuf, int n
 
 	nSend = sendto(getSocketfd(), pBuf, (unsigned long int) nBufLen, FLAGS, (struct sockaddr *) &rSocketAddr,
 			(unsigned int) sizeof(rSocketAddr));
-	_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
-			inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
+	//_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
+	//		inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
 	return nSend;
 }
 
@@ -342,7 +334,7 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 	{
 		case SOCK_STREAM: /*virtual circuit*/
 			nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
-			_log("[Socket] socket recv: %d", nResult);
+			//		_log("[Socket] socket recv: %d", nResult);
 			break;
 		case SOCK_DGRAM: /*datagram*/
 			if (0 != pClientSockaddr)
@@ -352,8 +344,8 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 				nResult = recvfrom(nSockFD, *pBuf, BUF_SIZE, FLAGS, (sockaddr *) pClientSockaddr, &slen);
 				if (0 < nResult)
 				{
-					_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
-							ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
+					//				_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
+					//						ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
 				}
 			}
 			break;
@@ -382,7 +374,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 	{
 		case SOCK_STREAM: /*virtual circuit*/
 			nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
-			_log("[Socket] socket recv: %d", nResult);
+			//		_log("[Socket] socket recv: %d", nResult);
 			break;
 		case SOCK_DGRAM: /*datagram*/
 			if (0 != pClientSockaddr)
@@ -392,8 +384,8 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 				nResult = recvfrom(nSockFD, *pBuf, nSize, FLAGS, (sockaddr *) pClientSockaddr, &slen);
 				if (0 < nResult)
 				{
-					_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
-							ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
+					//				_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
+					//						ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
 				}
 			}
 			break;
@@ -426,7 +418,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 	{
 		bValid = FD_ISSET(nSocketFD, &socketSet);
 	}
-	_DBG("[Socket] select socket FD :%d", bValid);
+//	_DBG("[Socket] select socket FD :%d", bValid);
 	return bValid;
 }
 
@@ -522,7 +514,7 @@ int CSocket::socketAccept()
 			nResult = accept(getSocketfd(), (struct sockaddr *) &inClientAddr, &sLen);
 			break;
 		default:
-			_DBG("socket type: %d", nSocketType);
+//			_DBG("socket type: %d", nSocketType);
 			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
 			nResult = -1;
 			break;
@@ -550,14 +542,13 @@ void CSocket::socketClose()
 		m_nSocketFD = -1;
 		setSocketType(-1);
 		setLastError(ERROR_OK);
-
-		_DBG("socket close...");
 	}
 }
 
 void CSocket::socketClose(int nSocketFD)
 {
 	close(nSocketFD);
+	_log("[Socket] socket close FDt: %d", nSocketFD);
 }
 
 void CSocket::setSocketStyle(int nStyle)

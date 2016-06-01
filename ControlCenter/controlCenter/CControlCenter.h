@@ -11,6 +11,7 @@
 #include <vector>
 #include <list>
 #include "CObject.h"
+#include "common.h"
 
 #define MAX_FUNC_POINT		256
 
@@ -20,8 +21,6 @@ class CSqliteHandler;
 class CThreadHandler;
 class CJsonHandler;
 class CAccessLog;
-class CSerApi;
-class CMdmHandler;
 class CAuthentication;
 
 class CControlCenter: public CObject
@@ -29,10 +28,10 @@ class CControlCenter: public CObject
 	public:
 		virtual ~CControlCenter();
 		static CControlCenter* getInstance();
-		int init(std::string strConf);
 		int startServer(const int nPort);
 		void stopServer();
-		void runEnquireLinkRequest();
+		void runEnquireLinkRequest();BOOL startSqlite(const int nDBId, const std::string strDB);BOOL startMongo(
+				const std::string strIP, const int nPort);
 
 	protected:
 		void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -52,8 +51,6 @@ class CControlCenter: public CObject
 		int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
-		int cmpMdmLogin(int nSocket, int nCommand, int nSequence, const void *pData);
-		int cmpMdmOperate(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData);
 		int cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData);
 
@@ -78,8 +75,6 @@ class CControlCenter: public CObject
 		CThreadHandler *tdEnquireLink;
 		CThreadHandler *tdExportLog;
 		CAccessLog *accessLog;
-		CSerApi *serapi;
-		CMdmHandler *mdm;
 		std::vector<int> vEnquireLink;
 		CAuthentication* authentication;
 

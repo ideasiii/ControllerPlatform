@@ -13,13 +13,14 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "CConfig.h"
 #include "CControlCenter.h"
 #include "CMessageHandler.h"
 #include "common.h"
 #include "event.h"
 #include "LogHandler.h"
-#include "Config.h"
 #include "utility.h"
+#include "config.h"
 
 using namespace std;
 
@@ -59,7 +60,6 @@ int Watching()
 
 	do
 	{
-		_DBG("[Process] Fork Child Process...");
 		child_pid = fork();
 		if (child_pid == -1)
 		{
@@ -160,16 +160,18 @@ void closeMessage()
  */
 void runService(int argc, char* argv[])
 {
+	std::string strArgv;
+	std::string strConf;
+	std::string strSqliteDBController;
+	std::string strSqliteDBIdeas;
+	int nServerPort = 6607;
 
 	LogHandler *logAgent = LogHandler::getInstance();
 	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
 
-	int nServerPort = 6607;
-
 	options(argc, argv);
 
-	std::string strArgv;
-	std::string strConf;
+	CControlCenter *controlCenter = CControlCenter::getInstance();
 
 	strArgv = argv[0];
 
@@ -177,33 +179,36 @@ void runService(int argc, char* argv[])
 	std::string strProcessName = strArgv.substr(++found);
 
 	strConf = strProcessName + ".conf";
-	_log("Config file is:%s", strConf.c_str());
 
 	if (!strConf.empty())
 	{
-		Config *config = new Config();
+		CConfig *config = new CConfig();
 		if ( FALSE != config->loadConfig(strConf))
 		{
 			logAgent->setLogPath(config->getValue("LOG", "log"));
 			convertFromString(nServerPort, config->getValue("SERVER", "port"));
+			strSqliteDBController = config->getValue("SQLITE", "db_controller");
+			strSqliteDBIdeas = config->getValue("SQLITE", "db_ideas");
 		}
 		delete config;
 	}
 
-	CControlCenter *controlCenter = CControlCenter::getInstance();
-
-	if (controlCenter->init(strConf) && -1 != controlCenter->initMessage( MSG_ID))
+	if (controlCenter->initMessage( MSG_ID) && controlCenter->startSqlite(ID_DB_CONTROLLER, strSqliteDBController)
+			&& controlCenter->startSqlite(ID_DB_IDEAS, strSqliteDBIdeas) && controlCenter->startServer(nServerPort)
+			&& controlCenter->startMongo("127.0.0.1", 27027))
 	{
-		if (controlCenter->startServer(nServerPort))
-		{
-			_DBG("<============= Service Start Run =============>");
-			controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
-			_DBG("<============= Service Stop Run =============>");
-			controlCenter->stopServer();
-		}
+		_log("<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>");
+		controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
+		_log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>");
+		controlCenter->stopServer();
+	}
+	else
+	{
+		closeMessage();
+		PSigHander(SIGINT);
 	}
 
-	_log("[Process] child process exit");
+	_log("[Process] Child process say: good bye~");
 	delete logAgent;
 }
 

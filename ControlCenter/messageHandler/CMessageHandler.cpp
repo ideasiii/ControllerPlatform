@@ -74,7 +74,7 @@ int CMessageHandler::init(const long lkey)
 			}
 			else
 			{
-				_DBG("[Message] Queue size = %lu", ds.msg_qbytes);
+				//	_DBG("[Message] Queue size = %lu", ds.msg_qbytes);
 				ds.msg_qbytes = 1024 * 1024 * 8;
 				if (msgctl(nMsqid, IPC_SET, &ds))
 				{

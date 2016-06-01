@@ -28,14 +28,12 @@ int CSocketServer::m_nInternalEventFilter = 7000;
 CSocketServer::CSocketServer() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0)
 {
-	// TODO Auto-generated constructor stub
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
 }
 
 CSocketServer::~CSocketServer()
 {
-	// TODO Auto-generated destructor stub
 	delete threadHandler;
 	if (udpClientData)
 	{
@@ -72,7 +70,7 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 	{
 		if (-1 == setInetSocket(cszAddr, nPort))
 		{
-			_DBG("set INET socket address & port fail");
+			_log("set INET socket address & port fail");
 			return -1;
 		}
 	}
@@ -185,7 +183,6 @@ int CSocketServer::runClientHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 
@@ -206,7 +203,6 @@ int CSocketServer::runClientHandler(int nClientFD)
 
 		if (externalEvent.isValid())
 		{
-			//	_DBG("[Socket Server] Send Message : FD=%d len=%d", nFD, result);
 			sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, result, pBuf);
 		}
 		else
@@ -286,7 +282,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 					}
 					socketClose(nClientFD);
-					_DBG("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
 							result);
 					break;
 				}
@@ -304,7 +300,6 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_log("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 		else
