@@ -10,7 +10,7 @@
 
 using namespace std;
 
-/**
- * Log list
- */
+
+
+/* Log list*/
 volatile list<string> extListLog;

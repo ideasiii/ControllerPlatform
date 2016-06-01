@@ -28,14 +28,15 @@ CObject::~CObject()
 
 int CObject::initMessage(int nKey)
 {
-	int nRet;
+	int nMsqid;
 
-	nRet = messageHandler->init(nKey);
-	if (-1 == nRet)
+	nMsqid = messageHandler->init(nKey);
+	if (0 >= nMsqid)
 	{
-		throwException("Create message queue fail");
+		//throwException("Create message queue fail");
+		return FALSE;
 	}
-	return nRet;
+	return TRUE;
 }
 
 int CObject::run(int nRecvEvent)

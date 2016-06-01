@@ -9,10 +9,7 @@ export MODULES=global_inc \
 			 dataHandler	\
 			 cmpHandler	\
 			 sqliteHandler	\
-			 httpHandler \
 			 jsonHandler \
-			 serApiHandler \
-			 mdmHandler \
 			 logHandler
 			 
 export EXT_MODULES=extInclude

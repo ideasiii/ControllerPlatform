@@ -6,7 +6,7 @@
  */
 
 #include <list>
-#include "Config.h"
+#include <ctime>
 #include "common.h"
 #include "CSocketServer.h"
 #include "event.h"
@@ -20,10 +20,9 @@
 #include "CAccessLog.h"
 #include "CInitial.h"
 #include "CSignup.h"
-#include "CSerApi.h"
-#include "CMdmHandler.h"
 #include "CAuthentication.h"
-#include <ctime>
+
+#include "config.h"
 
 using namespace std;
 
@@ -37,7 +36,7 @@ void *threadEnquireLinkRequest(void *argv);
  */
 int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
 {
-	//controlcenter->receiveCenterCMP(nSocketFD, nDataLen, pData);
+	//controlcenter->receiveCMP(nSocketFD, nDataLen, pData);
 	return 0;
 }
 
@@ -53,8 +52,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 CControlCenter::CControlCenter() :
 		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
 				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), accessLog(
-				CAccessLog::getInstance()), serapi(CSerApi::getInstance()), mdm(CMdmHandler::getInstance()), authentication(
-				CAuthentication::getInstance())
+				CAccessLog::getInstance()), authentication(CAuthentication::getInstance())
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
 	{
@@ -67,8 +65,6 @@ CControlCenter::CControlCenter() :
 	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
 	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
 	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
-	cmpRequest[mdm_login_request] = &CControlCenter::cmpMdmLogin;
-	cmpRequest[mdm_operate_request] = &CControlCenter::cmpMdmOperate;
 	cmpRequest[sdk_tracker_request] = &CControlCenter::cmpSdkTracker;
 	cmpRequest[authentication_request] = &CControlCenter::cmpAuthentication;
 }
@@ -87,64 +83,46 @@ CControlCenter* CControlCenter::getInstance()
 	return controlcenter;
 }
 
-int CControlCenter::init(std::string strConf)
+BOOL CControlCenter::startMongo(const std::string strIP, const int nPort)
 {
-
-	/** Load config file **/
-	Config *config = new Config();
-	if ( FALSE == config->loadConfig(strConf))
+	if (-1 != accessLog->connectDB(strIP, nPort))
 	{
-		_DBG("Load Config File Fail:%s", strConf.c_str());
-		delete config;
+		_log("[Center] Connect Mongodb Controller Success");
+		return TRUE;
+	}
+	else
+	{
+		_log("[Center] Connect Mongodb Controller Fail");
+	}
+	return FALSE;
+}
+
+BOOL CControlCenter::startSqlite(const int nDBId, const std::string strDB)
+{
+	if (strDB.empty())
 		return FALSE;
-	}
 
-	string strControllerDB = config->getValue("SQLITE", "db_controller");
-	string strIdeasDB = config->getValue("SQLITE", "db_ideas");
-	string strMdmDB = config->getValue("SQLITE", "db_mdm");
-	delete config;
+	mkdirp(strDB);
 
-	if (strControllerDB.empty())
+	switch (nDBId)
 	{
-		strControllerDB = "/data/sqlite/controller.db";
+		case ID_DB_CONTROLLER:
+			if (!sqlite->openControllerDB(strDB.c_str()))
+			{
+				_log("[Center] Open Sqlite DB controller fail");
+				return FALSE;
+			}
+			break;
+		case ID_DB_IDEAS:
+			if (!sqlite->openIdeasDB(strDB.c_str()))
+			{
+				_log("[Center] Open Sqlite DB ideas fail");
+				return FALSE;
+			}
+			break;
+		default:
+			return FALSE;
 	}
-	mkdirp(strControllerDB);
-	if (!sqlite->openControllerDB(strControllerDB.c_str()))
-	{
-		_DBG("[Center] Open Sqlite DB controller fail");
-		return FALSE;
-	}
-	_DBG("[Center] Open Sqlite DB controller Success");
-
-	if (strIdeasDB.empty())
-	{
-		strIdeasDB = "/data/sqlite/ideas.db";
-	}
-	mkdirp(strIdeasDB);
-	if (!sqlite->openIdeasDB(strIdeasDB.c_str()))
-	{
-		_DBG("[Center] Open Sqlite DB ideas fail");
-		return FALSE;
-	}
-	_DBG("[Center] Open Sqlite DB ideas Success");
-
-	if (strMdmDB.empty())
-	{
-		strMdmDB = "/data/sqlite/mdm.db";
-	}
-	mkdirp(strMdmDB);
-	if (!sqlite->openMdmDB(strMdmDB.c_str()))
-	{
-		_DBG("[Center] Open Sqlite DB mdm fail");
-		return FALSE;
-	}
-	_DBG("[Center] Open Sqlite DB mdm Success");
-
-	if (-1 != accessLog->connectDB("127.0.0.1", 27027))
-	{
-		_DBG("[Center] Connect Mongodb Controller Success");
-	}
-
 	return TRUE;
 }
 
@@ -393,22 +371,11 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-		_log("[Center] Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+		_log("[Center] cmpAccessLog Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
 
 		int nType = -1;
 		convertFromString(nType, rData["type"]);
-		//string strOID = accessLog->insertLog(nType, rData["data"]);
 		accessLog->cmpAccessLogRequest(rData["type"], rData["data"]);
-//		if (strOID.empty())
-//		{
-//			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-//			printLog("Insert Access Log Fail: " + rData["data"], "[Center]", mConfig.strLogPath);
-//		}
-//		else
-//		{
-//			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
-//			printLog("Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Center]", mConfig.strLogPath);
-//		}
 	}
 	else
 	{
@@ -520,50 +487,6 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	else
 	{
 		_log("[Center] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-	}
-	rData.clear();
-	return nRet;
-}
-
-int CControlCenter::cmpMdmLogin(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	CDataHandler<std::string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("account") && rData.isValidKey("password"))
-	{
-		_log("[Center] cmpMdmLogin Body: account=%s password=%s", rData["account"].c_str(), rData["password"].c_str());
-
-		string strToken = trim(mdm->login(rData["account"], rData["password"]));
-		rData.clear();
-		if (strToken.empty())
-		{
-			sendCommand(nSocket, nCommand, STATUS_RMDMLOGINFAIL, nSequence, true);
-			return FAIL;
-		}
-		nRet = cmpMdmLoginResponse(nSocket, nSequence, strToken.c_str());
-	}
-	else
-	{
-		_log("[Center] MDM Login Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-	}
-
-	return nRet;
-}
-
-int CControlCenter::cmpMdmOperate(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	CDataHandler<std::string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("token"))
-	{
-		_log("[Center] cmpMdmOperate Body: token=%s ", rData["token"].c_str());
-		nRet = cmpResponse(nSocket, mdm_login_response, nSequence, "opreate_json");
-	}
-	else
-	{
-		_log("[Center] MDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();

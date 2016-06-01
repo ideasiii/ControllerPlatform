@@ -148,7 +148,6 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			if ( enquire_link_request == nCommand)
 			{
-				_DBG("[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl(nCommandResp);
@@ -156,7 +155,6 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				continue;
 			}
 
@@ -172,7 +170,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
 					}
 					socketClose(nSocketFD);
-					_DBG("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
+					_log("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
 							nBodyLen, result);
 					break;
 				}
@@ -185,7 +183,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
 			}
 			socketClose(nSocketFD);
-			_DBG("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
+			_log("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
 			break;
 		}
 
@@ -196,14 +194,14 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
 			}
 			socketClose(nSocketFD);
-			_DBG("[Socket Client] socket client close: %d", nSocketFD);
 			break;
 		}
 
 		if (externalEvent.isValid())
 		{
 			ClientReceive(nSocketFD, nTotalLen, &cmpPacket);
-			//sendMessage( externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen, &cmpPacket );
+			//sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen,
+			//		&cmpPacket);
 		}
 		else
 		{
