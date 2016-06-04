@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include "CSocket.h"
-
+#include "LogHandler.h"
 #define FLAGS	MSG_NOSIGNAL // send & recv flag
 CSocket::CSocket() :
 		m_nSocketType( AF_INET ), m_nSocketFD( -1 ), m_nPort( -1 ), m_nLastError( 0 ), m_nSocketStyle( SOCK_STREAM )
@@ -393,7 +393,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 				nResult = recvfrom( nSockFD, *pBuf, nSize, FLAGS, (sockaddr *) pClientSockaddr, &slen );
 				if ( 0 < nResult )
 				{
-					_DBG( "[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa( pClientSockaddr->sin_addr ), ntohs( pClientSockaddr->sin_port ), (char* )*pBuf );
+					_log( "[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa( pClientSockaddr->sin_addr ), ntohs( pClientSockaddr->sin_port ), (char* )*pBuf );
 				}
 			}
 			break;
@@ -439,7 +439,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, int nTimeout)
 				{
 					nResult = recv( nSockFD, *pBuf, nSize, FLAGS );
 					close( epfd );
-					_DBG( "[Socket] socket recv: %d", nResult )
+					_DBG( "[Socket] socket recv: %d", nResult );
 					return nResult;
 				}
 			}
@@ -453,7 +453,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, int nTimeout)
 	}
 	else
 	{
-		_DBG( "[Socket] Socket Receive Fail, Invalid Socket Style." )
+		_DBG( "[Socket] Socket Receive Fail, Invalid Socket Style." );
 	}
 
 	return nResult;
@@ -570,8 +570,7 @@ int CSocket::socketAccept()
 			nResult = accept( getSocketfd(), (struct sockaddr *) &inClientAddr, &sLen );
 			break;
 		default:
-			_DBG( "socket type: %d", nSocketType )
-			;
+			_DBG( "socket type: %d", nSocketType );
 			setLastError( ERROR_UNKNOW_SOCKET_TYPE );
 			nResult = -1;
 			break;

@@ -10,7 +10,7 @@
 #include "CSocketClient.h"
 #include "CSocketServer.h"
 #include <string>
-
+#include "LogHandler.h"
 using namespace std;
 
 static ClientHandler* clientHandler = 0;
@@ -75,7 +75,7 @@ int ClientHandler::cmpBindRequest(const int nSocket, string strMAC)
 	nRet = cmpClient->socketSend( nSocket, &packet, nTotal_len );
 
 	string strMsg = "Bind to Center Controller ID:" + strMAC;
-	printLog( strMsg, "[ClientHandler]", G_LOG_PATH );
+	_log( "[ClientHandler] %s", strMsg.c_str());
 	return nRet;
 }
 

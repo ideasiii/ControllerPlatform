@@ -11,13 +11,14 @@
 #include "CSqliteHandler.h"
 #include "common.h"
 #include <vector>
-
+#include "LogHandler.h"
 using namespace std;
 
 static sqlite3 *dbDevice = 0;
 static sqlite3 *dbUser = 0;
 static sqlite3 *dbIdeas = 0;				// For Ideas SDK
 static sqlite3 *dbConfig = 0;
+static sqlite3 *dbField = 0;
 
 /**
  * init single return object
@@ -29,7 +30,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 	int i;
 	for ( i = 0; i < argc ; i++ )
 	{
-		_DBG( "[Sqlite] %s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL" );
+		_log( "[Sqlite] %s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL" );
 	}
 	return 0;
 }
@@ -50,11 +51,11 @@ int CSqliteHandler::openDeviceDB(const char *dbPath)
 
 	if ( rc )
 	{
-		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbDevice ) )
+		_log( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbDevice ) );
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened device database successfully" )
+		_DBG( "[Sqlite] Opened device database successfully" );
 		sqlExec( dbDevice, "DROP TABLE device;" );
 		const char *sql = "CREATE TABLE IF NOT EXISTS device(id CHAR(50) NOT NULL, status INT NOT NULL, socket_fd INT NOT NULL, created_date DATE, updated_date DATE );";
 		if ( SQLITE_OK == sqlExec( dbDevice, sql ) )
@@ -72,11 +73,11 @@ int CSqliteHandler::openUserDB(const char *dbPath)
 
 	if ( rc )
 	{
-		_DBG( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbUser ) )
+		_log( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbUser ) );
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened user database successfully" )
+		_DBG( "[Sqlite] Opened user database successfully" );
 		const char *sql = "CREATE TABLE IF NOT EXISTS user(mac CHAR(20) NOT NULL, account CHAR(20), password CHAR(20), token CHAR(50), created_date DATE );";
 		if ( SQLITE_OK == sqlExec( dbUser, sql ) )
 		{
@@ -94,11 +95,11 @@ int CSqliteHandler::openConfigDB(const char *dbPath)
 
 	if ( rc )
 	{
-		_DBG( "[Sqlite] Can't open config database: %s", sqlite3_errmsg( dbConfig ) )
+		_log( "[Sqlite] Can't open config database: %s", sqlite3_errmsg( dbConfig ) );
 	}
 	else
 	{
-		_DBG( "[Sqlite] Opened config database successfully" )
+		_DBG( "[Sqlite] Opened config database successfully" );
 		const char *sql = "CREATE TABLE IF NOT EXISTS config(conf_item CHAR(20) PRIMARY KEY ASC, conf_value CHAR(20) NOT NULL, created_date DATE );";
 		if ( SQLITE_OK == sqlExec( dbConfig, sql ) )
 		{
@@ -115,21 +116,40 @@ int CSqliteHandler::openIdeasDB(const char *dbPath)
 
 	if ( rc )
 	{
-		_DBG( "[Sqlite] Can't open ideas database: %s", sqlite3_errmsg( dbIdeas ) )
+		_log( "[Sqlite] Can't open ideas database: %s", sqlite3_errmsg( dbIdeas ) );
 	}
 	else
 	{
-		_DBG("[Sqlite] Opened ideas database successfully")
+		_DBG("[Sqlite] Opened ideas database successfully");
 		const char *sql =
 				"CREATE TABLE IF NOT EXISTS user(id	CHAR(128) NOT NULL, app_id 	CHAR(20)  NOT NULL,mac	CHAR(20), os	CHAR(20), phone	CHAR(20), fb_id CHAR(20), fb_name	CHAR(50), fb_email	CHAR(50), fb_account	CHAR(50), g_account CHAR(50), t_account CHAR(50), created_date DATE DEFAULT (datetime('now','localtime')), PRIMARY KEY(id) );";
 		if (SQLITE_OK == sqlExec(dbIdeas, sql))
 		{
-			const char *fieldSql =
-					"CREATE TABLE IF NOT EXISTS \"device_field\" (`id`TEXT NOT NULL,`field`TEXT NOT NULL,`create_date`DATE DEFAULT (datetime('now','localtime')),PRIMARY KEY(id,field));";
-			if ( SQLITE_OK == sqlExec(dbIdeas, fieldSql))
-			{
-				nRet = TRUE;
-			}
+			nRet = TRUE;
+		}
+	}
+
+	return nRet;
+}
+
+
+int CSqliteHandler::openFieldDB(const char *dbPath)
+{
+	int rc = sqlite3_open( dbPath, &dbField );
+	int nRet = FALSE;
+
+	if ( rc )
+	{
+		_log( "[Sqlite] Can't open user database: %s", sqlite3_errmsg( dbField ) );
+	}
+	else
+	{
+		_DBG( "[Sqlite] Opened Field database successfully" );
+		const char *fieldSql =
+				"CREATE TABLE IF NOT EXISTS \"device_field\" (`id`TEXT NOT NULL,`field`TEXT NOT NULL,`create_date`DATE DEFAULT (datetime('now','localtime')),PRIMARY KEY(id,field));";
+		if ( SQLITE_OK == sqlExec(dbField, fieldSql))
+		{
+			nRet = TRUE;
 		}
 	}
 
@@ -222,6 +242,91 @@ int CSqliteHandler::ideasSqlExec(const char *szSql, list<string> &listValue, int
 	return row;
 }
 
+int CSqliteHandler::fieldSqlExec(const char *szSql)
+{
+	int nRet = FAIL;
+	nRet = sqlExec( dbField, szSql );
+	if ( SQLITE_OK == nRet )
+		nRet = SUCCESS;
+	return nRet;
+}
+
+int CSqliteHandler::fieldSqlExec(const char *szSql, vector<vector<string> > &listValue, int nColumn)
+{
+	sqlite3_stmt * stmt;
+	int row = 0;
+	int s = -1;
+	int nValue = -1;
+	const unsigned char * text;
+
+	sqlite3_prepare(dbField, szSql, strlen(szSql) + 1, &stmt, NULL);
+
+	while (1)
+	{
+		s = sqlite3_step(stmt);
+		if (s == SQLITE_ROW)
+		{
+			vector<string> tmp = vector<string>();
+			for (int i = 0; i < nColumn; i++)
+			{
+				text = sqlite3_column_text(stmt, i);
+
+				//_DBG("*******ideasSqlExec %s ", text )
+
+				tmp.push_back(string( (const char*) text ));
+			}
+			listValue.push_back(tmp);
+			++row;
+		}
+		else
+		{
+			if (s != SQLITE_DONE)
+			{
+				_DBG("[Sqlite] SQL:%s exec fail", szSql);
+			}
+			break;
+		}
+	}
+
+	sqlite3_finalize(stmt);
+
+	return row;
+}
+int CSqliteHandler::fieldSqlExec(const char *szSql, list<string> &listValue, int nColumeIndex)
+{
+	sqlite3_stmt * stmt;
+	int row = 0;
+	int s = -1;
+	int nValue = -1;
+	const unsigned char * text;
+
+	sqlite3_prepare( dbField, szSql, strlen( szSql ) + 1, &stmt, NULL );
+
+	while ( 1 )
+	{
+		s = sqlite3_step( stmt );
+		if ( s == SQLITE_ROW )
+		{
+			text = sqlite3_column_text( stmt, nColumeIndex );
+			//_DBG("[sqlite] data %s",text)
+			listValue.push_back( string( (const char*) text ) );
+			++row;
+		}
+		else
+		{
+			if ( s != SQLITE_DONE )
+			{
+				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+			}
+			break;
+		}
+	}
+
+	sqlite3_finalize( stmt );
+
+	return row;
+}
+
 void CSqliteHandler::close()
 {
 
@@ -234,7 +339,7 @@ void CSqliteHandler::close()
 	dbDevice = 0;
 	dbUser = 0;
 	dbConfig = 0;
-	_DBG( "[Sqlite] Closed database successfully" )
+	_DBG( "[Sqlite] Closed database successfully" );
 }
 
 CSqliteHandler* CSqliteHandler::getInstance()
@@ -253,7 +358,7 @@ int CSqliteHandler::deviceSqlExec(const char *szSql)
 	int rc = sqlite3_exec( dbDevice, szSql, callback, 0, &zErrMsg );
 	if ( rc != SQLITE_OK )
 	{
-		_DBG( "[Sqlite] SQL error: %s\n", zErrMsg )
+		_log( "[Sqlite] SQL error: %s\n", zErrMsg );
 		sqlite3_free( zErrMsg );
 	}
 	else
@@ -267,11 +372,11 @@ int CSqliteHandler::deviceSqlExec(const char *szSql)
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql)
 {
 	char *zErrMsg = 0;
-	_DBG( "[Sqlite] SQL exec: %s", szSql )
+	_DBG( "[Sqlite] SQL exec: %s", szSql );
 	int rc = sqlite3_exec( db, szSql, callback, 0, &zErrMsg );
 	if ( rc != SQLITE_OK )
 	{
-		_DBG( "[Sqlite] SQL error: %s\n", zErrMsg )
+		_log( "[Sqlite] SQL error: %s sql %s\n", zErrMsg, szSql);
 		sqlite3_free( zErrMsg );
 	}
 	else
@@ -308,7 +413,7 @@ int CSqliteHandler::getColumeValue(const char *szTable, const char *szColume, st
 		}
 		else
 		{
-			_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+			_log( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
 			break;
 		}
 	}
@@ -343,7 +448,7 @@ int CSqliteHandler::getColumeValue(const char *szTable, const char *szColume, st
 		}
 		else
 		{
-			_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+			_log( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
 			break;
 		}
 	}
@@ -374,7 +479,7 @@ int CSqliteHandler::getDeviceColumeValueInt(const char *szSql, std::list<int> &l
 		{
 			if ( s != SQLITE_DONE )
 			{
-				_DBG( "[Sqlite] SQL:%s exec fail", szSql );
+				_log( "[Sqlite] SQL:%s exec fail", szSql );
 			}
 			break;
 		}
@@ -406,7 +511,7 @@ bool CSqliteHandler::getUserAuth(std::string strMAC)
 	}
 	else
 	{
-		_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+		_log( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
 	}
 
 	sqlite3_finalize( stmt );
@@ -481,7 +586,7 @@ string CSqliteHandler::getConfig(std::string strItem)
 		}
 		else
 		{
-			_DBG( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
+			_log( "[Sqlite] SQL:%s exec fail", strSql.c_str() );
 		}
 
 		sqlite3_finalize( stmt );

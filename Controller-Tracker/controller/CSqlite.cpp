@@ -12,6 +12,7 @@
 #include "common.h"
 #include "event.h"
 #include "cJSON.h"
+#include "LogHandler.h"
 using namespace std;
 
 static CSqlite *mInstance = 0;
@@ -114,11 +115,6 @@ void *threadSqliteHandler(void *argv)
 
 	ss->mCsqlite->updateDeviceFieldTable(deviceID, fieldData);
 
-
-
-
-
-
 	return NULL;
 }
 
@@ -164,7 +160,7 @@ bool CSqlite::updateCacheDeviceFieldData()
 	cacheDeviceFieldData.clear();
 	vector<vector<string> > newSqlData = vector<vector<string> >();
 
-	int dataCount = mCSqliteHandler->ideasSqlExec("SELECT id, field FROM device_field;", newSqlData, 2);
+	int dataCount = mCSqliteHandler->fieldSqlExec("SELECT id, field FROM device_field;", newSqlData, 2);
 
 	if (dataCount == 0)
 	{
@@ -248,8 +244,7 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	{
 		//error nonknown this id
 		//recorded it
-		//
-
+		 _log("[CSqlite] UNKNOWN this Device ID %s",id.c_str());
 
 		sendMessage(EVENT_FILTER_CSQLITE, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
 		threadHandler->threadUnlock();
@@ -263,7 +258,6 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	{
 		if (findCacheDeviceFieldDataExist(deviceID, mData.at(i)) == false)
 		{
-			//_DBG("need to add ( %s    %s)", deviceID.c_str(), mData.at(i).c_str())
 			needToAdd->push_back(DeviceField(deviceID, mData.at(i)));
 		}
 	}
@@ -274,7 +268,7 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 		string sqlexec = "INSERT INTO device_field(id,field) VALUES('" + needToAdd->at(i).getDeviceID()
 				+ "','" + needToAdd->at(i).getFieldName() + "');";
 
-		mCSqliteHandler->ideasSqlExec(sqlexec.c_str());
+		mCSqliteHandler->fieldSqlExec(sqlexec.c_str());
 
 	}
 
@@ -283,7 +277,7 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 		if (updateCacheDeviceFieldData() == false)
 		{
 			//error
-			_DBG("error IN updateCacheDeviceFieldData")
+			_log("[CSqlite] some ERROR from sqlite which in updating Device Field Chache");
 		}
 	}
 
@@ -307,7 +301,7 @@ void CSqlite::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, 
 	{
 	case EVENT_COMMAND_THREAD_EXIT:
 		threadHandler->threadJoin(nId);
-		_DBG("[CSqlite] Thread Join:%d", (int )nId)
+		_DBG("[CSqlite] Thread Join:%d", (int )nId);
 		break;
 	case EVENT_COMMAND_DATA:
 	{
@@ -352,7 +346,7 @@ void CSqlite::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, 
 		break;
 	}
 	default:
-		_DBG("[CSqlite]********* Unknown message command*********")
+		_DBG("[CSqlite]********* Unknown message command*********");
 		break;
 	}
 

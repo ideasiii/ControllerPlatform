@@ -46,7 +46,7 @@ class Controller: public CObject
 		int startServer();
 		void stopServer();
 		int connectCenter();
-		int connectMongoDB();
+		int connectMongoDBController();
 		void runEnquireLinkRequest();
 		void receiveCenterCMP(int nServerFD, int nDataLen, const void *pData);
 		void receiveClientCMP(int nClientFD, int nDataLen, const void *pData);

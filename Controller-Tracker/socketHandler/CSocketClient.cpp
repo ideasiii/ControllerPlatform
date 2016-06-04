@@ -9,7 +9,7 @@
 #include "CThreadHandler.h"
 #include "IReceiver.h"
 #include "packet.h"
-
+#include "LogHandler.h"
 int CSocketClient::m_nInternalEventFilter = 6000;
 
 void *threadMessageReceive(void *argv)
@@ -148,7 +148,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			if ( enquire_link_request == nCommand)
 			{
-				_DBG("[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_log("[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl(nCommandResp);
@@ -156,7 +156,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_log("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				continue;
 			}
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
@@ -171,7 +171,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
 					}
 					socketClose(nSocketFD);
-					_DBG("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
+					_log("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
 							nBodyLen, result);
 					break;
 				}
@@ -185,7 +185,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				socketClose(nSocketFD);
 			}
 			socketClose(nSocketFD);
-			_DBG("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
+			_log("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
 			break;
 		}
 
@@ -196,7 +196,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
 			}
 			socketClose(nSocketFD);
-			_DBG("[Socket Client] socket client close: %d", nSocketFD);
+			_log("[Socket Client] socket client close: %d", nSocketFD);
 			break;
 		}
 
@@ -226,13 +226,13 @@ void CSocketClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 	{
 	case EVENT_COMMAND_THREAD_EXIT:
 		threadHandler->threadJoin(nId);
-		_DBG("[Socket Client] Thread Join:%d", (int )nId)
+		_DBG("[Socket Client] Thread Join:%d", (int )nId);
 		break;
 	case EVENT_COMMAND_SOCKET_RECEIVE:
-		_DBG("[Socket Client] Socket FD: %d Received ", (int )nId)
+		_DBG("[Socket Client] Socket FD: %d Received ", (int )nId);
 		break;
 	default:
-		_DBG("[Socket Client] unknow message command")
+		_DBG("[Socket Client] unknow message command");
 		break;
 	}
 }

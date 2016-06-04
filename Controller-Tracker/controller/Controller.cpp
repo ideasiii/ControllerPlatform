@@ -52,19 +52,18 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-
 static int accessSequence = 0x00000000;
 static int getAccessLogSequence()
 {
 	++accessSequence;
-	if ( 0x7FFFFFFF <= accessSequence )
+	if (0x7FFFFFFF <= accessSequence)
 		accessSequence = 0x00000001;
 	return accessSequence;
 }
 
 Controller::Controller() :
 		CObject(), cmpServer(new CSocketServer), cmpClient(new CSocketClient), mongoDBClient(new CSocketClient), cmpParser(
-				new CCmpHandler), sqlite(CSqliteHandler::getInstance()),  tdEnquireLink(new CThreadHandler), clientHandler(
+				new CCmpHandler), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), clientHandler(
 				ClientHandler::getInstance()), mCSqlite(CSqlite::getInstance())
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
@@ -133,7 +132,7 @@ int Controller::init(std::string strConf)
 	mConfig.strCenterServerIP = config->getValue("CENTER", "ip");
 	mConfig.strCenterServerPort = config->getValue("CENTER", "port");
 	_DBG("[Controller] Control Center IP:%s Port:%s", mConfig.strCenterServerIP.c_str(),
-			mConfig.strCenterServerPort.c_str())
+			mConfig.strCenterServerPort.c_str());
 
 	/** Create sqlite DB device [must]**/
 	string strDeviceDB = config->getValue("SQLITE", "db_device");
@@ -144,7 +143,8 @@ int Controller::init(std::string strConf)
 	mkdirp(strDeviceDB);
 	if (!sqlite->openDeviceDB(strDeviceDB.c_str()))
 	{
-		_DBG("[Controller] Open Sqlite DB device fail")
+		_log("[Controller] Open Sqlite DB FAIL Path:%s",strDeviceDB.c_str());
+		return FALSE;
 	}
 
 	//read ideas.db data
@@ -156,25 +156,39 @@ int Controller::init(std::string strConf)
 	mkdirp(strIdeasDB);
 	if (!sqlite->openIdeasDB(strIdeasDB.c_str()))
 	{
-		_DBG("[Controller] Open Sqlite DB ideas fail")
+		_log("[Controller] Open Sqlite DB FAIL Path:%s",strIdeasDB.c_str());
 		return FALSE;
 	}
-	_DBG("[Controller] Open Sqlite DB ideas Success")
+
+	/** Create sqlite DB Field [must]**/
+	string strFieldDB = config->getValue("SQLITE", "db_field");
+	if (strFieldDB.empty())
+	{
+		strFieldDB = "/data/sqlite/field.db";
+	}
+	mkdirp(strFieldDB);
+	if (!sqlite->openFieldDB(strFieldDB.c_str()))
+	{
+		_log("[Controller] Open Sqlite DB FAIL Path:%s",strFieldDB.c_str());
+		return FALSE;
+	}
+	_log("[Controller] Open Sqlite ALL DB Success");
+
 
 	// /** Get MongoDB IP And Port **/
 	mConfig.strMongoDBControllerIP = config->getValue("MONGODB", "ip");
 	mConfig.strMongoDBControllerPort = config->getValue("MONGODB", "port");
 	_DBG("[Controller] MongoDB Controller IP:%s Port:%s", mConfig.strMongoDBControllerIP.c_str(),
-			mConfig.strMongoDBControllerPort.c_str())
+			mConfig.strMongoDBControllerPort.c_str());
 
 	if (mConfig.strMongoDBControllerIP.compare("127.0.0.1") == 0)
 	{
 		//if controller and mongoDB controller are in the same machine
 		//can use mongoDB controller message queue to send message let speed up
 
-
 		mConfig.strMongoDBControllerMsgID = config->getValue("MONGODB", "MSG_ID");
-		mongoDBClient->setPackageReceiver( atoi(mConfig.strMongoDBControllerMsgID.c_str()) , EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
+		mongoDBClient->setPackageReceiver(atoi(mConfig.strMongoDBControllerMsgID.c_str()), EVENT_FILTER_CONTROLLER,
+				EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
 	}
 	else
 	{
@@ -182,12 +196,9 @@ int Controller::init(std::string strConf)
 
 	}
 
-
 	//init cmpClient message queue
 	cmpClient->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CENTER_RESPONSE);
 	cmpClient->setClientDisconnectCommand( EVENT_COMMAND_CONTROL_CENTER_DISCONNECT);
-
-
 
 	mCSqlite->createMessageReceiver();
 
@@ -203,20 +214,20 @@ void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nI
 		onClientCMP(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
-		_DBG("[Controller] Socket Client FD:%d Connected", (int )nId)
+		_DBG("[Controller] Socket Client FD:%d Connected", (int )nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
 		setUnbindState((int) nId);
-		_DBG("[Controller] Socket Client FD:%d Close", (int )nId)
+		_DBG("[Controller] Socket Client FD:%d Close", (int )nId);
 		break;
 	case EVENT_COMMAND_CONTROL_CENTER_DISCONNECT:
-		_DBG("[Controller] Control Center Dissconnect, Socket FD:%d Close", (int )nId)
+		_DBG("[Controller] Control Center Dissconnect, Socket FD:%d Close", (int )nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CENTER_RESPONSE:
 		onCenterCMP(nId, nDataLen, pData);
 		break;
 	default:
-		printLog("unknow message command", "[Controller]", mConfig.strLogPath);
+		_DBG("[Controller] unknow message command");
 		break;
 	}
 }
@@ -233,20 +244,20 @@ int Controller::startServer()
 		int nPort = atoi(mConfig.strServerPort.c_str());
 		if (0 >= nPort)
 		{
-			_DBG("CMP Server Start Fail, Invalid Port:%s", mConfig.strServerPort.c_str())
+			_log("[Controller] CMP Server Start Fail, Invalid Port:%s", mConfig.strServerPort.c_str());
 			return FALSE;
 		}
 		/** Start TCP/IP socket listen **/
 		tdEnquireLink->createThread(threadEnquireLinkRequest, this, 0, PTHREAD_CREATE_DETACHED);
 		if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
 		{
-			_DBG("CMP Server Socket Create Fail")
+			_log("[Controller] CMP Server Socket Create Fail");
 			return FALSE;
 		}
 	}
 	else
 	{
-		_DBG("CMP Server Start Fail, Invalid Port Config")
+		_log("[Controller] CMP Server Start Fail, Invalid Port Config");
 		return FALSE;
 	}
 
@@ -259,7 +270,7 @@ void Controller::stopServer()
 	{
 		tdEnquireLink->threadExit();
 		delete tdEnquireLink;
-		_DBG("[Controller] Stop Enquire Link Thread")
+		_DBG("[Controller] Stop Enquire Link Thread");
 	}
 
 	if (cmpServer)
@@ -275,71 +286,71 @@ int Controller::connectCenter()
 	int nRet = FAIL;
 	if (mConfig.strCenterServerIP.empty() || mConfig.strCenterServerPort.empty())
 	{
-		_DBG("[Controller] Connect Control Center Fail, Config Invalid")
+		_log("[Controller] Connect Control Center Fail, Config Invalid");
 		return FALSE;
 	}
 
 	int nPort = atoi(mConfig.strCenterServerPort.c_str());
 	if (0 >= nPort)
 	{
-		_DBG("[Controller] Connect Control Center Fail, Invalid Port:%s", mConfig.strCenterServerPort.c_str())
+		_log("[Controller] Connect Control Center Fail, Invalid Port:%s", mConfig.strCenterServerPort.c_str());
 		return FALSE;
 	}
 
 	cmpClient->start( AF_INET, mConfig.strCenterServerIP.c_str(), nPort);
 	if (cmpClient->isValidSocketFD())
 	{
-		_DBG("[Controller] Connect Center Success.")
+		_log("[Controller] Connect Center Success.");
 
 		/*Bind to Control Center*/
 		//clientHandler->setClientSocket(cmpClient);
-		nRet = cmpBindRequest(cmpClient->getSocketfd(),cmpClient);
+		nRet = cmpBindRequest(cmpClient->getSocketfd(), cmpClient);
 		return nRet;
 	}
 	else
 	{
-		_DBG("[Controller] Connect Center Fail.")
+		_log("[Controller] Connect Center Fail.");
 	}
 
 	return nRet;
 }
 
-int Controller::connectMongoDB()
+int Controller::connectMongoDBController()
 {
 	int nRet = FAIL;
 	if (mConfig.strMongoDBControllerIP.empty() || mConfig.strMongoDBControllerPort.empty())
 	{
-		_DBG("[Controller] Connect MongoDB Controller Fail, Config Invalid")
+		_log("[Controller] Connect MongoDB Controller Fail, Config Invalid");
 		return FALSE;
 	}
 
 	int nPort = atoi(mConfig.strMongoDBControllerPort.c_str());
 	if (0 >= nPort)
 	{
-		_DBG("[Controller] Connect MongoDB Controller Fail, Invalid Port:%s", mConfig.strMongoDBControllerPort.c_str())
+		_log("[Controller] Connect MongoDB Controller Fail, Invalid Port:%s", mConfig.strMongoDBControllerPort.c_str());
 		return FALSE;
 	}
 
 	mongoDBClient->start( AF_INET, mConfig.strMongoDBControllerIP.c_str(), nPort);
 	if (mongoDBClient->isValidSocketFD())
 	{
-		_DBG("[Controller] mongoDB Controller link Success.")
+		_log("[Controller] mongoDB Controller link Success.");
 
 		/*bind to mongoDB Controller*/
-        return SUCCESS;
+		return SUCCESS;
 		//nRet = cmpBindRequest(mongoDBClient->getSocketfd(),mongoDBClient);
 
 	}
 	else
 	{
-		_DBG("[Controller] Connect MongoDB Controller Fail.")
+		_log("[Controller] Connect MongoDB Controller Fail.");
 	}
 
 	return nRet;
 
 }
 
-int Controller::sendCommandtoSocketServer(int socketFD,int nCommand, int nStatus, int nSequence, bool isResp)
+int Controller::sendCommandtoSocketServer(int socketFD, int nCommand, int nStatus, int nSequence, bool isResp)
 {
 	int nRet = -1;
 	int nCommandSend;
@@ -365,7 +376,8 @@ int Controller::sendCommandtoSocketServer(int socketFD,int nCommand, int nStatus
 
 				nRet = clientCollection.at(i)->socketSend(clientCollection.at(i)->getSocketfd(), &cmpHeader,
 						sizeof(CMP_HEADER));
-				printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Socket Server]", mConfig.strLogPath.c_str(), cmpClient->getSocketfd() );
+				printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Socket Server]",
+						clientCollection.at(i)->getSocketfd());
 			}
 		}
 	}
@@ -394,15 +406,13 @@ int Controller::sendCommandtoCenter(int nCommand, int nStatus, int nSequence, bo
 
 		cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 		nRet = cmpClient->socketSend(cmpClient->getSocketfd(), &cmpHeader, sizeof(CMP_HEADER));
-		printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Center]", mConfig.strLogPath.c_str(), cmpClient->getSocketfd() );
+		printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Center]", cmpClient->getSocketfd());
 	}
 
 	return nRet;
 }
 
-
-
-int Controller::cmpBindRequest(const int nSocket , CSocketClient * client)
+int Controller::cmpBindRequest(const int nSocket, CSocketClient * client)
 {
 	int nRet = -1;
 	int nBody_len = 0;
@@ -428,9 +438,8 @@ int Controller::cmpBindRequest(const int nSocket , CSocketClient * client)
 
 	nRet = client->socketSend(nSocket, &packet, nTotal_len);
 	string strMsg = "Bind to Server Controller ID:" + mConfig.strMAC + "socket FD: " + ConvertToString(nSocket);
-	_DBG("**[Controller]** %s",strMsg.c_str());
 
-	printLog(strMsg, "[Controller]", mConfig.strLogPath);
+	_log("[Controller] %s", strMsg.c_str());
 	return nRet;
 }
 
@@ -445,8 +454,8 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 	char *pIndex = packet.cmpBody.cmpdata;
 
 	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	cmpParser->formatHeader( access_log_request, STATUS_ROK, getAccessLogSequence(), &pHeader);
+	int accessLogSequence = getAccessLogSequence();
+	cmpParser->formatHeader( access_log_request, STATUS_ROK, accessLogSequence, &pHeader);
 
 	int nType = -1;
 	convertFromString(nType, strType);
@@ -466,20 +475,22 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 
-	if(mConfig.strMongoDBControllerMsgID.empty())
+	if (mConfig.strMongoDBControllerMsgID.empty())
 	{
-		//_DBG("in not same machine!")
+		_log("[controller] use Socket send AccessLog to MongoDB Controller");
+
 		nRet = mongoDBClient->socketSend(nSocketFD, &packet, nTotal_len);
+		printPacket( access_log_request, STATUS_ROK, accessLogSequence, nRet, "[Controller Send to Client]",
+				mongoDBClient->getSocketfd());
 	}
 	//because of controller-tracker and mongodb controller are in the same machine
 	//just send a inserted message into the mongodb controller message queue
 	else
 	{
-		//_DBG("in same machine!")
-		nRet = mongoDBClient->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE,nSocketFD,nTotal_len,&packet);
+		_log("[controller] use Message Queue send AccessLog to MongoDB Controller");
+		nRet = mongoDBClient->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE, nSocketFD,
+				nTotal_len, &packet);
 	}
-	string strMsg = "Access Log to Center Controller ID:" + mConfig.strMAC;
-	printLog(strMsg, "[Controller]", mConfig.strLogPath);
 	return nRet;
 }
 
@@ -500,7 +511,7 @@ int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int 
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 	nRet = cmpServer->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket( nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", mConfig.strLogPath.c_str(), nSocket );
+	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", nSocket);
 	return nRet;
 }
 
@@ -522,7 +533,7 @@ void Controller::ackPacket(int nClientSocketFD, int nCommand, const void * pData
 			if (nClientSocketFD == *it)
 			{
 				vEnquireLink.erase(it);
-				_DBG("[Controller] Keep alive Socket FD:%d", nClientSocketFD)
+				_log("[Controller] Keep alive Socket FD:%d", nClientSocketFD);
 				break;
 			}
 		}
@@ -542,7 +553,7 @@ void Controller::ackPacket(int nClientSocketFD, int nCommand, const void * pData
 
 int Controller::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	_DBG("[Controller] Unknow command:%d", nCommand)
+	_log("[Controller] Unknow command:%d", nCommand);
 	sendCommandtoClient(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
 	return 0;
 }
@@ -553,7 +564,7 @@ int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * p
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet)
 	{
-		_DBG("[Controller] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket)
+		_log("[Controller] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket);
 		string strSql = "DELETE FROM device WHERE id = '" + rData["id"] + "';";
 		sqlite->deviceSqlExec(strSql.c_str());
 
@@ -565,7 +576,7 @@ int Controller::cmpBind(int nSocket, int nCommand, int nSequence, const void * p
 	}
 	else
 	{
-		_DBG("[Controller] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket)
+		_log("[Controller] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket);
 		sendCommandtoClient(nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true);
 	}
 	rData.clear();
@@ -591,39 +602,17 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-		//_DBG("[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket)
+		_log("[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket);
 
-		/***** [NEW CODE]insert data to MongoDB Controller******/
-			int result = cmpAccessLogRequest(mongoDBClient->getSocketfd(), rData["type"], rData["data"]);
-			if (result > 0)
-			{
-				_DBG("[Controller] send to MongoDB Controller success")
-			}
-			else
-			{
-				_DBG("[Controller] send to MongoDB Controller FAIL!")
-			}
-
-
-		/***** [NEW CODE]insert data to MongoDB Controller******/
-
-		/**********[OLD CODE]insert data to mongoDB*************/
-		/*		convertFromString(nType, rData["type"]);
-		 string strOID = accessLog->insertLog(nType, rData["data"]);
-
-		 if (strOID.empty())
-		 {
-		 sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-		 printLog("Insert Access Log Fail: " + rData["data"], "[Controller]", mConfig.strLogPath);
-		 }
-		 else
-		 {
-		 sendCommandtoClient(nSocket, nCommand, STATUS_ROK, nSequence, true);
-		 _DBG( "[Controller] ******************** %d*****%d*****%d****",nSocket,nCommand,nSequence)
-		 printLog("Insert Access Log Success: " + rData["data"] + " OID:" + strOID, "[Controller]", mConfig.strLogPath);
-		 }
-		 */
-		/**********[OLD CODE]insert data to mongoDB*************/
+		int result = cmpAccessLogRequest(mongoDBClient->getSocketfd(), rData["type"], rData["data"]);
+		if (result > 0)
+		{
+			_log("[Controller] AccessLog send to MongoDB Controller success result = %d", result);
+		}
+		else
+		{
+			_log("[Controller] AccessLog send to MongoDB Controller FAIL!");
+		}
 
 		/* lock and auto add device id and device field */
 		//mCSqlite->sendMessage(EVENT_FILTER_CSQLITE, 1, 0, rData["data"].capacity(), (void *) (rData["data"]).c_str());
@@ -633,7 +622,7 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 	}
 	else
 	{
-		_DBG("[Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket)
+		_log("[Controller] Access Log Fail, Invalid Body Parameters Socket FD: %d", nSocket);
 		//sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
@@ -651,7 +640,7 @@ void Controller::setUnbindState(int nSocketFD)
  */
 void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 {
-	_DBG("[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen)
+	_DBG("[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen);
 
 	int nRet = -1;
 	int nPacketLen = 0;
@@ -666,7 +655,8 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Controller Recv]", mConfig.strLogPath.c_str(), nClientFD );
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Controller Recv]", nClientFD);
 
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
@@ -699,7 +689,7 @@ void Controller::receiveClientCMP(int nClientFD, int nDataLen, const void *pData
  */
 void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 {
-	_DBG("[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen)
+	_log("[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen);
 	int nRet = -1;
 	int nPacketLen = 0;
 	CMP_HEADER cmpHeader;
@@ -713,7 +703,8 @@ void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket( cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length, "[Controller Recv]", mConfig.strLogPath.c_str(), nServerFD );
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Controller Recv]", nServerFD);
 
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
@@ -746,7 +737,8 @@ void Controller::runEnquireLinkRequest()
 	while (1)
 	{
 		tdEnquireLink->threadSleep(10);
-
+		strLog = "Run Enquire Link Request";
+		_DBG("[Controller] %s", strLog.c_str());
 		/** Check Enquire link response **/
 		if (vEnquireLink.size())
 		{
@@ -757,41 +749,51 @@ void Controller::runEnquireLinkRequest()
 				sqlite->deviceSqlExec(strSql.c_str());
 				close(*it);
 				strLog = "Dropped connection, Close socket file descriptor filedes = " + ConvertToString(*it);
-				printLog(strLog, "[Controller]", mConfig.strLogPath);
+				_log("[Controller]%s", strLog.c_str());
 			}
 		}
 		vEnquireLink.clear();
 
-		strLog = "Run Enquire Link Request";
-		printLog(strLog, "[Controller]", mConfig.strLogPath);
-
 		/*for bind */
 		if (0 < getBindSocket(listValue))
 		{
+			_DBG("WWWWWWW[connect to Contorol Center]WWWWWW");
 			for (list<int>::iterator i = listValue.begin(); i != listValue.end(); ++i)
 			{
 				nSocketFD = *i;
 				vEnquireLink.push_back(nSocketFD);
+				_DBG("*********[connect to Contorol Center]******");
 				cmpEnquireLinkRequest(nSocketFD);
 			}
 			listValue.clear();
 		}
-		/*for no bind*/
-		cmpEnquireLinkRequest(mongoDBClient->getSocketfd());
+
+		_DBG("*********Cmp Client socket fd %d", cmpClient->getSocketfd());
+		_DBG("*********MongoDB Client socket fd %d", mongoDBClient->getSocketfd());
 
 		/**  Check Control Center Connection **/
 		if (!cmpClient->isValidSocketFD())
 		{
-			_DBG("[Controller] Control Center Disconnect will reconnect")
+			_log("[Controller] Control Center Disconnect will reconnect");
 			connectCenter();
+		}
+		else
+		{
+			cmpEnquireLinkRequest(cmpClient->getSocketfd());
 		}
 
 		/**  Check MongoDB Controller Connection **/
 		if (!mongoDBClient->isValidSocketFD())
 		{
-			_DBG("[Controller] MongoDB Controller Disconnect will reconnect")
-			connectMongoDB();
+			_log("[Controller] MongoDB Controller Disconnect will reconnect");
+			connectMongoDBController();
 		}
+		else
+		{
+			/*for no bind*/
+			cmpEnquireLinkRequest(mongoDBClient->getSocketfd());
+		}
+
 	}
 
 }
@@ -809,5 +811,4 @@ void *threadEnquireLinkRequest(void *argv)
 	ss->runEnquireLinkRequest();
 	return NULL;
 }
-
 

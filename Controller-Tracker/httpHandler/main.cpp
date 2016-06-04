@@ -18,6 +18,6 @@ int main(int argc, char* argv[])
 //			mapData );
 	delete httpClient;
 
-	_DBG( "Get HTTP Code: %s Body: %s", mapData["code"].c_str(), mapData["body"].c_str() )
+	_DBG( "Get HTTP Code: %s Body: %s", mapData["code"].c_str(), mapData["body"].c_str() );
 }
 

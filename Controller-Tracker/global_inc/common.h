@@ -46,25 +46,9 @@ extern "C"
 #define INVALID			-1
 #endif
 
-#ifdef DEBUG
-#ifdef TRACE
-#define _DBG(msg, arg...) printf("[DEBUG] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg);
-#else
-#define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg);
-#endif
-#else
-#define _DBG(msg, arg...) syslog(LOG_DEBUG, "[DEBUG] " msg"\n" , ##arg);
-#endif
+#define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)
 
-#ifdef DEBUG
-#ifdef TRACE
-#define _ERR(msg, arg...) printf("[ERROR] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg);
-#else
-#define _ERR(msg, arg...) printf("[ERROR] " msg"\n" , ##arg);
-#endif
-#else
-#define _ERR(msg, arg...) syslog(LOG_ERR, "[ERROR] " msg"\n" , ##arg);
-#endif
+#define _TRACE(msg, arg...) printf("[DEBUG] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg)
 
 #ifdef DUMPLOG
 #define _DUMP(msg) \

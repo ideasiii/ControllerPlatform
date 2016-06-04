@@ -16,6 +16,7 @@
 #include "common.h"
 #include "event.h"
 #include "Controller.h"
+#include "LogHandler.h"
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -23,7 +24,6 @@ pid_t child_pid = -1; //Global
 int Watching();
 void CSigHander(int signo);
 void PSigHander(int signo);
-void OtherSigHander(int signo);
 void closeMessage();
 void runService(int argc, char* argv[]);
 void options(int argc, char **argv);
@@ -52,12 +52,9 @@ int Watching()
 	do
 	{
 
-		printf("Father fork child.........\n");
 		child_pid = fork();
-		printf("After fork child.........PID=%d \n");
 		if (child_pid == -1)
 		{
-			printf("fork child fail.........\n");
 			exit( EXIT_FAILURE);
 		}
 
@@ -70,35 +67,6 @@ int Watching()
 			signal( SIGTERM, CSigHander);
 			signal( SIGPIPE, SIG_IGN);
 
-			signal(SIGQUIT, OtherSigHander);
-			signal(SIGILL, OtherSigHander);
-			signal(SIGTRAP, OtherSigHander);
-			signal(SIGABRT, OtherSigHander);
-			signal(SIGIOT, OtherSigHander);
-			signal(SIGBUS, OtherSigHander);
-			signal(SIGFPE, OtherSigHander);
-			signal(SIGKILL, OtherSigHander);
-			signal(SIGUSR1, OtherSigHander);
-			signal(SIGSEGV, OtherSigHander);
-			signal(SIGUSR2, OtherSigHander);
-			signal(SIGALRM, OtherSigHander);
-			signal(SIGSTKFLT, OtherSigHander);
-			//signal(SIGCLD, OtherSigHander);
-			//signal(SIGCHLD, OtherSigHander);
-			//signal(SIGCONT, OtherSigHander);
-			//signal(SIGSTOP, OtherSigHander);
-			signal(SIGTSTP, OtherSigHander);
-			//signal(SIGTTIN, OtherSigHander);
-			//signal(SIGTTOU, OtherSigHander);
-			//signal(SIGURG, OtherSigHander);
-			//signal(SIGXCPU, OtherSigHander);
-			signal(SIGXFSZ, OtherSigHander);
-			//signal(SIGVTALRM, OtherSigHander);
-			//signal(SIGPROF, OtherSigHander);
-			//signal(SIGWINCH, OtherSigHander);
-			//signal(SIGIO, OtherSigHander);
-			signal(SIGPWR, OtherSigHander);
-			signal(SIGSYS, OtherSigHander);
 			printf("controller child process has been invoked\n");
 			return 0;
 		}
@@ -111,70 +79,10 @@ int Watching()
 		signal( SIGHUP, PSigHander);
 		signal( SIGPIPE, SIG_IGN);
 
-		signal(SIGQUIT, OtherSigHander);
-		signal(SIGILL, OtherSigHander);
-		signal(SIGTRAP, OtherSigHander);
-		signal(SIGABRT, OtherSigHander);
-		signal(SIGIOT, OtherSigHander);
-		signal(SIGBUS, OtherSigHander);
-		signal(SIGFPE, OtherSigHander);
-		signal(SIGKILL, OtherSigHander);
-		signal(SIGUSR1, OtherSigHander);
-		signal(SIGSEGV, OtherSigHander);
-		signal(SIGUSR2, OtherSigHander);
-		signal(SIGALRM, OtherSigHander);
-		signal(SIGSTKFLT, OtherSigHander);
-		//signal(SIGCLD, OtherSigHander);
-		//signal(SIGCHLD, OtherSigHander);
-		//signal(SIGCONT, OtherSigHander);
-		//signal(SIGSTOP, OtherSigHander);
-		signal(SIGTSTP, OtherSigHander);
-		//signal(SIGTTIN, OtherSigHander);
-		//signal(SIGTTOU, OtherSigHander);
-		//signal(SIGURG, OtherSigHander);
-		//signal(SIGXCPU, OtherSigHander);
-		signal(SIGXFSZ, OtherSigHander);
-		//signal(SIGVTALRM, OtherSigHander);
-		//signal(SIGPROF, OtherSigHander);
-		//signal(SIGWINCH, OtherSigHander);
-		//signal(SIGIO, OtherSigHander);
-		signal(SIGPWR, OtherSigHander);
-		signal(SIGSYS, OtherSigHander);
+
 		syslog( LOG_INFO, "controller child process has been invoked");
 
-		/*
-		 signal(SIGQUIT, OtherSigHander);
-		 signal(SIGILL, OtherSigHander);
-		 signal(SIGTRAP, OtherSigHander);
-		 signal(SIGABRT, OtherSigHander);
-		 signal(SIGIOT, OtherSigHander);
-		 signal(SIGBUS, OtherSigHander);
-		 signal(SIGFPE, OtherSigHander);
-		 signal(SIGKILL, OtherSigHander);
-		 signal(SIGUSR1, OtherSigHander);
-		 signal(SIGSEGV, OtherSigHander);
-		 signal(SIGUSR2, OtherSigHander);
-		 signal(SIGALRM, OtherSigHander);
-		 signal(SIGSTKFLT, OtherSigHander);
-		 signal(SIGCLD, OtherSigHander);
-		 signal(SIGCHLD, OtherSigHander);
-		 signal(SIGCONT, OtherSigHander);
-		 signal(SIGSTOP, OtherSigHander);
-		 signal(SIGTSTP, OtherSigHander);
-		 signal(SIGTTIN, OtherSigHander);
-		 signal(SIGTTOU, OtherSigHander);
-		 signal(SIGURG, OtherSigHander);
-		 signal(SIGXCPU, OtherSigHander);
-		 signal(SIGXFSZ, OtherSigHander);
-		 signal(SIGVTALRM, OtherSigHander);
-		 signal(SIGPROF, OtherSigHander);
-		 signal(SIGWINCH, OtherSigHander);
-		 signal(SIGIO, OtherSigHander);
-		 signal(SIGPWR, OtherSigHander);
-		 signal(SIGSYS, OtherSigHander);*/
-
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
-		printf("Father jumo .........: %d , status=%d\n", (int) w, status);
 		//closeMessage();
 		//debug use
 		//return 0;
@@ -236,14 +144,7 @@ void PSigHander(int signo)
 	sleep(3);
 	kill(child_pid, SIGKILL);
 }
-void OtherSigHander(int signo)
-{
-	printf("************[Other Signal] Child Received signal %d *************", signo);
 
-	//closeMessage();
-	//sleep( 3 );
-//	kill( child_pid, SIGKILL );
-}
 
 /**
  * clean message queue
@@ -264,14 +165,15 @@ void runService(int argc, char* argv[])
 	options(argc, argv);
 	std::string strArgv;
 	std::string strConf;
-
+	LogHandler *logAgent = LogHandler::getInstance();
+	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/Controller-Tracker.log");
 	strArgv = argv[0];
 
 	size_t found = strArgv.find_last_of("/\\");
 	std::string strProcessName = strArgv.substr(++found);
 
 	strConf = strProcessName + ".conf";
-	_DBG("Config file is:%s", strConf.c_str())
+	_DBG("Config file is:%s", strConf.c_str());
 	Controller *controller = Controller::getInstance();
 
 	if (controller->init(strConf) && -1 != controller->initMessage( MSG_ID))
@@ -279,10 +181,10 @@ void runService(int argc, char* argv[])
 		if (controller->startServer())
 		{
 			controller->connectCenter();
-			controller->connectMongoDB();
-			printf("<============= Service Start Run =============>\n");
+			controller->connectMongoDBController();
+			_log("<=============Controller-Tracker Service Start Run =============>\n");
 			controller->run( EVENT_FILTER_CONTROLLER);
-			printf("<============= Service Stop Run =============>\n");
+			_log("<=============Controller-Tracker Service Stop Run =============>\n");
 			controller->stopServer();
 		}
 	}

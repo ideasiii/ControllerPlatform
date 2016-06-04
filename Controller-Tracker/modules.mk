@@ -10,5 +10,6 @@ export MODULES=global_inc \
 			 cmpHandler \
 			 sqliteHandler \
 			 httpHandler \
-			 jsonHandler
+			 jsonHandler \
+			 logHandler
 
