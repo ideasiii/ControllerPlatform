@@ -115,6 +115,7 @@ struct CMP_PACKET
 #define TYPE_TRACKER_APPLIENCE								5
 #define TYPE_TRACKER_TOY											6
 #define TYPE_TRACKER_IOT											7
+#define TYPE_TEST															20160604
 
 template<typename T, typename U>
 class create_map

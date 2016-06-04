@@ -28,6 +28,7 @@
 #define	TRACKER_APPLIANCE	5
 #define TRACKER_TOY				6
 #define TRACKER_IOT				7
+#define TYPE_TEST						20160604
 
 CCmpTest::CCmpTest() :
 		mSocket(-1)
@@ -307,7 +308,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			nBody_len += 1;
 			break;
 		case access_log_request:
-			net_type = htonl(TRACKER_APPLIANCE);
+			net_type = htonl(TYPE_TEST);
 			memcpy(pIndex, (const char*) &net_type, 4);
 			pIndex += 4;
 			nBody_len += 4;
@@ -427,7 +428,7 @@ void CCmpTest::cmpPressure()
 			printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength,
 					nStatus, nSequence);
 		}
-		sleep(0.001);
+		sleep(0.0001);
 	}
 }
 

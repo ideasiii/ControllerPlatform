@@ -211,6 +211,9 @@ std::string Controller::insertLog(const int nType, std::string strData)
 		case TYPE_TRACKER_IOT:
 			strOID = mongodb->insert("access", "iot", strData);
 			break;
+		case TYPE_TEST:
+			strOID = mongodb->insert("access", "test", strData);
+			break;
 		default:
 			_log("[Mongodb Controller] Insert Access log fail, unknow service type: %d", nType);
 			break;
