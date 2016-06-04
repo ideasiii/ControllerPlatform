@@ -25,6 +25,7 @@ public:
 	int openUserDB(const char *dbPath);
 	int openConfigDB(const char *dbPath);
 	int openIdeasDB(const char *dbPath);
+	int openFieldDB(const char *dbPath);
 	int deviceSqlExec(const char *szSql);
 	int sqlExec(sqlite3 *db, const char *szSql);
 	int getColumeValue(const char *szTable, const char *szColume, std::list<std::string> &listValue);
@@ -36,6 +37,10 @@ public:
 	int ideasSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex);
 	int ideasSqlExec(const char *szSql, std::vector<std::vector<std::string> > &listValue, int nColumn);
 	int ideasSqlExec(const char *szSql);
+	int fieldSqlExec(const char *szSql);
+	int fieldSqlExec(const char *szSql, std::vector<std::vector<std::string> > &listValue, int nColumn);
+	int fieldSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex);
+
 	bool getUserAuth(std::string strMAC);
 	void close();
 	int setConfig(std::string strItem, std::string strValue);

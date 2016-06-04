@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include "CDataHandler.h"
 #include "common.h"
-
+#include "LogHandler.h"
 #define MAX_SIZE		2048
 
 template<typename T>

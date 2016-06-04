@@ -90,17 +90,17 @@ int CSerApiHandler::insertEvent(string token, string jsonInputString)
 			string message = cJSON_GetObjectItem(returnData, "message")->valuestring;
 			if(message.compare("success") == 0)
 			{
-				_DBG("[SER API] insert success!")
+				_DBG("[SER API] insert success!");
 				return INSERT_EVENT_OK;
 			}
 			else
 			{
-				_DBG("[SER API] insert fail: %s",message.c_str())
+				_DBG("[SER API] insert fail: %s",message.c_str());
 				return INSERT_EVENT_FAIL;
 			}
 		}
 	}
-	_DBG("[SER API] insert fail: return data is empty")
+	_DBG("[SER API] insert fail: return data is empty");
 	return INSERT_EVENT_FAIL;
 }
 
@@ -124,7 +124,7 @@ string CSerApiHandler::getHttpJsonData(string host, string apiFunc, string input
 		}
 		catch ( std::out_of_range& exception)
 		{
-			_DBG("[SER API] string out_of_range")
+			_DBG("[SER API] string out_of_range");
 		}
 	}
 
@@ -188,7 +188,7 @@ string CSerApiHandler::getToken()
 		}
 		else
 		{
-			_DBG("[SER API] error to get token")
+			_DBG("[SER API] error to get token");
 		}
 	}
 

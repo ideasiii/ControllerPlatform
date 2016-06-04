@@ -28,7 +28,7 @@
 #include <sstream>
 #include <sys/epoll.h>
 #include "common.h"
-
+#include "LogHandler.h"
 extern int h_errno;
 #define MAXLINE 4096
 #define MAXSUB  200
@@ -95,14 +95,14 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 
 	if ((hptr = gethostbyname(strURL.c_str())) == NULL)
 	{
-		_DBG(" gethostbyname error for host: %s: %s", strURL.c_str(), hstrerror( h_errno ))
+		_log("[Http Client] gethostbyname error for host: %s: %s", strURL.c_str(), hstrerror( h_errno ));
 		return nRet;
 	}
 
-	printf("http hostname: %s\n", hptr->h_name);
+	_DBG("[Http Client] http hostname: %s\n", hptr->h_name);
 	if (hptr->h_addrtype == AF_INET && (pptr = hptr->h_addr_list) != NULL)
 	{
-		printf("address: %s\n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
+		_DBG("[Http Client] address: %s\n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
 	}
 	else
 	{
@@ -111,7 +111,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 
 	if ((sockfd = socket( AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		printf("Create Socket Fail, error: %s\n", hstrerror( h_errno));
+		_log("[Http Client] Create Socket Fail, error: %s\n", hstrerror( h_errno));
 		return nRet;
 	};
 	fcntl(sockfd, F_SETFL, O_NONBLOCK);
@@ -121,7 +121,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	servaddr.sin_port = htons(nPort);
 	if (0 >= inet_pton( AF_INET, str, &servaddr.sin_addr))
 	{
-		printf("inet_pton Fail, error: %s\n", hstrerror( h_errno));
+		_log("[Http Client] inet_pton Fail, error: %s\n", hstrerror( h_errno));
 		return nRet;
 	}
 
@@ -141,7 +141,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 
 		if (so_error != 0)
 		{
-			_DBG("Socket Connect Fail")
+			_log("[Http Client] Socket Connect Fail");
 			return nRet;
 		}
 	}
@@ -176,17 +176,17 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	strcat(sendline, strParam.c_str());
 	strcat(sendline, "\r\n\r\n");
 
-	printf("%s\n", sendline);
+	_DBG("%s\n", sendline);
 
 	len = send(sockfd, sendline, strlen(sendline), 0);
 	if (len < 0)
 	{
-		printf("Socket Send Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+		_log("[Http Client] Socket Send Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
 		return nRet;
 	}
 	else
 	{
-		printf("Socket Send Success, Size: %d\n\n", len);
+		_DBG("[Http Client] Socket Send Success, Size: %d\n\n", len);
 		string strRecv;
 		memset(recvline, 0, sizeof(recvline));
 		len = 0;

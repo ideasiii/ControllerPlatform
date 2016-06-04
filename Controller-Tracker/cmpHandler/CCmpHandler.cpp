@@ -135,7 +135,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 
 	nTotalLen = getLength(pData);
 
-	_DBG("[CCmpHandler] sockect total Length: %d",nTotalLen)
+	_DBG("[CCmpHandler] sockect total Length: %d",nTotalLen);
 
 	nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
@@ -272,13 +272,13 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 	}
 	else
 	{
-		_ERR("CMP body length error")
+		_DBG("[CCmpHandler] CMP body length error");
 		nRet = -1;
 	}
 
 	if (-1 == nRet)
 	{
-		_ERR("parse CMP body fail")
+		_DBG("[CCmpHandler] parse CMP body fail");
 	}
 	else
 	{

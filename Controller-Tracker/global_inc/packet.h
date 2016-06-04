@@ -16,7 +16,7 @@
 #include <map>
 #include <string.h>
 #include <stdlib.h>
-
+#include "LogHandler.h"
 using namespace std;
 /*
  * CMP body data length
@@ -146,94 +146,22 @@ static map<int, string> mapStatus = create_map<int, string>\
 STATUS_RBINDFAIL, "Bind Failed" )( STATUS_RPPSFAIL, "Power Port Setting Fail" )( STATUS_RINVBODY, "Invalid Packet Body Data" )( STATUS_RINVCTRLID, "Invalid Controller ID" )(
 STATUS_RINVJSON, "Invalid JSON Data" )( STATUS_ROPERATE, "MDM operate notify" )( STATUS_RMDMLOGINFAIL, "MDM Login fail, no token" );
 
-inline void printPacket(int nCommand, int nStatus, int nSequence, int nLength, const char * szDesc, const char *szLogPath = 0, int nClienFD = 0)
+__attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
+		const char * szDesc, int nClienFD = 0)
 {
-
 	char szCmd[48];
 	char szSta[32];
-	memset( szCmd, 0, sizeof(szCmd) );
-	memset( szSta, 0, sizeof(szSta) );
+	memset(szCmd, 0, sizeof(szCmd));
+	memset(szSta, 0, sizeof(szSta));
 
-	strcpy( szCmd, mapCommand[nCommand].c_str() );
-	strcpy( szSta, mapStatus[nStatus].c_str() );
+	strcpy(szCmd, mapCommand[nCommand].c_str());
+	strcpy(szSta, mapStatus[nStatus].c_str());
 
-	std::time_t t = std::time( NULL );
-	char mbstr[100];
-	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
-
-	char szLog[255];
-	sprintf( szLog, "%s-%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", mbstr, szDesc, szCmd, szSta, nSequence, nLength, nClienFD );
-
-#ifdef DEBUG
-	printf("[DEBUG] %s\n" ,szLog);
-#else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
-#endif
-
-	if ( 0 != szLogPath )
-	{
-		FILE *pstream;
-		memset( mbstr, 0, 100 );
-		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
-		char szPath[255];
-		memset( szPath, 0, 255 );
-		sprintf( szPath, "%s.%s", szLogPath, mbstr );
-		pstream = fopen( szPath, "a" );
-		if ( NULL != pstream )
-		{
-			fprintf( pstream, "%s\n", szLog );
-			fflush( pstream );
-			fclose( pstream );
-			system( "sync;sync;sync" );
-		}
-		else
-		{
-			printf( "[Error] Log file path open fail!!\n" );
-		}
-	}
+	_log("%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", szDesc, szCmd, szSta, nSequence,
+			nLength, nClienFD);
 }
 
-inline void printLog(const char *szMsg, const char * szDesc, const char *szLogPath = 0)
-{
-	std::time_t t = std::time( NULL );
-	char mbstr[100];
-	std::strftime( mbstr, 100, "%d/%m/%Y %T", std::localtime( &t ) );
 
-	char szLog[MAX_DATA_LEN];
-	sprintf( szLog, "%s-%s CMP : %-20s", mbstr, szDesc, szMsg );
-#ifdef DEBUG
-	printf("[DEBUG] %s\n" ,szLog);
-#else
-	syslog( LOG_DEBUG, "[DEBUG] %s\n", szLog );
-#endif
-
-	if ( 0 != szLogPath )
-	{
-		FILE *pstream;
-		memset( mbstr, 0, 100 );
-		std::strftime( mbstr, 100, "%Y-%m-%d", std::localtime( &t ) );
-		char szPath[255];
-		memset( szPath, 0, 255 );
-		sprintf( szPath, "%s.%s", szLogPath, mbstr );
-		pstream = fopen( szPath, "a" );
-		if ( NULL != pstream )
-		{
-			fprintf( pstream, "%s\n", szLog );
-			fflush( pstream );
-			fclose( pstream );
-			system( "sync;sync;sync" );
-		}
-		else
-		{
-			printf( "[Error] Log file path open fail!!\n" );
-		}
-	}
-}
-
-inline void printLog(string strMsg, string strDesc, string strLogPath = 0)
-{
-	printLog( strMsg.c_str(), strDesc.c_str(), strLogPath.c_str() );
-}
 
 /**
  *  sequence for request

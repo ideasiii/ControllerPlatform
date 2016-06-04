@@ -18,7 +18,7 @@
 #include "CDataHandler.cpp"
 #include "packet.h"
 #include "IReceiver.h"
-
+#include "LogHandler.h"
 void *threadSocketMessageReceive(void *argv);
 void *threadSocketAccept(void *argv);
 void *threadClientHandler(void *argv);
@@ -184,7 +184,7 @@ int CSocketServer::runClientHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d", nClientFD);
+			_log("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 
@@ -284,7 +284,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 					}
 					socketClose(nClientFD);
-					_DBG("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
 							result);
 					break;
 				}
@@ -297,7 +297,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result);
+			_log("[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result);
 			break;
 		}
 
@@ -308,7 +308,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_DBG("[Socket Server] socket close client: %d", nClientFD);
+			_log("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 		if ( access_log_request == nCommand)
@@ -320,7 +320,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 			socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-			_DBG("[Socket Server] Send Access Log Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+			_log("[Socket Server] Send Access Log Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 		}
 
 		if (nClientFD == getSocketfd())
@@ -442,7 +442,7 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 		break;
 	default:
-		_DBG("[Socket Server] unknow message command")
+		_DBG("[Socket Server] unknow message command");
 		break;
 	}
 }

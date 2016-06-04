@@ -12,7 +12,7 @@
 #include "CMessageHandler.h"
 #include <common.h>
 #include "memory.h"
-
+#include "LogHandler.h"
 CObject::CObject() :
 		messageHandler( new CMessageHandler )
 {
@@ -59,7 +59,7 @@ int CObject::run(int nRecvEvent)
 	pdata = msgbuf;
 	messageHandler->setRecvEvent( nRecvEvent );
 
-	_DBG( "[Message] Message Service Start Run , Event ID:%d", nRecvEvent )
+	_log( "[Message] Message Service Start Run , Event ID:%d", nRecvEvent );
 	while ( 1 )
 	{
 		memset( msgbuf, 0, sizeof(MESSAGE_BUF) );

@@ -13,7 +13,7 @@
 #include <errno.h>
 #include "CMessageHandler.h"
 #include "common.h"
-
+#include "LogHandler.h"
 CMessageHandler::CMessageHandler() :
 		msqid( -1 ), m_nEvent( -1 )
 {
@@ -67,7 +67,7 @@ int CMessageHandler::init(const long lkey)
 			memset( &ds, 0, sizeof(struct msqid_ds) );
 			if ( msgctl( nMsqid, IPC_STAT, &ds ) )
 			{
-				_ERR( "[Message] msgctl(msqid=%d, IPC_STAT, ...) failed: " "%s (errno=%d)\n", nMsqid, strerror(errno), errno );
+				_log( "[Message] msgctl(msqid=%d, IPC_STAT, ...) failed: " "%s (errno=%d)\n", nMsqid, strerror(errno), errno );
 			}
 			else
 			{
