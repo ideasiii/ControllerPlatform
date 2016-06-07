@@ -270,7 +270,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			if ( enquire_link_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-				_log("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+				//_log("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 				continue;
 			}
 

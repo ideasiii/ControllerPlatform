@@ -106,13 +106,13 @@ int Controller::startServer(const int nPort)
 	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
 	if (0 >= nPort)
 	{
-		_DBG("Mongodb Controller Start Fail, Invalid Port:%d", nPort)
+		_log("Mongodb Controller Start Fail, Invalid Port:%d", nPort);
 		return FALSE;
 	}
 	/** Start TCP/IP socket listen **/
 	if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
 	{
-		_DBG("Mongodb Controller Socket Server Create Fail")
+		_log("Mongodb Controller Socket Server Create Fail");
 		return FALSE;
 	}
 
@@ -241,8 +241,11 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Mongodb Controller]", nClientFD);
+	if (cmpHeader.command_id != enquire_link_request)
+	{
+		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+				"[Mongodb Controller]", nClientFD);
+	}
 
 	if (access_log_request == cmpHeader.command_id)
 	{
