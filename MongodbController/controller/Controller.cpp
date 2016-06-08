@@ -241,11 +241,8 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	if (cmpHeader.command_id != enquire_link_request && cmpHeader.command_id != enquire_link_response)
-	{
-		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-				"[Mongodb Controller]", nClientFD);
-	}
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Mongodb Controller]", nClientFD);
 
 	if (access_log_request == cmpHeader.command_id)
 	{
