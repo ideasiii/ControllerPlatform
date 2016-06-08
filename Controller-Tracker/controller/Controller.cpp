@@ -181,23 +181,14 @@ int Controller::init(std::string strConf)
 	_DBG("[Controller] MongoDB Controller IP:%s Port:%s", mConfig.strMongoDBControllerIP.c_str(),
 			mConfig.strMongoDBControllerPort.c_str());
 
-	if (mConfig.strMongoDBControllerIP.compare("127.0.0.1") == 0)
-	{
-		//if controller and mongoDB controller are in the same machine
-		//can use mongoDB controller message queue to send message let speed up
 
-		mConfig.strMongoDBControllerMsgID = config->getValue("MONGODB", "MSG_ID");
-		mongoDBClient->setPackageReceiver(atoi(mConfig.strMongoDBControllerMsgID.c_str()), EVENT_FILTER_CONTROLLER,
-				EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE);
-	}
-	else
-	{
-		mConfig.strMongoDBControllerMsgID = "";
-
-	}
 
 	//init cmpClient message queue
 	cmpClient->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CENTER_RESPONSE);
+
+	mongoDBClient->setPackageReceiver(MSG_ID, EVENT_FILTER_CONTROLLER,
+	EVENT_COMMAND_SOCKET_CENTER_RESPONSE);
+
 	cmpClient->setClientDisconnectCommand( EVENT_COMMAND_CONTROL_CENTER_DISCONNECT);
 
 	mCSqlite->createMessageReceiver();
@@ -376,8 +367,9 @@ int Controller::sendCommandtoSocketServer(int socketFD, int nCommand, int nStatu
 
 				nRet = clientCollection.at(i)->socketSend(clientCollection.at(i)->getSocketfd(), &cmpHeader,
 						sizeof(CMP_HEADER));
-				printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Socket Server]",
-						clientCollection.at(i)->getSocketfd());
+				//printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller-Tracker(sendCommandtoSocketServer)]",
+				//		clientCollection.at(i)->getSocketfd());
+				break;
 			}
 		}
 	}
@@ -445,9 +437,14 @@ int Controller::cmpBindRequest(const int nSocket, CSocketClient * client)
 
 int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, std::string strLog)
 {
+
+
 	int nRet = -1;
 	int nBody_len = 0;
 	int nTotal_len = 0;
+
+	if(nSocketFD == -1)
+			return nRet;
 
 	CMP_PACKET packet;
 	void *pHeader = &packet.cmpHeader;
@@ -477,7 +474,7 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 
 	if (mConfig.strMongoDBControllerMsgID.empty())
 	{
-		_log("[controller] use Socket send AccessLog to MongoDB Controller");
+		_DBG("[controller] use Socket send AccessLog to MongoDB Controller");
 
 		nRet = mongoDBClient->socketSend(nSocketFD, &packet, nTotal_len);
 		printPacket( access_log_request, STATUS_ROK, accessLogSequence, nRet, "[Controller Send to Client]",
@@ -487,7 +484,7 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 	//just send a inserted message into the mongodb controller message queue
 	else
 	{
-		_log("[controller] use Message Queue send AccessLog to MongoDB Controller");
+		_DBG("[controller] use Message Queue send AccessLog to MongoDB Controller");
 		nRet = mongoDBClient->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE, nSocketFD,
 				nTotal_len, &packet);
 	}
@@ -655,9 +652,15 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Controller Recv]", nClientFD);
+	if(cmpHeader.command_id == enquire_link_response && cmpHeader.command_status == STATUS_ROK)
+	{
 
+	}
+	else
+	{
+		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+						"[Controller-Tracker(Receive CMP from Client)]", nClientFD);
+	}
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
 		ackPacket(nClientFD, cmpHeader.command_id, pPacket);
@@ -689,7 +692,7 @@ void Controller::receiveClientCMP(int nClientFD, int nDataLen, const void *pData
  */
 void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 {
-	_log("[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen);
+	_DBG("[Controller] Receive CMP From Control Center:%d Length:%d", nServerFD, nDataLen);
 	int nRet = -1;
 	int nPacketLen = 0;
 	CMP_HEADER cmpHeader;
@@ -703,9 +706,18 @@ void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Controller Recv]", nServerFD);
-
+	if ((cmpHeader.command_id == enquire_link_response || cmpHeader.command_id == enquire_link_request)
+			&& cmpHeader.command_status == STATUS_ROK)
+	{
+		//_DBG("[Controller-Tracker] Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]",
+		//		cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+		//		nServerFD);
+	}
+	else
+	{
+		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+				"[Controller-Tracker(receive CMP from Control Center)]", nServerFD);
+	}
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
 		ackPacket(nServerFD, cmpHeader.command_id, pPacket);
@@ -736,7 +748,7 @@ void Controller::runEnquireLinkRequest()
 
 	while (1)
 	{
-		tdEnquireLink->threadSleep(10);
+		tdEnquireLink->threadSleep(20);
 		strLog = "Run Enquire Link Request";
 		_DBG("[Controller] %s", strLog.c_str());
 		/** Check Enquire link response **/

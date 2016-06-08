@@ -184,7 +184,7 @@ int CSocketServer::runClientHandler(int nClientFD)
 				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 			}
 			socketClose(nClientFD);
-			_log("[Socket Server] socket close client: %d", nClientFD);
+			_DBG("[Socket Server] socket close client: %d", nClientFD);
 			break;
 		}
 
@@ -320,7 +320,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 			socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-			_log("[Socket Server] Send Access Log Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+			_DBG("[Socket Server] Send Access Log Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 		}
 
 		if (nClientFD == getSocketfd())

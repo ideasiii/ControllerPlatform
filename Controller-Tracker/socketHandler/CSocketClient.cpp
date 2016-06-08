@@ -148,7 +148,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			if ( enquire_link_request == nCommand)
 			{
-				_log("[Socket Server] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_DBG("[Socket Client] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl(nCommandResp);
@@ -156,7 +156,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
-				_log("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_DBG("[Socket Client] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				continue;
 			}
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
