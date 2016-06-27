@@ -16,7 +16,6 @@ using namespace std;
 class CCmpHandler
 {
 	public:
-		explicit CCmpHandler();
 		static CCmpHandler* getInstance();
 		virtual ~CCmpHandler();
 		int getCommand(const void *pData);
@@ -31,5 +30,9 @@ class CCmpHandler
 		int parseBody(int nCommand, const void *pData, CDataHandler<std::string> &rData);
 		bool isAckPacket(int nCommand);
 		int parseBody(const void *pData, vector<string> &vData);
+
+	private:
+		CCmpHandler();
+
 };
 

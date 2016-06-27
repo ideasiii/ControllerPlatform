@@ -1,7 +1,7 @@
 /*
  * main.cpp
  *
- *  Created on: 2015年10月19日
+ *  Created on: 2015年10月20日
  *      Author: Louis Ju
  */
 
@@ -12,10 +12,16 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+
+#include "CConfig.h"
+#include "CControlCenter.h"
 #include "CMessageHandler.h"
 #include "common.h"
 #include "event.h"
-#include "Controller.h"
+#include "LogHandler.h"
+#include "utility.h"
+
+using namespace std;
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -29,10 +35,14 @@ void options(int argc, char **argv);
 
 int main(int argc, char* argv[])
 {
+
+	// parent process run process monitor
 	Watching();
 
 	// child process run service
-	runService( argc, argv );
+	runService(argc, argv);
+
+	closeMessage();
 
 	return EXIT_SUCCESS;
 }
@@ -45,67 +55,68 @@ int Watching()
 	pid_t w;
 	int status;
 
-	openlog( "Controller", LOG_PID, LOG_LOCAL0 );
+	openlog("ControlCenter", LOG_PID, LOG_LOCAL0);
 
 	do
 	{
 		child_pid = fork();
-		if ( child_pid == -1 )
+		if (child_pid == -1)
 		{
-			exit( EXIT_FAILURE );
+			exit( EXIT_FAILURE);
 		}
 
-		if ( child_pid == 0 )
+		if (child_pid == 0)
 		{
 			/**
 			 * Child process
 			 */
-			signal( SIGINT, CSigHander );
-			signal( SIGTERM, CSigHander );
-			signal( SIGPIPE, SIG_IGN );
-			syslog( LOG_INFO, "controller child process has been invoked" );
+			signal( SIGINT, CSigHander);
+			signal( SIGTERM, CSigHander);
+			signal( SIGPIPE, SIG_IGN);
 			return 0;
 		}
 
 		/**
 		 * Parent process
 		 */
-		signal( SIGINT, PSigHander );
-		signal( SIGTERM, PSigHander );
-		signal( SIGHUP, PSigHander );
-		signal( SIGPIPE, SIG_IGN );
+		signal( SIGINT, PSigHander);
+		signal( SIGTERM, PSigHander);
+		signal( SIGHUP, PSigHander);
+		signal( SIGPIPE, SIG_IGN);
 
-		w = waitpid( child_pid, &status, WUNTRACED | WCONTINUED );
-		closeMessage();
+		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
 
-		if ( w == -1 )
+		if (w == -1)
 		{
-			perror( "waitpid" );
-			exit( EXIT_FAILURE );
+			perror("waitpid");
+			exit( EXIT_FAILURE);
 		}
-		if ( WIFEXITED( status ) )
+		if (WIFEXITED(status))
 		{
-			_DBG( "[Process] child exited, status=%d\n", WEXITSTATUS(status) );
+			_DBG("[Process] child exited, status=%d\n", WEXITSTATUS(status));
 		}
-		else if ( WIFSIGNALED( status ) )
+		else if (WIFSIGNALED(status))
 		{
-			_DBG( "[Process] child killed by signal %d\n", WTERMSIG(status) );
+			_DBG("[Process] child killed by signal %d\n", WTERMSIG(status));
 		}
-		else if ( WIFSTOPPED( status ) )
+		else if (WIFSTOPPED(status))
 		{
-			_DBG( "[Process] child stopped by signal %d\n", WSTOPSIG(status) );
+			_DBG("[Process] child stopped by signal %d\n", WSTOPSIG(status));
 		}
-		else if ( WIFCONTINUED( status ) )
+		else if (WIFCONTINUED(status))
 		{
-			_DBG( "[Process] continued\n" );
+			_DBG("[Process] continued\n");
 		}
-		sleep( 3 );
+		else
+		{
+			_DBG("[Process] receive signal: %d\n", status);
+		}
+		sleep(3);
 	}
-	while ( SIGTERM != WTERMSIG( status ) && !flag );
+	while ( SIGTERM != WTERMSIG(status) && !flag);
 
-	syslog( LOG_INFO, "controller child process has been terminated" );
 	closelog();
-	exit( EXIT_SUCCESS );
+	exit( EXIT_SUCCESS);
 	return 1;
 }
 
@@ -114,7 +125,7 @@ int Watching()
  */
 void CSigHander(int signo)
 {
-	_DBG( "[Signal] Child Received signal %d", signo );
+	_DBG("[Signal] Child Received signal %d", signo);
 	flag = 1;
 }
 
@@ -123,13 +134,12 @@ void CSigHander(int signo)
  */
 void PSigHander(int signo)
 {
-	if ( SIGHUP == signo )
+	if ( SIGHUP == signo)
 		return;
-	_DBG( "[Signal] Parent Received signal %d", signo );
+	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
-	closeMessage();
-	sleep( 3 );
-	kill( child_pid, SIGKILL );
+	sleep(3);
+	kill(child_pid, SIGKILL);
 }
 
 /**
@@ -137,10 +147,11 @@ void PSigHander(int signo)
  */
 void closeMessage()
 {
-	CMessageHandler *messageHandler = new CMessageHandler;
-	messageHandler->init( MSG_ID );
-	messageHandler->close();
-	delete messageHandler;
+	int nMsqId = CMessageHandler::registerMsq(MSG_ID);
+	if (0 < nMsqId)
+	{
+		CMessageHandler::closeMsg(nMsqId);
+	}
 }
 
 /**
@@ -148,31 +159,55 @@ void closeMessage()
  */
 void runService(int argc, char* argv[])
 {
-	options( argc, argv );
 	std::string strArgv;
 	std::string strConf;
+	std::string strSqliteDBController;
+	std::string strSqliteDBIdeas;
+	int nServerPort = 6607;
+
+	LogHandler *logAgent = LogHandler::getInstance();
+	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
+
+	options(argc, argv);
+
+	CControlCenter *controlCenter = CControlCenter::getInstance();
 
 	strArgv = argv[0];
 
-	size_t found = strArgv.find_last_of( "/\\" );
-	std::string strProcessName = strArgv.substr( ++found );
+	size_t found = strArgv.find_last_of("/\\");
+	std::string strProcessName = strArgv.substr(++found);
 
 	strConf = strProcessName + ".conf";
-	_DBG( "Config file is:%s", strConf.c_str() )
-	Controller *controller = Controller::getInstance();
 
-	if ( controller->init(strConf ) && -1 != controller->initMessage( MSG_ID ) )
+	if (!strConf.empty())
 	{
-		if ( controller->startServer() )
+		CConfig *config = new CConfig();
+		if ( FALSE != config->loadConfig(strConf))
 		{
-			controller->connectCenter();
-			_DBG( "<============= Service Start Run =============>" )
-			controller->run( EVENT_FILTER_CONTROLLER );
-			_DBG( "<============= Service Stop Run =============>" )
-			controller->stopServer();
+			logAgent->setLogPath(config->getValue("LOG", "log"));
+			convertFromString(nServerPort, config->getValue("SERVER", "port"));
+			strSqliteDBController = config->getValue("SQLITE", "db_controller");
+			strSqliteDBIdeas = config->getValue("SQLITE", "db_ideas");
 		}
+		delete config;
 	}
-	_DBG( "[Process] child process exit" );
+
+	if (controlCenter->initMessage( MSG_ID) && controlCenter->startServer(nServerPort)
+			&& controlCenter->startMongo("127.0.0.1", 27027))
+	{
+		_log("<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>");
+		controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
+		_log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>");
+		controlCenter->stopServer();
+	}
+	else
+	{
+		closeMessage();
+		PSigHander(SIGINT);
+	}
+
+	_log("[Process] Child process say: good bye~");
+	delete logAgent;
 }
 
 /**
@@ -182,14 +217,14 @@ void options(int argc, char **argv)
 {
 	int c;
 
-	while ( (c = getopt( argc, argv, "M:P:F:m:p:f:H:h" )) != -1 )
+	while ((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
 	{
-		switch ( c )
+		switch (c)
 		{
-			case 'H':
-			case 'h':
-				printf( "this is help\n" );
-				break;
+		case 'H':
+		case 'h':
+			printf("this is help\n");
+			break;
 		}
 	}
 }
