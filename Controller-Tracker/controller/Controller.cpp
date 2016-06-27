@@ -472,7 +472,7 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 
-	if (mConfig.strMongoDBControllerMsgID.empty())
+	//if (mConfig.strMongoDBControllerMsgID.empty())
 	{
 		_DBG("[controller] use Socket send AccessLog to MongoDB Controller");
 
@@ -482,11 +482,11 @@ int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, st
 	}
 	//because of controller-tracker and mongodb controller are in the same machine
 	//just send a inserted message into the mongodb controller message queue
-	else
+	//else
 	{
-		_DBG("[controller] use Message Queue send AccessLog to MongoDB Controller");
-		nRet = mongoDBClient->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE, nSocketFD,
-				nTotal_len, &packet);
+		//_DBG("[controller] use Message Queue send AccessLog to MongoDB Controller");
+		//nRet = mongoDBClient->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_CONTROLLER_RECEIVE, nSocketFD,
+		//		nTotal_len, &packet);
 	}
 	return nRet;
 }
@@ -508,7 +508,16 @@ int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int 
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 	nRet = cmpServer->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", nSocket);
+
+	if (((unsigned int)nCommandSend == enquire_link_response ||(unsigned int) nCommandSend == enquire_link_request)
+				&& cmpHeader.command_status == STATUS_ROK)
+	{
+
+	}
+	else
+	{
+		printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send to Client]", nSocket);
+	}
 	return nRet;
 }
 
@@ -652,7 +661,7 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	if(cmpHeader.command_id == enquire_link_response && cmpHeader.command_status == STATUS_ROK)
+	if(((unsigned int)cmpHeader.command_id == enquire_link_request || (unsigned int)cmpHeader.command_id == enquire_link_response) && cmpHeader.command_status == STATUS_ROK)
 	{
 
 	}
@@ -706,7 +715,7 @@ void Controller::onCenterCMP(int nServerFD, int nDataLen, const void *pData)
 	cmpHeader.command_status = cmpParser->getStatus(pPacket);
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	if ((cmpHeader.command_id == enquire_link_response || cmpHeader.command_id == enquire_link_request)
+	if (((unsigned int)cmpHeader.command_id == enquire_link_response ||(unsigned int) cmpHeader.command_id == enquire_link_request)
 			&& cmpHeader.command_status == STATUS_ROK)
 	{
 		//_DBG("[Controller-Tracker] Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]",
