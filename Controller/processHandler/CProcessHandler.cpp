@@ -11,9 +11,36 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <event.h>
 
 #include "CProcessHandler.h"
 #include "CObject.h"
+#include "common.h"
+
+volatile int flag = 0;
+pid_t child_pid = -1; //Global
+
+/**
+ * Child signal handler
+ */
+void CSigHander(int signo)
+{
+	_DBG("[Signal] Child Received signal %d", signo);
+	flag = 1;
+}
+
+/**
+ * Parent signal handler
+ */
+void PSigHander(int signo)
+{
+	if ( SIGHUP == signo)
+		return;
+	_DBG("[Signal] Parent Received signal %d", signo);
+	flag = 1;
+	sleep(3);
+	kill(child_pid, SIGKILL);
+}
 
 CProcessHandler::CProcessHandler()
 {
@@ -35,7 +62,7 @@ int CProcessHandler::runProcess(CObject *pObj)
 
 	do
 	{
-		pid_t child_pid = fork();
+		child_pid = fork();
 		if (-1 == child_pid)
 		{
 			exit(EXIT_FAILURE);
@@ -49,6 +76,7 @@ int CProcessHandler::runProcess(CObject *pObj)
 			signal(SIGINT, CSigHander);
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
+			pObj->run( EVENT_FILTER_CONTROL_CENTER);
 			return 0;
 		}
 

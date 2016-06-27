@@ -1,30 +1,31 @@
 /*
- * CControlCenter.cpp
+ * CController.cpp
  *
- *  Created on: 2015年10月20日
- *      Author: Louis Ju
+ *  Created on: 2016年06月27日
+ *      Author: Jugo
  */
 
 #include <list>
 #include <ctime>
+
+#include "CAccessLog.h"
+#include "CAuthentication.h"
+#include "CInitial.h"
+#include "CSignup.h"
 #include "common.h"
 #include "CSocketServer.h"
 #include "event.h"
 #include "packet.h"
-#include "CControlCenter.h"
 #include "utility.h"
 #include "CCmpHandler.h"
+#include "CController.h"
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
-#include "CAccessLog.h"
-#include "CInitial.h"
-#include "CSignup.h"
-#include "CAuthentication.h"
 
 using namespace std;
 
-static CControlCenter * controlcenter = 0;
+static CController * controller = 0;
 
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
@@ -47,41 +48,41 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-CControlCenter::CControlCenter() :
+CController::CController() :
 		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
 				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), accessLog(
 				CAccessLog::getInstance()), authentication(CAuthentication::getInstance())
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
 	{
-		cmpRequest[i] = &CControlCenter::cmpUnknow;
+		cmpRequest[i] = &CController::cmpUnknow;
 	}
-	cmpRequest[bind_request] = &CControlCenter::cmpBind;
-	cmpRequest[unbind_request] = &CControlCenter::cmpUnbind;
-	cmpRequest[power_port_set_request] = &CControlCenter::cmpPowerPort;
-	cmpRequest[power_port_state_request] = &CControlCenter::cmpPowerPortState;
-	cmpRequest[access_log_request] = &CControlCenter::cmpAccessLog;
-	cmpRequest[initial_request] = &CControlCenter::cmpInitial;
-	cmpRequest[sign_up_request] = &CControlCenter::cmpSignup;
-	cmpRequest[sdk_tracker_request] = &CControlCenter::cmpSdkTracker;
-	cmpRequest[authentication_request] = &CControlCenter::cmpAuthentication;
+	cmpRequest[bind_request] = &CController::cmpBind;
+	cmpRequest[unbind_request] = &CController::cmpUnbind;
+	cmpRequest[power_port_set_request] = &CController::cmpPowerPort;
+	cmpRequest[power_port_state_request] = &CController::cmpPowerPortState;
+	cmpRequest[access_log_request] = &CController::cmpAccessLog;
+	cmpRequest[initial_request] = &CController::cmpInitial;
+	cmpRequest[sign_up_request] = &CController::cmpSignup;
+	cmpRequest[sdk_tracker_request] = &CController::cmpSdkTracker;
+	cmpRequest[authentication_request] = &CController::cmpAuthentication;
 }
 
-CControlCenter::~CControlCenter()
+CController::~CController()
 {
 	delete cmpParser;
 }
 
-CControlCenter* CControlCenter::getInstance()
+CController* CController::getInstance()
 {
-	if (0 == controlcenter)
+	if (0 == controller)
 	{
-		controlcenter = new CControlCenter();
+		controller = new CController();
 	}
-	return controlcenter;
+	return controller;
 }
 
-BOOL CControlCenter::startMongo(const std::string strIP, const int nPort)
+BOOL CController::startMongo(const std::string strIP, const int nPort)
 {
 	if (-1 != accessLog->connectDB(strIP, nPort))
 	{
@@ -95,7 +96,7 @@ BOOL CControlCenter::startMongo(const std::string strIP, const int nPort)
 	return FALSE;
 }
 
-void CControlCenter::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	switch (nCommand)
 	{
@@ -111,7 +112,7 @@ void CControlCenter::onReceiveMessage(int nEvent, int nCommand, unsigned long in
 	}
 }
 
-int CControlCenter::startServer(const int nPort)
+int CController::startServer(const int nPort)
 {
 	if (0 >= nPort)
 		return FALSE;
@@ -130,7 +131,7 @@ int CControlCenter::startServer(const int nPort)
 	return TRUE;
 }
 
-void CControlCenter::stopServer()
+void CController::stopServer()
 {
 	if (tdEnquireLink)
 	{
@@ -147,7 +148,7 @@ void CControlCenter::stopServer()
 	}
 }
 
-int CControlCenter::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
+int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
 {
 	int nRet = -1;
 	int nCommandSend;
@@ -168,7 +169,7 @@ int CControlCenter::sendCommand(int nSocket, int nCommand, int nStatus, int nSeq
 	return nRet;
 }
 
-void CControlCenter::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
+void CController::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
 {
 	string strLog;
 	switch (nCommand)
@@ -204,16 +205,16 @@ void CControlCenter::ackPacket(int nClientSocketFD, int nCommand, const void * p
 	}
 }
 
-int CControlCenter::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
+int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
 {
 	_DBG("[Center] Unknow command:%d", nCommand);
 	sendCommand(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
 	return 0;
 }
 
-int CControlCenter::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
+int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet)
 	{
@@ -243,13 +244,13 @@ int CControlCenter::cmpBind(int nSocket, int nCommand, int nSequence, const void
 	return FAIL;
 }
 
-int CControlCenter::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
+int CController::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
 	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
 	return 0;
 }
 
-int CControlCenter::getControllerSocketFD(std::string strControllerID)
+int CController::getControllerSocketFD(std::string strControllerID)
 {
 	int nRet = FAIL;
 	string strSQL = "SELECT socket_fd FROM controller WHERE status = 1 and id = '" + strControllerID + "';";
@@ -264,9 +265,9 @@ int CControlCenter::getControllerSocketFD(std::string strControllerID)
 	return nRet;
 }
 
-int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("wire") && rData.isValidKey("port") && rData.isValidKey("state")
 			&& rData.isValidKey("controller"))
@@ -295,9 +296,9 @@ int CControlCenter::cmpPowerPort(int nSocket, int nCommand, int nSequence, const
 	return 0;
 }
 
-int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("wire") && rData.isValidKey("controller"))
 	{
@@ -334,9 +335,9 @@ int CControlCenter::cmpPowerPortState(int nSocket, int nCommand, int nSequence, 
 	return 0;
 }
 
-int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
@@ -355,9 +356,9 @@ int CControlCenter::cmpAccessLog(int nSocket, int nCommand, int nSequence, const
 	return 0;
 }
 
-int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type"))
 	{
@@ -386,9 +387,9 @@ int CControlCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const v
 	return nRet;
 }
 
-int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
@@ -415,9 +416,9 @@ int CControlCenter::cmpAuthentication(int nSocket, int nCommand, int nSequence, 
 	return nRet;
 }
 
-int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
@@ -433,9 +434,9 @@ int CControlCenter::cmpSdkTracker(int nSocket, int nCommand, int nSequence, cons
 	return nRet;
 }
 
-int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler < std::string > rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
@@ -462,22 +463,22 @@ int CControlCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const vo
 	return nRet;
 }
 
-int CControlCenter::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
+int CController::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
 {
 	return cmpResponse(nSocket, power_port_state_response, nSequence, szData);
 }
 
-int CControlCenter::cmpInitialResponse(int nSocket, int nSequence, const char * szData)
+int CController::cmpInitialResponse(int nSocket, int nSequence, const char * szData)
 {
 	return cmpResponse(nSocket, initial_response, nSequence, szData);
 }
 
-int CControlCenter::cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData)
+int CController::cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData)
 {
 	return cmpResponse(nSocket, mdm_login_response, nSequence, szData);
 }
 
-int CControlCenter::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
+int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
 {
 	int nRet = -1;
 	int nBody_len = 0;
@@ -512,7 +513,7 @@ int CControlCenter::cmpResponse(const int nSocket, const int nCommandId, const i
 	return nRet;
 }
 
-int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState)
+int CController::cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState)
 {
 	int nRet = -1;
 	int nBody_len = 0;
@@ -546,7 +547,7 @@ int CControlCenter::cmpPowerPortRequest(int nSocket, std::string strWire, std::s
 	return nRet;
 }
 
-int CControlCenter::cmpPowerPortStateRequest(int nSocket, std::string strWire)
+int CController::cmpPowerPortStateRequest(int nSocket, std::string strWire)
 {
 	int nRet = -1;
 	int nBody_len = 0;
@@ -572,7 +573,7 @@ int CControlCenter::cmpPowerPortStateRequest(int nSocket, std::string strWire)
 	return nRet;
 }
 
-void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
+void CController::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
 	_DBG("[Center] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen);
 
@@ -609,7 +610,7 @@ void CControlCenter::onCMP(int nClientFD, int nDataLen, const void *pData)
 
 }
 
-void CControlCenter::runEnquireLinkRequest()
+void CController::runEnquireLinkRequest()
 {
 	int nSocketFD = -1;
 	list<int> listValue;
@@ -648,12 +649,12 @@ void CControlCenter::runEnquireLinkRequest()
 	}
 }
 
-int CControlCenter::cmpEnquireLinkRequest(const int nSocketFD)
+int CController::cmpEnquireLinkRequest(const int nSocketFD)
 {
 	return sendCommand(nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false);
 }
 
-int CControlCenter::getBindSocket(list<int> &listValue)
+int CController::getBindSocket(list<int> &listValue)
 {
 	string strSql = "SELECT socket_fd FROM controller WHERE status = 1;";
 	return sqlite->getControllerColumeValueInt(strSql.c_str(), listValue, 0);
@@ -662,7 +663,7 @@ int CControlCenter::getBindSocket(list<int> &listValue)
 /************************************* thread function **************************************/
 void *threadEnquireLinkRequest(void *argv)
 {
-	CControlCenter* ss = reinterpret_cast<CControlCenter*>(argv);
+	CController* ss = reinterpret_cast<CController*>(argv);
 	ss->runEnquireLinkRequest();
 	return NULL;
 }

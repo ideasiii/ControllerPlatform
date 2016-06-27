@@ -5,7 +5,8 @@
  *      Author: Louis Ju
  */
 
-#include "CAccessLog.h"
+#include "../controllerHandler/CAccessLog.h"
+
 #include "packet.h"
 #include <map>
 #include <string>

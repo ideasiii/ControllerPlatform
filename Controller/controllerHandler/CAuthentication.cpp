@@ -5,7 +5,8 @@
  *      Author: Jugo
  */
 
-#include "CAuthentication.h"
+#include "../controllerHandler/CAuthentication.h"
+
 #include "CSqliteHandler.h"
 #include "packet.h"
 

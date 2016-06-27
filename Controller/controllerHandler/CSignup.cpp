@@ -4,11 +4,12 @@
  *  Created on: 2015年12月17日
  *      Author: Louis Ju
  */
+#include "../controllerHandler/CSignup.h"
+
 #include <list>
 #include "CSqliteHandler.h"
 #include "common.h"
 #include "cJSON.h"
-#include "CSignup.h"
 #include "packet.h"
 
 using namespace std;

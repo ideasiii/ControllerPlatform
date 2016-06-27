@@ -15,4 +15,7 @@ public:
 	explicit CProcessHandler();
 	virtual ~CProcessHandler();
 	int runProcess(CObject *pObj);
+
+private:
+
 };

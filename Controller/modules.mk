@@ -1,6 +1,6 @@
 export MODULES=global_inc \
 			 main \
-			 controlCenter \
+			 controllerHandler \
 			 configHandler	\
 			 messageHandler	\
 			 objectHandler	\

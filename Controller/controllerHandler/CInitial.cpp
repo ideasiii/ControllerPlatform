@@ -5,7 +5,8 @@
  *      Author: Louis Ju
  */
 
-#include "CInitial.h"
+#include "../controllerHandler/CInitial.h"
+
 #include "packet.h"
 
 using namespace std;

@@ -42,37 +42,37 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 {
 	switch (nSocketType)
 	{
-		case AF_UNIX:
-			memset(&unAddr, 0, sizeof(sockaddr_un));
-			unAddr.sun_family = AF_UNIX;
-			if ( NULL == szPath || strlen(szPath) <= 0)
+	case AF_UNIX:
+		memset(&unAddr, 0, sizeof(sockaddr_un));
+		unAddr.sun_family = AF_UNIX;
+		if ( NULL == szPath || strlen(szPath) <= 0)
+		{
+			setLastError(ERROR_NOT_SET_DOMAIN_PATH);
+			return -1;
+		}
+		strcpy(unAddr.sun_path, szPath);
+		break;
+	case AF_INET:
+		memset(&inAddr, 0, sizeof(sockaddr_in));
+		inAddr.sin_family = AF_INET;
+		if (0 >= strlen(szIP))
+		{
+			inAddr.sin_addr.s_addr = INADDR_ANY;
+		}
+		else
+		{
+			if (inet_aton(szIP, &inAddr.sin_addr) == 0)
 			{
-				setLastError(ERROR_NOT_SET_DOMAIN_PATH);
+				perror("inet_aton");
 				return -1;
 			}
-			strcpy(unAddr.sun_path, szPath);
-			break;
-		case AF_INET:
-			memset(&inAddr, 0, sizeof(sockaddr_in));
-			inAddr.sin_family = AF_INET;
-			if (0 >= strlen(szIP))
-			{
-				inAddr.sin_addr.s_addr = INADDR_ANY;
-			}
-			else
-			{
-				if (inet_aton(szIP, &inAddr.sin_addr) == 0)
-				{
-					perror("inet_aton");
-					return -1;
-				}
-			}
-			inAddr.sin_port = htons(m_nPort);
-			break;
-		default:
-			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			return -1;
-			break;
+		}
+		inAddr.sin_port = htons(m_nPort);
+		break;
+	default:
+		setLastError(ERROR_UNKNOW_SOCKET_TYPE);
+		return -1;
+		break;
 	}
 
 	setSocketType(nSocketType);
@@ -80,30 +80,31 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 
 	switch (nStyle)
 	{
-		case SOCK_STREAM:
-			m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-			if ( AF_UNIX == nSocketType && -1 != m_nSocketFD)
-			{
-				_log("[Socket] create doamin socket success , socket FD = %d", m_nSocketFD);
-			}
-			if ( AF_INET == nSocketType && -1 != m_nSocketFD)
-			{
-				_log("[Socket] create TCP socket success , socket FD = %d", m_nSocketFD);
-			}
-			break;
-		case SOCK_DGRAM:
-			m_nSocketFD = socket(nSocketType, SOCK_DGRAM, IPPROTO_UDP);
-			if (-1 != m_nSocketFD)
-				_log("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
-			break;
-		default:
-			m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-			_log("[Socket] create stream socket");
-			break;
+	case SOCK_STREAM:
+		m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
+//			if ( AF_UNIX == nSocketType && -1 != m_nSocketFD)
+//			{
+//				//_log("[Socket] create doamin socket success , socket FD = %d", m_nSocketFD);
+//			}
+//			if ( AF_INET == nSocketType && -1 != m_nSocketFD)
+//			{
+//				//_log("[Socket] create TCP socket success , socket FD = %d\n", m_nSocketFD);
+//			}
+		break;
+	case SOCK_DGRAM:
+		m_nSocketFD = socket(nSocketType, SOCK_DGRAM, IPPROTO_UDP);
+		//if (-1 != m_nSocketFD)
+		//_log("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
+		break;
+	default:
+		m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
+		//_log("[Socket] create stream socket");
+		break;
 	}
 
 	if (-1 == m_nSocketFD)
 	{
+		_log("[Socket] create Socket Fail , socket FD = -1");
 		setLastError(ERROR_SOCKET_CREATE_FAIL);
 	}
 	else
@@ -112,6 +113,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 
 		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
 		{
+			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
 			perror("setsockopt SO_REUSEADDR");
 		}
 
@@ -192,30 +194,30 @@ int CSocket::connectServer()
 
 	switch (nSocketType)
 	{
-		case AF_UNIX:
-			sLen = sizeof(unAddr);
-			nResult = connect(getSocketfd(), (struct sockaddr *) &unAddr, sLen);
-			break;
-		case AF_INET:
-			server = gethostbyname((const char *) szIP);
-			if (server == NULL)
-			{
-				_log("[Socket] ERROR, no such host");
-				return -1;
-			}
-			bzero((char *) &serv_addr, sizeof(serv_addr));
-			serv_addr.sin_family = AF_INET;
-			bcopy((char *) server->h_addr, (char *) &serv_addr.sin_addr.s_addr,
-			server->h_length);
-			serv_addr.sin_port = htons(m_nPort);
-			nResult = connect(getSocketfd(),(struct sockaddr *)&serv_addr,sizeof(serv_addr));
-			_log("connect to: IP=%s port=%d", szIP, m_nPort);
-			break;
-			default:
-			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			nResult = -1;
-			break;
+	case AF_UNIX:
+		sLen = sizeof(unAddr);
+		nResult = connect(getSocketfd(), (struct sockaddr *) &unAddr, sLen);
+		break;
+	case AF_INET:
+		server = gethostbyname((const char *) szIP);
+		if (server == NULL)
+		{
+			_log("[Socket] ERROR, no such host");
+			return -1;
 		}
+		bzero((char *) &serv_addr, sizeof(serv_addr));
+		serv_addr.sin_family = AF_INET;
+		bcopy((char *) server->h_addr, (char *) &serv_addr.sin_addr.s_addr,
+		server->h_length);
+		serv_addr.sin_port = htons(m_nPort);
+		nResult = connect(getSocketfd(),(struct sockaddr *)&serv_addr,sizeof(serv_addr));
+		_log("connect to: IP=%s port=%d", szIP, m_nPort);
+		break;
+		default:
+		setLastError(ERROR_UNKNOW_SOCKET_TYPE);
+		nResult = -1;
+		break;
+	}
 
 	if (-1 == nResult)
 	{
@@ -233,42 +235,42 @@ void CSocket::setLastError(int nErrNo)
 
 	switch (nErrNo)
 	{
-		case ERROR_OK:
-			return;
-			break;
-		case ERROR_UNKNOW_SOCKET_TYPE:
-			strcpy(msg, "unknow socket type");
-			break;
-		case ERROR_SOCKET_CREATE_FAIL:
-			strcpy(msg, "socket create error");
-			break;
-		case ERROR_BIND_FAIL:
-			strcpy(msg, "socket bind error");
-			break;
-		case ERROR_LISTEN_FAIL:
-			strcpy(msg, "socket listen error");
-			break;
-		case ERROR_ACCEPT_FAIL:
-			strcpy(msg, "socket accept error");
-			break;
-		case ERROR_NOT_SET_DOMAIN_PATH:
-			strcpy(msg, "socket domain path error");
-			break;
-		case ERROR_INVALID_SOCKET_FD:
-			strcpy(msg, "socket invalid socket FD");
-			break;
-		case ERROR_CONNECT_FAIL:
-			strcpy(msg, "socket connect error");
-			break;
-		case ERROR_SEND_FAIL:
-			strcpy(msg, "socket send error");
-			break;
-		case ERROR_RECEIVE_FAIL:
-			strcpy(msg, "socket receive error");
-			break;
-		default:
-			strcpy(msg, "socket unknow error");
-			break;
+	case ERROR_OK:
+		return;
+		break;
+	case ERROR_UNKNOW_SOCKET_TYPE:
+		strcpy(msg, "unknow socket type");
+		break;
+	case ERROR_SOCKET_CREATE_FAIL:
+		strcpy(msg, "socket create error");
+		break;
+	case ERROR_BIND_FAIL:
+		strcpy(msg, "socket bind error");
+		break;
+	case ERROR_LISTEN_FAIL:
+		strcpy(msg, "socket listen error");
+		break;
+	case ERROR_ACCEPT_FAIL:
+		strcpy(msg, "socket accept error");
+		break;
+	case ERROR_NOT_SET_DOMAIN_PATH:
+		strcpy(msg, "socket domain path error");
+		break;
+	case ERROR_INVALID_SOCKET_FD:
+		strcpy(msg, "socket invalid socket FD");
+		break;
+	case ERROR_CONNECT_FAIL:
+		strcpy(msg, "socket connect error");
+		break;
+	case ERROR_SEND_FAIL:
+		strcpy(msg, "socket send error");
+		break;
+	case ERROR_RECEIVE_FAIL:
+		strcpy(msg, "socket receive error");
+		break;
+	default:
+		strcpy(msg, "socket unknow error");
+		break;
 	}
 
 	perror(msg);
@@ -288,17 +290,17 @@ int CSocket::socketSend(int nSockFD, const void* pBuf, int nBufLen)
 
 	switch (nSocketStyle)
 	{
-		case SOCK_STREAM: /*virtual circuit*/
-			nResult = send(nSockFD, pBuf, nBufLen, FLAGS);
-			break;
-		case SOCK_DGRAM: /*datagram, for UDP client send*/
-			nResult = sendto(nSockFD, pBuf, (unsigned long int) nBufLen, FLAGS, (const sockaddr *) &inAddr,
-					(unsigned int) sizeof(inAddr));
-			break;
-		case SOCK_RAW: /*raw socket*/
-			break;
-		case SOCK_RDM: /*reliably-delivered message*/
-			break;
+	case SOCK_STREAM: /*virtual circuit*/
+		nResult = send(nSockFD, pBuf, nBufLen, FLAGS);
+		break;
+	case SOCK_DGRAM: /*datagram, for UDP client send*/
+		nResult = sendto(nSockFD, pBuf, (unsigned long int) nBufLen, FLAGS, (const sockaddr *) &inAddr,
+				(unsigned int) sizeof(inAddr));
+		break;
+	case SOCK_RAW: /*raw socket*/
+		break;
+	case SOCK_RDM: /*reliably-delivered message*/
+		break;
 	}
 
 	if (-1 == nResult)
@@ -332,27 +334,27 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 
 	switch (nSocketStyle)
 	{
-		case SOCK_STREAM: /*virtual circuit*/
-			nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
-			//		_log("[Socket] socket recv: %d", nResult);
-			break;
-		case SOCK_DGRAM: /*datagram*/
-			if (0 != pClientSockaddr)
+	case SOCK_STREAM: /*virtual circuit*/
+		nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
+		//		_log("[Socket] socket recv: %d", nResult);
+		break;
+	case SOCK_DGRAM: /*datagram*/
+		if (0 != pClientSockaddr)
+		{
+			memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
+			slen = sizeof(struct sockaddr_in);
+			nResult = recvfrom(nSockFD, *pBuf, BUF_SIZE, FLAGS, (sockaddr *) pClientSockaddr, &slen);
+			if (0 < nResult)
 			{
-				memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
-				slen = sizeof(struct sockaddr_in);
-				nResult = recvfrom(nSockFD, *pBuf, BUF_SIZE, FLAGS, (sockaddr *) pClientSockaddr, &slen);
-				if (0 < nResult)
-				{
-					//				_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
-					//						ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
-				}
+				//				_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
+				//						ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
 			}
-			break;
-		case SOCK_RAW: /*raw socket*/
-			break;
-		case SOCK_RDM: /*reliably-delivered message*/
-			break;
+		}
+		break;
+	case SOCK_RAW: /*raw socket*/
+		break;
+	case SOCK_RDM: /*reliably-delivered message*/
+		break;
 	}
 
 	if (-1 == nResult)
@@ -372,27 +374,27 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 
 	switch (nSocketStyle)
 	{
-		case SOCK_STREAM: /*virtual circuit*/
-			nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
-			//		_log("[Socket] socket recv: %d", nResult);
-			break;
-		case SOCK_DGRAM: /*datagram*/
-			if (0 != pClientSockaddr)
+	case SOCK_STREAM: /*virtual circuit*/
+		nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
+		//		_log("[Socket] socket recv: %d", nResult);
+		break;
+	case SOCK_DGRAM: /*datagram*/
+		if (0 != pClientSockaddr)
+		{
+			memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
+			slen = sizeof(struct sockaddr_in);
+			nResult = recvfrom(nSockFD, *pBuf, nSize, FLAGS, (sockaddr *) pClientSockaddr, &slen);
+			if (0 < nResult)
 			{
-				memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
-				slen = sizeof(struct sockaddr_in);
-				nResult = recvfrom(nSockFD, *pBuf, nSize, FLAGS, (sockaddr *) pClientSockaddr, &slen);
-				if (0 < nResult)
-				{
-					//				_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
-					//						ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
-				}
+				//				_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
+				//						ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
 			}
-			break;
-		case SOCK_RAW: /*raw socket*/
-			break;
-		case SOCK_RDM: /*reliably-delivered message*/
-			break;
+		}
+		break;
+	case SOCK_RAW: /*raw socket*/
+		break;
+	case SOCK_RDM: /*reliably-delivered message*/
+		break;
 	}
 
 	if (-1 == nResult)
@@ -446,19 +448,19 @@ int CSocket::socketBind()
 
 	switch (nSocketType)
 	{
-		case AF_UNIX:
-			sLen = sizeof(unAddr);
-			unlink(szPath);
-			nResult = bind(getSocketfd(), (struct sockaddr *) &unAddr, sLen);
-			break;
-		case AF_INET:
-			sLen = sizeof(inAddr);
-			nResult = bind(getSocketfd(), (struct sockaddr *) &inAddr, sLen);
-			break;
-		default:
-			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			nResult = -1;
-			break;
+	case AF_UNIX:
+		sLen = sizeof(unAddr);
+		unlink(szPath);
+		nResult = bind(getSocketfd(), (struct sockaddr *) &unAddr, sLen);
+		break;
+	case AF_INET:
+		sLen = sizeof(inAddr);
+		nResult = bind(getSocketfd(), (struct sockaddr *) &inAddr, sLen);
+		break;
+	default:
+		setLastError(ERROR_UNKNOW_SOCKET_TYPE);
+		nResult = -1;
+		break;
 	}
 
 	if (-1 == nResult)
@@ -505,19 +507,19 @@ int CSocket::socketAccept()
 
 	switch (nSocketType)
 	{
-		case AF_UNIX:
-			sLen = sizeof(unClientAddr);
-			nResult = accept(getSocketfd(), (struct sockaddr *) &unClientAddr, &sLen);
-			break;
-		case AF_INET:
-			sLen = sizeof(inClientAddr);
-			nResult = accept(getSocketfd(), (struct sockaddr *) &inClientAddr, &sLen);
-			break;
-		default:
+	case AF_UNIX:
+		sLen = sizeof(unClientAddr);
+		nResult = accept(getSocketfd(), (struct sockaddr *) &unClientAddr, &sLen);
+		break;
+	case AF_INET:
+		sLen = sizeof(inClientAddr);
+		nResult = accept(getSocketfd(), (struct sockaddr *) &inClientAddr, &sLen);
+		break;
+	default:
 //			_DBG("socket type: %d", nSocketType);
-			setLastError(ERROR_UNKNOW_SOCKET_TYPE);
-			nResult = -1;
-			break;
+		setLastError(ERROR_UNKNOW_SOCKET_TYPE);
+		nResult = -1;
+		break;
 	}
 
 	if (-1 == nResult)
