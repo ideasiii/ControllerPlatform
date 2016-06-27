@@ -22,6 +22,7 @@
 #include "LogHandler.h"
 #include "utility.h"
 #include "CConfig.h"
+#include "LogHandler.h"
 
 using namespace std;
 
@@ -31,6 +32,8 @@ void options(int argc, char **argv);
 int main(int argc, char* argv[])
 {
 	openlog("controller", LOG_PID, LOG_LOCAL0);
+	LogHandler *logAgent = LogHandler::getInstance(); // this is parent process log handler.
+	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
 	CProcessHandler *process = new CProcessHandler();
 	CController *controller = CController::getInstance();
 	if (controller->initMessage( MSG_ID) && controller->startServer(6607))

@@ -16,6 +16,7 @@
 #include "CProcessHandler.h"
 #include "CObject.h"
 #include "common.h"
+#include "LogHandler.h"
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -76,6 +77,8 @@ int CProcessHandler::runProcess(CObject *pObj)
 			signal(SIGINT, CSigHander);
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
+			LogHandler *logAgent = LogHandler::getInstance();
+			 logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
 			pObj->run( EVENT_FILTER_CONTROL_CENTER);
 			return 0;
 		}

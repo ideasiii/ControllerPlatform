@@ -37,5 +37,6 @@ extern "C"
 #define BACKLOG		128		// How many pending connections queue will hold
 #define SUCCESS		1
 #define	 FAIL				-1
-};
+}
+;
 #endif
