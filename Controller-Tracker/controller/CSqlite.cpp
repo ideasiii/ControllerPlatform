@@ -85,33 +85,38 @@ void *threadSqliteHandler(void *argv)
 	ThreadArgv* ss = reinterpret_cast<ThreadArgv*>(argv);
 
 	cJSON *cJsonInputString = cJSON_Parse(ss->jsonString.c_str());
-	cJSON *cJsonData = cJsonInputString->child;
-	cJSON *next;
 
 	string deviceID = "";
 	vector<string> fieldData = vector<string>();
-	while (cJsonData)
+
+	if (cJsonInputString)
 	{
-		next = cJsonData->next;
+		cJSON *cJsonData = cJsonInputString->child;
+		cJSON *next;
 
-		if (strcmp(cJsonData->string, "ID") == 0)
+
+		while (cJsonData)
 		{
-			deviceID = cJsonData->valuestring;
+			next = cJsonData->next;
+
+			if (strcmp(cJsonData->string, "ID") == 0)
+			{
+				deviceID = cJsonData->valuestring;
+			}
+			else
+			{
+				fieldData.push_back(cJsonData->string);
+			}
+			cJsonData = next;
 		}
-		else
-		{
-			fieldData.push_back(cJsonData->string);
-		}
-		cJsonData = next;
+
+		delete cJsonData;
+		delete next;
+		delete cJsonInputString;
+		cJsonData = NULL;
+		next = NULL;
 	}
-
-	delete cJsonInputString;
-	delete cJsonData;
-	delete next;
-
 	cJsonInputString = NULL;
-	cJsonData = NULL;
-	next = NULL;
 
 	ss->mCsqlite->updateDeviceFieldTable(deviceID, fieldData);
 
@@ -135,19 +140,14 @@ void CSqlite::runMessageReceive()
 	threadHandler->threadJoin(threadHandler->getThreadID());
 }
 
-
 void CSqlite::createThread(string jsonString)
 {
 	ThreadArgv *argv = new ThreadArgv();
 	argv->mCsqlite = this;
 
-
 	argv->jsonString = jsonString;
 
 	threadHandler->createThread(threadSqliteHandler, (void *) argv);
-
-
-
 
 }
 void CSqlite::createMessageReceiver()
@@ -187,12 +187,12 @@ void CSqlite::updateCacheDeviceIDData()
 	{
 		cacheDeviceIDData.push_back(string(*it));
 	}
-/*
-	for (size_t i = 0; i < cacheDeviceIDData.size(); i++)
-	{
-		_DBG("update new device id: %s", cacheDeviceIDData.at(i).c_str())
-	}
-	*/
+	/*
+	 for (size_t i = 0; i < cacheDeviceIDData.size(); i++)
+	 {
+	 _DBG("update new device id: %s", cacheDeviceIDData.at(i).c_str())
+	 }
+	 */
 	delete newSqlData;
 
 }
@@ -228,7 +228,6 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	//for (size_t i = 0; i < mData.size(); i++)
 	//	_DBG("flied data = %s", mData.at(i).c_str());
 
-
 	threadHandler->threadLock();
 
 	//here add rawdata ID to compare cacheDeviceID cause rawdata ID is composed by mac+deviceID+mail
@@ -244,7 +243,7 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	{
 		//error nonknown this id
 		//recorded it
-		 _log("[CSqlite] UNKNOWN this Device ID %s",id.c_str());
+		_log("[CSqlite] UNKNOWN this Device ID %s", id.c_str());
 
 		sendMessage(EVENT_FILTER_CSQLITE, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
 		threadHandler->threadUnlock();
@@ -265,8 +264,8 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	for (size_t i = 0; i < needToAdd->size(); i++)
 	{
 
-		string sqlexec = "INSERT INTO device_field(id,field) VALUES('" + needToAdd->at(i).getDeviceID()
-				+ "','" + needToAdd->at(i).getFieldName() + "');";
+		string sqlexec = "INSERT INTO device_field(id,field) VALUES('" + needToAdd->at(i).getDeviceID() + "','"
+				+ needToAdd->at(i).getFieldName() + "');";
 
 		mCSqliteHandler->fieldSqlExec(sqlexec.c_str());
 
@@ -285,14 +284,11 @@ void CSqlite::updateDeviceFieldTable(string id, vector<string> &mData)
 	delete needToAdd;
 	needToAdd = NULL;
 
-
 	sendMessage(EVENT_FILTER_CSQLITE, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
 	threadHandler->threadUnlock();
 	threadHandler->threadSleep(1);
 	threadHandler->threadExit();
 }
-
-
 
 void CSqlite::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
