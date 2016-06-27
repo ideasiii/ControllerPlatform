@@ -29,8 +29,11 @@ extern "C"
 #define ULONG	unsigned long
 #endif
 
-#define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)
+#ifndef UINT
+#define UINT unsigned int
+#endif
 
+#define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)
 #define _TRACE(msg, arg...) printf("[DEBUG] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg)
 
 #define BUF_SIZE		2048	// socket send & recv buffer

@@ -10,7 +10,7 @@
 /********************************************************************
  * message queue id
  */
-#define MSG_ID							20160608
+#define MSG_ID							20160621
 
 /********************************************************************
  * event filter
@@ -18,11 +18,11 @@
  */
 enum EVENT_FILTER
 {
-	CONTROL_CENTER = 1, SOCKET_SERVER,
+	CONTROLLER = 1, SOCKET_SERVER,
 };
 
-#define EVENT_FILTER														2000
-#define EVENT_FILTER_CONTROL_CENTER				(EVENT_FILTER + CONTROL_CENTER)
+#define EVENT_FILTER												2000
+#define EVENT_FILTER_CONTROLLER						(EVENT_FILTER + CONTROLLER)
 #define EVENT_FILTER_SOCKET_SERVER					(EVENT_FILTER + SOCKET_SERVER)
 
 /********************************************************************
