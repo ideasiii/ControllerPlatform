@@ -10,6 +10,7 @@ export MODULES=global_inc \
 			 cmpHandler	\
 			 sqliteHandler	\
 			 jsonHandler \
-			 logHandler
+			 logHandler \
+			 processHandler
 			 
 export EXT_MODULES=extInclude

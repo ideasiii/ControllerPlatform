@@ -35,7 +35,7 @@ void options(int argc, char **argv);
 
 int main(int argc, char* argv[])
 {
-
+	openlog("controller", LOG_PID, LOG_LOCAL0);
 	// parent process run process monitor
 	Watching();
 
@@ -54,8 +54,6 @@ int Watching()
 {
 	pid_t w;
 	int status;
-
-	openlog("ControlCenter", LOG_PID, LOG_LOCAL0);
 
 	do
 	{
