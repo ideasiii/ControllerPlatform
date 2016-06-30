@@ -1,8 +1,7 @@
 #####################################
 # Controller make file
-# Created on: Nor 02,2015
-# Author: Louis Ju
-# This is controller service prototype
+# Created on: 2016-06-27
+# Author: Jugo
 #####################################
 
 include env.mk
@@ -27,7 +26,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lsqlite3
-			
+					
 vpath %.cpp $(SRC_DIR)
 
 define make-goal
@@ -39,9 +38,9 @@ endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-.IGNORE: clean
+.IGNORE: clean cleanAll
 
-all: checkdirs lib bin/$(TARGET)
+all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
@@ -65,27 +64,33 @@ checkdirs:
 	@mkdir -p libs
 	
 clean:
+	@for libName in ${MODULES} ; do \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
+	done
 	@for libName in ${LIB_NAMES} ; do \
-		$(MAKE) V=99 -C $$libName clean; \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
 	@for libName in ${EXT_MODULES} ; do \
-		$(MAKE) V=99 -C $$libName clean; \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
+	@$(MAKE) v=99 -C Tester clean > /dev/null;
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
 
 cleanAll: clean
-	@rm -rf $(DIR_APP_ROOT)libs/*
+	@rm -rf $(DIR_APP_ROOT)libs
 	
 mk_debug:
 	@echo "\n"
 	@echo 'Program Name    : '$(TARGET)
 	@echo 'Program Version : '$(VERSION)"\n"
 	@echo 'Source Director : '$(SRC_DIR)"\n"
+	@echo 'Source  : '$(SRC)"\n"
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
+	@echo 'Libs:'${LIB_NAMES}"\n"
 	
 package-s:
 	yum -y install sqlite-devel.x86_64
@@ -96,7 +101,9 @@ package-s:
 	
 package-u:
 	apt-get -y install sqlite3 libsqlite3-dev
+	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
+	apt-get -y install autoconf automake libtool
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 	

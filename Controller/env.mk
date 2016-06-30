@@ -1,15 +1,16 @@
 #####################################
 # global variable
-# Created on: Oct 16, 2015
-# Author: Louis Ju
+# Created on: 2016-06-27
+# Author: Jugo
 #####################################
 
-export VERSION=v0.0.0.2
+export VERSION=v0.0.0.1
 export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 #####################################
-# Version module controle
-# Build Debug version use: -DDEBUG -DTRACE -DTRACE_BODY
+# Running Version module controle
+# Build Debug version use: -DDEBUG
+# Build Trace version use: -DTRACE
 # Build Release version use: -DRELEASE
 #####################################
-export LOG=-DDEBUG -DTRACE_BODY
+export LOG=-DDEBUG 
