@@ -53,9 +53,9 @@ CProcessHandler::~CProcessHandler()
 
 }
 
-int CProcessHandler::runProcess(CObject *pObj)
+int CProcessHandler::runProcess(void (*entry)(void))
 {
-	if (0 == pObj)
+	if (0 == entry)
 		return -1;
 
 	pid_t w;
@@ -78,8 +78,8 @@ int CProcessHandler::runProcess(CObject *pObj)
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
 			LogHandler *logAgent = LogHandler::getInstance();
-			 logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
-			pObj->run( EVENT_FILTER_CONTROL_CENTER);
+			logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
+			(*entry)();
 			return 0;
 		}
 

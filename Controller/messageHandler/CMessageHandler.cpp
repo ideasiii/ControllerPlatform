@@ -207,15 +207,13 @@ int CMessageHandler::registerMsq(const long lkey)
 
 void CMessageHandler::closeMsg(const int nMsqId)
 {
-	if (-1 == nMsqId)
+	if (0 >= nMsqId)
 	{
-		_log("[Message] Error, close message fail, invalid meqid");
+		_log("[Message] Error, close message fail, invalid meqid : %d", nMsqId);
 		return;
 	}
-	if (msgctl(nMsqId, IPC_RMID, NULL) == -1)
-	{
+	if (-1 == msgctl(nMsqId, IPC_RMID, NULL))
 		_log("[Message] Error, close message fail, message queue control fail");
-	}
-
-	_log("[Message] message queue close, id: %d", nMsqId);
+	else
+		_log("[Message] message queue close, id: %d", nMsqId);
 }

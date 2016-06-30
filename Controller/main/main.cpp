@@ -26,39 +26,57 @@
 
 using namespace std;
 
-void closeMessage();
+string getConfName(string strProcessName);
 void options(int argc, char **argv);
+void runService();
 
 int main(int argc, char* argv[])
 {
+
 	openlog("controller", LOG_PID, LOG_LOCAL0);
-	LogHandler *logAgent = LogHandler::getInstance(); // this is parent process log handler.
-	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
+//	LogHandler *logAgent = LogHandler::getInstance(); // this is parent process log handler.
+//	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controllerP.log");
+
+// Read Configuration
+	string *pstrConf = new string(getConfName(argv[0]));
+	delete pstrConf;
+
+	// Run Process
 	CProcessHandler *process = new CProcessHandler();
+	process->runProcess(runService);
+
+//	if (controller->initMessage( MSG_ID) && controller->startServer(6607))
+//	{
+//		cout << "<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+//		process->runProcess(runService);
+//		cout << "<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+//		controller->stopServer();
+//	}
+
+	// Clear Message Queue
+	CMessageHandler::closeMsg(CMessageHandler::registerMsq(MSG_ID));
+
+	delete process;
+	return EXIT_SUCCESS;
+}
+
+std::string getConfName(std::string strProcessName)
+{
+	size_t found = strProcessName.find_last_of("/\\");
+	return (strProcessName.substr(++found) + ".conf");
+}
+
+void runService()
+{
 	CController *controller = CController::getInstance();
 	if (controller->initMessage( MSG_ID) && controller->startServer(6607))
 	{
 		cout << "<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
-		process->runProcess(dynamic_cast<CObject*>(controller));
+		controller->run(EVENT_FILTER_CONTROL_CENTER);
 		cout << "<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
 	}
-
-	delete process;
-	closeMessage();
-	return EXIT_SUCCESS;
-}
-
-/**
- * clean message queue
- */
-void closeMessage()
-{
-	int nMsqId = CMessageHandler::registerMsq(MSG_ID);
-	if (0 < nMsqId)
-	{
-		CMessageHandler::closeMsg(nMsqId);
-	}
+	delete controller;
 }
 
 /**

@@ -14,7 +14,7 @@ class CProcessHandler
 public:
 	explicit CProcessHandler();
 	virtual ~CProcessHandler();
-	int runProcess(CObject *pObj);
+	int runProcess(void (*entry)(void));
 
 private:
 
