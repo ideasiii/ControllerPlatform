@@ -119,6 +119,7 @@ void *threadSqliteHandler(void *argv)
 	else
 	{
 		_log("[CSqlite] Invaild Json format!!  data: %s", ss->jsonString.c_str());
+
 	}
 	cJsonInputString = NULL;
 
