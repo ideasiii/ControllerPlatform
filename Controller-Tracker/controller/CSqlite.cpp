@@ -116,6 +116,10 @@ void *threadSqliteHandler(void *argv)
 		cJsonData = NULL;
 		next = NULL;
 	}
+	else
+	{
+		_log("[CSqlite] Invaild Json format!!  data: %s", ss->jsonString.c_str());
+	}
 	cJsonInputString = NULL;
 
 	ss->mCsqlite->updateDeviceFieldTable(deviceID, fieldData);
