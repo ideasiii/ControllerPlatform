@@ -1,66 +1,40 @@
 /*
  * main.cpp
  *
- *  Created on: 2015年10月20日
- *      Author: Louis Ju
+ *  Created on: 2016年07月01日
+ *      Author: Jugo
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
 
 #include "CController.h"
 #include "CProcessHandler.h"
-
 #include "CMessageHandler.h"
-#include "common.h"
 #include "event.h"
 #include "LogHandler.h"
-#include "utility.h"
 #include "CConfig.h"
-#include "LogHandler.h"
 
 using namespace std;
 
 string getConfName(string strProcessName);
 void options(int argc, char **argv);
-void runService();
+static void runService();
 
 int main(int argc, char* argv[])
 {
-
-	openlog("controller", LOG_PID, LOG_LOCAL0);
-//	LogHandler *logAgent = LogHandler::getInstance(); // this is parent process log handler.
-//	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controllerP.log");
-
-// Read Configuration
-	string *pstrConf = new string(getConfName(argv[0]));
-	delete pstrConf;
+	extern char *__progname;
+	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
 	// Run Process
-	CProcessHandler *process = new CProcessHandler();
-	process->runProcess(runService);
+	CProcessHandler::runProcess(runService);
 
-//	if (controller->initMessage( MSG_ID) && controller->startServer(6607))
-//	{
-//		cout << "<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
-//		process->runProcess(runService);
-//		cout << "<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
-//		controller->stopServer();
-//	}
-
-	// Clear Message Queue
-	CMessageHandler::closeMsg(CMessageHandler::registerMsq(MSG_ID));
-
-	delete process;
+	closelog();
 	return EXIT_SUCCESS;
 }
 
-std::string getConfName(std::string strProcessName)
+string getConfName(std::string strProcessName)
 {
 	size_t found = strProcessName.find_last_of("/\\");
 	return (strProcessName.substr(++found) + ".conf");
@@ -68,13 +42,21 @@ std::string getConfName(std::string strProcessName)
 
 void runService()
 {
+	extern char *__progname;
+	getConfName(__progname);
+	string *pstrConf = new string(getConfName(__progname));
+	_log("Get Config File : %s", pstrConf->c_str());
+	delete pstrConf;
+
 	CController *controller = CController::getInstance();
 	if (controller->initMessage( MSG_ID) && controller->startServer(6607))
 	{
-		cout << "<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROL_CENTER);
-		cout << "<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+		CMessageHandler::closeMsg(CMessageHandler::registerMsq(MSG_ID));
+		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
+
 	}
 	delete controller;
 }

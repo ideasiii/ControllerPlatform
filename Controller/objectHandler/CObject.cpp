@@ -46,13 +46,13 @@ int CObject::run(int nRecvEvent)
 
 	if (-1 == messageHandler->getMsqid())
 	{
-		_DBG("invalid msqid, not init msq");
+		_log("[Object] Invalid msqid, not init msq");
 		return -1;
 	}
 
 	if (0 >= nRecvEvent)
 	{
-		_DBG("invalid receive event id");
+		_log("[Object] Invalid receive event id");
 		return -1;
 	}
 
@@ -61,7 +61,7 @@ int CObject::run(int nRecvEvent)
 	pdata = msgbuf;
 	messageHandler->setRecvEvent(nRecvEvent);
 
-	_log("[Message] Message Service Start Run , Event ID:%d", nRecvEvent);
+	_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
 	while (1)
 	{
 		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
@@ -80,14 +80,13 @@ int CObject::run(int nRecvEvent)
 		}
 		else
 		{
-			_DBG("receive message fail");
 			sleep(5);
 		}
 	}
 
 	delete msgbuf;
 
-	_DBG("[Object] message loop end");
+	_log("[Object] Message loop end");
 	return 0;
 }
 

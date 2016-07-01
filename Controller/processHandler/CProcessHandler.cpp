@@ -14,7 +14,6 @@
 #include <event.h>
 
 #include "CProcessHandler.h"
-#include "CObject.h"
 #include "common.h"
 #include "LogHandler.h"
 
@@ -26,7 +25,7 @@ pid_t child_pid = -1; //Global
  */
 void CSigHander(int signo)
 {
-	_DBG("[Signal] Child Received signal %d", signo);
+	_log("[Signal] Child Received signal %d", signo);
 	flag = 1;
 }
 
@@ -37,7 +36,7 @@ void PSigHander(int signo)
 {
 	if ( SIGHUP == signo)
 		return;
-	_DBG("[Signal] Parent Received signal %d", signo);
+	_log("[Signal] Parent Received signal %d", signo);
 	flag = 1;
 	sleep(3);
 	kill(child_pid, SIGKILL);
@@ -100,30 +99,28 @@ int CProcessHandler::runProcess(void (*entry)(void))
 		}
 		if (WIFEXITED(status))
 		{
-			_DBG("[Process] child exited, status=%d\n", WEXITSTATUS(status));
+			_log("[Process] child exited, status=%d\n", WEXITSTATUS(status));
 		}
 		else if (WIFSIGNALED(status))
 		{
-			_DBG("[Process] child killed by signal %d\n", WTERMSIG(status));
+			_log("[Process] child killed by signal %d\n", WTERMSIG(status));
 		}
 		else if (WIFSTOPPED(status))
 		{
-			_DBG("[Process] child stopped by signal %d\n", WSTOPSIG(status));
+			_log("[Process] child stopped by signal %d\n", WSTOPSIG(status));
 		}
 		else if (WIFCONTINUED(status))
 		{
-			_DBG("[Process] continued\n");
+			_log("[Process] continued\n");
 		}
 		else
 		{
-			_DBG("[Process] receive signal: %d\n", status);
+			_log("[Process] receive signal: %d\n", status);
 		}
 		sleep(3);
 	}
 	while (SIGTERM != WTERMSIG(status) && !flag);
 
-	closelog();
-	exit(EXIT_SUCCESS);
 	return 1;
 }
 
