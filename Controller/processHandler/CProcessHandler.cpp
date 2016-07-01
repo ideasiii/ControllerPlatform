@@ -76,8 +76,7 @@ int CProcessHandler::runProcess(void (*entry)(void))
 			signal(SIGINT, CSigHander);
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
-			LogHandler *logAgent = LogHandler::getInstance();
-			logAgent->setLogPath("/data/opt/tomcat/webapps/logs/controller.log");
+
 			(*entry)();
 			return 0;
 		}

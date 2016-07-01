@@ -15,6 +15,7 @@
 #include "event.h"
 #include "LogHandler.h"
 #include "CConfig.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -42,21 +43,50 @@ string getConfName(std::string strProcessName)
 
 void runService()
 {
+	int nInit = TRUE;
+	int nTmp = -1;
 	extern char *__progname;
 	getConfName(__progname);
+
+	LogHandler *logAgent = LogHandler::getInstance();
+	CController *controller = CController::getInstance();
+	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
+	if ( FALSE != config->loadConfig(*pstrConf))
+	{
+		logAgent->setLogPath(config->getValue("LOG", "log"));
+		convertFromString(nTmp, config->getValue("MSQ", "id"));
+		if (controller->initMessage(nTmp))
+		{
+			if (0 == config->getValue("SERVER", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("SERVER", "port"));
+				if (!controller->startServer(nTmp))
+				{
+					nInit = FALSE;
+				}
+			}
+		}
+		else
+		{
+			nInit = FALSE;
+		}
+	}
+	else
+	{
+		nInit = FALSE;
+	}
 	delete pstrConf;
+	delete config;
 
-	CController *controller = CController::getInstance();
-	if (controller->initMessage( MSG_ID) && controller->startServer(6607))
+	if (TRUE == nInit)
 	{
 		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROL_CENTER);
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(MSG_ID));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
-
 	}
 	delete controller;
 }
