@@ -16,6 +16,7 @@
 #define MAX_FUNC_POINT		256
 
 class CSocketServer;
+class CSocketClient;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
@@ -28,10 +29,11 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServer(const int nPort);
+	int startServer(const int nPort, const int nMsqId);
 	void stopServer();
-	void runEnquireLinkRequest();BOOL startSqlite(const int nDBId, const std::string strDB);BOOL startMongo(
-			const std::string strIP, const int nPort);
+	void runEnquireLinkRequest();
+	int startSqlite(const int nDBId, const std::string strDB);
+	int startMongo(const std::string strIP, const int nPort);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -77,6 +79,7 @@ private:
 	CAccessLog *accessLog;
 	std::vector<int> vEnquireLink;
 	CAuthentication* authentication;
+	CSocketClient *cmpClient;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
 	MemFn cmpRequest[MAX_FUNC_POINT];

@@ -195,6 +195,19 @@ void CCmpTest::cmpAuthentication()
 	}
 }
 
+void CCmpTest::cmpBind()
+{
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	int nRet = sendRequest( bind_request, pbuf);
+	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
+	{
+		printf("Bind Response Body Data:%s\n", buf);
+	}
+}
+
 int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 {
 	struct epoll_event ev;                     // Used for EPOLL.
@@ -296,92 +309,93 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strMdmAccount = "testing@iii.org.tw";
 	string strMdmPasswd = "testing";
 	string strAppId = "123456789";
+	string strMAC = "000c29d0013c";
 
 	switch (nCommand)
 	{
-		case bind_request:
-			memcpy(pIndex, strControllerId.c_str(), strControllerId.size());
-			pIndex += strControllerId.size();
-			nBody_len += strControllerId.size();
-			memcpy(pIndex, "\0", 1);
-			pIndex += 1;
-			nBody_len += 1;
-			break;
-		case access_log_request:
-			net_type = htonl(TYPE_TEST);
-			memcpy(pIndex, (const char*) &net_type, 4);
-			pIndex += 4;
-			nBody_len += 4;
-			memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
-			pIndex += strAccessLog.length();
-			nBody_len += strAccessLog.length();
-			memcpy(pIndex, "\0", 1);
-			++pIndex;
-			++nBody_len;
-			break;
-		case initial_request:
-			net_type = htonl(TRACKER_APPLIANCE);
-			memcpy(pIndex, (const char*) &net_type, 4);
-			pIndex += 4;
-			nBody_len += 4;
-			break;
-		case sign_up_request:
-			net_type = htonl(TYPE_MOBILE_SERVICE);
-			memcpy(pIndex, (const char*) &net_type, 4);
-			pIndex += 4;
-			nBody_len += 4;
-			memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
-			pIndex += strSignup.length();
-			nBody_len += strSignup.length();
-			memcpy(pIndex, "\0", 1);
-			++pIndex;
-			++nBody_len;
-			break;
-		case mdm_login_request:
-			memcpy(pIndex, strMdmAccount.c_str(), strMdmAccount.size());
-			pIndex += strMdmAccount.size();
-			nBody_len += strMdmAccount.size();
-			memcpy(pIndex, "\0", 1);
-			pIndex += 1;
-			nBody_len += 1;
-			memcpy(pIndex, strMdmPasswd.c_str(), strMdmPasswd.size());
-			pIndex += strMdmPasswd.size();
-			nBody_len += strMdmPasswd.size();
-			memcpy(pIndex, "\0", 1);
-			pIndex += 1;
-			nBody_len += 1;
-			break;
-		case mdm_operate_request:
-			memcpy(pIndex, mstrToken.c_str(), mstrToken.size());
-			pIndex += mstrToken.size();
-			nBody_len += mstrToken.size();
-			memcpy(pIndex, "\0", 1);
-			pIndex += 1;
-			nBody_len += 1;
-			break;
-		case power_port_state_request:
-			nNum = htonl(1);
-			memcpy(pIndex, (const char*) &nNum, 4);
-			pIndex += 4;
-			nBody_len += 4;
-			break;
-		case power_port_set_request:
-			nNum = htonl(1);
-			memcpy(pIndex, (const char*) &nNum, 4);
-			pIndex += 4;
-			nBody_len += 4;
+	case bind_request:
+		memcpy(pIndex, strMAC.c_str(), strMAC.size());
+		pIndex += strMAC.size();
+		nBody_len += strMAC.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case access_log_request:
+		net_type = htonl(TYPE_TEST);
+		memcpy(pIndex, (const char*) &net_type, 4);
+		pIndex += 4;
+		nBody_len += 4;
+		memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
+		pIndex += strAccessLog.length();
+		nBody_len += strAccessLog.length();
+		memcpy(pIndex, "\0", 1);
+		++pIndex;
+		++nBody_len;
+		break;
+	case initial_request:
+		net_type = htonl(TRACKER_APPLIANCE);
+		memcpy(pIndex, (const char*) &net_type, 4);
+		pIndex += 4;
+		nBody_len += 4;
+		break;
+	case sign_up_request:
+		net_type = htonl(TYPE_MOBILE_SERVICE);
+		memcpy(pIndex, (const char*) &net_type, 4);
+		pIndex += 4;
+		nBody_len += 4;
+		memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
+		pIndex += strSignup.length();
+		nBody_len += strSignup.length();
+		memcpy(pIndex, "\0", 1);
+		++pIndex;
+		++nBody_len;
+		break;
+	case mdm_login_request:
+		memcpy(pIndex, strMdmAccount.c_str(), strMdmAccount.size());
+		pIndex += strMdmAccount.size();
+		nBody_len += strMdmAccount.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		memcpy(pIndex, strMdmPasswd.c_str(), strMdmPasswd.size());
+		pIndex += strMdmPasswd.size();
+		nBody_len += strMdmPasswd.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case mdm_operate_request:
+		memcpy(pIndex, mstrToken.c_str(), mstrToken.size());
+		pIndex += mstrToken.size();
+		nBody_len += mstrToken.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case power_port_state_request:
+		nNum = htonl(1);
+		memcpy(pIndex, (const char*) &nNum, 4);
+		pIndex += 4;
+		nBody_len += 4;
+		break;
+	case power_port_set_request:
+		nNum = htonl(1);
+		memcpy(pIndex, (const char*) &nNum, 4);
+		pIndex += 4;
+		nBody_len += 4;
 
-			nNum = htonl(1);
-			memcpy(pIndex, (const char*) &nNum, 4);
-			pIndex += 4;
-			nBody_len += 4;
+		nNum = htonl(1);
+		memcpy(pIndex, (const char*) &nNum, 4);
+		pIndex += 4;
+		nBody_len += 4;
 
-			memcpy(pIndex, "0", 1);
-			pIndex += 1;
-			nBody_len += 1;
-			break;
-		case authentication_request:
-			break;
+		memcpy(pIndex, "0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case authentication_request:
+		break;
 	}
 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;

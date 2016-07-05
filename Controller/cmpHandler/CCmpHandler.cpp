@@ -140,135 +140,131 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 	int nMacCount = 0;
 	char macName[13];
 
-	struct sPORT
-	{
-			int nPort;
-	};
-
 	nTotalLen = getLength(pData);
 	nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 	if (0 < nBodyLen)
 	{
 		pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+
 		switch (nCommand)
 		{
-			case bind_request:
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("id", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case power_port_set_request:
+		case bind_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
 				memset(temp, 0, sizeof(temp));
-				memcpy(temp, pBody, 1);
-				++pBody;
-				rData.setData("wire", temp);
+				strcpy(temp, pBody);
+				rData.setData("id", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case power_port_set_request:
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("wire", temp);
 
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("port", temp);
+
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("state", temp);
+
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
 				memset(temp, 0, sizeof(temp));
-				memcpy(temp, pBody, 1);
-				++pBody;
-				rData.setData("port", temp);
+				strcpy(temp, pBody);
+				rData.setData("controller", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case power_port_state_request:
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("wire", temp);
 
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
 				memset(temp, 0, sizeof(temp));
-				memcpy(temp, pBody, 1);
-				++pBody;
-				rData.setData("state", temp);
-
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("controller", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case power_port_state_request:
+				strcpy(temp, pBody);
+				rData.setData("controller", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case initial_request:
+			nType = ntohl(*((int*) pBody));
+			rData.setData("type", ConvertToString(nType));
+			pBody += 4;
+			break;
+		case sign_up_request:
+		case authentication_request:
+		case access_log_request:
+			nType = ntohl(*((int*) pBody));
+			rData.setData("type", ConvertToString(nType));
+			pBody += 4;
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
 				memset(temp, 0, sizeof(temp));
-				memcpy(temp, pBody, 1);
-				++pBody;
-				rData.setData("wire", temp);
-
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("controller", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case initial_request:
-				nType = ntohl(*((int*) pBody));
-				rData.setData("type", ConvertToString(nType));
-				pBody += 4;
-				break;
-			case sign_up_request:
-			case authentication_request:
-			case access_log_request:
-				nType = ntohl(*((int*) pBody));
-				rData.setData("type", ConvertToString(nType));
-				pBody += 4;
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("data", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case mdm_login_request:
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("account", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("password", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case mdm_operate_request:
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("token", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
-			case sdk_tracker_request:
-				if (isValidStr((const char*) pBody, MAX_SIZE))
-				{
-					memset(temp, 0, sizeof(temp));
-					strcpy(temp, pBody);
-					rData.setData("data", temp);
-					nStrLen = strlen(temp);
-					++nStrLen;
-					pBody += nStrLen;
-				}
-				break;
+				strcpy(temp, pBody);
+				rData.setData("data", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case mdm_login_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("account", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("password", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case mdm_operate_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("token", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case sdk_tracker_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("data", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
 		}
 	}
 	else

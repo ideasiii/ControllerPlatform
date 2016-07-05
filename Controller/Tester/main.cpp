@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	sign_up_request)("cmp enquire", enquire_link_request)("cmp access", access_log_request)("mdm login",
 	mdm_login_request)("mdm operate",
 	mdm_operate_request)("io", IO_PRESSURE)("cmp pwstate", power_port_state_request)("cmp pwset",
-	power_port_set_request)("cmp auth", authentication_request);
+	power_port_set_request)("cmp auth", authentication_request)("cmp bind", bind_request);
 
 	printf("This process is a Control Center testing process!.\n");
 
@@ -94,52 +94,55 @@ int main(int argc, char* argv[])
 			//	printf("get command: %d from input: %s size: %d\n", nCommand, strInput.c_str(), (int)strInput.length());
 			switch (nCommand)
 			{
-				case BYE:
-					printf("Bye.\n");
-					running = 0;
-					break;
-				case HELP:
-					printf("Test CMP Use:\n");
-					for (map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
-					{
-						cout << (*i).first << endl;
-					}
-					break;
-				case PRESSURE:
-					cmpTest->cmpPressure();
-					break;
-				case enquire_link_request:
-					cmpTest->cmpEnquireLinkRequest();
-					break;
-				case initial_request:
-					cmpTest->cmpInitialRequest();
-					break;
-				case sign_up_request:
-					cmpTest->cmpSignupRequest();
-					break;
-				case access_log_request:
-					cmpTest->cmpAccessLogRequest();
-					break;
-				case mdm_login_request:
-					cmpTest->cmpMdmLogin();
-					break;
-				case mdm_operate_request:
-					cmpTest->cmpMdmOperate();
-					break;
-				case IO_PRESSURE:
-					cmpTest->ioPressure();
-					break;
-				case power_port_state_request:
-					cmpTest->cmpPowerState();
-					break;
-				case power_port_set_request:
-					cmpTest->cmpPowerSet();
-					break;
-				case authentication_request:
-					break;
-				default:
-					printf("Unknow command, use help to show valid command.\n");
-					break;
+			case BYE:
+				printf("Bye.\n");
+				running = 0;
+				break;
+			case HELP:
+				printf("Test CMP Use:\n");
+				for (map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+				{
+					cout << (*i).first << endl;
+				}
+				break;
+			case PRESSURE:
+				cmpTest->cmpPressure();
+				break;
+			case enquire_link_request:
+				cmpTest->cmpEnquireLinkRequest();
+				break;
+			case initial_request:
+				cmpTest->cmpInitialRequest();
+				break;
+			case sign_up_request:
+				cmpTest->cmpSignupRequest();
+				break;
+			case access_log_request:
+				cmpTest->cmpAccessLogRequest();
+				break;
+			case mdm_login_request:
+				cmpTest->cmpMdmLogin();
+				break;
+			case mdm_operate_request:
+				cmpTest->cmpMdmOperate();
+				break;
+			case IO_PRESSURE:
+				cmpTest->ioPressure();
+				break;
+			case power_port_state_request:
+				cmpTest->cmpPowerState();
+				break;
+			case power_port_set_request:
+				cmpTest->cmpPowerSet();
+				break;
+			case authentication_request:
+				break;
+			case bind_request:
+				cmpTest->cmpBind();
+				break;
+			default:
+				printf("Unknow command, use help to show valid command.\n");
+				break;
 			}
 		}
 	}

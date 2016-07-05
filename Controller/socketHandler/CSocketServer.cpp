@@ -245,6 +245,11 @@ int CSocketServer::runSMSHandler(int nClientFD)
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
 
+	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
+	{
+		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
+	}
+
 	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(cmpPacket));
@@ -417,19 +422,18 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 {
 	switch (nCommand)
 	{
-		case EVENT_COMMAND_SOCKET_ACCEPT:
-			smsHandler((int) nId);
-			//clientHandler((int) nId);
-			break;
-		case EVENT_COMMAND_THREAD_EXIT:
-			_log("[Socket Server] Receive Thread Join, Thread ID: %d", (int) nId);
-			threadHandler->threadJoin(nId);
-			break;
-		case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
-			break;
-		default:
-			_log("[Socket Server] unknow message command");
-			break;
+	case EVENT_COMMAND_SOCKET_ACCEPT:
+		smsHandler((int) nId);
+		break;
+	case EVENT_COMMAND_THREAD_EXIT:
+		_log("[Socket Server] Receive Thread Join, Thread ID: %x", nId);
+		threadHandler->threadJoin(nId);
+		break;
+	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
+		break;
+	default:
+		_log("[Socket Server] unknow message command");
+		break;
 	}
 }
 

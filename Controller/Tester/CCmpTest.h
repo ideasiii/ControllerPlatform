@@ -11,25 +11,26 @@
 
 class CCmpTest
 {
-	public:
-		CCmpTest();
-		virtual ~CCmpTest();
-		void cmpInitialRequest();
-		void cmpSignupRequest();
-		void cmpEnquireLinkRequest();
-		void cmpAccessLogRequest();
-		void cmpPressure();
-		void ioPressure();
-		void cmpMdmLogin();
-		void cmpMdmOperate();
-		void cmpPowerState();
-		void cmpPowerSet();
-		void cmpAuthentication();
-		int sendRequest(const int nCommandId, void *pRespBuf);
-		void connectCenter(const std::string strIP, const int nPort);
+public:
+	CCmpTest();
+	virtual ~CCmpTest();
+	void cmpInitialRequest();
+	void cmpSignupRequest();
+	void cmpEnquireLinkRequest();
+	void cmpAccessLogRequest();
+	void cmpPressure();
+	void ioPressure();
+	void cmpMdmLogin();
+	void cmpMdmOperate();
+	void cmpPowerState();
+	void cmpPowerSet();
+	void cmpAuthentication();
+	int sendRequest(const int nCommandId, void *pRespBuf);
+	void connectCenter(const std::string strIP, const int nPort);
+	void cmpBind();
 
-	private:
-		int mSocket;
-		int formatPacket(int nCommand, void **pPacket, int nSequence);
-		std::string mstrToken;
+private:
+	int mSocket;
+	int formatPacket(int nCommand, void **pPacket, int nSequence);
+	std::string mstrToken;
 };

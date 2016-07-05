@@ -43,6 +43,7 @@ CSqliteHandler::~CSqliteHandler()
 int CSqliteHandler::openControllerDB(const char *dbPath)
 {
 	int rc = sqlite3_open(dbPath, &dbController);
+
 	int nRet = FALSE;
 
 	if (rc)
@@ -383,15 +384,15 @@ bool CSqliteHandler::isAppIdExist(const std::string strAppId)
 	nState = sqlite3_step(stmt);
 	switch (nState)
 	{
-		case SQLITE_ROW:
-			text = sqlite3_column_text(stmt, 1);
-			_log("[Sqlite] get App Id count: %s", text);
-			break;
-		case SQLITE_DONE:
-			break;
-		default:
-			_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
-			break;
+	case SQLITE_ROW:
+		text = sqlite3_column_text(stmt, 1);
+		_log("[Sqlite] get App Id count: %s", text);
+		break;
+	case SQLITE_DONE:
+		break;
+	default:
+		_log("[Sqlite] SQL:%s exec fail", strSql.c_str());
+		break;
 	}
 	return bExist;
 }

@@ -16,6 +16,8 @@
 #include "LogHandler.h"
 #include "CConfig.h"
 #include "utility.h"
+#include "common.h"
+#include "CSqliteHandler.h"
 
 using namespace std;
 
@@ -45,6 +47,8 @@ void runService()
 {
 	int nInit = TRUE;
 	int nTmp = -1;
+	int nMsgID = -1;
+	string strConf;
 	extern char *__progname;
 	getConfName(__progname);
 
@@ -53,16 +57,34 @@ void runService()
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
-	if ( FALSE != config->loadConfig(*pstrConf))
+	if (FALSE != config->loadConfig(*pstrConf))
 	{
 		logAgent->setLogPath(config->getValue("LOG", "log"));
-		convertFromString(nTmp, config->getValue("MSQ", "id"));
-		if (controller->initMessage(nTmp))
+		convertFromString(nMsgID, config->getValue("MSQ", "id"));
+		if (controller->initMessage(nMsgID))
 		{
 			if (0 == config->getValue("SERVER", "enable").compare("yes"))
 			{
 				convertFromString(nTmp, config->getValue("SERVER", "port"));
-				if (!controller->startServer(nTmp))
+				if (!controller->startServer(nTmp, nMsgID))
+				{
+					nInit = FALSE;
+				}
+				else
+				{
+					_log("[Controller] Create Server Service Success. Port : %d", nTmp);
+				}
+			}
+
+			if (0 == config->getValue("CENTER", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("CENTER", "port"));
+			}
+
+			strConf = config->getValue("SQLITE", "db_controller");
+			if (!strConf.empty())
+			{
+				if (!controller->startSqlite(DB_CONTROLLER, strConf))
 				{
 					nInit = FALSE;
 				}
@@ -83,8 +105,8 @@ void runService()
 	if (TRUE == nInit)
 	{
 		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
-		controller->run(EVENT_FILTER_CONTROL_CENTER);
-		CMessageHandler::closeMsg(CMessageHandler::registerMsq(MSG_ID));
+		controller->run(EVENT_FILTER_CONTROLLER);
+		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
 	}
