@@ -1,7 +1,7 @@
 /*
  * CSocket.h
  *
- *  Created on: 2015年10月19日
+ *  Created on: Sep 7, 2012
  *      Author: Louis Ju
  */
 
@@ -53,7 +53,6 @@ class CSocket
 		int socketSend(struct sockaddr_in &rSocketAddr, const void* pBuf, int nBufLen);
 		int socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSockaddr = 0);
 		int socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in *pClientSockaddr = 0);
-		int socketrecv(int nSockFD, int nSize, void** pBuf, int nTimeout = -1);
 		int socketBind();
 		int socketListen(int nCount);
 		int socketAccept();
@@ -63,7 +62,6 @@ class CSocket
 		bool checkSocketFD(int nSocketFD);
 		char *getMac(const char *iface);
 		int getIfAddress();
-		int make_socket_non_blocking(int nSocketFD);
 		int isValidSocketFD();
 
 	private:

@@ -1,5 +1,5 @@
 /*
- * Config.h
+ * CConfig.h
  *
  *  Created on: 2015年10月19日
  *      Author: root
@@ -16,16 +16,17 @@ typedef std::list<MAP_CONF_VALUE> LIST_CONF_MAP;
 typedef std::map<std::string, LIST_CONF_MAP> MAP_CONF;		// <section,list<name,value>>
 static MAP_CONF mapConf;
 
-class Config
+class CConfig
 {
 	public:
-		explicit Config();
-		virtual ~Config();
+		explicit CConfig();
+		virtual ~CConfig();
 		int loadConfig(std::string strConf);
 		void setConfig(std::string strSection, std::string strName, std::string strValue);
 		std::string getValue(std::string strSection, std::string strName);
 
 	private:
 		int readConfig(std::string strConf);
+
 };
 

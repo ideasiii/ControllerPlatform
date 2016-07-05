@@ -1,180 +1,174 @@
 /*
  * main.cpp
  *
- *  Created on: 2015年10月19日
- *      Author: Louis Ju
+ *  Created on: 2016年07月01日
+ *      Author: Jugo
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
+
+#include "CController.h"
+#include "CProcessHandler.h"
 #include "CMessageHandler.h"
-#include "common.h"
 #include "event.h"
-#include "Controller.h"
+#include "LogHandler.h"
+#include "CConfig.h"
+#include "utility.h"
+#include "common.h"
+#include "CSqliteHandler.h"
 
-volatile int flag = 0;
-pid_t child_pid = -1; //Global
+using namespace std;
 
-int Watching();
-void CSigHander(int signo);
-void PSigHander(int signo);
-void closeMessage();
-void runService(int argc, char* argv[]);
+string getConfName(string strProcessName);
 void options(int argc, char **argv);
+static void runService();
 
 int main(int argc, char* argv[])
 {
-	Watching();
+	extern char *__progname;
+	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
-	// child process run service
-	runService( argc, argv );
+	// Run Process
+	CProcessHandler::runProcess(runService);
 
+	closelog();
 	return EXIT_SUCCESS;
 }
 
-/**
- * Parent watch child status
- */
-int Watching()
+string getConfName(std::string strProcessName)
 {
-	pid_t w;
-	int status;
+	size_t found = strProcessName.find_last_of("/\\");
+	return (strProcessName.substr(++found) + ".conf");
+}
 
-	openlog( "Controller-AMX", LOG_PID, LOG_LOCAL0 );
+void runService()
+{
+	int nInit = TRUE;
+	int nTmp = -1;
+	int nMsgID = -1;
+	string strConf;
+	extern char *__progname;
+	getConfName(__progname);
 
-	do
+	LogHandler *logAgent = LogHandler::getInstance();
+	CController *controller = CController::getInstance();
+	CConfig *config = new CConfig();
+	string *pstrConf = new string(getConfName(__progname));
+	_log("Get Config File : %s", pstrConf->c_str());
+	if (FALSE != config->loadConfig(*pstrConf))
 	{
-		child_pid = fork();
-		if ( child_pid == -1 )
+		logAgent->setLogPath(config->getValue("LOG", "log"));
+		convertFromString(nMsgID, config->getValue("MSQ", "id"));
+		if (controller->initMessage(nMsgID))
 		{
-			exit( EXIT_FAILURE );
-		}
+			if (0 == config->getValue("SERVER", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("SERVER", "port"));
+				if (!controller->startServer(nTmp, nMsgID))
+				{
+					nInit = FALSE;
+				}
+				else
+				{
+					_log("[Controller] Create Server Service Success. Port : %d", nTmp);
+				}
+			}
 
-		if ( child_pid == 0 )
-		{
-			/**
-			 * Child process
-			 */
-			signal( SIGINT, CSigHander );
-			signal( SIGTERM, CSigHander );
-			signal( SIGPIPE, SIG_IGN );
-			syslog( LOG_INFO, "controller child process has been invoked" );
-			return 0;
-		}
+			if (0 == config->getValue("CENTER", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("CENTER", "port"));
+			}
 
-		/**
-		 * Parent process
-		 */
-		signal( SIGINT, PSigHander );
-		signal( SIGTERM, PSigHander );
-		signal( SIGHUP, PSigHander );
-		signal( SIGPIPE, SIG_IGN );
-
-		w = waitpid( child_pid, &status, WUNTRACED | WCONTINUED );
-		closeMessage();
-
-		if ( w == -1 )
-		{
-			perror( "waitpid" );
-			exit( EXIT_FAILURE );
+			strConf = config->getValue("SQLITE", "db_controller");
+			if (!strConf.empty())
+			{
+				if (!controller->startSqlite(DB_CONTROLLER, strConf))
+				{
+					nInit = FALSE;
+				}
+			}
 		}
-		if ( WIFEXITED( status ) )
+		else
 		{
-			_DBG( "[Process] child exited, status=%d\n", WEXITSTATUS(status) );
+			nInit = FALSE;
 		}
-		else if ( WIFSIGNALED( status ) )
-		{
-			_DBG( "[Process] child killed by signal %d\n", WTERMSIG(status) );
-		}
-		else if ( WIFSTOPPED( status ) )
-		{
-			_DBG( "[Process] child stopped by signal %d\n", WSTOPSIG(status) );
-		}
-		else if ( WIFCONTINUED( status ) )
-		{
-			_DBG( "[Process] continued\n" );
-		}
-		sleep( 3 );
 	}
-	while ( SIGTERM != WTERMSIG( status ) && !flag );
+	else
+	{
+		nInit = FALSE;
+	}
+	delete pstrConf;
+	delete config;
 
-	syslog( LOG_INFO, "controller child process has been terminated" );
-	closelog();
-	exit( EXIT_SUCCESS );
-	return 1;
-}
-
-/**
- * Child signal handler
- */
-void CSigHander(int signo)
-{
-	_DBG( "[Signal] Child Received signal %d", signo );
-	flag = 1;
-}
-
-/**
- * Parent signal handler
- */
-void PSigHander(int signo)
-{
-	if ( SIGHUP == signo )
-		return;
-	_DBG( "[Signal] Parent Received signal %d", signo );
-	flag = 1;
-	closeMessage();
-	sleep( 3 );
-	kill( child_pid, SIGKILL );
-}
-
-/**
- * clean message queue
- */
-void closeMessage()
-{
-	CMessageHandler *messageHandler = new CMessageHandler;
-	messageHandler->init( MSG_ID );
-	messageHandler->close();
-	delete messageHandler;
+	if (TRUE == nInit)
+	{
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		controller->run(EVENT_FILTER_CONTROLLER);
+		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
+		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+		controller->stopServer();
+	}
+	delete controller;
 }
 
 /**
  *Controller Service Run
+
+ void runService(int argc, char* argv[])
+ {
+ std::string strArgv;
+ std::string strConf;
+ std::string strSqliteDBController;
+ std::string strSqliteDBIdeas;
+ int nServerPort = 6607;
+
+ LogHandler *logAgent = LogHandler::getInstance();
+ logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
+
+ options(argc, argv);
+
+ CControlCenter *controlCenter = CControlCenter::getInstance();
+
+ strArgv = argv[0];
+
+ size_t found = strArgv.find_last_of("/\\");
+ std::string strProcessName = strArgv.substr(++found);
+
+ strConf = strProcessName + ".conf";
+
+ if (!strConf.empty())
+ {
+ CConfig *config = new CConfig();
+ if ( FALSE != config->loadConfig(strConf))
+ {
+ logAgent->setLogPath(config->getValue("LOG", "log"));
+ convertFromString(nServerPort, config->getValue("SERVER", "port"));
+ strSqliteDBController = config->getValue("SQLITE", "db_controller");
+ strSqliteDBIdeas = config->getValue("SQLITE", "db_ideas");
+ }
+ delete config;
+ }
+
+ if (controlCenter->initMessage( MSG_ID) && controlCenter->startServer(nServerPort)
+ && controlCenter->startMongo("127.0.0.1", 27027))
+ {
+ _log("<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>");
+ controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
+ _log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>");
+ controlCenter->stopServer();
+ }
+ else
+ {
+ closeMessage();
+ PSigHander(SIGINT);
+ }
+
+ _log("[Process] Child process say: good bye~");
+ delete logAgent;
+ }
  */
-void runService(int argc, char* argv[])
-{
-	options( argc, argv );
-	std::string strArgv;
-	std::string strConf;
-
-	strArgv = argv[0];
-
-	size_t found = strArgv.find_last_of( "/\\" );
-	std::string strProcessName = strArgv.substr( ++found );
-
-	strConf = strProcessName + ".conf";
-	_DBG( "Config file is:%s", strConf.c_str() )
-	Controller *controller = Controller::getInstance();
-
-	if ( controller->init(strConf ) && -1 != controller->initMessage( MSG_ID ) )
-	{
-		if ( controller->startServer() )
-		{
-			controller->connectCenter();
-			_DBG( "<============= Service Start Run =============>" )
-			controller->run( EVENT_FILTER_CONTROLLER );
-			_DBG( "<============= Service Stop Run =============>" )
-			controller->stopServer();
-		}
-	}
-	_DBG( "[Process] child process exit" );
-}
-
 /**
  * process options
  */
@@ -182,14 +176,14 @@ void options(int argc, char **argv)
 {
 	int c;
 
-	while ( (c = getopt( argc, argv, "M:P:F:m:p:f:H:h" )) != -1 )
+	while ((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
 	{
-		switch ( c )
+		switch (c)
 		{
-			case 'H':
-			case 'h':
-				printf( "this is help\n" );
-				break;
+		case 'H':
+		case 'h':
+			printf("this is help\n");
+			break;
 		}
 	}
 }
