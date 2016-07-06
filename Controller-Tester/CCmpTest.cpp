@@ -232,9 +232,6 @@ void CCmpTest::cmpBind()
 
 int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 {
-	struct epoll_event ev;                     // Used for EPOLL.
-	struct epoll_event events[5];         // Used for EPOLL.
-	int noEvents;               				// EPOLL event number.
 	int nRet = -1;
 
 	if (-1 == m_nSocketFD)
@@ -247,63 +244,20 @@ int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
 	void *pbuf;
 	pbuf = buf;
 
-	// Create epoll file descriptor.
-	int epfd = epoll_create(5);
-
-	// Add socket into the EPOLL set.
-	ev.data.fd = m_nSocketFD;
-	ev.events = EPOLLIN | EPOLLET;
-	epoll_ctl(epfd, EPOLL_CTL_ADD, m_nSocketFD, &ev);
-
 	int nPacketLen = formatPacket(nCommandId, &pbuf, getSequence());
 	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
 	if (nPacketLen == nRet)
 	{
 		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
-		std::time_t t = std::time( NULL);
-		char mbstr[100];
-		std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-		printf("%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, ntohl(pHeader->command_id),
-				ntohl(pHeader->command_length), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number));
-		/*		string strRecv;
-		 for (int i = 0; i < 3; ++i)
-		 {
-		 noEvents = epoll_wait(epfd, events, 5, 1000);
-		 for (int j = 0; j < noEvents; ++j)
-		 {
-		 if ((events[j].events & EPOLLIN) && m_nSocketFD == events[j].data.fd)
-		 {
-		 memset(buf, 0, MAX_DATA_LEN);
-		 int nRet = recv(m_nSocketFD, pbuf, MAX_DATA_LEN, MSG_NOSIGNAL);
-		 char * pBody;
-		 if (sizeof(CMP_HEADER) <= (unsigned int) nRet)
-		 {
-		 pHeader = (CMP_HEADER *) pbuf;
-		 int nCommand = (ntohl(pHeader->command_id)) & 0x000000FF;
-		 int nLength = ntohl(pHeader->command_length);
-		 int nStatus = ntohl(pHeader->command_status);
-		 int nSequence = ntohl(pHeader->sequence_number);
-		 char temp[MAX_DATA_LEN];
-		 pBody = (char*) ((char *) const_cast<void*>(pbuf) + sizeof(CMP_HEADER));
-		 memset(mbstr, 0, sizeof(mbstr));
-		 std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-		 printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr,
-		 nCommand, nLength, nStatus, nSequence);
-		 memcpy(pRespBuf, pBody, nLength - sizeof(CMP_HEADER));
-		 }
-		 close(epfd);
-		 return nRet;
-		 }
-		 }
-		 }
-		 */
+		printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
+				ntohl(pHeader->command_length), m_nSocketFD);
 	}
 	else
 	{
 		printf("Send CMP Request Fail!!\n");
 	}
-	close(epfd);
+
 	return nRet;
 }
 
@@ -326,7 +280,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strControllerId = "123456789";
 	//string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS爛機器\",\"station\":334,\"serial\":1347}";
 	string strAccessLog =
-			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyah\/ʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"1462241606197\",\"PRICE\":\"1500\",\"DATE\":\"2016-03-16 14:16:59\"}";
+			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"1462241606197\",\"PRICE\":\"1500\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strSignup =
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strMdmAccount = "testing@iii.org.tw";
@@ -437,36 +391,19 @@ void CCmpTest::cmpPressure()
 	void *pbuf;
 	pbuf = buf;
 	CMP_HEADER *pHeader;
-	char mbstr[100];
+
+	nPacketLen = formatPacket( access_log_request, &pbuf, getSequence());
+	pHeader = (CMP_HEADER *) pbuf;
 
 	while (1)
 	{
-		nPacketLen = formatPacket( access_log_request, &pbuf, getSequence());
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
 		if (nPacketLen == nRet)
 		{
-			pHeader = (CMP_HEADER *) pbuf;
-			std::time_t t = std::time( NULL);
-			memset(mbstr, 0, sizeof(mbstr));
-			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-			printf("%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr,
-					ntohl(pHeader->command_id), ntohl(pHeader->command_length), ntohl(pHeader->command_status),
-					ntohl(pHeader->sequence_number));
-
-			continue;
-			memset(buf, 0, sizeof(buf));
-			nRet = recv(m_nSocketFD, pbuf, MAX_DATA_LEN, MSG_NOSIGNAL);
-			pHeader = (CMP_HEADER *) pbuf;
-			int nCommand = (ntohl(pHeader->command_id)) & 0x000000FF;
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			memset(mbstr, 0, sizeof(mbstr));
-			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-			printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength,
-					nStatus, nSequence);
+			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
+					ntohl(pHeader->command_length), m_nSocketFD);
 		}
-		sleep(0.0001);
+		pHeader->sequence_number = htonl(getSequence());
 	}
 }
 
@@ -478,35 +415,20 @@ void CCmpTest::ioPressure()
 	void *pbuf;
 	pbuf = buf;
 	CMP_HEADER *pHeader;
-	char mbstr[100];
+
+	nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence());
+	pHeader = (CMP_HEADER *) pbuf;
 
 	while (1)
 	{
-		nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence());
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
 		if (nPacketLen == nRet)
 		{
-			pHeader = (CMP_HEADER *) pbuf;
-			std::time_t t = std::time( NULL);
-			memset(mbstr, 0, sizeof(mbstr));
-			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-			printf("%s - CMP Send Request: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr,
-					ntohl(pHeader->command_id), ntohl(pHeader->command_length), ntohl(pHeader->command_status),
-					ntohl(pHeader->sequence_number));
-			continue;
-			memset(buf, 0, sizeof(buf));
-			nRet = recv(m_nSocketFD, pbuf, MAX_DATA_LEN, MSG_NOSIGNAL);
-			pHeader = (CMP_HEADER *) pbuf;
-			int nCommand = (ntohl(pHeader->command_id)) & 0x000000FF;
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			memset(mbstr, 0, sizeof(mbstr));
-			std::strftime(mbstr, 100, "%d/%m/%Y %T", std::localtime(&t));
-			printf("%s - CMP Receive Response: Command:%d Length:%d Status:%d Sequence:%d\n", mbstr, nCommand, nLength,
-					nStatus, nSequence);
+			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
+					ntohl(pHeader->command_length), m_nSocketFD);
 		}
-		sleep(0.0001);
+		pHeader->sequence_number = htonl(getSequence());
+		//sleep(0.000001);
 	}
 }
 
@@ -518,6 +440,7 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 	int nBodyLen = 0;
 	int nCommand = generic_nack;
 	int nSequence = 0;
+	int nStatus = 0;
 
 	CMP_PACKET cmpPacket;
 	void* pHeader = &cmpPacket.cmpHeader;
@@ -527,19 +450,17 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 	void *pHeaderResp = &cmpHeader;
 	int nCommandResp;
 
-	struct sockaddr_in *clientSockaddr;
-	clientSockaddr = new struct sockaddr_in;
-
 	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(CMP_PACKET));
-		result = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL); //socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr);
+		result = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL);
 
 		if (sizeof(CMP_HEADER) == result)
 		{
-			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
+			nStatus = ntohl(cmpPacket.cmpHeader.command_status);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
+			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			if ( enquire_link_request == nCommand)
 			{
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
@@ -548,37 +469,40 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 				cmpHeader.command_status = htonl( STATUS_ROK);
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
-				//socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
 				send(nSocketFD, pHeaderResp, sizeof(CMP_HEADER), MSG_NOSIGNAL);
 				continue;
 			}
+
+			if (enquire_link_response == nCommand)
+				continue;
+
+			printPacket(nCommand, nStatus, nSequence, nTotalLen, nSocketFD);
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if (0 < nBodyLen)
 			{
-				result = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL); //socketrecv(nSocketFD, nBodyLen, &pBody, 0);
+				result = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
 				if (result != nBodyLen)
 				{
-
 					close(nSocketFD);
-					_log("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
+					printf("[Socket Client] socket client close : %d , packet length error: %d != %d\n", nSocketFD,
 							nBodyLen, result);
 					break;
 				}
+				printf("[Socket Client] socket receive CMP Body: %s\n", static_cast<char*>(pBody));
 			}
 		}
 		else
 		{
 
 			close(nSocketFD);
-			_log("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
+			printf("[Socket Client] socket client close : %d , packet header length error: %d\n", nSocketFD, result);
 			break;
 		}
 
 		if (0 >= result)
 		{
-
 			close(nSocketFD);
 			break;
 		}

@@ -17,7 +17,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <list>
-#include "LogHandler.h"
 
 using namespace std;
 /*
@@ -30,21 +29,21 @@ using namespace std;
  */
 struct CMP_HEADER
 {
-		int command_length;
-		int command_id;
-		int command_status;
-		int sequence_number;
+	int command_length;
+	int command_id;
+	int command_status;
+	int sequence_number;
 };
 
 struct CMP_BODY
 {
-		char cmpdata[MAX_DATA_LEN];
+	char cmpdata[MAX_DATA_LEN];
 };
 
 struct CMP_PACKET
 {
-		CMP_HEADER cmpHeader;
-		CMP_BODY cmpBody;
+	CMP_HEADER cmpHeader;
+	CMP_BODY cmpBody;
 };
 
 /*
@@ -119,24 +118,24 @@ struct CMP_PACKET
 template<typename T, typename U>
 class create_map
 {
-	private:
-		std::map<T, U> m_map;
-	public:
-		create_map(const T& key, const U& val)
-		{
-			m_map[key] = val;
-		}
+private:
+	std::map<T, U> m_map;
+public:
+	create_map(const T& key, const U& val)
+	{
+		m_map[key] = val;
+	}
 
-		create_map<T, U>& operator()(const T& key, const U& val)
-		{
-			m_map[key] = val;
-			return *this;
-		}
+	create_map<T, U>& operator()(const T& key, const U& val)
+	{
+		m_map[key] = val;
+		return *this;
+	}
 
-		operator std::map<T, U>()
-		{
-			return m_map;
-		}
+	operator std::map<T, U>()
+	{
+		return m_map;
+	}
 
 };
 
@@ -166,7 +165,7 @@ STATUS_RINVJSON, "Invalid JSON Data")( STATUS_ROPERATE, "MDM operate notify")( S
 		"MDM Login fail, no token")(STATUS_RAUTHFAIL, "Authentication Fail");
 
 __attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
-		const char * szDesc, int nClienFD = 0)
+		int nClienFD = 0)
 {
 	char szCmd[48];
 	char szSta[32];
@@ -176,8 +175,7 @@ __attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int 
 	strcpy(szCmd, mapCommand[nCommand].c_str());
 	strcpy(szSta, mapStatus[nStatus].c_str());
 
-	_log("%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]", szDesc, szCmd, szSta, nSequence,
-			nLength, nClienFD);
+	printf("Command=%-s Status=%-s Sequence=%d Length=%d [Socket FD=%d]\n", szCmd, szSta, nSequence, nLength, nClienFD);
 }
 
 static int msnSequence = 0x00000000;
