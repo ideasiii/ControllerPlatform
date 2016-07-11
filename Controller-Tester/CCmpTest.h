@@ -15,21 +15,11 @@ class CCmpTest
 public:
 	CCmpTest();
 	virtual ~CCmpTest();
-	void cmpInitialRequest();
-	void cmpSignupRequest();
-	void cmpEnquireLinkRequest();
-	void cmpAccessLogRequest();
 	void cmpPressure();
 	void ioPressure();
-	void cmpMdmLogin();
-	void cmpMdmOperate();
-	void cmpPowerState();
-	void cmpPowerSet();
-	void cmpAuthentication();
-	int sendRequest(const int nCommandId, void *pRespBuf);
+	int sendRequest(const int nCommandId);
 	void connectController(const std::string strIP, const int nPort);
 	void closeConnect();
-	void cmpBind();
 	int getSocketfd() const;
 	void runSMSSocketReceive(int nSocketFD);
 

@@ -94,143 +94,7 @@ int CCmpTest::getSocketfd() const
 	return m_nSocketFD;
 }
 
-void CCmpTest::cmpInitialRequest()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( initial_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Initial Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpSignupRequest()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( sign_up_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Sign up Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpEnquireLinkRequest()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( enquire_link_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Enquire Link Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpAccessLogRequest()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( access_log_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Access Log Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpMdmLogin()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( mdm_login_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		mstrToken = trim(buf);
-		printf("MDM Login Response Body Data:%s\n", mstrToken.c_str());
-	}
-}
-
-void CCmpTest::cmpMdmOperate()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	if (mstrToken.empty())
-	{
-		printf("Please run mdm login first.\n");
-		return;
-	}
-	int nRet = sendRequest( mdm_operate_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("MDM Operate Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpPowerState()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( power_port_state_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Power State Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpPowerSet()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( power_port_set_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Power Setting Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpAuthentication()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( authentication_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Authentication Response Body Data:%s\n", buf);
-	}
-}
-
-void CCmpTest::cmpBind()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	int nRet = sendRequest( bind_request, pbuf);
-	if (sizeof(CMP_HEADER) < (unsigned int) nRet)
-	{
-		printf("Bind Response Body Data:%s\n", buf);
-	}
-}
-
-int CCmpTest::sendRequest(const int nCommandId, void *pRespBuf)
+int CCmpTest::sendRequest(const int nCommandId)
 {
 	int nRet = -1;
 
@@ -278,7 +142,6 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
 
 	string strControllerId = "123456789";
-	//string strAccessLog = "{\"time\":{\"start\":\"2015-12-17 17:01:00\",\"end\":\"2015-12-17 17:01:00\"},\"type\":\"iOS爛機器\",\"station\":334,\"serial\":1347}";
 	string strAccessLog =
 			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"1462241606197\",\"PRICE\":\"1500\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strSignup =
@@ -343,6 +206,10 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		nBody_len += 1;
 		break;
 	case mdm_operate_request:
+		if (mstrToken.empty())
+		{
+			mstrToken = "123456789";
+		}
 		memcpy(pIndex, mstrToken.c_str(), mstrToken.size());
 		pIndex += mstrToken.size();
 		nBody_len += mstrToken.size();
