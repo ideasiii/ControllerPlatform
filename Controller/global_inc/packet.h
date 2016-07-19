@@ -30,21 +30,21 @@ using namespace std;
  */
 struct CMP_HEADER
 {
-		int command_length;
-		int command_id;
-		int command_status;
-		int sequence_number;
+	int command_length;
+	int command_id;
+	int command_status;
+	int sequence_number;
 };
 
 struct CMP_BODY
 {
-		char cmpdata[MAX_DATA_LEN];
+	char cmpdata[MAX_DATA_LEN];
 };
 
 struct CMP_PACKET
 {
-		CMP_HEADER cmpHeader;
-		CMP_BODY cmpBody;
+	CMP_HEADER cmpHeader;
+	CMP_BODY cmpBody;
 };
 
 /*
@@ -77,10 +77,10 @@ struct CMP_PACKET
 #define ser_api_signin_response					0x80000014
 #define enquire_link_request						0x00000015
 #define enquire_link_response					0x80000015
-#define mdm_login_request							0x00000016
-#define mdm_login_response						0x80000016
-#define mdm_operate_request					0x00000017
-#define mdm_operate_response					0x80000017
+#define rdm_login_request							0x00000016
+#define rdm_login_response						0x80000016
+#define rdm_operate_request						0x00000017
+#define rdm_operate_response					0x80000017
 #define sdk_tracker_request						0x00000018
 #define sdk_tracker_response						0x80000018
 
@@ -93,14 +93,8 @@ struct CMP_PACKET
 #define STATUS_RINVCMDID						0x00000003		//Invalid Command ID
 #define STATUS_RINVBNDSTS						0x00000004		//Incorrect BIND Status for given command
 #define STATUS_RALYBND								0x00000005		//Already in Bound State
-#define STATUS_ROPERATE							0x00000006		//MDM operate notify
 #define STATUS_RSYSERR								0x00000008		//System Error
 #define STATUS_RBINDFAIL							0x00000010		//Bind Failed
-#define STATUS_RPPSFAIL								0x00000011		//Power Port Setting Fail
-#define STATUS_RPPSTAFAIL							0x00000012		//Get Power State Fail
-#define STATUS_RSIGINFAIL							0x00000013		//SER API Sign in Fail
-#define STATUS_RMDMLOGINFAIL				0x00000014		//MDM Login Fail, no token
-#define STATUS_RAUTHFAIL							0x00000015		//Authentication Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 #define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
@@ -119,24 +113,24 @@ struct CMP_PACKET
 template<typename T, typename U>
 class create_map
 {
-	private:
-		std::map<T, U> m_map;
-	public:
-		create_map(const T& key, const U& val)
-		{
-			m_map[key] = val;
-		}
+private:
+	std::map<T, U> m_map;
+public:
+	create_map(const T& key, const U& val)
+	{
+		m_map[key] = val;
+	}
 
-		create_map<T, U>& operator()(const T& key, const U& val)
-		{
-			m_map[key] = val;
-			return *this;
-		}
+	create_map<T, U>& operator()(const T& key, const U& val)
+	{
+		m_map[key] = val;
+		return *this;
+	}
 
-		operator std::map<T, U>()
-		{
-			return m_map;
-		}
+	operator std::map<T, U>()
+	{
+		return m_map;
+	}
 
 };
 
@@ -150,9 +144,9 @@ reboot_request, "reboot_request")( reboot_response, "reboot_response")( config_r
 config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
 		"power_port_response")( power_port_state_request, "power_port_state_request")( power_port_state_response,
 		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
-sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")( mdm_login_request, "mdm_login_request")(
-mdm_login_response, "mdm_login_response")( mdm_operate_request, "mdm_operate_request")(
-mdm_operate_response, "mdm_operate_response")(
+sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
+rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
+		"rdm_operate_response")(
 sdk_tracker_request, "sdk_tracker_request")( sdk_tracker_response, "sdk_tracker_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
@@ -160,10 +154,9 @@ static map<int, string> mapStatus = create_map<int, string>\
 		"Message Length is invalid")( STATUS_RINVCMDLEN, "Command Length is invalid")( STATUS_RINVCMDID,
 		"Invalid Command ID")( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command")( STATUS_RALYBND,
 		"Already in Bound State")( STATUS_RSYSERR, "System Error")(
-STATUS_RBINDFAIL, "Bind Failed")( STATUS_RPPSFAIL, "Power Port Setting Fail")( STATUS_RINVBODY,
-		"Invalid Packet Body Data")( STATUS_RINVCTRLID, "Invalid Controller ID")(
-STATUS_RINVJSON, "Invalid JSON Data")( STATUS_ROPERATE, "MDM operate notify")( STATUS_RMDMLOGINFAIL,
-		"MDM Login fail, no token")(STATUS_RAUTHFAIL, "Authentication Fail");
+STATUS_RBINDFAIL, "Bind Failed")( STATUS_RINVBODY, "Invalid Packet Body Data")( STATUS_RINVCTRLID,
+		"Invalid Controller ID")(
+STATUS_RINVJSON, "Invalid JSON Data");
 
 __attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
 		const char * szDesc, int nClienFD = 0)

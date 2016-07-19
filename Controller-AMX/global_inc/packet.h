@@ -83,10 +83,6 @@ struct CMP_PACKET
 #define mdm_operate_response					0x80000017
 #define sdk_tracker_request						0x00000018
 #define sdk_tracker_response						0x80000018
-#define device_control_request					0x00000019
-#define device_control_response				0x80000019
-#define device_state_request						0x00000020
-#define device_state_response					0x80000020
 
 /*
  * CMP status set
@@ -97,14 +93,8 @@ struct CMP_PACKET
 #define STATUS_RINVCMDID						0x00000003		//Invalid Command ID
 #define STATUS_RINVBNDSTS						0x00000004		//Incorrect BIND Status for given command
 #define STATUS_RALYBND								0x00000005		//Already in Bound State
-#define STATUS_ROPERATE							0x00000006		//MDM operate notify
 #define STATUS_RSYSERR								0x00000008		//System Error
 #define STATUS_RBINDFAIL							0x00000010		//Bind Failed
-#define STATUS_RPPSFAIL								0x00000011		//Power Port Setting Fail
-#define STATUS_RPPSTAFAIL							0x00000012		//Get Power State Fail
-#define STATUS_RSIGINFAIL							0x00000013		//SER API Sign in Fail
-#define STATUS_RMDMLOGINFAIL				0x00000014		//MDM Login Fail, no token
-#define STATUS_RAUTHFAIL							0x00000015		//Authentication Fail
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 #define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
@@ -164,10 +154,9 @@ static map<int, string> mapStatus = create_map<int, string>\
 		"Message Length is invalid")( STATUS_RINVCMDLEN, "Command Length is invalid")( STATUS_RINVCMDID,
 		"Invalid Command ID")( STATUS_RINVBNDSTS, "Incorrect BIND Status for given command")( STATUS_RALYBND,
 		"Already in Bound State")( STATUS_RSYSERR, "System Error")(
-STATUS_RBINDFAIL, "Bind Failed")( STATUS_RPPSFAIL, "Power Port Setting Fail")( STATUS_RINVBODY,
-		"Invalid Packet Body Data")( STATUS_RINVCTRLID, "Invalid Controller ID")(
-STATUS_RINVJSON, "Invalid JSON Data")( STATUS_ROPERATE, "MDM operate notify")( STATUS_RMDMLOGINFAIL,
-		"MDM Login fail, no token")(STATUS_RAUTHFAIL, "Authentication Fail");
+STATUS_RBINDFAIL, "Bind Failed")( STATUS_RINVBODY, "Invalid Packet Body Data")( STATUS_RINVCTRLID,
+		"Invalid Controller ID")(
+STATUS_RINVJSON, "Invalid JSON Data");
 
 __attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
 		const char * szDesc, int nClienFD = 0)

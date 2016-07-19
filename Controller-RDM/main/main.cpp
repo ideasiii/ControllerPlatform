@@ -1,7 +1,7 @@
 /*
  * main.cpp
  *
- *  Created on: 2016年07月01日
+ *  Created on: 2016年07月19日
  *      Author: Jugo
  */
 
@@ -113,62 +113,6 @@ void runService()
 	delete controller;
 }
 
-/**
- *Controller Service Run
-
- void runService(int argc, char* argv[])
- {
- std::string strArgv;
- std::string strConf;
- std::string strSqliteDBController;
- std::string strSqliteDBIdeas;
- int nServerPort = 6607;
-
- LogHandler *logAgent = LogHandler::getInstance();
- logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
-
- options(argc, argv);
-
- CControlCenter *controlCenter = CControlCenter::getInstance();
-
- strArgv = argv[0];
-
- size_t found = strArgv.find_last_of("/\\");
- std::string strProcessName = strArgv.substr(++found);
-
- strConf = strProcessName + ".conf";
-
- if (!strConf.empty())
- {
- CConfig *config = new CConfig();
- if ( FALSE != config->loadConfig(strConf))
- {
- logAgent->setLogPath(config->getValue("LOG", "log"));
- convertFromString(nServerPort, config->getValue("SERVER", "port"));
- strSqliteDBController = config->getValue("SQLITE", "db_controller");
- strSqliteDBIdeas = config->getValue("SQLITE", "db_ideas");
- }
- delete config;
- }
-
- if (controlCenter->initMessage( MSG_ID) && controlCenter->startServer(nServerPort)
- && controlCenter->startMongo("127.0.0.1", 27027))
- {
- _log("<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>");
- controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
- _log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>");
- controlCenter->stopServer();
- }
- else
- {
- closeMessage();
- PSigHander(SIGINT);
- }
-
- _log("[Process] Child process say: good bye~");
- delete logAgent;
- }
- */
 /**
  * process options
  */
