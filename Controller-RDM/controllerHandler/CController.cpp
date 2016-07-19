@@ -8,6 +8,10 @@
 #include <list>
 #include <ctime>
 
+#include "CAccessLog.h"
+#include "CAuthentication.h"
+#include "CInitial.h"
+#include "CSignup.h"
 #include "common.h"
 #include "CSocketServer.h"
 #include "CSocketClient.h"
@@ -47,8 +51,8 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 
 CController::CController() :
 		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
-				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), cmpClient(
-				new CSocketClient)
+				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), accessLog(
+				CAccessLog::getInstance()), authentication(CAuthentication::getInstance()), cmpClient(new CSocketClient)
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
 	{
@@ -56,8 +60,13 @@ CController::CController() :
 	}
 	cmpRequest[bind_request] = &CController::cmpBind;
 	cmpRequest[unbind_request] = &CController::cmpUnbind;
-	cmpRequest[device_control_request] = &CController::cmpDeviceControl;
-	cmpRequest[device_state_request] = &CController::cmpDeviceState;
+	cmpRequest[power_port_set_request] = &CController::cmpPowerPort;
+	cmpRequest[power_port_state_request] = &CController::cmpPowerPortState;
+	cmpRequest[access_log_request] = &CController::cmpAccessLog;
+	cmpRequest[initial_request] = &CController::cmpInitial;
+	cmpRequest[sign_up_request] = &CController::cmpSignup;
+	cmpRequest[sdk_tracker_request] = &CController::cmpSdkTracker;
+	cmpRequest[authentication_request] = &CController::cmpAuthentication;
 }
 
 CController::~CController()
@@ -94,6 +103,20 @@ int CController::startSqlite(const int nDBId, const std::string strDB)
 	}
 
 	return nResult;
+}
+
+BOOL CController::startMongo(const std::string strIP, const int nPort)
+{
+	if (-1 != accessLog->connectDB(strIP, nPort))
+	{
+		_log("[Controller] Connect Mongodb Controller Success");
+		return TRUE;
+	}
+	else
+	{
+		_log("[Controller] Connect Mongodb Controller Fail");
+	}
+	return FALSE;
 }
 
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
@@ -273,34 +296,199 @@ int CController::getControllerSocketFD(std::string strControllerID)
 	return nRet;
 }
 
-int CController::cmpDeviceControl(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("item") && rData.isValidKey("value"))
+	if (0 < nRet && rData.isValidKey("wire") && rData.isValidKey("port") && rData.isValidKey("state")
+			&& rData.isValidKey("controller"))
 	{
-		_log("[Controller] cmpDeviceControl Body: item=%s value=%s", rData["item"].c_str(), rData["value"].c_str());
+		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		_DBG("[Controller] Power Port Setting Wire:%s Port:%s state:%s Controller:%s Socket FD:%d",
+				rData["wire"].c_str(), rData["port"].c_str(), rData["state"].c_str(), rData["controller"].c_str(),
+				nSocket);
+		int nFD = getControllerSocketFD(rData["controller"]);
+		if (0 < nFD)
+		{
+			_DBG("[Controller] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str());
+			cmpPowerPortRequest(nFD, rData["wire"], rData["port"], rData["state"]);
+		}
+		else
+		{
+			_DBG("[Controller] Get Socket FD Fail Controller ID:%s", rData["controller"].c_str());
+		}
 	}
 	else
 	{
-		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		_DBG("[Controller] Power Port Setting Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+
+	return 0;
+}
+
+int CController::cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("wire") && rData.isValidKey("controller"))
+	{
+		_DBG("[Controller] Power Port State Request Wire:%s Controller:%s Socket FD:%d", rData["wire"].c_str(),
+				rData["controller"].c_str(), nSocket);
+		int nFD = getControllerSocketFD(rData["controller"]);
+		if (0 < nFD)
+		{
+			_DBG("[Controller] Get Socket FD:%d Controller ID:%s", nFD, rData["controller"].c_str());
+			if (0 < cmpPowerPortStateRequest(nFD, rData["wire"]))
+			{
+				cmpPowerPortStateResponse(nSocket, nSequence,
+						"{\"count\":1,\"wires\":[{\"wire\":1,\"state\": \"1111\"}]}");
+			}
+			else
+			{
+				sendCommand(nSocket, nCommand, STATUS_RPPSTAFAIL, nSequence, true);
+				_DBG("[Controller] Get Power Port State Fail Controller ID:%s", rData["controller"].c_str());
+			}
+		}
+		else
+		{
+			sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
+			_DBG("[Controller] Get Socket FD Fail Controller ID:%s", rData["controller"].c_str());
+		}
+	}
+	else
+	{
+		_DBG("[Controller] Power Port Setting Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+
+	return 0;
+}
+
+int CController::cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
+	{
+		_log("[Controller] cmpAccessLog Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+
+		int nType = -1;
+		convertFromString(nType, rData["type"]);
+		accessLog->cmpAccessLogRequest(rData["type"], rData["data"]);
+	}
+	else
+	{
+		_DBG("[Controller] Access Log Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+	return 0;
+}
+
+int CController::cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("type"))
+	{
+		_log("[Controller] Receive Body: type=%s ", rData["type"].c_str());
+		CInitial *init = new CInitial();
+		int nType = 0;
+		convertFromString(nType, rData["type"]);
+		string strData = init->getInitData(nType);
+		if (strData.empty())
+		{
+			_log("[Controller] Initial Fail, Can't get initial data Socket FD:%d", nSocket);
+			sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
+		}
+		else
+		{
+			cmpInitialResponse(nSocket, nSequence, strData.c_str());
+		}
+		delete init;
+	}
+	else
+	{
+		_log("[Controller] Initial Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();
 	return nRet;
 }
 
-int CController::cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData)
+int CController::cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("item"))
+	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 	{
-		_log("[Controller] cmpDeviceState Body: item=%s value=%s", rData["item"].c_str());
+		_log("[Controller] Receive Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+		int nType = -1;
+		bool bAuth = false;
+		convertFromString(nType, rData["type"]);
+		bAuth = authentication->authorization(nType, rData["data"]);
+		if (bAuth)
+		{
+			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		}
+		else
+		{
+			sendCommand(nSocket, nCommand, STATUS_RAUTHFAIL, nSequence, true);
+		}
 	}
 	else
 	{
-		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		_log("[Controller] Authentication Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+	return nRet;
+}
+
+int CController::cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+
+	}
+	else
+	{
+		_log("[Controller] SDK Tracker Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+	return nRet;
+}
+
+int CController::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
+	{
+		_log("[Controller] cmpSignup Body: type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+
+		CSignup *signup = new CSignup();
+
+		if (INSERT_FAIL != signup->insert(rData["data"]))
+		{
+			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		}
+		else
+		{
+			sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
+		}
+		delete signup;
+	}
+	else
+	{
+		_log("[Controller] Sign up Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	rData.clear();

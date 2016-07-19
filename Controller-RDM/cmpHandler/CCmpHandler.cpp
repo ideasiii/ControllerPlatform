@@ -160,32 +160,106 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				pBody += nStrLen;
 			}
 			break;
-		case device_control_request:
+		case power_port_set_request:
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("wire", temp);
+
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("port", temp);
+
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("state", temp);
+
 			if (isValidStr((const char*) pBody, MAX_SIZE))
 			{
 				memset(temp, 0, sizeof(temp));
 				strcpy(temp, pBody);
-				rData.setData("item", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("value", temp);
+				rData.setData("controller", temp);
 				nStrLen = strlen(temp);
 				++nStrLen;
 				pBody += nStrLen;
 			}
 			break;
-		case device_state_request:
+		case power_port_state_request:
+			memset(temp, 0, sizeof(temp));
+			memcpy(temp, pBody, 1);
+			++pBody;
+			rData.setData("wire", temp);
+
 			if (isValidStr((const char*) pBody, MAX_SIZE))
 			{
 				memset(temp, 0, sizeof(temp));
 				strcpy(temp, pBody);
-				rData.setData("item", temp);
+				rData.setData("controller", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case initial_request:
+			nType = ntohl(*((int*) pBody));
+			rData.setData("type", ConvertToString(nType));
+			pBody += 4;
+			break;
+		case sign_up_request:
+		case authentication_request:
+		case access_log_request:
+			nType = ntohl(*((int*) pBody));
+			rData.setData("type", ConvertToString(nType));
+			pBody += 4;
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("data", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case mdm_login_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("account", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("password", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case mdm_operate_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("token", temp);
+				nStrLen = strlen(temp);
+				++nStrLen;
+				pBody += nStrLen;
+			}
+			break;
+		case sdk_tracker_request:
+			if (isValidStr((const char*) pBody, MAX_SIZE))
+			{
+				memset(temp, 0, sizeof(temp));
+				strcpy(temp, pBody);
+				rData.setData("data", temp);
 				nStrLen = strlen(temp);
 				++nStrLen;
 				pBody += nStrLen;

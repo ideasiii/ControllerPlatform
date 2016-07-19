@@ -21,6 +21,8 @@ class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
 class CJsonHandler;
+class CAccessLog;
+class CAuthentication;
 
 class CController: public CObject
 {
@@ -31,6 +33,7 @@ public:
 	void stopServer();
 	void runEnquireLinkRequest();
 	int startSqlite(const int nDBId, const std::string strDB);
+	int startMongo(const std::string strIP, const int nPort);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -45,8 +48,13 @@ private:
 	int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
-	int cmpDeviceControl(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData);
 
 	/** Send CMP Request **/
 	int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
@@ -68,7 +76,9 @@ private:
 	CSqliteHandler *sqlite;
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
+	CAccessLog *accessLog;
 	std::vector<int> vEnquireLink;
+	CAuthentication* authentication;
 	CSocketClient *cmpClient;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
