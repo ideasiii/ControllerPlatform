@@ -19,6 +19,7 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "JSONObject.h"
+#include "CRdmLogin.h"
 
 using namespace std;
 
@@ -76,8 +77,8 @@ int CController::startSqlite(const int nDBId, const std::string strDB)
 	case DB_CONTROLLER:
 		nResult = sqlite->openControllerDB(strDB.c_str());
 		break;
-	case DB_RDM:
-		nResult = sqlite->openRdmDB(strDB.c_str());
+	case DB_MDM_ANDROID:
+		nResult = sqlite->openMdmAndroidDB(strDB.c_str());
 		break;
 	}
 
@@ -214,7 +215,17 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 			_log("id:%s", jobj->getString("id").c_str());
 			_log("device:%d", jobj->getInt("device"));
 
-			cmpRdmLoginResponse(nSocket, nSequence, "{\"result\":0}");
+			CRdmLogin *rdmLogin = new CRdmLogin();
+			if (rdmLogin->login(jobj->getString("account"), jobj->getString("password"), jobj->getString("id"),
+					jobj->getInt("device")))
+			{
+				cmpRdmLoginResponse(nSocket, nSequence, "{\"result\":0}");
+			}
+			else
+			{
+				cmpRdmLoginResponse(nSocket, nSequence, "{\"result\":2}");
+			}
+			delete rdmLogin;
 		}
 		else
 		{

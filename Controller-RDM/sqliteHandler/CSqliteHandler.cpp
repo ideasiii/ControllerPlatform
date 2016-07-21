@@ -15,7 +15,7 @@
 using namespace std;
 
 static sqlite3 *dbController = 0;
-static sqlite3 *dbRdm = 0;				// For MORE RDM
+static sqlite3 *dbMdmAndroid = 0;				// For RDM
 
 CSqliteHandler* CSqliteHandler::m_instance = 0;
 
@@ -61,14 +61,14 @@ int CSqliteHandler::openControllerDB(const char *dbPath)
 	return nRet;
 }
 
-int CSqliteHandler::openRdmDB(const char *dbPath)
+int CSqliteHandler::openMdmAndroidDB(const char *dbPath)
 {
-	int rc = sqlite3_open(dbPath, &dbRdm);
+	int rc = sqlite3_open(dbPath, &dbMdmAndroid);
 	int nRet = FALSE;
 
 	if (rc)
 	{
-		_log("[Sqlite] Can't open rdm database: %s", sqlite3_errmsg(dbRdm));
+		_log("[Sqlite] Can't open mdm_android database: %s", sqlite3_errmsg(dbMdmAndroid));
 	}
 	else
 		nRet = TRUE;
@@ -78,9 +78,9 @@ int CSqliteHandler::openRdmDB(const char *dbPath)
 void CSqliteHandler::close()
 {
 	sqlite3_close(dbController);
-	sqlite3_close(dbRdm);
+	sqlite3_close(dbMdmAndroid);
 	dbController = 0;
-	dbRdm = 0;
+	dbMdmAndroid = 0;
 }
 
 CSqliteHandler* CSqliteHandler::getInstance()
@@ -102,10 +102,10 @@ int CSqliteHandler::controllerSqlExec(const char *szSql)
 	return nRet;
 }
 
-int CSqliteHandler::rdmSqlExec(const char *szSql)
+int CSqliteHandler::mdmAndroidSqlExec(const char *szSql)
 {
 	int nRet = FAIL;
-	nRet = sqlExec(dbRdm, szSql);
+	nRet = sqlExec(dbMdmAndroid, szSql);
 	if ( SQLITE_OK == nRet)
 		nRet = SUCCESS;
 	return nRet;
@@ -231,9 +231,9 @@ int CSqliteHandler::getControllerColumeValueInt(const char *szSql, std::list<int
 	return row;
 }
 
-int CSqliteHandler::rdmSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex)
+int CSqliteHandler::mdmAndroidSqlExec(const char *szSql, std::list<std::string> &listValue, int nColumeIndex)
 {
-	return sqlExec(dbRdm, szSql, listValue, nColumeIndex);
+	return sqlExec(dbMdmAndroid, szSql, listValue, nColumeIndex);
 }
 
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql, std::list<std::string> &listValue, int nColumeIndex)

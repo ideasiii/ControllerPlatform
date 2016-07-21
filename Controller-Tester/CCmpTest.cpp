@@ -149,7 +149,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
-	string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
+	//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
+	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"000c29d0013c\",\"device\":0}";
 
 	switch (nCommand)
 	{

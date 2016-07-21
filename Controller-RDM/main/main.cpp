@@ -89,6 +89,15 @@ void runService()
 					nInit = FALSE;
 				}
 			}
+
+			strConf = config->getValue("SQLITE", "db_mdm_android");
+			if (!strConf.empty())
+			{
+				if (!controller->startSqlite(DB_MDM_ANDROID, strConf))
+				{
+					nInit = FALSE;
+				}
+			}
 		}
 		else
 		{
