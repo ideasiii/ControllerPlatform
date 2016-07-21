@@ -77,10 +77,10 @@ struct CMP_PACKET
 #define ser_api_signin_response					0x80000014
 #define enquire_link_request						0x00000015
 #define enquire_link_response					0x80000015
-#define mdm_login_request							0x00000016
-#define mdm_login_response						0x80000016
-#define mdm_operate_request					0x00000017
-#define mdm_operate_response					0x80000017
+#define rdm_login_request							0x00000016
+#define rdm_login_response						0x80000016
+#define rdm_operate_request						0x00000017
+#define rdm_operate_response					0x80000017
 #define sdk_tracker_request						0x00000018
 #define sdk_tracker_response						0x80000018
 
@@ -144,9 +144,9 @@ reboot_request, "reboot_request")( reboot_response, "reboot_response")( config_r
 config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
 		"power_port_response")( power_port_state_request, "power_port_state_request")( power_port_state_response,
 		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
-sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")( mdm_login_request, "mdm_login_request")(
-mdm_login_response, "mdm_login_response")( mdm_operate_request, "mdm_operate_request")(
-mdm_operate_response, "mdm_operate_response")(
+sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
+rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
+		"rdm_operate_response")(
 sdk_tracker_request, "sdk_tracker_request")( sdk_tracker_response, "sdk_tracker_response");
 
 static map<int, string> mapStatus = create_map<int, string>\

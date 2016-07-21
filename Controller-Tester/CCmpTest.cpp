@@ -114,8 +114,9 @@ int CCmpTest::sendRequest(const int nCommandId)
 	{
 		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
+
 		printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
-				ntohl(pHeader->command_length), m_nSocketFD);
+				ntohl(pHeader->command_length), "", m_nSocketFD);
 	}
 	else
 	{
@@ -146,10 +147,9 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"1462241606197\",\"PRICE\":\"1500\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strSignup =
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
-	string strMdmAccount = "testing@iii.org.tw";
-	string strMdmPasswd = "testing";
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
+	string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
 
 	switch (nCommand)
 	{
@@ -191,21 +191,15 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		++pIndex;
 		++nBody_len;
 		break;
-	case mdm_login_request:
-		memcpy(pIndex, strMdmAccount.c_str(), strMdmAccount.size());
-		pIndex += strMdmAccount.size();
-		nBody_len += strMdmAccount.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		memcpy(pIndex, strMdmPasswd.c_str(), strMdmPasswd.size());
-		pIndex += strMdmPasswd.size();
-		nBody_len += strMdmPasswd.size();
+	case rdm_login_request:
+		memcpy(pIndex, strLogin.c_str(), strLogin.size());
+		pIndex += strLogin.size();
+		nBody_len += strLogin.size();
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
 		break;
-	case mdm_operate_request:
+	case rdm_operate_request:
 		if (mstrToken.empty())
 		{
 			mstrToken = "123456789";
@@ -268,7 +262,7 @@ void CCmpTest::cmpPressure()
 		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
-					ntohl(pHeader->command_length), m_nSocketFD);
+					ntohl(pHeader->command_length), "", m_nSocketFD);
 		}
 		pHeader->sequence_number = htonl(getSequence());
 	}
@@ -292,7 +286,7 @@ void CCmpTest::ioPressure()
 		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
-					ntohl(pHeader->command_length), m_nSocketFD);
+					ntohl(pHeader->command_length), "", m_nSocketFD);
 		}
 		pHeader->sequence_number = htonl(getSequence());
 		//sleep(0.000001);
@@ -343,7 +337,7 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 			if (enquire_link_response == nCommand)
 				continue;
 
-			printPacket(nCommand, nStatus, nSequence, nTotalLen, nSocketFD);
+			printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 

@@ -18,7 +18,7 @@
 #include "CController.h"
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
-#include "cJSON.h"
+#include "JSONObject.h"
 
 using namespace std;
 
@@ -50,7 +50,7 @@ CController::CController() :
 	{
 		cmpRequest[i] = &CController::cmpUnknow;
 	}
-	cmpRequest[bind_request] = &CController::cmpRdmLogin;
+	cmpRequest[rdm_login_request] = &CController::cmpRdmLogin;
 
 }
 
@@ -206,6 +206,22 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 	if (0 < nRet && rData.isValidKey("data"))
 	{
 		_log("[Controller] RDM Login Data: %s | Socket FD:%d", rData["data"].c_str(), nSocket);
+		JSONObject *jobj = new JSONObject(rData["data"]);
+		if (jobj->isValid())
+		{
+			_log("account:%s", jobj->getString("account").c_str());
+			_log("password:%s", jobj->getString("password").c_str());
+			_log("id:%s", jobj->getString("id").c_str());
+			_log("device:%d", jobj->getInt("device"));
+
+			cmpRdmLoginResponse(nSocket, nSequence, "{\"result\":0}");
+		}
+		else
+		{
+			_log("[Controller] RDM Login Fail, Invalid JSON Data | Socket FD:%d", nSocket);
+			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		}
+		delete jobj;
 	}
 	else
 	{

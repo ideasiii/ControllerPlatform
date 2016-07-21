@@ -41,13 +41,26 @@ int main(int argc, char* argv[])
 	struct epoll_event events[5];         // Used for EPOLL.
 	int noEvents;               						// EPOLL event number.
 
-	static map<string, int> mapCommand = create_map<string, int>("bye", BYE)("help", HELP)("pressure", PRESSURE)(
-			"mdm operate", mdm_operate_request)("cmp init",
-	initial_request)("cmp signup",
-	sign_up_request)("cmp enquire", enquire_link_request)("cmp access", access_log_request)("mdm login",
-	mdm_login_request)("mdm operate",
-	mdm_operate_request)("io", IO_PRESSURE)("cmp pwstate", power_port_state_request)("cmp pwset",
-	power_port_set_request)("cmp auth", authentication_request)("cmp bind", bind_request)("cmp unbind", unbind_request);
+	static map<string, int> mapCommand = create_map<string, int>\
+("bye", BYE)\
+("help", HELP)\
+("pressure", PRESSURE)\
+(
+			"cmp init", initial_request)\
+("cmp signup", sign_up_request)\
+("cmp enquire", enquire_link_request)\
+(
+			"cmp access", access_log_request)\
+("rdm login", rdm_login_request)\
+("rdm operate", rdm_operate_request)\
+("io",
+	IO_PRESSURE)\
+("cmp pwstate", power_port_state_request)\
+("cmp pwset", power_port_set_request)\
+("cmp auth",
+	authentication_request)\
+("cmp bind", bind_request)\
+("cmp unbind", unbind_request);
 
 	printf("This process is a Controller testing process!.\n");
 
@@ -106,8 +119,8 @@ int main(int argc, char* argv[])
 			case initial_request:
 			case sign_up_request:
 			case access_log_request:
-			case mdm_login_request:
-			case mdm_operate_request:
+			case rdm_login_request:
+			case rdm_operate_request:
 			case power_port_state_request:
 			case power_port_set_request:
 			case authentication_request:
