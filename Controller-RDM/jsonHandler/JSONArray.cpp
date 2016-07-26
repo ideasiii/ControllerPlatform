@@ -30,6 +30,11 @@ void JSONArray::add(JSONObject &jsonObject)
 	cJSON_AddItemToArray(cjsonArray, jsonObject.getcJSON());
 }
 
+void JSONArray::add(std::string strValue)
+{
+	cJSON_AddItemToArray(cjsonArray, cJSON_CreateString(strValue.c_str()));
+}
+
 cJSON *JSONArray::getcJSON()
 {
 	return cjsonArray;

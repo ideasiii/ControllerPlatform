@@ -19,6 +19,7 @@ public:
 	JSONArray(cJSON *pcJSON);
 	virtual ~JSONArray();
 	void add(JSONObject &jsonObject);
+	void add(std::string strValue);
 	cJSON *getcJSON();
 	cJSON *getJsonObject(int index);
 	int size();

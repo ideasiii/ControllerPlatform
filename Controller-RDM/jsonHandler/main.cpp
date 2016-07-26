@@ -131,6 +131,7 @@ int main(int argc, char* argv[])
 	jobjItem2.put("value", 1);
 	jobjItem2.put("ssid", "xxxxxx");
 	jArray.add(jobjItem2);
+	jArray.add("jtest");
 
 	jobjCtrl.put("list", jArray);
 
