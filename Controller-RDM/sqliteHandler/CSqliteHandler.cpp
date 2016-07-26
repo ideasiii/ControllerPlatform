@@ -95,20 +95,12 @@ CSqliteHandler* CSqliteHandler::getInstance()
 
 int CSqliteHandler::controllerSqlExec(const char *szSql)
 {
-	int nRet = FAIL;
-	nRet = sqlExec(dbController, szSql);
-	if ( SQLITE_OK == nRet)
-		nRet = SUCCESS;
-	return nRet;
+	return sqlExec(dbController, szSql);
 }
 
 int CSqliteHandler::mdmAndroidSqlExec(const char *szSql)
 {
-	int nRet = FAIL;
-	nRet = sqlExec(dbMdmAndroid, szSql);
-	if ( SQLITE_OK == nRet)
-		nRet = SUCCESS;
-	return nRet;
+	return sqlExec(dbMdmAndroid, szSql);
 }
 
 int CSqliteHandler::sqlExec(sqlite3 *db, const char *szSql)

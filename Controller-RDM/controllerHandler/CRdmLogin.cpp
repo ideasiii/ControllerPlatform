@@ -26,6 +26,7 @@ bool CRdmLogin::login(const std::string strAccount, const std::string strPasswor
 		const int nDevice)
 {
 	bool bResult = false;
+	int nResult = R_SQLITE_ERROR;
 
 	string strSql = "select group_id from group_info where account = '" + strAccount + "' and password = '"
 			+ strPassword + "'";
@@ -38,8 +39,18 @@ bool CRdmLogin::login(const std::string strAccount, const std::string strPasswor
 	{
 		strGroupId = *it;
 		_log("[CRdmLogin] Get Group Id: %s", strGroupId.c_str());
-		bResult = true;
+		break;
 	}
+
+	if (!strGroupId.empty())
+	{
+		strSql = "insert into device_info(mac_address,device_model,group_id) values('" + strId + "','Android','"
+				+ strGroupId + "')";
+		nResult = CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str());
+	}
+
+	if (R_SQLITE_OK == nResult)
+		bResult = true;
 
 	return bResult;
 }
