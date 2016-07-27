@@ -11,27 +11,36 @@
 class cJSON;
 class JSONArray;
 
+using namespace std;
+
 class JSONObject
 {
 public:
 	explicit JSONObject();
-	explicit JSONObject(std::string strSource);
+	explicit JSONObject(string strSource);
 	explicit JSONObject(cJSON *pcJSON);
-	std::string getString(std::string key);
-	int getInt(std::string key);
+	bool getBoolean(string name);
+	bool getBoolean(string name, bool defaultValue);
+	int getInt(string name);
+	int getInt(string name, int defaultValue);
+	cJSON *getJsonArray(string strName);
+	cJSON *getJsonObject(string strName);
+	string getString(string name);
+	string getString(string name, string defaultValue);
+	bool isNull(string name);
+
 	virtual ~JSONObject();
 	bool isValid();
-	std::string toString();
-	void put(std::string strKey, std::string strValue);
-	void put(std::string strKey, const char* szrValue);
-	void put(std::string strKey, int nValue);
-	void put(std::string strKey, bool bValue);
-	void put(std::string strKey, double dValue);
-	void put(std::string strKey, JSONObject &jsonObject);
-	void put(std::string strKey, JSONArray &jsonArray);
+	string toString();
+	void put(string strKey, string strValue);
+	void put(string strKey, const char* szrValue);
+	void put(string strKey, int nValue);
+	void put(string strKey, bool bValue);
+	void put(string strKey, double dValue);
+	void put(string strKey, JSONObject &jsonObject);
+	void put(string strKey, JSONArray &jsonArray);
 	cJSON * getcJSON();
-	cJSON *getJsonObject(std::string strName);
-	cJSON *getJsonArray(std::string strName);
+
 	void release();
 
 private:

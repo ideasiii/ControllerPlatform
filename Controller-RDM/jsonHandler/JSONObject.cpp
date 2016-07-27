@@ -50,35 +50,73 @@ bool JSONObject::isValid()
 	return false;
 }
 
-string JSONObject::getString(string key)
+bool JSONObject::getBoolean(string name)
+{
+	return getBoolean(name, false);
+}
+
+bool JSONObject::getBoolean(string name, bool defaultValue)
+{
+	int nValue = -1;
+	if (cjsonObj)
+	{
+		if (!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
+		{
+			nValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
+		}
+	}
+	if (-1 == nValue)
+		return defaultValue;
+
+	if (0 == nValue)
+		return false;
+	return true;
+}
+
+string JSONObject::getString(string name)
 {
 	string strValue;
+	return getString(name, strValue);
+}
+
+string JSONObject::getString(string name, string defaultValue)
+{
+	string strValue = defaultValue;
 
 	if (cjsonObj)
 	{
-		if (cJSON_GetObjectItem(cjsonObj, key.c_str())
-				&& (cJSON_String == cJSON_GetObjectItem(cjsonObj, key.c_str())->type))
+		if (!isNull(name) && (cJSON_String == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
 		{
-			strValue = cJSON_GetObjectItem(cjsonObj, key.c_str())->valuestring;
+			strValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valuestring;
 		}
 	}
 
 	return strValue;
 }
 
-int JSONObject::getInt(std::string key)
+int JSONObject::getInt(string name)
 {
-	int nValue = -1;
+	return getInt(name, 0);
+}
+
+int JSONObject::getInt(string name, int defaultValue)
+{
+	int nValue = defaultValue;
 	if (cjsonObj)
 	{
-		if (cJSON_GetObjectItem(cjsonObj, key.c_str())
-				&& (cJSON_Number == cJSON_GetObjectItem(cjsonObj, key.c_str())->type))
+		if (!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
 		{
-			nValue = cJSON_GetObjectItem(cjsonObj, key.c_str())->valueint;
+			nValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
 		}
 	}
-
 	return nValue;
+}
+
+bool JSONObject::isNull(string name)
+{
+	if (cJSON_GetObjectItem(cjsonObj, name.c_str()))
+		return false;
+	return true;
 }
 
 string JSONObject::toString()
