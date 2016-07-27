@@ -27,9 +27,10 @@ bool CRdmLogin::login(const std::string strAccount, const std::string strPasswor
 {
 	bool bResult = false;
 	int nResult = R_SQLITE_ERROR;
+	string strSql;
 
-	string strSql = "select group_id from group_info where account = '" + strAccount + "' and password = '"
-			+ strPassword + "'";
+	strSql = "select group_id from group_info where account = '" + strAccount + "' and password = '" + strPassword
+			+ "'";
 	list<string> listValue;
 	CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str(), listValue, 0);
 
@@ -44,14 +45,22 @@ bool CRdmLogin::login(const std::string strAccount, const std::string strPasswor
 
 	if (!strGroupId.empty())
 	{
-		strSql = "insert into device_info(mac_address,device_model,group_id) values('" + strId + "','Android','"
-				+ strGroupId + "')";
-		nResult = CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str());
+		if (R_SQLITE_OK == logout(strId))
+		{
+			strSql = "insert into device_info(mac_address,device_model,group_id) values('" + strId + "','Android','"
+					+ strGroupId + "')";
+			if (R_SQLITE_OK == CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str()))
+			{
+				bResult = true;
+			}
+		}
 	}
-
-	if (R_SQLITE_OK == nResult)
-		bResult = true;
 
 	return bResult;
 }
 
+int CRdmLogin::logout(const string strId)
+{
+	string strSql = "delete from device_info where mac_address = '" + strId + "'";
+	return CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str());
+}

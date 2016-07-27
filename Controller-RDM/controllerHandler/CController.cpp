@@ -52,7 +52,7 @@ CController::CController() :
 		cmpRequest[i] = &CController::cmpUnknow;
 	}
 	cmpRequest[rdm_login_request] = &CController::cmpRdmLogin;
-
+	cmpRequest[rdm_logout_request] = &CController::cmpRdmLogout;
 }
 
 CController::~CController()
@@ -214,6 +214,7 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 			_log("password:%s", jobj->getString("password").c_str());
 			_log("id:%s", jobj->getString("id").c_str());
 			_log("device:%d", jobj->getInt("device"));
+			_log("gcmid:%s", jobj->getString("gcmid").c_str());
 
 			CRdmLogin *rdmLogin = new CRdmLogin();
 			if (rdmLogin->login(jobj->getString("account"), jobj->getString("password"), jobj->getString("id"),
@@ -232,6 +233,7 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 			_log("[Controller] RDM Login Fail, Invalid JSON Data | Socket FD:%d", nSocket);
 			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 		}
+		jobj->release();
 		delete jobj;
 	}
 	else
@@ -247,6 +249,38 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 int CController::cmpRdmLoginResponse(int nSocket, int nSequence, const char * szData)
 {
 	return cmpResponse(nSocket, rdm_login_response, nSequence, szData);
+}
+
+int CController::cmpRdmLogout(int nSocket, int nCommand, int nSequence, const void * pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Controller] RDM Logout Data: %s | Socket FD:%d", rData["data"].c_str(), nSocket);
+		JSONObject *jobj = new JSONObject(rData["data"]);
+		if (jobj->isValid())
+		{
+			_log("id:%s", jobj->getString("id").c_str());
+			sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+			CRdmLogin *rdmLogin = new CRdmLogin();
+			rdmLogin->logout(jobj->getString("id"));
+			delete rdmLogin;
+		}
+		else
+		{
+			_log("[Controller] RDM Logout Fail, Invalid JSON Data | Socket FD:%d", nSocket);
+			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		}
+		jobj->release();
+		delete jobj;
+	}
+	else
+	{
+		_log("[Controller] RDM Logout Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	return 0;
 }
 
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)

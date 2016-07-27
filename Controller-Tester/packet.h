@@ -81,8 +81,8 @@ struct CMP_PACKET
 #define rdm_login_response						0x80000016
 #define rdm_operate_request						0x00000017
 #define rdm_operate_response					0x80000017
-#define sdk_tracker_request						0x00000018
-#define sdk_tracker_response						0x80000018
+#define rdm_logout_request							0x00000018
+#define rdm_logout_response						0x80000018
 
 /*
  * CMP status set
@@ -146,8 +146,7 @@ config_response, "config_response")( power_port_set_request, "power_port_request
 		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
 sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
 rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
-		"rdm_operate_response")(
-sdk_tracker_request, "sdk_tracker_request")( sdk_tracker_response, "sdk_tracker_response");
+		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

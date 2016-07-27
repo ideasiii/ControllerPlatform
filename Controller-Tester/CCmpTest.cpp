@@ -150,7 +150,9 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
 	//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
-	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"000c29d0013c\",\"device\":0}";
+	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"" + strMAC
+			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\"}";
+	string strLogout = "{\"id\":\"" + strMAC + "\"}";
 
 	switch (nCommand)
 	{
@@ -201,13 +203,10 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		nBody_len += 1;
 		break;
 	case rdm_operate_request:
-		if (mstrToken.empty())
-		{
-			mstrToken = "123456789";
-		}
-		memcpy(pIndex, mstrToken.c_str(), mstrToken.size());
-		pIndex += mstrToken.size();
-		nBody_len += mstrToken.size();
+	case rdm_logout_request:
+		memcpy(pIndex, strLogout.c_str(), strLogout.size());
+		pIndex += strLogout.size();
+		nBody_len += strLogout.size();
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;

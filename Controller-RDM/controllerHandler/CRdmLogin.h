@@ -9,10 +9,13 @@
 
 #include <string>
 
+using namespace std;
+
 class CRdmLogin
 {
 public:
 	explicit CRdmLogin();
 	virtual ~CRdmLogin();
-	bool login(const std::string strAccount, const std::string strPassword, const std::string strId, const int nDevice);
+	bool login(const string strAccount, const string strPassword, const string strId, const int nDevice);
+	int logout(const string strId);
 };
