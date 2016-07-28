@@ -20,6 +20,7 @@
 #include "CSqliteHandler.h"
 #include "JSONObject.h"
 #include "CRdmLogin.h"
+#include "CRdmOperate.h"
 
 using namespace std;
 
@@ -45,7 +46,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 
 CController::CController() :
 		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
-				CSqliteHandler::getInstance()), cmpClient(new CSocketClient)
+				CSqliteHandler::getInstance()), cmpClient(new CSocketClient), rdmOperate(CRdmOperate::getInstance())
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
 	{
@@ -53,6 +54,7 @@ CController::CController() :
 	}
 	cmpRequest[rdm_login_request] = &CController::cmpRdmLogin;
 	cmpRequest[rdm_logout_request] = &CController::cmpRdmLogout;
+	cmpRequest[rdm_operate_request] = &CController::cmpRdmOperate;
 }
 
 CController::~CController()
@@ -251,6 +253,11 @@ int CController::cmpRdmLoginResponse(int nSocket, int nSequence, const char * sz
 	return cmpResponse(nSocket, rdm_login_response, nSequence, szData);
 }
 
+int CController::cmpRdmOperateResponse(int nSocket, int nSequence, const char * szData)
+{
+	return cmpResponse(nSocket, rdm_operate_response, nSequence, szData);
+}
+
 int CController::cmpRdmLogout(int nSocket, int nCommand, int nSequence, const void * pData)
 {
 	CDataHandler<std::string> rData;
@@ -278,6 +285,35 @@ int CController::cmpRdmLogout(int nSocket, int nCommand, int nSequence, const vo
 	else
 	{
 		_log("[Controller] RDM Logout Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	return 0;
+}
+
+int CController::cmpRdmOperate(int nSocket, int nCommand, int nSequence, const void * pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Controller] RDM Operate Data: %s | Socket FD:%d", rData["data"].c_str(), nSocket);
+		JSONObject *jobj = new JSONObject(rData["data"]);
+		if (jobj->isValid())
+		{
+			_log("id:%s", jobj->getString("id").c_str());
+			cmpRdmOperateResponse(nSocket, nSequence, "");
+		}
+		else
+		{
+			_log("[Controller] RDM Operate Fail, Invalid JSON Data | Socket FD:%d", nSocket);
+			sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		}
+		jobj->release();
+		delete jobj;
+	}
+	else
+	{
+		_log("[Controller] RDM Operate Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 	}
 	return 0;
