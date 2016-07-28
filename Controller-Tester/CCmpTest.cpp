@@ -151,7 +151,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strMAC = "000c29d0013c";
 	//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
 	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"" + strMAC
-			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\"}";
+			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
 	string strLogout = "{\"id\":\"" + strMAC + "\"}";
 
 	switch (nCommand)

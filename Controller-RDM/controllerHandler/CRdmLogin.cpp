@@ -23,7 +23,7 @@ CRdmLogin::~CRdmLogin()
 }
 
 bool CRdmLogin::login(const std::string strAccount, const std::string strPassword, const std::string strId,
-		const int nDevice)
+		const int nDevice, const string strModel)
 {
 	bool bResult = false;
 	int nResult = R_SQLITE_ERROR;
@@ -47,8 +47,8 @@ bool CRdmLogin::login(const std::string strAccount, const std::string strPasswor
 	{
 		if (R_SQLITE_OK == logout(strId))
 		{
-			strSql = "insert into device_info(mac_address,device_model,group_id) values('" + strId + "','Android','"
-					+ strGroupId + "')";
+			strSql = "insert into device_info(mac_address,device_model,group_id) values('" + strId + "','" + strModel
+					+ "','" + strGroupId + "')";
 			if (R_SQLITE_OK == CSqliteHandler::getInstance()->mdmAndroidSqlExec(strSql.c_str()))
 			{
 				bResult = true;

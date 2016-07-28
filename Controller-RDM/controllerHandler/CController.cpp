@@ -217,10 +217,11 @@ int CController::cmpRdmLogin(int nSocket, int nCommand, int nSequence, const voi
 			_log("id:%s", jobj->getString("id").c_str());
 			_log("device:%d", jobj->getInt("device"));
 			_log("gcmid:%s", jobj->getString("gcmid").c_str());
+			_log("model:%s", jobj->getString("model").c_str());
 
 			CRdmLogin *rdmLogin = new CRdmLogin();
 			if (rdmLogin->login(jobj->getString("account"), jobj->getString("password"), jobj->getString("id"),
-					jobj->getInt("device")))
+					jobj->getInt("device"), jobj->getString("model")))
 			{
 				cmpRdmLoginResponse(nSocket, nSequence, "{\"result\":0}");
 			}
@@ -301,7 +302,7 @@ int CController::cmpRdmOperate(int nSocket, int nCommand, int nSequence, const v
 		if (jobj->isValid())
 		{
 			_log("id:%s", jobj->getString("id").c_str());
-			cmpRdmOperateResponse(nSocket, nSequence, "");
+			cmpRdmOperateResponse(nSocket, nSequence, rdmOperate->getOperate(jobj->getString("id")).c_str());
 		}
 		else
 		{

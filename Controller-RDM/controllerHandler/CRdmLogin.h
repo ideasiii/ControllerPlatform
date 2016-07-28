@@ -16,6 +16,6 @@ class CRdmLogin
 public:
 	explicit CRdmLogin();
 	virtual ~CRdmLogin();
-	bool login(const string strAccount, const string strPassword, const string strId, const int nDevice);
+	bool login(const string strAccount, const string strPassword, const string strId, const int nDevice, const string strModel);
 	int logout(const string strId);
 };
