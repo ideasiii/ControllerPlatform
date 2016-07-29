@@ -34,12 +34,14 @@ int CObject::initMessage(int nKey)
 	if (0 >= nMsqid)
 	{
 		//throwException("Create message queue fail");
+		_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
 		return FALSE;
 	}
+	_log("[Object] Create Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
 	return TRUE;
 }
 
-int CObject::run(int nRecvEvent)
+int CObject::run(int nRecvEvent, const char * szDescript)
 {
 	int nRecv;
 	MESSAGE_BUF *msgbuf;
@@ -61,7 +63,11 @@ int CObject::run(int nRecvEvent)
 	pdata = msgbuf;
 	messageHandler->setRecvEvent(nRecvEvent);
 
-	_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
+	if (szDescript)
+		_log("[Object] %s Message Service Start Run , Event ID:%d ", szDescript, nRecvEvent);
+	else
+		_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
+
 	while (1)
 	{
 		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
@@ -86,7 +92,10 @@ int CObject::run(int nRecvEvent)
 
 	delete msgbuf;
 
-	_log("[Object] Message loop end");
+	if (szDescript)
+		_log("[Object] %s Message loop end", szDescript);
+	else
+		_log("[Object] Message loop end");
 	return 0;
 }
 

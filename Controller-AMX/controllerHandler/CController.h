@@ -54,9 +54,6 @@ private:
 
 	/** Send CMP Response **/
 	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData = 0);
-	int cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData);
-	int cmpInitialResponse(int nSocket, int nSequence, const char * szData);
-	int cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData);
 
 	int getControllerSocketFD(std::string strControllerID);
 	int getBindSocket(std::list<int> &listValue);

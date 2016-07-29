@@ -307,21 +307,6 @@ int CController::cmpDeviceState(int nSocket, int nCommand, int nSequence, const 
 	return nRet;
 }
 
-int CController::cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData)
-{
-	return cmpResponse(nSocket, power_port_state_response, nSequence, szData);
-}
-
-int CController::cmpInitialResponse(int nSocket, int nSequence, const char * szData)
-{
-	return cmpResponse(nSocket, initial_response, nSequence, szData);
-}
-
-int CController::cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData)
-{
-	return cmpResponse(nSocket, mdm_login_response, nSequence, szData);
-}
-
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
 {
 	int nRet = -1;
@@ -353,66 +338,6 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 	{
 		_log("[Controller] cmpResponse Fail socket: %d", nSocket);
 	}
-
-	return nRet;
-}
-
-int CController::cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
-
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	cmpParser->formatHeader( power_port_set_request, STATUS_ROK, getSequence(), &pHeader);
-
-	memcpy(pIndex, strWire.c_str(), 1); // wire
-	++pIndex;
-	++nBody_len;
-
-	memcpy(pIndex, strPort.c_str(), 1);	//	port
-	++pIndex;
-	++nBody_len;
-
-	memcpy(pIndex, strState.c_str(), 1);	//	state
-	++pIndex;
-	++nBody_len;
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-
-	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
-
-	return nRet;
-}
-
-int CController::cmpPowerPortStateRequest(int nSocket, std::string strWire)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
-
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	cmpParser->formatHeader( power_port_state_request, STATUS_ROK, getSequence(), &pHeader);
-
-	memcpy(pIndex, strWire.c_str(), 1); // wire
-	++pIndex;
-	++nBody_len;
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-
-	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 
 	return nRet;
 }

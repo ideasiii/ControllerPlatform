@@ -65,7 +65,6 @@ CController::CController() :
 	cmpRequest[access_log_request] = &CController::cmpAccessLog;
 	cmpRequest[initial_request] = &CController::cmpInitial;
 	cmpRequest[sign_up_request] = &CController::cmpSignup;
-	cmpRequest[sdk_tracker_request] = &CController::cmpSdkTracker;
 	cmpRequest[authentication_request] = &CController::cmpAuthentication;
 }
 
@@ -347,7 +346,7 @@ int CController::cmpPowerPortState(int nSocket, int nCommand, int nSequence, con
 			}
 			else
 			{
-				sendCommand(nSocket, nCommand, STATUS_RPPSTAFAIL, nSequence, true);
+				sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
 				_DBG("[Controller] Get Power Port State Fail Controller ID:%s", rData["controller"].c_str());
 			}
 		}
@@ -436,7 +435,7 @@ int CController::cmpAuthentication(int nSocket, int nCommand, int nSequence, con
 		}
 		else
 		{
-			sendCommand(nSocket, nCommand, STATUS_RAUTHFAIL, nSequence, true);
+			sendCommand(nSocket, nCommand, STATUS_RSYSERR, nSequence, true);
 		}
 	}
 	else
@@ -507,7 +506,7 @@ int CController::cmpInitialResponse(int nSocket, int nSequence, const char * szD
 
 int CController::cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData)
 {
-	return cmpResponse(nSocket, mdm_login_response, nSequence, szData);
+	return cmpResponse(nSocket, rdm_login_response, nSequence, szData);
 }
 
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)

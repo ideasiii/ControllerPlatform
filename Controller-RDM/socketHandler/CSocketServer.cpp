@@ -397,7 +397,7 @@ void *threadSocketMessageReceive(void *argv)
 
 void CSocketServer::runMessageReceive()
 {
-	run(m_nInternalFilter);
+	run(m_nInternalFilter, "SocketServer");
 	threadHandler->threadExit();
 }
 
