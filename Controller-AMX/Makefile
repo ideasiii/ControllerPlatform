@@ -7,7 +7,7 @@
 include env.mk
 include modules.mk
 
-TARGET    := controllerAmx
+TARGET    := controller-amx
 CC        := g++
 LD        := g++
 
