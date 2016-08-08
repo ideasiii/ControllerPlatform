@@ -344,39 +344,41 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 
 void CController::onCMP(int nClientFD, int nDataLen, const void *pData)
 {
-	_DBG("[Controller] Receive CMP From Client:%d Length:%d", nClientFD, nDataLen);
+	_log("[Controller] Receive CMP From Client:%d Length:%d Data:%s", nClientFD, nDataLen,
+			static_cast<char*>(const_cast<void*>(pData)));
 
-	int nRet = -1;
-	int nPacketLen = 0;
-	CMP_HEADER cmpHeader;
-	char *pPacket;
+	/*
+	 int nRet = -1;
+	 int nPacketLen = 0;
+	 CMP_HEADER cmpHeader;
+	 char *pPacket;
 
-	pPacket = (char*) const_cast<void*>(pData);
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+	 pPacket = (char*) const_cast<void*>(pData);
+	 memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 
-	cmpHeader.command_id = cmpParser->getCommand(pPacket);
-	cmpHeader.command_length = cmpParser->getLength(pPacket);
-	cmpHeader.command_status = cmpParser->getStatus(pPacket);
-	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
+	 cmpHeader.command_id = cmpParser->getCommand(pPacket);
+	 cmpHeader.command_length = cmpParser->getLength(pPacket);
+	 cmpHeader.command_status = cmpParser->getStatus(pPacket);
+	 cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Center Recv]", nClientFD);
+	 printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+	 "[Center Recv]", nClientFD);
 
-	if (cmpParser->isAckPacket(cmpHeader.command_id))
-	{
-		ackPacket(nClientFD, cmpHeader.command_id, pPacket);
-		return;
-	}
+	 if (cmpParser->isAckPacket(cmpHeader.command_id))
+	 {
+	 ackPacket(nClientFD, cmpHeader.command_id, pPacket);
+	 return;
+	 }
 
-	if (0x000000FF < cmpHeader.command_id)
-	{
-		sendCommand(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
-		return;
-	}
+	 if (0x000000FF < cmpHeader.command_id)
+	 {
+	 sendCommand(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
+	 return;
+	 }
 
-	(this->*this->cmpRequest[cmpHeader.command_id])(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number,
-			pPacket);
-
+	 (this->*this->cmpRequest[cmpHeader.command_id])(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number,
+	 pPacket);
+	 */
 }
 
 void CController::runEnquireLinkRequest()

@@ -176,9 +176,9 @@ int CSocketServer::runClientHandler(int nClientFD)
 		memset(pBuf, 0, sizeof(pBuf));
 		result = socketrecv(nClientFD, &pvBuf, clientSockaddr);
 
-		_log("[AMX Receive] %s", (char *) pvBuf);
-		socketSend(nClientFD, pvBuf, strlen(pBuf));
-		continue;
+		//_log("[AMX Receive] %s", (char *) pvBuf);
+		//socketSend(nClientFD, pvBuf, strlen(pBuf));
+		//continue;
 
 		if (0 >= result)
 		{
