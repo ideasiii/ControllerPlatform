@@ -62,17 +62,31 @@ void runService()
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
 		if (controller->initMessage(nMsgID))
 		{
-			if (0 == config->getValue("SERVER", "enable").compare("yes"))
+			if (0 == config->getValue("SERVER AMX", "enable").compare("yes"))
 			{
-				convertFromString(nTmp, config->getValue("SERVER", "port"));
+				convertFromString(nTmp, config->getValue("SERVER AMX", "port"));
 				if (!controller->startServer(nTmp, nMsgID))
 				{
 					nInit = FALSE;
-					_log("[Controller] Create Server Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+					_log("[Controller] Create Server AMX Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
 				}
 				else
 				{
-					_log("[Controller] Create Server Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
+					_log("[Controller] Create Server AMX Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
+				}
+			}
+
+			if (0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("SERVER DEVICE", "port"));
+				if (!controller->startServer(nTmp, nMsgID))
+				{
+					nInit = FALSE;
+					_log("[Controller] Create Server DEVICE Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+				}
+				else
+				{
+					_log("[Controller] Create Server DEVICE Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
 				}
 			}
 

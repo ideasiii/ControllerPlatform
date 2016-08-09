@@ -126,6 +126,41 @@ int CCmpTest::sendRequest(const int nCommandId)
 	return nRet;
 }
 
+int CCmpTest::sendRequestAMX(const int nCommandId)
+{
+	int nRet = -1;
+
+	if (-1 == m_nSocketFD)
+	{
+		_DBG("TCP Socket invalid");
+		return nRet;
+	}
+
+	string strCommand;
+	int nPacketLen = 0;
+	char buf[MAX_DATA_LEN];
+	void *pbuf;
+	pbuf = buf;
+
+	switch (nCommandId)
+	{
+	case amx_bind_request:
+		strCommand = "bind";
+		break;
+	}
+
+	char szEnd = 0x0D;
+	memcpy(pbuf, strCommand.c_str(), strCommand.length());
+	pbuf += strCommand.length();
+	memcpy(pbuf, &szEnd, 1);
+	nPacketLen += strCommand.length();
+	++nPacketLen;
+
+	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
+
+	return nRet;
+}
+
 int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 {
 	int nNum = 0;
@@ -149,7 +184,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
-	//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
+//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
 	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"" + strMAC
 			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
 	string strLogout = "{\"id\":\"" + strMAC + "\"}";

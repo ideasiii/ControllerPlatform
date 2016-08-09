@@ -15,22 +15,22 @@
 
 #define MAX_FUNC_POINT		256
 
-class CSocketServer;
-class CSocketClient;
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
 class CJsonHandler;
+class CServerAMX;
+class CServerDevice;
 
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServer(const int nPort, const int nMsqId);
-	void stopServer();
 	void runEnquireLinkRequest();
 	int startSqlite(const int nDBId, const std::string strDB);
+	int startServerAMX(const int nPort, const int nMsqId);
+	int startServerDevice(const int nPort, const int nMsqId);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -60,13 +60,13 @@ private:
 	int cmpEnquireLinkRequest(const int nSocketFD);
 
 private:
-	CSocketServer *cmpServer;
+	CServerAMX *serverAMX;
+	CServerDevice *serverDevice;
 	CCmpHandler *cmpParser;
 	CSqliteHandler *sqlite;
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
-	CSocketClient *cmpClient;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
 	MemFn cmpRequest[MAX_FUNC_POINT];

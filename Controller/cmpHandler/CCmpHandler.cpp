@@ -223,7 +223,7 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				pBody += nStrLen;
 			}
 			break;
-		case mdm_login_request:
+		case rdm_login_request:
 			if (isValidStr((const char*) pBody, MAX_SIZE))
 			{
 				memset(temp, 0, sizeof(temp));
@@ -243,23 +243,12 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 				pBody += nStrLen;
 			}
 			break;
-		case mdm_operate_request:
+		case rdm_operate_request:
 			if (isValidStr((const char*) pBody, MAX_SIZE))
 			{
 				memset(temp, 0, sizeof(temp));
 				strcpy(temp, pBody);
 				rData.setData("token", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			break;
-		case sdk_tracker_request:
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("data", temp);
 				nStrLen = strlen(temp);
 				++nStrLen;
 				pBody += nStrLen;

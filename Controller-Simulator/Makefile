@@ -1,9 +1,9 @@
 #####################################
-# httpHandler make file
+# Controller Simulator make file
 # Created on: Nor 02,2015
 # Author: Louis Ju
 #####################################
-TARGET    := tester
+TARGET    := simulator
 CC        := g++
 LD        := g++
 

@@ -171,6 +171,12 @@ int CSocketServer::runClientHandler(int nClientFD)
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
 
+	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
+	{
+		//_log("send message socket connected");
+		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
+	}
+
 	while (1)
 	{
 		memset(pBuf, 0, sizeof(pBuf));
@@ -251,6 +257,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
+		_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 

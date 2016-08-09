@@ -46,9 +46,9 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 }
 
 CController::CController() :
-		CObject(), cmpServer(new CSocketServer), cmpParser(CCmpHandler::getInstance()), sqlite(
-				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler), cmpClient(
-				new CSocketClient)
+		CObject(), serverAMX(CServerAMX::getInstance()), serverDevice(CServerDevice::getInstance()), cmpParser(
+				CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
+				new CThreadHandler)
 {
 	for (int i = 0; i < MAX_FUNC_POINT; ++i)
 	{
@@ -103,11 +103,30 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	case EVENT_COMMAND_SOCKET_TCP_RECEIVE:
 		onCMP(nId, nDataLen, pData);
 		break;
+	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
+		_log("[Controller] AMX Socket Client FD:%d Send:%s", (int) nId, static_cast<char*>(const_cast<void*>(pData)));
+		break;
+	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
+		_log("[Controller] Device Socket Client FD:%d Send:%s", (int) nId,
+				static_cast<char*>(const_cast<void*>(pData)));
+		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
 		_log("[Controller] Socket Client FD:%d Connected", (int) nId);
 		break;
+	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
+		_log("[Controller] AMX Socket Client FD:%d Connected", (int) nId);
+		break;
+	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
+		_log("[Controller] Device Socket Client FD:%d Connected", (int) nId);
+		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
 		_log("[Controller] Socket Client FD:%d Close", (int) nId);
+		break;
+	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
+		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
+		break;
+	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
+		_log("[Controller] Device Socket Client FD:%d Close", (int) nId);
 		break;
 	default:
 		_log("[Controller] Unknow message command: %d", nCommand);
@@ -115,45 +134,14 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-int CController::startServer(const int nPort, const int nMsqId)
+int CController::startServerAMX(const int nPort, const int nMsqId)
 {
-	if (0 >= nPort || 0 >= nMsqId)
-		return FALSE;
-
-	/** Run socket server for CMP **/
-	if (0 < nMsqId)
-	{
-		cmpServer->setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_RECEIVE);
-		cmpServer->setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT);
-		cmpServer->setClientDisconnectCommand( EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT);
-	}
-
-	if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
-	{
-		_log("CMP Server Socket Create Fail");
-		return FALSE;
-	}
-
-	tdEnquireLink->createThread(threadEnquireLinkRequest, this);
-
-	return TRUE;
+	return serverAMX->startServer(nPort, nMsqId);
 }
 
-void CController::stopServer()
+int CController::startServerDevice(const int nPort, const int nMsqId)
 {
-	if (tdEnquireLink)
-	{
-		tdEnquireLink->threadExit();
-		delete tdEnquireLink;
-		_DBG("[Controller] Stop Enquire Link Thread");
-	}
-
-	if (cmpServer)
-	{
-		cmpServer->stop();
-		delete cmpServer;
-		cmpServer = 0;
-	}
+	return serverDevice->startServer(nPort, nMsqId);
 }
 
 int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
@@ -172,7 +160,7 @@ int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequen
 	}
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-	nRet = cmpServer->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
+//	nRet = cmpServerAMX->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
 	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Center Send]", nSocket);
 	return nRet;
 }
@@ -330,7 +318,7 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 
-	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
+//	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] cmpResponse", nSocket);
 
 	string strLog;

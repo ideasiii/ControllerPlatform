@@ -20,10 +20,11 @@
 #include "utility.h"
 
 #define BUFSIZE 			1024
-#define BYE						555
+#define BYE					555
 #define PRESSURE			666
-#define HELP					777
-#define IO_PRESSURE	888
+#define HELP				777
+#define IO_PRESSURE			888
+
 
 using namespace std;
 
@@ -62,7 +63,8 @@ int main(int argc, char* argv[])
 ("cmp auth", authentication_request)\
 ("cmp bind", bind_request)\
 ("cmp unbind",
-	unbind_request);
+	unbind_request)\
+("amx bind", amx_bind_request);
 
 	printf("This process is a Controller testing process!.\n");
 
@@ -130,6 +132,9 @@ int main(int argc, char* argv[])
 			case bind_request:
 			case unbind_request:
 				cmpTest->sendRequest(nCommand);
+				break;
+			case amx_bind_request:
+				cmpTest->sendRequestAMX(nCommand);
 				break;
 			default:
 				printf("Unknow command, use help to show valid command.\n");
