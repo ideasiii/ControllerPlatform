@@ -19,6 +19,8 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
+#include "CServerAMX.h"
+#include "CServerDevice.h"
 
 using namespace std;
 
@@ -104,11 +106,12 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		onCMP(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		_log("[Controller] AMX Socket Client FD:%d Send:%s", (int) nId, static_cast<char*>(const_cast<void*>(pData)));
+		//_log("[Controller] AMX Socket Client FD:%d Send:%s", (int) nId, static_cast<char*>(const_cast<void*>(pData)));
+		onReceiveAMX(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		_log("[Controller] Device Socket Client FD:%d Send:%s", (int) nId,
-				static_cast<char*>(const_cast<void*>(pData)));
+		//_log("[Controller] Device Socket Client FD:%d Send, Length:%d Data:%s", (int) nId, nDataLen, static_cast<char*>(const_cast<void*>(pData)));
+		onReceiveDevice(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
 		_log("[Controller] Socket Client FD:%d Connected", (int) nId);
@@ -124,6 +127,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
 		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
+		serverAMX->unbind(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
 		_log("[Controller] Device Socket Client FD:%d Close", (int) nId);
@@ -131,6 +135,44 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	default:
 		_log("[Controller] Unknow message command: %d", nCommand);
 		break;
+	}
+}
+
+void CController::onReceiveDevice(const int nSocketFD, char * pCommand)
+{
+	string strCommand = pCommand;
+	_log("[Controller] Receive Device Command: %s", strCommand.c_str());
+
+	if (!strCommand.empty())
+	{
+		if (serverAMX)
+		{
+			serverAMX->sendCommand(strCommand);
+		}
+		else
+		{
+			_log("[Controller] AMX Server Invalid");
+		}
+	}
+	else
+	{
+		_log("[Controller] Device Send Invalid Command");
+	}
+}
+
+void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
+{
+	string strCommand = pCommand;
+	_log("[Controller] Receive AMX Command: %s", strCommand.c_str());
+
+	if (0 == strCommand.substr(0, 4).compare("bind"))
+	{
+		serverAMX->bind(nSocketFD);
+	}
+
+	if (0 == strCommand.substr(0, 6).compare("unbind"))
+	{
+		serverAMX->unbind(nSocketFD);
 	}
 }
 
@@ -142,6 +184,23 @@ int CController::startServerAMX(const int nPort, const int nMsqId)
 int CController::startServerDevice(const int nPort, const int nMsqId)
 {
 	return serverDevice->startServer(nPort, nMsqId);
+}
+
+void CController::stopServer()
+{
+	if (serverAMX)
+	{
+		serverAMX->stopServer();
+		delete serverAMX;
+		serverAMX = 0;
+	}
+
+	if (serverDevice)
+	{
+		serverDevice->stopServer();
+		delete serverDevice;
+		serverDevice = 0;
+	}
 }
 
 int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)

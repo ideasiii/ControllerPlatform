@@ -12,6 +12,10 @@ class CThreadHandler;
 
 #define amx_bind_request	2001
 
+enum
+{
+	AMX_BIND = 2001, AMX_SYSTEM_ON
+};
 class CCmpTest
 {
 public:

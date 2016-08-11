@@ -25,7 +25,6 @@
 #define HELP				777
 #define IO_PRESSURE			888
 
-
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -64,7 +63,8 @@ int main(int argc, char* argv[])
 ("cmp bind", bind_request)\
 ("cmp unbind",
 	unbind_request)\
-("amx bind", amx_bind_request);
+("amx bind", AMX_BIND)\
+("amx system on", AMX_SYSTEM_ON);
 
 	printf("This process is a Controller testing process!.\n");
 
@@ -133,7 +133,8 @@ int main(int argc, char* argv[])
 			case unbind_request:
 				cmpTest->sendRequest(nCommand);
 				break;
-			case amx_bind_request:
+			case AMX_BIND:
+			case AMX_SYSTEM_ON:
 				cmpTest->sendRequestAMX(nCommand);
 				break;
 			default:

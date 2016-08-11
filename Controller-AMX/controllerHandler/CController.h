@@ -31,6 +31,7 @@ public:
 	int startSqlite(const int nDBId, const std::string strDB);
 	int startServerAMX(const int nPort, const int nMsqId);
 	int startServerDevice(const int nPort, const int nMsqId);
+	void stopServer();
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -58,6 +59,8 @@ private:
 	int getControllerSocketFD(std::string strControllerID);
 	int getBindSocket(std::list<int> &listValue);
 	int cmpEnquireLinkRequest(const int nSocketFD);
+	void onReceiveDevice(const int nSocketFD, char * pCommand);
+	void onReceiveAMX(const int nSocketFD, char * pCommand);
 
 private:
 	CServerAMX *serverAMX;

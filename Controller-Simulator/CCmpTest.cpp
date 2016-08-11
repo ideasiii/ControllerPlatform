@@ -144,20 +144,25 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 
 	switch (nCommandId)
 	{
-	case amx_bind_request:
+	case AMX_BIND:
 		strCommand = "bind";
+		break;
+	case AMX_SYSTEM_ON:
+		strCommand = "CTL_SYSTEM_ON";
 		break;
 	}
 
 	char szEnd = 0x0D;
+	printf("AMX command = %s\n", strCommand.c_str());
 	memcpy(pbuf, strCommand.c_str(), strCommand.length());
 	pbuf += strCommand.length();
 	memcpy(pbuf, &szEnd, 1);
 	nPacketLen += strCommand.length();
 	++nPacketLen;
 
-	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
+	nRet = send(m_nSocketFD, buf, nPacketLen, 0);
 
+	printf("socket send: %s\n", buf);
 	return nRet;
 }
 
@@ -392,9 +397,10 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 		else
 		{
 
-			close(nSocketFD);
-			printf("[Socket Client] socket client close : %d , packet header length error: %d\n", nSocketFD, result);
-			break;
+			printf("[Socket Client] socket receive : %s\n", static_cast<char*>(pHeader));
+			//close(nSocketFD);
+			//printf("[Socket Client] socket client close : %d , packet header length error: %d\n", nSocketFD, result);
+			//break;
 		}
 
 		if (0 >= result)

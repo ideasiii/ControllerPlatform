@@ -36,7 +36,7 @@ CServerDevice * CServerDevice::getInstance()
 	return serverDevice;
 }
 
-int CServerAMX::startServer(const int nPort, const int nMsqId)
+int CServerDevice::startServer(const int nPort, const int nMsqId)
 {
 	if (0 >= nPort || 0 >= nMsqId)
 		return FALSE;
@@ -45,20 +45,20 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 	if (0 < nMsqId)
 	{
 		socketServer->setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE);
-		socketServer->setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT);
-		socketServer->setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT);
+		socketServer->setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE);
+		socketServer->setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE);
 	}
 
 	if ( FAIL == socketServer->start( AF_INET, NULL, nPort))
 	{
-		_log("AMX Server Socket Create Fail");
+		_log("Device Server Socket Create Fail");
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-void CServerAMX::stopServer()
+void CServerDevice::stopServer()
 {
 	if (socketServer)
 	{
