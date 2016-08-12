@@ -36,7 +36,11 @@ void *threadSocketRecvHandler(void *argv)
 	int nFD;
 	CCmpTest* ss = reinterpret_cast<CCmpTest*>(argv);
 	nFD = ss->getSocketfd();
+#ifdef AMX
+	ss->runSocketReceive(nFD);
+#else
 	ss->runSMSSocketReceive(nFD);
+#endif
 	return NULL;
 }
 
@@ -396,11 +400,9 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 		}
 		else
 		{
-
-			printf("[Socket Client] socket receive : %s\n", static_cast<char*>(pHeader));
-			//close(nSocketFD);
-			//printf("[Socket Client] socket client close : %d , packet header length error: %d\n", nSocketFD, result);
-			//break;
+			close(nSocketFD);
+			printf("[Socket Client] socket client close : %d , packet header length error: %d\n", nSocketFD, result);
+			break;
 		}
 
 		if (0 >= result)
@@ -410,6 +412,39 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 		}
 
 	} // while
+
+	threadHandler->threadSleep(1);
+	threadHandler->threadExit();
+}
+
+void CCmpTest::runSocketReceive(int nSocketFD)
+{
+	int nFD;
+	int result;
+	char pBuf[BUF_SIZE];
+	string strPacket;
+
+	while (1)
+	{
+		memset(pBuf, 0, sizeof(pBuf));
+		result = recv(nSocketFD, pBuf, BUF_SIZE, MSG_NOSIGNAL);
+
+		if (0 >= result)
+		{
+			close(nSocketFD);
+			break;
+		}
+
+		strPacket = pBuf;
+		printf("[Socket Client] socket receive : %s\n", strPacket.c_str());
+		if (0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
+		{
+			memset(pBuf, 0, sizeof(pBuf));
+			memcpy(pBuf, "CTL_OK", 6);
+			send(nSocketFD, pBuf, 6, MSG_NOSIGNAL);
+			printf("[Socket Client] socket send : %s\n", pBuf);
+		}
+	}
 
 	threadHandler->threadSleep(1);
 	threadHandler->threadExit();

@@ -184,3 +184,9 @@ __attribute__ ((unused)) static int getSequence()
 		msnSequence = 0x00000001;
 	return msnSequence;
 }
+
+//============ AMX Protocol ===============//
+#define CTL_OK			"CTL_OK"
+#define CTL_ERROR		"CTL_ERROR"
+
+

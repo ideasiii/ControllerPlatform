@@ -107,7 +107,8 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
 		//_log("[Controller] AMX Socket Client FD:%d Send:%s", (int) nId, static_cast<char*>(const_cast<void*>(pData)));
-		onReceiveAMX(nId, static_cast<char*>(const_cast<void*>(pData)));
+		//onReceiveAMX(nId, static_cast<char*>(const_cast<void*>(pData)));
+		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
 		//_log("[Controller] Device Socket Client FD:%d Send, Length:%d Data:%s", (int) nId, nDataLen, static_cast<char*>(const_cast<void*>(pData)));
@@ -140,6 +141,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 void CController::onReceiveDevice(const int nSocketFD, char * pCommand)
 {
+	int nLength = 0;
 	string strCommand = pCommand;
 	_log("[Controller] Receive Device Command: %s", strCommand.c_str());
 
@@ -147,15 +149,25 @@ void CController::onReceiveDevice(const int nSocketFD, char * pCommand)
 	{
 		if (serverAMX)
 		{
-			serverAMX->sendCommand(strCommand);
+			nLength = serverAMX->sendCommand(strCommand);
+			if (nLength == ((int) strCommand.length()))
+			{
+				serverDevice->sendCommand(nSocketFD, CTL_OK);
+			}
+			else
+			{
+				serverDevice->sendCommand(nSocketFD, CTL_ERROR);
+			}
 		}
 		else
 		{
+			serverDevice->sendCommand(nSocketFD, CTL_ERROR);
 			_log("[Controller] AMX Server Invalid");
 		}
 	}
 	else
 	{
+		serverDevice->sendCommand(nSocketFD, CTL_ERROR);
 		_log("[Controller] Device Send Invalid Command");
 	}
 }
@@ -176,7 +188,6 @@ void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
 		serverAMX->unbind(nSocketFD);
 		return;
 	}
-
 
 }
 

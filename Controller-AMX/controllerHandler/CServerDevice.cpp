@@ -68,3 +68,15 @@ void CServerDevice::stopServer()
 	}
 }
 
+int CServerDevice::sendCommand(const int nSocketFD, string strCommand)
+{
+	int nResult = FALSE;
+
+	if (0 < nSocketFD)
+	{
+		nResult = socketServer->socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
+		_log("[Server Device] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
+	}
+	return nResult;
+}
+

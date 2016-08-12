@@ -21,8 +21,10 @@ public:
 	int startServer(const int nPort, const int nMsqId);
 	void stopServer();
 	int sendCommand(string strCommand);
+	int sendCommand(const int nSocketFD, string strCommand);
 	void bind(const int nSocketFD);
 	void unbind(const int nSocketFD);
+	bool onReceive(const int nSocketFD, string strCommand);
 
 private:
 	CServerAMX();

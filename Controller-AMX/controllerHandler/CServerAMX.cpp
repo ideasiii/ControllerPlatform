@@ -71,8 +71,20 @@ int CServerAMX::sendCommand(string strCommand)
 
 	if (0 < mnSocketAMX)
 	{
-		int nRet = socketServer->socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
-		_log("[Server AMX] Send Command, length:%d Data:%s", nRet, strCommand.c_str());
+		nResult = socketServer->socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
+		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
+	}
+	return nResult;
+}
+
+int CServerAMX::sendCommand(const int nSocketFD, string strCommand)
+{
+	int nResult = FALSE;
+
+	if (0 < nSocketFD)
+	{
+		nResult = socketServer->socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
+		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
 	}
 	return nResult;
 }
@@ -91,4 +103,34 @@ void CServerAMX::unbind(const int nSocketFD)
 		_log("[Server AMX] Unbind Socket: %d", mnSocketAMX);
 		mnSocketAMX = -1;
 	}
+}
+
+bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
+{
+	if (0 < nSocketFD && !strCommand.empty())
+	{
+		_log("[Server AMX] Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
+		if (0 == strCommand.substr(0, 4).compare("bind"))
+		{
+			bind(nSocketFD);
+		}
+
+		if (0 == strCommand.substr(0, 6).compare("unbind"))
+		{
+			unbind(nSocketFD);
+		}
+
+		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
+		{
+			sendCommand(nSocketFD, CTL_OK);
+		}
+
+		return true;
+	}
+	else
+	{
+		sendCommand(nSocketFD, CTL_ERROR);
+		_log("[Server AMX] Error Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
+	}
+	return false;
 }

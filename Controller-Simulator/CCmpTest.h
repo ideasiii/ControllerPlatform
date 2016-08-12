@@ -29,6 +29,7 @@ public:
 	void closeConnect();
 	int getSocketfd() const;
 	void runSMSSocketReceive(int nSocketFD);
+	void runSocketReceive(int nSocketFD);
 
 private:
 	int m_nSocketFD;
