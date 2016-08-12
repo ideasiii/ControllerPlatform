@@ -168,12 +168,16 @@ void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
 	if (0 == strCommand.substr(0, 4).compare("bind"))
 	{
 		serverAMX->bind(nSocketFD);
+		return;
 	}
 
 	if (0 == strCommand.substr(0, 6).compare("unbind"))
 	{
 		serverAMX->unbind(nSocketFD);
+		return;
 	}
+
+
 }
 
 int CController::startServerAMX(const int nPort, const int nMsqId)
