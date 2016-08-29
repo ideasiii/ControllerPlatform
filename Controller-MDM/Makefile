@@ -1,5 +1,5 @@
 #####################################
-# Controller RDM make file
+# Controller MDM make file
 # Created on: 2016-07-19
 # Author: Jugo
 #####################################
@@ -7,7 +7,7 @@
 include env.mk
 include modules.mk
 
-TARGET    := controller-rdm
+TARGET    := controller-mdm
 CC        := g++
 LD        := g++
 
