@@ -1,9 +1,9 @@
 #####################################
-# Controller Simulator make file
-# Created on: Nor 02,2015
-# Author: Louis Ju
+# cJSON Test make file
+# Created on: 2016-07-26
+# Author: Jugo
 #####################################
-TARGET    := simulator
+TARGET    := jsontest
 CC        := g++
 LD        := g++
 
@@ -12,25 +12,26 @@ SRC_DIR   := $(DIR_APP_ROOT)
 BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR))
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG #-DAMX
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
+		
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
-			-lm -lrt -ldl \
-				
+			-lm -lrt -ldl
+	
 vpath %.cpp $(SRC_DIR)
 
 define make-goal
 $1%.o: %.cpp
-	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	$(CC) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
 	@echo -ne '###### $1 Object Build Done. ######\n'
 	@echo "\n"
 endef
 
-.PHONY: all bin/$(TARGET) checkdirs clean cleanAll
+.PHONY: all bin/$(TARGET) checkdirs clean
 
 .IGNORE: clean
 
@@ -39,7 +40,7 @@ all: checkdirs bin/$(TARGET)
 	@echo "\n"
 
 bin/$(TARGET): $(OBJ)
-	@echo -ne '\n###### Start Build $(TARGET) ######\n'
+	@echo -ne '\n###### Start Build $(OBJ) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
 	strip -s $@
 	@echo "\n"

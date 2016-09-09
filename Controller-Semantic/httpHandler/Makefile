@@ -1,9 +1,9 @@
 #####################################
-# Controller Simulator make file
+# httpHandler make file
 # Created on: Nor 02,2015
 # Author: Louis Ju
 #####################################
-TARGET    := simulator
+TARGET    := httpHandler
 CC        := g++
 LD        := g++
 
@@ -12,15 +12,9 @@ SRC_DIR   := $(DIR_APP_ROOT)
 BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR))
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG #-DAMX
-LDLIBS    :=-L$(DIR_APP_ROOT)libs \
-			-L/lib64 \
-			-L/usr/lib64 \
-			-L/usr/lib64/x86_64-linux-gnu \
-			-lpthread \
-			-lm -lrt -ldl \
-				
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I../global_inc
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
+			
 vpath %.cpp $(SRC_DIR)
 
 define make-goal
@@ -40,7 +34,7 @@ all: checkdirs bin/$(TARGET)
 
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
-	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
+	$(LD) $^ -o $@ $(CXXFLAGS)
 	strip -s $@
 	@echo "\n"
 		

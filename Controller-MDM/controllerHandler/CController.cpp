@@ -345,7 +345,10 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 
 	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] cmpResponse", nSocket);
-
+	if (szData)
+	{
+		_log("[Controller] CMP Body: %s", szData);
+	}
 	string strLog;
 	if (0 >= nRet)
 	{
