@@ -21,8 +21,6 @@ class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
 class CJsonHandler;
-class CAccessLog;
-class CAuthentication;
 
 class CController: public CObject
 {

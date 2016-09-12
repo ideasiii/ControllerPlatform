@@ -87,6 +87,8 @@ struct CMP_PACKET
 #define device_control_response					0x80000019
 #define device_state_request							0x00000020
 #define device_state_response						0x80000020
+#define semantic_request						0x00000030
+#define semantic_response						0x80000030
 
 /*
  * CMP status set
@@ -150,7 +152,8 @@ config_response, "config_response")( power_port_set_request, "power_port_request
 		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
 sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
 rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
-		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response");
+		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
+semantic_request, "semantic_request")(semantic_response, "semantic_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

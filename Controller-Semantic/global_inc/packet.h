@@ -66,27 +66,29 @@ struct CMP_PACKET
 #define update_request								    0x00000007
 #define update_response								0x80000007
 #define reboot_request									0x00000010
-#define reboot_response								    0x80000010
-#define config_request									    0x00000011
-#define config_response								    0x80000011
+#define reboot_response							0x80000010
+#define config_request							0x00000011
+#define config_response							0x80000011
 #define power_port_set_request					0x00000012
-#define power_port_set_response				0x80000012
+#define power_port_set_response					0x80000012
 #define power_port_state_request				0x00000013
-#define power_port_state_response			0x80000013
-#define ser_api_signin_request					    0x00000014
+#define power_port_state_response				0x80000013
+#define ser_api_signin_request					0x00000014
 #define ser_api_signin_response					0x80000014
-#define enquire_link_request						    0x00000015
-#define enquire_link_response					    0x80000015
-#define rdm_login_request							    0x00000016
-#define rdm_login_response						    0x80000016
+#define enquire_link_request					0x00000015
+#define enquire_link_response					0x80000015
+#define rdm_login_request						0x00000016
+#define rdm_login_response						0x80000016
 #define rdm_operate_request						0x00000017
-#define rdm_operate_response					    0x80000017
-#define rdm_logout_request							0x00000018
+#define rdm_operate_response					0x80000017
+#define rdm_logout_request						0x00000018
 #define rdm_logout_response						0x80000018
 #define device_control_request					0x00000019
 #define device_control_response					0x80000019
-#define device_state_request							0x00000020
-#define device_state_response						0x80000020
+#define device_state_request					0x00000020
+#define device_state_response					0x80000020
+#define semantic_request						0x00000030
+#define semantic_response						0x80000030
 
 /*
  * CMP status set
@@ -150,7 +152,8 @@ config_response, "config_response")( power_port_set_request, "power_port_request
 		"power_port_state_response")( initial_request, "initial_request")( initial_response, "initial_response")(
 sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
 rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
-		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response");
+		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
+semantic_request, "semantic_request")(semantic_response, "semantic_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
