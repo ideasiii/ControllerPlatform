@@ -44,39 +44,16 @@ private:
 
 	/**  Receive CMP Request **/
 	int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
-	int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
-	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
-	int cmpPowerPort(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpPowerPortState(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpAccessLog(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpSdkTracker(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpAuthentication(int nSocket, int nCommand, int nSequence, const void *pData);
-
-	/** Send CMP Request **/
-	int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
-	int cmpPowerPortStateRequest(int nSocket, std::string strWire);
 
 	/** Send CMP Response **/
 	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData = 0);
-	int cmpPowerPortStateResponse(int nSocket, int nSequence, const char * szData);
-	int cmpInitialResponse(int nSocket, int nSequence, const char * szData);
-	int cmpMdmLoginResponse(int nSocket, int nSequence, const char * szData);
-
-	int getControllerSocketFD(std::string strControllerID);
-	int getBindSocket(std::list<int> &listValue);
-	int cmpEnquireLinkRequest(const int nSocketFD);
 
 private:
 	CSocketServer *cmpServer;
 	CCmpHandler *cmpParser;
 	CSqliteHandler *sqlite;
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
-	CAccessLog *accessLog;
+
 	std::vector<int> vEnquireLink;
-	CAuthentication* authentication;
 	CSocketClient *cmpClient;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
