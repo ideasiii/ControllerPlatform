@@ -51,6 +51,7 @@ CController::CController() :
 		cmpRequest[i] = &CController::cmpUnknow;
 	}
 
+	cmpRequest[semantic_request] = &CController::cmpSemantic;
 }
 
 CController::~CController()
@@ -199,9 +200,27 @@ void CController::ackPacket(int nClientSocketFD, int nCommand, const void * pDat
 
 int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	_DBG("[Controller] Unknow command:%d", nCommand);
+	_log("[Controller] Unknow command:%d", nCommand);
 	sendCommand(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
 	return 0;
+}
+
+int CController::cmpSemantic(int nSocket, int nCommand, int nSequence, const void * pData)
+{
+	CDataHandler<std::string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Controller] Receive Body: %s ", rData["data"].c_str());
+		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+	}
+	else
+	{
+		_log("[Controller] Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+	}
+	rData.clear();
+	return nRet;
 }
 
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)

@@ -197,6 +197,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"" + strMAC
 			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
 	string strLogout = "{\"id\":\"" + strMAC + "\"}";
+	string strSemantic = "{\"type\":0\"local\":0\"text\":\"Ivy Hello\"}";
 
 	switch (nCommand)
 	{
@@ -277,6 +278,14 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		nBody_len += 1;
 		break;
 	case authentication_request:
+		break;
+	case semantic_request:
+		memcpy(pIndex, strSemantic.c_str(), strSemantic.size());
+		pIndex += strSemantic.size();
+		nBody_len += strSemantic.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
 		break;
 	}
 

@@ -44,6 +44,7 @@ private:
 
 	/**  Receive CMP Request **/
 	int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
+	int cmpSemantic(int nSocket, int nCommand, int nSequence, const void * pData);
 
 	/** Send CMP Response **/
 	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData = 0);
