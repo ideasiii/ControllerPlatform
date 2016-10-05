@@ -19,6 +19,7 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
+#include "JSONObject.h"
 
 using namespace std;
 
@@ -212,7 +213,13 @@ int CController::cmpSemantic(int nSocket, int nCommand, int nSequence, const voi
 	if (0 < nRet && rData.isValidKey("data"))
 	{
 		_log("[Controller] Receive Body: %s ", rData["data"].c_str());
-		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		//sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		JSONObject jsonResult;
+		jsonResult.put("result", 0);
+		jsonResult.put("type", 0);
+		jsonResult.put("local", 0);
+		jsonResult.put("words", "Fine Thanks");
+		cmpResponse(nSocket, semantic_response, nSequence, jsonResult.toString().c_str());
 	}
 	else
 	{
@@ -248,7 +255,7 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 
 	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
 	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] cmpResponse", nSocket);
-
+	_log("Body: %s", szData);
 	string strLog;
 	if (0 >= nRet)
 	{
