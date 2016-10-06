@@ -20,6 +20,7 @@
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
 #include "JSONObject.h"
+#include "CWordParser.h"
 
 using namespace std;
 
@@ -212,8 +213,9 @@ int CController::cmpSemantic(int nSocket, int nCommand, int nSequence, const voi
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
-		_log("[Controller] Receive Body: %s ", rData["data"].c_str());
-		//sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+		JSONObject jsonOutput;
+		CWordParser::parser(rData["data"].c_str(), jsonOutput);
+
 		JSONObject jsonResult;
 		jsonResult.put("result", 0);
 		jsonResult.put("type", 0);
