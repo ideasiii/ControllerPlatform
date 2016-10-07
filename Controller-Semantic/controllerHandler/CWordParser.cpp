@@ -41,6 +41,11 @@ int CWordParser::parser(string strData, JSONObject &jsonOutput)
 
 	int nType = jsonInput.getInt("type");
 
+	switch(nType)
+	{
+	case
+	}
+
 	return ERR_SUCCESS;
 }
 
