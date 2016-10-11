@@ -9,8 +9,11 @@
 #include "service.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
+#include "CDelivery.h"
 
 using namespace std;
+
+static CDelivery *delivery = new CDelivery;
 
 CWordParser::CWordParser()
 {
@@ -36,16 +39,16 @@ int CWordParser::parser(string strData, JSONObject &jsonOutput)
 
 	_log("[Word] Input word: %s", strData.c_str());
 
-	if (jsonInput.isNull("type"))
+	if (jsonInput.isNull("type") || jsonInput.isNull("words"))
 		return ERR_INVALID_PARAMETER;
 
 	int nType = jsonInput.getInt("type");
+	int nLocal = jsonInput.getInt("local");
+	string strWords = jsonInput.getString("words");
+	JSONObject jsonoutput;
+	JSONObject *pjson = &jsonoutput;
+	int nResult = delivery->deliver(nType, nLocal, strWords.c_str(), &pjson);
 
-	switch(nType)
-	{
-	case
-	}
-
-	return ERR_SUCCESS;
+	return 0;
 }
 

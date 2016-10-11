@@ -10,6 +10,7 @@
 #include <string>
 
 class JSONObject;
+class CDelivery;
 
 class CWordParser
 {
@@ -17,4 +18,7 @@ public:
 	CWordParser();
 	virtual ~CWordParser();
 	static int parser(std::string strWord, JSONObject &jsonOutput);
+
+private:
+
 };

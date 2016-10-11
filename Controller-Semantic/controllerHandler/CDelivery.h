@@ -20,10 +20,11 @@ public:
 	CDelivery();
 	virtual ~CDelivery();
 
-// Receive word
-	int deliver(int, int, const void *, JSONObject **jsonOut);
+	int deliver(int nType, int nLocal, const char * szWord, JSONObject **jsonOut);
 
 private:
-	typedef int (CDelivery::*MemFn)(int, int, const void *, JSONObject **jsonOut);
+	typedef int (CDelivery::*MemFn)(int, int, const char *, JSONObject **jsonOut);
 	MemFn fpTarget[SIZE];
+	int semantic(int nType, int nLocal, const char * szWord, JSONObject **jsonOut);
+	int command(int nType, int nLocal, const char * szWord, JSONObject **jsonOut);
 };
