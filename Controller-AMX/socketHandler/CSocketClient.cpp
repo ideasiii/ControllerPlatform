@@ -170,6 +170,11 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				result = socketrecv(nSocketFD, nBodyLen, &pBody, 0);
 				if (result != nBodyLen)
 				{
+					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
+					{
+						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
+					}
+					socketClose(nSocketFD);
 					_log("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
 							nBodyLen, result);
 					break;
@@ -178,6 +183,10 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 		}
 		else
 		{
+			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
+			{
+				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
+			}
 			socketClose(nSocketFD);
 			_log("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
 			break;
@@ -185,11 +194,27 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 
 		if (0 >= result)
 		{
+			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
+			{
+				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
+			}
 			socketClose(nSocketFD);
 			break;
 		}
 
+		if (externalEvent.isValid())
+		{
+			ClientReceive(nSocketFD, nTotalLen, &cmpPacket);
+			//sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen,
+			//		&cmpPacket);
+		}
+		else
+		{
+			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_RECEIVE, nSocketFD, nTotalLen, &cmpPacket);
+		}
 	} // while
+
+	sendMessage(m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
 
 	threadHandler->threadSleep(1);
 	threadHandler->threadExit();

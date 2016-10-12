@@ -106,12 +106,9 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		onCMP(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		//_log("[Controller] AMX Socket Client FD:%d Send:%s", (int) nId, static_cast<char*>(const_cast<void*>(pData)));
-		//onReceiveAMX(nId, static_cast<char*>(const_cast<void*>(pData)));
 		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		//_log("[Controller] Device Socket Client FD:%d Send, Length:%d Data:%s", (int) nId, nDataLen, static_cast<char*>(const_cast<void*>(pData)));
 		onReceiveDevice(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:

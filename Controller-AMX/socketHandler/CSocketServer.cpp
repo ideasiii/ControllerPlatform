@@ -182,10 +182,6 @@ int CSocketServer::runClientHandler(int nClientFD)
 		memset(pBuf, 0, sizeof(pBuf));
 		result = socketrecv(nClientFD, &pvBuf, clientSockaddr);
 
-		//_log("[AMX Receive] %s", (char *) pvBuf);
-		//socketSend(nClientFD, pvBuf, strlen(pBuf));
-		//continue;
-
 		if (0 >= result)
 		{
 			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
@@ -337,7 +333,9 @@ int CSocketServer::runSMSHandler(int nClientFD)
 
 		if (nClientFD == getSocketfd())
 		{
-
+			/**
+			 * UDP server receive packet,record client information
+			 */
 			nFD = ntohs(clientSockaddr->sin_port);
 			memset(szTmp, 0, sizeof(szTmp));
 			sprintf(szTmp, "%d", nFD);
@@ -434,8 +432,7 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
-		//smsHandler((int) nId);
-		clientHandler((int) nId);
+		smsHandler((int) nId);
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
 		_log("[Socket Server] Receive Thread Join, Thread ID: %x", nId);

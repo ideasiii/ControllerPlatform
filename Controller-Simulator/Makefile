@@ -13,7 +13,7 @@ BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG #-DAMX
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG -DAMX
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \

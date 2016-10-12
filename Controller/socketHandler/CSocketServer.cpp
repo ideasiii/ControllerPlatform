@@ -17,16 +17,18 @@
 #include "common.h"
 #include "CDataHandler.cpp"
 #include "packet.h"
+#include "IReceiver.h"
 
 void *threadSocketMessageReceive(void *argv);
 void *threadSocketAccept(void *argv);
 void *threadClientHandler(void *argv);
-void *threadSMSHandler(void *argv);
+void *threadCMPHandler(void *argv);
 
 int CSocketServer::m_nInternalEventFilter = 7000;
 
 CSocketServer::CSocketServer() :
-		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0)
+		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0), mnPacketType(PK_CMP), mnPacketHandle(
+				PK_MSQ)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -120,11 +122,11 @@ void CSocketServer::clientHandler(int nFD)
 	threadHandler->createThread(threadClientHandler, this);
 }
 
-void CSocketServer::smsHandler(int nFD)
+void CSocketServer::cmpHandler(int nFD)
 {
 	this->threadLock();
 	this->m_nClientFD = nFD;
-	threadHandler->createThread(threadSMSHandler, this);
+	threadHandler->createThread(threadCMPHandler, this);
 }
 
 void *threadClientHandler(void *argv)
@@ -137,13 +139,13 @@ void *threadClientHandler(void *argv)
 	return NULL;
 }
 
-void *threadSMSHandler(void *argv)
+void *threadCMPHandler(void *argv)
 {
 	int nFD;
 	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
 	nFD = ss->m_nClientFD;
 	ss->threadUnLock();
-	ss->runSMSHandler(nFD);
+	ss->runCMPHandler(nFD);
 	return NULL;
 }
 
@@ -170,6 +172,12 @@ int CSocketServer::runClientHandler(int nClientFD)
 	 */
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
+
+	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
+	{
+		//_log("send message socket connected");
+		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
+	}
 
 	while (1)
 	{
@@ -201,13 +209,21 @@ int CSocketServer::runClientHandler(int nClientFD)
 			nFD = nClientFD;
 		}
 
-		if (externalEvent.isValid())
+		switch (mnPacketHandle)
 		{
-			sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, result, pBuf);
-		}
-		else
-		{
-			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, result, pBuf);
+		case PK_MSQ:
+			if (externalEvent.isValid())
+			{
+				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, result, pBuf);
+			}
+			else
+			{
+				sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, result, pBuf);
+			}
+			break;
+		case PK_ASYNC:
+			ServerReceive(nFD, result, pBuf);
+			break;
 		}
 	}
 
@@ -221,7 +237,7 @@ int CSocketServer::runClientHandler(int nClientFD)
 	return 0;
 }
 
-int CSocketServer::runSMSHandler(int nClientFD)
+int CSocketServer::runCMPHandler(int nClientFD)
 {
 	int nFD;
 	int result = 0;
@@ -247,11 +263,13 @@ int CSocketServer::runSMSHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
+		_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 
 	while (1)
 	{
+
 		memset(&cmpPacket, 0, sizeof(cmpPacket));
 		result = socketrecv(nClientFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr);
 
@@ -338,14 +356,24 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			nFD = nClientFD;
 		}
 
-		if (externalEvent.isValid())
+		switch (mnPacketHandle)
 		{
-			sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen, &cmpPacket);
+		case PK_MSQ:
+			if (externalEvent.isValid())
+			{
+				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nFD, nTotalLen,
+						&cmpPacket);
+			}
+			else
+			{
+				sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, nTotalLen, &cmpPacket);
+			}
+			break;
+		case PK_ASYNC:
+			ServerReceive(nFD, nTotalLen, &cmpPacket);
+			break;
 		}
-		else
-		{
-			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, nTotalLen, &cmpPacket);
-		}
+
 	} // while
 
 	delete clientSockaddr;
@@ -423,7 +451,15 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
-		smsHandler((int) nId);
+		switch (mnPacketType)
+		{
+		case PK_BYTE:
+			clientHandler((int) nId);
+			break;
+		case PK_CMP:
+			cmpHandler((int) nId);
+			break;
+		}
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
 		_log("[Socket Server] Receive Thread Join, Thread ID: %x", nId);
@@ -469,5 +505,14 @@ void CSocketServer::eraseUDPCliefnt(int nClientId)
 	}
 
 	_DBG("[Socket Server] UDP client %d in queue", udpClientData->size());
+}
+
+void CSocketServer::setPacketConf(int nType, int nHandle)
+{
+	if (0 <= nType && PK_TYPE_SIZE > nType)
+		mnPacketType = nType;
+
+	if (0 <= nHandle && PK_HANDLE_SIZE > nHandle)
+		mnPacketHandle = nHandle;
 }
 
