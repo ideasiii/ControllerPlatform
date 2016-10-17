@@ -1,4 +1,5 @@
 #pragma once
+
 /**
  *  Declare socket client receive
  */
@@ -29,3 +30,9 @@ typedef enum _EVENT_INTERNAL
 	EVENT_COMMAND_SOCKET_SERVER_RECEIVE,
 	EVENT_COMMAND_SOCKET_CLIENT_RECEIVE
 } EVENT_INTERNAL;
+
+
+
+
+
+

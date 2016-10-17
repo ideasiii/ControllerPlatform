@@ -29,7 +29,12 @@ using namespace std;
 static CController * controller = 0;
 
 /** Enquire link function declare for enquire link thread **/
-void *threadEnquireLinkRequest(void *argv);
+void *threadEnquireLinkRequest(void *argv)
+{
+	CController* ss = reinterpret_cast<CController*>(argv);
+	ss->runEnquireLinkRequest();
+	return NULL;
+}
 
 /**
  * Define Socket Client ReceiveFunction
@@ -692,9 +697,4 @@ int CController::getBindSocket(list<int> &listValue)
 }
 
 /************************************* thread function **************************************/
-void *threadEnquireLinkRequest(void *argv)
-{
-	CController* ss = reinterpret_cast<CController*>(argv);
-	ss->runEnquireLinkRequest();
-	return NULL;
-}
+

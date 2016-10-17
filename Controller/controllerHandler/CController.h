@@ -27,6 +27,7 @@ class CAuthentication;
 class CController: public CObject
 {
 public:
+	explicit CController();
 	virtual ~CController();
 	static CController* getInstance();
 	int startServer(const int nPort, const int nMsqId);
@@ -39,7 +40,6 @@ protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 private:
-	explicit CController();
 	void onCMP(int nClientFD, int nDataLen, const void *pData);
 	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
 	void ackPacket(int nClientSocketFD, int nCommand, const void * pData);

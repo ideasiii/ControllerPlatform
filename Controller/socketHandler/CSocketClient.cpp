@@ -13,14 +13,7 @@
 
 int CSocketClient::m_nInternalEventFilter = 6789;
 
-void *threadMessageReceive(void *argv)
-{
-	CSocketClient* ss = reinterpret_cast<CSocketClient*>(argv);
-	ss->runMessageReceive();
-	return NULL;
-}
-
-void *threadCMPHandler(void *argv)
+void *threadClientCMPHandler(void *argv)
 {
 	int nFD;
 	CSocketClient* ss = reinterpret_cast<CSocketClient*>(argv);
@@ -29,18 +22,24 @@ void *threadCMPHandler(void *argv)
 	return NULL;
 }
 
-void *threadClientHandler(void *argv)
+void *threadClientMessageReceive(void *argv)
 {
-	int nFD;
 	CSocketClient* ss = reinterpret_cast<CSocketClient*>(argv);
-	nFD = ss->m_nClientFD;
+	ss->runMessageReceive();
+	return NULL;
+}
+
+void *threadClientDataHandler(void *argv)
+{
+	CSocketClient* ss = reinterpret_cast<CSocketClient*>(argv);
+	int nFD = ss->m_nClientFD;
 	ss->threadUnLock();
-	ss->runClientHandler(nFD);
+	ss->runDataHandler(nFD);
 	return NULL;
 }
 
 CSocketClient::CSocketClient() :
-		CSocket(), threadHandler(new CThreadHandler), mnPacketType(PK_CMP), mnPacketHandle(PK_MSQ), m_nClientFD(-1)
+		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), mnPacketType(PK_CMP), mnPacketHandle(PK_MSQ)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -92,19 +91,18 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 			}
 		}
 
-		threadHandler->createThread(threadMessageReceive, this);
+		threadHandler->createThread(threadClientMessageReceive, this);
 		switch (mnPacketType)
 		{
 		case PK_BYTE:
-			clientHandler((int) getSocketfd());
+			dataHandler((int) getSocketfd());
 			break;
 		case PK_CMP:
 			cmpHandler((int) getSocketfd());
 			break;
 		}
-		//threadHandler->createThread(threadSocketRecvHandler, this);
 
-		_DBG("[Socket Client] Socket connect success, FD:%d", getSocketfd());
+		_log("[Socket Client] Socket connect success, FD:%d", getSocketfd());
 		return getSocketfd();
 	}
 
@@ -121,18 +119,18 @@ void CSocketClient::threadUnLock()
 	threadHandler->threadUnlock();
 }
 
-void CSocketClient::clientHandler(int nFD)
+void CSocketClient::dataHandler(int nFD)
 {
 	this->threadLock();
 	this->m_nClientFD = nFD;
-	threadHandler->createThread(threadClientHandler, this);
+	threadHandler->createThread(threadClientDataHandler, this);
 }
 
 void CSocketClient::cmpHandler(int nFD)
 {
 	this->threadLock();
 	this->m_nClientFD = nFD;
-	threadHandler->createThread(threadCMPHandler, this);
+	threadHandler->createThread(threadClientCMPHandler, this);
 }
 
 void CSocketClient::stop()
@@ -154,126 +152,9 @@ void CSocketClient::setClientDisconnectCommand(int nCommand)
 
 void CSocketClient::runMessageReceive()
 {
-	run(m_nInternalFilter);
+	run(m_nInternalFilter, "SocketClient");
 	threadHandler->threadExit();
 	threadHandler->threadJoin(threadHandler->getThreadID());
-}
-
-int CSocketClient::runCMPHandler(int nSocketFD)
-{
-	int result = 0;
-	char szTmp[16];
-	int nTotalLen = 0;
-	int nBodyLen = 0;
-	int nCommand = generic_nack;
-	int nSequence = 0;
-
-	CMP_PACKET cmpPacket;
-	void* pHeader = &cmpPacket.cmpHeader;
-	void* pBody = &cmpPacket.cmpBody;
-
-	CMP_HEADER cmpHeader;
-	void *pHeaderResp = &cmpHeader;
-	int nCommandResp;
-
-	struct sockaddr_in *clientSockaddr;
-	clientSockaddr = new struct sockaddr_in;
-
-	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
-	{
-		_log("send message socket connected");
-		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nSocketFD, 0, 0);
-	}
-
-	while (1)
-	{
-		memset(&cmpPacket, 0, sizeof(CMP_PACKET));
-		result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr);
-
-		if (sizeof(CMP_HEADER) == result)
-		{
-			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
-			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
-			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
-			if ( enquire_link_request == nCommand)
-			{
-				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-				nCommandResp = generic_nack | nCommand;
-				cmpHeader.command_id = htonl(nCommandResp);
-				cmpHeader.command_status = htonl( STATUS_ROK);
-				cmpHeader.sequence_number = htonl(nSequence);
-				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
-				socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
-				continue;
-			}
-
-			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
-
-			if (0 == nBodyLen)
-			{
-				_log("[Socket Client] Receive CMP:%d", nCommand);
-				continue;
-			}
-			if (0 < nBodyLen)
-			{
-				result = socketrecv(nSocketFD, nBodyLen, &pBody, 0);
-				if (result != nBodyLen)
-				{
-					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
-					{
-						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
-					}
-					socketClose(nSocketFD);
-					_log("[Socket Client] socket client close : %d , packet length error: %d != %d", nSocketFD,
-							nBodyLen, result);
-					break;
-				}
-			}
-		}
-		else
-		{
-			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
-			{
-				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
-			}
-			socketClose(nSocketFD);
-			_log("[Socket Client] socket client close : %d , packet header length error: %d", nSocketFD, result);
-			break;
-		}
-
-		if (0 >= result)
-		{
-			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
-			{
-				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nSocketFD, 0, 0);
-			}
-			socketClose(nSocketFD);
-			break;
-		}
-
-		switch (mnPacketHandle)
-		{
-		case PK_MSQ:
-			if (externalEvent.isValid())
-			{
-				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nSocketFD, nTotalLen,
-						&cmpPacket);
-			}
-			else
-			{
-				sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen, &cmpPacket);
-			}
-			break;
-		case PK_ASYNC:
-			ClientReceive(nSocketFD, nTotalLen, &cmpPacket);
-			break;
-		}
-	} // while
-
-	sendMessage(m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
-
-	threadHandler->threadSleep(1);
-	threadHandler->threadExit();
 }
 
 void CSocketClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
@@ -302,7 +183,7 @@ void CSocketClient::setPacketConf(int nType, int nHandle)
 		mnPacketHandle = nHandle;
 }
 
-int CSocketClient::runClientHandler(int nClientFD)
+int CSocketClient::runDataHandler(int nClientFD)
 {
 	int result;
 	char pBuf[BUF_SIZE];
@@ -317,7 +198,6 @@ int CSocketClient::runClientHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
-		//_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 
@@ -336,13 +216,21 @@ int CSocketClient::runClientHandler(int nClientFD)
 			break;
 		}
 
-		if (externalEvent.isValid())
+		switch (mnPacketHandle)
 		{
-			sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nClientFD, result, pBuf);
-		}
-		else
-		{
-			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nClientFD, result, pBuf);
+		case PK_MSQ:
+			if (externalEvent.isValid())
+			{
+				sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventRecvCommand, nClientFD, result, pBuf);
+			}
+			else
+			{
+				sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nClientFD, result, pBuf);
+			}
+			break;
+		case PK_ASYNC:
+			ClientReceive(nClientFD, result, pBuf);
+			break;
 		}
 	}
 
@@ -381,7 +269,6 @@ int CSocketClient::runCMPHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
-		_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 

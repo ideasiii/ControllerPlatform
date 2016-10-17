@@ -22,7 +22,7 @@ public:
 	void setPackageReceiver(int nMsgId, int nEventFilter, int nCommand);
 	void setClientDisconnectCommand(int nCommand);
 	void runMessageReceive();
-	int runClientHandler(int nClientFD);
+	int runDataHandler(int nClientFD);
 	int runCMPHandler(int nClientFD);
 	void setPacketConf(int nType, int nHandle);
 	void threadLock();
@@ -35,7 +35,7 @@ protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 private:
-	void clientHandler(int nFD);
+	void dataHandler(int nFD);
 	void cmpHandler(int nFD);
 	CThreadHandler *threadHandler;
 	EVENT_EXTERNAL externalEvent;

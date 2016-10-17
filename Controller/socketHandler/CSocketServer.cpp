@@ -19,12 +19,40 @@
 #include "packet.h"
 #include "IReceiver.h"
 
-void *threadSocketMessageReceive(void *argv);
-void *threadSocketAccept(void *argv);
-void *threadClientHandler(void *argv);
-void *threadCMPHandler(void *argv);
-
 int CSocketServer::m_nInternalEventFilter = 7000;
+
+/** Thread Function Run **/
+void *threadServerCMPHandler(void *argv)
+{
+	int nFD;
+	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
+	nFD = ss->getSocketfd();
+	ss->runCMPHandler(nFD);
+	return NULL;
+}
+
+void *threadServerMessageReceive(void *argv)
+{
+	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
+	ss->runMessageReceive();
+	return NULL;
+}
+
+void *threadServerSocketAccept(void *argv)
+{
+	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
+	ss->runSocketAccept();
+	return NULL;
+}
+
+void *threadServerDataHandler(void *argv)
+{
+	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
+	int nFD = ss->m_nClientFD;
+	ss->threadUnLock();
+	ss->runDataHandler(nFD);
+	return NULL;
+}
 
 CSocketServer::CSocketServer() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0), mnPacketType(PK_CMP), mnPacketHandle(
@@ -62,7 +90,7 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 		return -1;
 	}
 
-	threadHandler->createThread(threadSocketMessageReceive, this);
+	threadHandler->createThread(threadServerMessageReceive, this);
 
 	if ( AF_UNIX == nSocketType)
 	{
@@ -90,14 +118,14 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 					return -1;
 				}
 
-				threadHandler->createThread(threadSocketAccept, this);
+				threadHandler->createThread(threadServerSocketAccept, this);
 			}
 			else if ( SOCK_DGRAM == nStyle)
 			{
 				if (udpClientData)
 					delete udpClientData;
 				udpClientData = new CDataHandler<struct sockaddr_in>;
-				clientHandler(getSocketfd());
+				dataHandler(getSocketfd());
 			}
 			return 0;
 		}
@@ -115,38 +143,18 @@ void CSocketServer::stop()
 	socketClose();
 }
 
-void CSocketServer::clientHandler(int nFD)
+void CSocketServer::dataHandler(int nFD)
 {
 	this->threadLock();
 	this->m_nClientFD = nFD;
-	threadHandler->createThread(threadClientHandler, this);
+	threadHandler->createThread(threadServerDataHandler, this);
 }
 
 void CSocketServer::cmpHandler(int nFD)
 {
 	this->threadLock();
 	this->m_nClientFD = nFD;
-	threadHandler->createThread(threadCMPHandler, this);
-}
-
-void *threadClientHandler(void *argv)
-{
-	int nFD;
-	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
-	nFD = ss->m_nClientFD;
-	ss->threadUnLock();
-	ss->runClientHandler(nFD);
-	return NULL;
-}
-
-void *threadCMPHandler(void *argv)
-{
-	int nFD;
-	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
-	nFD = ss->m_nClientFD;
-	ss->threadUnLock();
-	ss->runCMPHandler(nFD);
-	return NULL;
+	threadHandler->createThread(threadServerCMPHandler, this);
 }
 
 void CSocketServer::threadLock()
@@ -159,7 +167,7 @@ void CSocketServer::threadUnLock()
 	threadHandler->threadUnlock();
 }
 
-int CSocketServer::runClientHandler(int nClientFD)
+int CSocketServer::runDataHandler(int nClientFD)
 {
 	int nFD;
 	int result;
@@ -175,7 +183,6 @@ int CSocketServer::runClientHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
-		//_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 
@@ -386,13 +393,6 @@ int CSocketServer::runCMPHandler(int nClientFD)
 	return 0;
 }
 
-void *threadSocketAccept(void *argv)
-{
-	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
-	ss->runSocketAccept();
-	return NULL;
-}
-
 void CSocketServer::runSocketAccept()
 {
 	int nChildSocketFD = -1;
@@ -416,17 +416,11 @@ void CSocketServer::runSocketAccept()
 	threadHandler->threadExit();
 }
 
-void *threadSocketMessageReceive(void *argv)
-{
-	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
-	ss->runMessageReceive();
-	return NULL;
-}
-
 void CSocketServer::runMessageReceive()
 {
 	run(m_nInternalFilter, "SocketServer");
 	threadHandler->threadExit();
+	threadHandler->threadJoin(threadHandler->getThreadID());
 }
 
 void CSocketServer::setPackageReceiver(int nMsgId, int nEventFilter, int nCommand)
@@ -454,7 +448,7 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 		switch (mnPacketType)
 		{
 		case PK_BYTE:
-			clientHandler((int) nId);
+			dataHandler((int) nId);
 			break;
 		case PK_CMP:
 			cmpHandler((int) nId);

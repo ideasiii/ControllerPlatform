@@ -23,7 +23,7 @@ public:
 	int start(int nSocketType, const char* cszAddr, short nPort, int nStyle = SOCK_STREAM);
 	void stop();
 	void setPackageReceiver(int nMsgId, int nEventFilter, int nCommand);
-	int runClientHandler(int nClientFD);
+	int runDataHandler(int nClientFD);
 	int runCMPHandler(int nClientFD);
 	void runSocketAccept();
 	void runMessageReceive();
@@ -41,7 +41,7 @@ protected:
 
 private:
 	int recvHandler();
-	void clientHandler(int nFD);
+	void dataHandler(int nFD);
 	void cmpHandler(int nFD);
 
 public:
