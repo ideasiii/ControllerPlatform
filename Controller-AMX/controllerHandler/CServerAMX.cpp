@@ -10,6 +10,8 @@
 #include "event.h"
 #include "packet.h"
 #include "common.h"
+#include "AMXCommand.h"
+#include "IReceiver.h"
 
 static CServerAMX * serverAMX = 0;
 
@@ -46,11 +48,18 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 		socketServer->setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX);
 	}
 
+	/** Set Receive , Packet is CMP , Message Queue Handle **/
+	socketServer->setPacketConf(PK_CMP, PK_MSQ);
+
 	if ( FAIL == socketServer->start( AF_INET, NULL, nPort))
 	{
 		_log("AMX Server Socket Create Fail");
 		return FALSE;
 	}
+
+	// test
+	string strVal = mapAMXCommand[1][0][1];
+	_log(strVal.c_str());
 
 	return TRUE;
 }

@@ -7,6 +7,7 @@
 
 #include "CServerDevice.h"
 #include "CSocketServer.h"
+#include "IReceiver.h"
 #include "event.h"
 #include "packet.h"
 
@@ -48,6 +49,9 @@ int CServerDevice::startServer(const int nPort, const int nMsqId)
 		socketServer->setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE);
 		socketServer->setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE);
 	}
+
+	/** Set Receive , Packet is CMP , Message Queue Handle **/
+	socketServer->setPacketConf(PK_CMP, PK_MSQ);
 
 	if ( FAIL == socketServer->start( AF_INET, NULL, nPort))
 	{

@@ -8,11 +8,9 @@
 #include <list>
 #include <ctime>
 
-#include "common.h"
 #include "CSocketServer.h"
 #include "CSocketClient.h"
 #include "event.h"
-#include "packet.h"
 #include "utility.h"
 #include "CCmpHandler.h"
 #include "CController.h"
@@ -52,7 +50,7 @@ CController::CController() :
 				CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
 				new CThreadHandler)
 {
-	for (int i = 0; i < MAX_FUNC_POINT; ++i)
+	for (int i = 0; i < MAX_COMMAND; ++i)
 	{
 		cmpRequest[i] = &CController::cmpUnknow;
 	}
@@ -136,37 +134,37 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-void CController::onReceiveDevice(const int nSocketFD, char * pCommand)
+void CController::onReceiveDevice(const int nSocketFD, const void *pData)
 {
-	int nLength = 0;
-	string strCommand = pCommand;
-	_log("[Controller] Receive Device Command: %s", strCommand.c_str());
+	int nRet = -1;
+	int nPacketLen = 0;
+	CMP_HEADER cmpHeader;
+	char *pPacket;
 
-	if (!strCommand.empty())
+	pPacket = (char*) const_cast<void*>(pData);
+	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+
+	cmpHeader.command_id = cmpParser->getCommand(pPacket);
+	cmpHeader.command_length = cmpParser->getLength(pPacket);
+	cmpHeader.command_status = cmpParser->getStatus(pPacket);
+	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
+
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Controller Recv]", nSocketFD);
+
+	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
-		if (serverAMX)
-		{
-			nLength = serverAMX->sendCommand(strCommand);
-			if (nLength == ((int) strCommand.length()))
-			{
-				serverDevice->sendCommand(nSocketFD, CTL_OK);
-			}
-			else
-			{
-				serverDevice->sendCommand(nSocketFD, CTL_ERROR);
-			}
-		}
-		else
-		{
-			serverDevice->sendCommand(nSocketFD, CTL_ERROR);
-			_log("[Controller] AMX Server Invalid");
-		}
+		return;
 	}
-	else
+
+	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id)
 	{
-		serverDevice->sendCommand(nSocketFD, CTL_ERROR);
-		_log("[Controller] Device Send Invalid Command");
+		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
+		return;
 	}
+
+	(this->*this->cmpRequest[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number,
+			pPacket);
 }
 
 void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
@@ -234,42 +232,6 @@ int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequen
 //	nRet = cmpServerAMX->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
 	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Center Send]", nSocket);
 	return nRet;
-}
-
-void CController::ackPacket(int nClientSocketFD, int nCommand, const void * pData)
-{
-	string strLog;
-	switch (nCommand)
-	{
-	case generic_nack:
-		break;
-	case bind_response:
-		break;
-	case authentication_response:
-		break;
-	case access_log_response:
-		break;
-	case enquire_link_response:
-		for (vector<int>::iterator it = vEnquireLink.begin(); it != vEnquireLink.end(); ++it)
-		{
-			if (nClientSocketFD == *it)
-			{
-				vEnquireLink.erase(it);
-				break;
-			}
-		}
-		break;
-	case unbind_response:
-		break;
-	case update_response:
-		break;
-	case reboot_response:
-		break;
-	case config_response:
-		break;
-	case power_port_set_response:
-		break;
-	}
 }
 
 int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)

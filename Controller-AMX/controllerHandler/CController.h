@@ -12,8 +12,7 @@
 #include <list>
 #include "CObject.h"
 #include "common.h"
-
-#define MAX_FUNC_POINT		256
+#include "packet.h"
 
 class CCmpHandler;
 class CSqliteHandler;
@@ -40,7 +39,6 @@ private:
 	explicit CController();
 	void onCMP(int nClientFD, int nDataLen, const void *pData);
 	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
-	void ackPacket(int nClientSocketFD, int nCommand, const void * pData);
 
 	/**  Receive CMP Request **/
 	int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
@@ -59,7 +57,7 @@ private:
 	int getControllerSocketFD(std::string strControllerID);
 	int getBindSocket(std::list<int> &listValue);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-	void onReceiveDevice(const int nSocketFD, char * pCommand);
+	void onReceiveDevice(const int nSocketFD, const void *pData);
 	void onReceiveAMX(const int nSocketFD, char * pCommand);
 
 private:
@@ -72,6 +70,6 @@ private:
 	std::vector<int> vEnquireLink;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
-	MemFn cmpRequest[MAX_FUNC_POINT];
+	MemFn cmpRequest[MAX_COMMAND];
 
 };
