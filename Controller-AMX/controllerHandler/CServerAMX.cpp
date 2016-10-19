@@ -58,7 +58,7 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 	}
 
 	// test
-	string strVal = mapAMXCommand[1][0][1];
+	string strVal = mapAMXCommand[10001];
 	_log(strVal.c_str());
 
 	return TRUE;
