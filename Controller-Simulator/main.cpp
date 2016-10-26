@@ -65,6 +65,9 @@ int main(int argc, char* argv[])
 	unbind_request)\
 ("amx bind", AMX_BIND)\
 ("amx system on", AMX_SYSTEM_ON)\
+("amx control", amx_control_request)\
+(
+			"amx status", amx_status_request)\
 ("semantic", semantic_request);
 
 	printf("This process is a Controller testing process!.\n");
@@ -133,6 +136,8 @@ int main(int argc, char* argv[])
 			case bind_request:
 			case unbind_request:
 			case semantic_request:
+			case amx_control_request:
+			case amx_status_request:
 				cmpTest->sendRequest(nCommand);
 				break;
 			case AMX_BIND:
