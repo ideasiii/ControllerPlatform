@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 #include "CObject.h"
 #include "common.h"
 #include "packet.h"
@@ -70,6 +71,7 @@ private:
 	std::vector<int> vEnquireLink;
 
 	typedef int (CController::*MemFn)(int, int, int, const void *);
-	MemFn cmpRequest[MAX_COMMAND];
+//	MemFn cmpRequest[MAX_COMMAND];
+	std::map<int, MemFn> mapFunc;
 
 };

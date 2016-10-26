@@ -50,14 +50,16 @@ CController::CController() :
 				CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
 				new CThreadHandler)
 {
-	for (int i = 0; i < MAX_COMMAND; ++i)
-	{
-		cmpRequest[i] = &CController::cmpUnknow;
-	}
-	cmpRequest[bind_request] = &CController::cmpBind;
-	cmpRequest[unbind_request] = &CController::cmpUnbind;
-	cmpRequest[device_control_request] = &CController::cmpDeviceControl;
-	cmpRequest[device_state_request] = &CController::cmpDeviceState;
+//	for (int i = 0; i < MAX_COMMAND; ++i)
+//	{
+//		cmpRequest[i] = &CController::cmpUnknow;
+//	}
+//	cmpRequest[bind_request] = &CController::cmpBind;
+//	cmpRequest[unbind_request] = &CController::cmpUnbind;
+//	cmpRequest[device_control_request] = &CController::cmpDeviceControl;
+//	cmpRequest[device_state_request] = &CController::cmpDeviceState;
+
+	mapFunc[bind_request] = &CController::cmpBind;
 }
 
 CController::~CController()
@@ -157,14 +159,17 @@ void CController::onReceiveDevice(const int nSocketFD, const void *pData)
 		return;
 	}
 
-	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id)
+	map<int, MemFn>::iterator iter;
+	iter = mapFunc.find(cmpHeader.command_id);
+
+	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
 	{
 		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
 		return;
 	}
 
-	(this->*this->cmpRequest[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number,
-			pPacket);
+	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
+
 }
 
 void CController::onReceiveAMX(const int nSocketFD, char * pCommand)

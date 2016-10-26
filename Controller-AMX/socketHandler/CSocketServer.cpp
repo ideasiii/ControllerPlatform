@@ -24,9 +24,9 @@ int CSocketServer::m_nInternalEventFilter = 7000;
 /** Thread Function Run **/
 void *threadServerCMPHandler(void *argv)
 {
-	int nFD;
 	CSocketServer* ss = reinterpret_cast<CSocketServer*>(argv);
-	nFD = ss->getSocketfd();
+	int nFD = ss->m_nClientFD;
+	ss->threadUnLock();
 	ss->runCMPHandler(nFD);
 	return NULL;
 }
@@ -403,6 +403,7 @@ void CSocketServer::runSocketAccept()
 
 		if (-1 != nChildSocketFD)
 		{
+			_log("[CSocketServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
 			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
 		}
 		else
