@@ -393,6 +393,7 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 			nStatus = ntohl(cmpPacket.cmpHeader.command_status);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
+			printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
 			if ( enquire_link_request == nCommand)
 			{
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));

@@ -158,7 +158,9 @@ config_response, "config_response")( power_port_set_request, "power_port_request
 sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(rdm_login_request, "rdm_login_request")(
 rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
 		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
-semantic_request, "semantic_request")(semantic_response, "semantic_response");
+semantic_request, "semantic_request")(semantic_response, "semantic_response")(amx_control_request,
+		"amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request, "amx_status_request")(
+		amx_status_response, "amx_status_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

@@ -234,8 +234,8 @@ int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequen
 	}
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-//	nRet = cmpServerAMX->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Center Send]", nSocket);
+	nRet = cmpServerAMX->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
+	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", nSocket);
 	return nRet;
 }
 
