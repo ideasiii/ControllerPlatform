@@ -9,20 +9,18 @@
 
 #include <string>
 
-class CSocketServer;
+#include "CSocketServer.h"
 
 using namespace std;
 
-class CServerDevice
+class CServerDevice: public CSocketServer
 {
 public:
 	static CServerDevice * getInstance();
 	virtual ~CServerDevice();
 	int startServer(const int nPort, const int nMsqId);
 	void stopServer();
-	int sendCommand(const int nSocketFD, string strCommand);
 
 private:
 	CServerDevice();
-	CSocketServer * socketServer;
 };

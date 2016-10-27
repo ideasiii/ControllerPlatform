@@ -16,7 +16,7 @@
 static CServerAMX * serverAMX = 0;
 
 CServerAMX::CServerAMX() :
-		socketServer(new CSocketServer), mnSocketAMX(-1)
+		CSocketServer(), mnSocketAMX(-1)
 {
 
 }
@@ -43,35 +43,28 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 	/** Run socket server for CMP **/
 	if (0 < nMsqId)
 	{
-		socketServer->setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE);
-		socketServer->setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX);
-		socketServer->setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX);
+		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE);
+		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX);
+		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX);
 	}
 
 	/** Set Receive , Packet is CMP , Message Queue Handle **/
-	socketServer->setPacketConf(PK_CMP, PK_MSQ);
+	setPacketConf(PK_CMP, PK_MSQ);
 
-	if ( FAIL == socketServer->start( AF_INET, NULL, nPort))
+	if ( FAIL == start( AF_INET, NULL, nPort))
 	{
 		_log("AMX Server Socket Create Fail");
 		return FALSE;
 	}
-
 	// test
 	string strVal = AMX_CONTROL[10001];
 	_log(strVal.c_str());
-
 	return TRUE;
 }
 
 void CServerAMX::stopServer()
 {
-	if (socketServer)
-	{
-		socketServer->stop();
-		delete socketServer;
-		socketServer = 0;
-	}
+	stop();
 }
 
 int CServerAMX::sendCommand(string strCommand)
@@ -80,7 +73,7 @@ int CServerAMX::sendCommand(string strCommand)
 
 	if (0 < mnSocketAMX)
 	{
-		nResult = socketServer->socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
+		nResult = socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
 		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
 	}
 	return nResult;
@@ -92,7 +85,7 @@ int CServerAMX::sendCommand(const int nSocketFD, string strCommand)
 
 	if (0 < nSocketFD)
 	{
-		nResult = socketServer->socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
+		nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
 		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
 	}
 	return nResult;

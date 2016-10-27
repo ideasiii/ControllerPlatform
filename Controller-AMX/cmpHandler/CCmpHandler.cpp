@@ -127,88 +127,24 @@ void CCmpHandler::getSourcePath(const void *pData, char **pPath)
 
 int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::string> &rData)
 {
-	int nRet = 0;
-	int nStrLen = 0;
-	int nTotalLen = 0;
-	int nBodyLen = 0;
-	int nIndex = 0;
-	int nPort = 0;
-	int *pType;
-	int nType = 0;
-	char * pBody;
-	char temp[MAX_SIZE];
-	int nMacCount = 0;
-	char macName[13];
-
-	nTotalLen = getLength(pData);
-	nBodyLen = nTotalLen - sizeof(CMP_HEADER);
-
-	if (0 < nBodyLen)
+	if (0 < (getLength(pData) - sizeof(CMP_HEADER)))
 	{
-		pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+		char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
 
-		switch (nCommand)
+		if (isValidStr((const char*) pBody, MAX_SIZE))
 		{
-		case bind_request:
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("id", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			break;
-		case device_control_request:
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("item", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("value", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			break;
-		case device_state_request:
-			if (isValidStr((const char*) pBody, MAX_SIZE))
-			{
-				memset(temp, 0, sizeof(temp));
-				strcpy(temp, pBody);
-				rData.setData("item", temp);
-				nStrLen = strlen(temp);
-				++nStrLen;
-				pBody += nStrLen;
-			}
-			break;
+			char temp[MAX_SIZE];
+			memset(temp, 0, sizeof(temp));
+			strcpy(temp, pBody);
+			rData.setData("data", temp);
 		}
 	}
 	else
 	{
 		_log("[CMP Parser]CMP body length error");
-		nRet = -1;
 	}
 
-	if (-1 == nRet)
-	{
-		_log("[CMP Parser] parse CMP body fail");
-	}
-	else
-	{
-		nRet = rData.size();
-	}
-
-	return nRet;
+	return rData.size();
 }
 
 int CCmpHandler::parseBody(const void *pData, vector<string> &vData)

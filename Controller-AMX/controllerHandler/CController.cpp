@@ -8,6 +8,7 @@
 #include <list>
 #include <ctime>
 
+#include "CSocket.h"
 #include "CSocketServer.h"
 #include "CSocketClient.h"
 #include "event.h"
@@ -19,6 +20,7 @@
 #include "CThreadHandler.h"
 #include "CServerAMX.h"
 #include "CServerDevice.h"
+#include "AMXCommand.h"
 
 using namespace std;
 
@@ -50,16 +52,7 @@ CController::CController() :
 				CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
 				new CThreadHandler)
 {
-//	for (int i = 0; i < MAX_COMMAND; ++i)
-//	{
-//		cmpRequest[i] = &CController::cmpUnknow;
-//	}
-//	cmpRequest[bind_request] = &CController::cmpBind;
-//	cmpRequest[unbind_request] = &CController::cmpUnbind;
-//	cmpRequest[device_control_request] = &CController::cmpDeviceControl;
-//	cmpRequest[device_state_request] = &CController::cmpDeviceState;
-
-	mapFunc[bind_request] = &CController::cmpBind;
+	mapFunc[amx_control_request] = &CController::cmpAmxControl;
 }
 
 CController::~CController()
@@ -164,7 +157,8 @@ void CController::onReceiveDevice(const int nSocketFD, const void *pData)
 
 	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
 	{
-		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
+		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true,
+				dynamic_cast<CSocket*>(serverDevice));
 		return;
 	}
 
@@ -218,8 +212,13 @@ void CController::stopServer()
 	}
 }
 
-int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp)
+int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
 {
+	if (NULL == socket)
+	{
+		_log("Send Command Fail, Socket invalid");
+		return -1;
+	}
 	int nRet = -1;
 	int nCommandSend;
 	CMP_HEADER cmpHeader;
@@ -234,17 +233,17 @@ int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequen
 	}
 
 	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-	nRet = cmpServerAMX->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
+	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
 	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", nSocket);
 	return nRet;
 }
 
-int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
-{
-	_DBG("[Controller] Unknow command:%d", nCommand);
-	sendCommand(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
-	return 0;
-}
+//int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
+//{
+//	_DBG("[Controller] Unknow command:%d", nCommand);
+//	sendCommand(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
+//	return 0;
+//}
 
 int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
@@ -264,7 +263,7 @@ int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * 
 			nRet = sqlite->controllerSqlExec(strSql.c_str());
 			if ( SUCCESS == nRet)
 			{
-				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
 				rData.clear();
 				return nRet;
 			}
@@ -272,7 +271,7 @@ int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * 
 	}
 
 	_log("[Controller] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket);
-	sendCommand(nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true);
+	sendCommand(nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
 	rData.clear();
 
 	return FAIL;
@@ -280,7 +279,7 @@ int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * 
 
 int CController::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
-	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true);
+	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
 	return 0;
 }
 
@@ -310,7 +309,7 @@ int CController::cmpDeviceControl(int nSocket, int nCommand, int nSequence, cons
 	else
 	{
 		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	}
 	rData.clear();
 	return nRet;
@@ -318,7 +317,7 @@ int CController::cmpDeviceControl(int nSocket, int nCommand, int nSequence, cons
 
 int CController::cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CDataHandler<std::string> rData;
+	CDataHandler<string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("item"))
 	{
@@ -327,7 +326,28 @@ int CController::cmpDeviceState(int nSocket, int nCommand, int nSequence, const 
 	else
 	{
 		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	}
+	rData.clear();
+	return nRet;
+}
+
+int CController::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	CDataHandler<string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Controller] cmpAmxControl Body: %s", rData["data"].c_str());
+		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+
+		/** get AMX string command **/
+
+	}
+	else
+	{
+		_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	}
 	rData.clear();
 	return nRet;
@@ -448,7 +468,7 @@ void CController::runEnquireLinkRequest()
 
 int CController::cmpEnquireLinkRequest(const int nSocketFD)
 {
-	return sendCommand(nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false);
+	return sendCommand(nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false, NULL);
 }
 
 int CController::getBindSocket(list<int> &listValue)

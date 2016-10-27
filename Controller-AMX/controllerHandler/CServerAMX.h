@@ -7,13 +7,12 @@
 
 #pragma once
 
+#include "CSocketServer.h"
 #include <string>
-
-class CSocketServer;
 
 using namespace std;
 
-class CServerAMX
+class CServerAMX: public CSocketServer
 {
 public:
 	static CServerAMX * getInstance();
@@ -28,6 +27,5 @@ public:
 
 private:
 	CServerAMX();
-	CSocketServer * socketServer;
 	int mnSocketAMX;
 };

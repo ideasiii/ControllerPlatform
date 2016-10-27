@@ -21,6 +21,7 @@ class CThreadHandler;
 class CJsonHandler;
 class CServerAMX;
 class CServerDevice;
+class CSocket;
 
 class CController: public CObject
 {
@@ -39,14 +40,15 @@ protected:
 private:
 	explicit CController();
 	void onCMP(int nClientFD, int nDataLen, const void *pData);
-	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp);
+	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket);
 
 	/**  Receive CMP Request **/
-	int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
+	//int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpDeviceControl(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
 
 	/** Send CMP Request **/
 	int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
