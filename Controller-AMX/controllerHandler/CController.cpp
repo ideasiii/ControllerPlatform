@@ -21,10 +21,23 @@
 #include "CServerAMX.h"
 #include "CServerDevice.h"
 #include "AMXCommand.h"
+#include "JSONObject.h"
 
 using namespace std;
 
 static CController * controller = 0;
+
+/** Callback Function **/
+void IonAMXCommand(void* param)
+{
+	string strParam = reinterpret_cast<const char*>(param);
+	controller->onAMXCommand(strParam);
+}
+
+void CController::onAMXCommand(string strCommand)
+{
+	_log("[Controller] callback parameter: %s", strCommand.c_str());
+}
 
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
@@ -95,26 +108,18 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_RECEIVE:
-		onCMP(nId, nDataLen, pData);
-		break;
 	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
 		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		onReceiveDevice(nId, static_cast<char*>(const_cast<void*>(pData)));
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT:
-		_log("[Controller] Socket Client FD:%d Connected", (int) nId);
+		//onReceiveDevice(nId, static_cast<char*>(const_cast<void*>(pData)));
+		serverDevice->onReceive(nId, pData, IonAMXCommand);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
 		_log("[Controller] AMX Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
 		_log("[Controller] Device Socket Client FD:%d Connected", (int) nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT:
-		_log("[Controller] Socket Client FD:%d Close", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
 		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
@@ -238,13 +243,6 @@ int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequen
 	return nRet;
 }
 
-//int CController::cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData)
-//{
-//	_DBG("[Controller] Unknow command:%d", nCommand);
-//	sendCommand(nSocket, nCommand, STATUS_RINVCMDID, nSequence, true);
-//	return 0;
-//}
-
 int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
 {
 	CDataHandler<std::string> rData;
@@ -298,40 +296,6 @@ int CController::getControllerSocketFD(std::string strControllerID)
 	return nRet;
 }
 
-int CController::cmpDeviceControl(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	CDataHandler<std::string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("item") && rData.isValidKey("value"))
-	{
-		_log("[Controller] cmpDeviceControl Body: item=%s value=%s", rData["item"].c_str(), rData["value"].c_str());
-	}
-	else
-	{
-		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-	}
-	rData.clear();
-	return nRet;
-}
-
-int CController::cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	CDataHandler<string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("item"))
-	{
-		_log("[Controller] cmpDeviceState Body: item=%s value=%s", rData["item"].c_str());
-	}
-	else
-	{
-		_log("[Controller] Device Control Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-	}
-	rData.clear();
-	return nRet;
-}
-
 int CController::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	CDataHandler<string> rData;
@@ -339,18 +303,32 @@ int CController::cmpAmxControl(int nSocket, int nCommand, int nSequence, const v
 	if (0 < nRet && rData.isValidKey("data"))
 	{
 		_log("[Controller] cmpAmxControl Body: %s", rData["data"].c_str());
-		sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 
 		/** get AMX string command **/
+		JSONObject jobj(rData["data"].c_str());
+		if (jobj.isValid())
+		{
+			int nFunction = jobj.getInt("function");
+			int nDevice = jobj.getInt("device");
+			int nControl = jobj.getInt("control");
+			string strCommand = getAMXControl(nFunction, nDevice, nControl);
+			if (!strCommand.empty())
+			{
+				_log("[Controller] AMX Command: %s", strCommand.c_str());
+				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+				serverAMX->sendCommand(strCommand);
+				return TRUE;
+			}
+		}
+		_log("[Controller] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
+		sendCommand(nSocket, nCommand, STATUS_RINVJSON, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	}
 
-	}
-	else
-	{
-		_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-	}
+	_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+	sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+
 	rData.clear();
-	return nRet;
+	return FALSE;
 }
 
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
@@ -386,45 +364,6 @@ int CController::cmpResponse(const int nSocket, const int nCommandId, const int 
 	}
 
 	return nRet;
-}
-
-void CController::onCMP(int nClientFD, int nDataLen, const void *pData)
-{
-	_log("[Controller] Receive CMP From Client:%d Length:%d Data:%s", nClientFD, nDataLen,
-			static_cast<char*>(const_cast<void*>(pData)));
-
-	/*
-	 int nRet = -1;
-	 int nPacketLen = 0;
-	 CMP_HEADER cmpHeader;
-	 char *pPacket;
-
-	 pPacket = (char*) const_cast<void*>(pData);
-	 memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-
-	 cmpHeader.command_id = cmpParser->getCommand(pPacket);
-	 cmpHeader.command_length = cmpParser->getLength(pPacket);
-	 cmpHeader.command_status = cmpParser->getStatus(pPacket);
-	 cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
-
-	 printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-	 "[Center Recv]", nClientFD);
-
-	 if (cmpParser->isAckPacket(cmpHeader.command_id))
-	 {
-	 ackPacket(nClientFD, cmpHeader.command_id, pPacket);
-	 return;
-	 }
-
-	 if (0x000000FF < cmpHeader.command_id)
-	 {
-	 sendCommand(nClientFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true);
-	 return;
-	 }
-
-	 (this->*this->cmpRequest[cmpHeader.command_id])(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number,
-	 pPacket);
-	 */
 }
 
 void CController::runEnquireLinkRequest()

@@ -10,11 +10,12 @@
 #include "event.h"
 #include "packet.h"
 #include "common.h"
+#include "CCmpHandler.h"
 
 static CServerDevice * serverDevice = 0;
 
 CServerDevice::CServerDevice() :
-		CSocketServer()
+		CSocketServer(), cmpParser(CCmpHandler::getInstance())
 {
 
 }
@@ -61,5 +62,31 @@ int CServerDevice::startServer(const int nPort, const int nMsqId)
 void CServerDevice::stopServer()
 {
 	stop();
+}
+
+void CServerDevice::onReceive(const int nSocketFD, const void *pData, CBFun cbfun)
+{
+	int nRet = -1;
+	int nPacketLen = 0;
+	CMP_HEADER cmpHeader;
+	char *pPacket;
+
+	pPacket = (char*) const_cast<void*>(pData);
+	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+
+	cmpHeader.command_id = cmpParser->getCommand(pPacket);
+	cmpHeader.command_length = cmpParser->getLength(pPacket);
+	cmpHeader.command_status = cmpParser->getStatus(pPacket);
+	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
+
+	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
+			"[Controller Recv]", nSocketFD);
+
+	if (cmpParser->isAckPacket(cmpHeader.command_id))
+	{
+		return;
+	}
+
+	(*cbfun)(static_cast<void*>(const_cast<char*>("dddddxxxxxx")));
 }
 

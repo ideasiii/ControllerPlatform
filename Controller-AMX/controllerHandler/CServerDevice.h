@@ -10,11 +10,16 @@
 #include <string>
 
 #include "CSocketServer.h"
+#include "ICallback.h"
 
 using namespace std;
 
+class CCmpHandler;
+
 class CServerDevice: public CSocketServer
 {
+public:
+	void onReceive(const int nSocketFD, const void *pData, CBFun cbfun);
 public:
 	static CServerDevice * getInstance();
 	virtual ~CServerDevice();
@@ -23,4 +28,5 @@ public:
 
 private:
 	CServerDevice();
+	CCmpHandler *cmpParser;
 };

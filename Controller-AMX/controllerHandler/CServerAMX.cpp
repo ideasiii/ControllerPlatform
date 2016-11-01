@@ -56,9 +56,6 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 		_log("AMX Server Socket Create Fail");
 		return FALSE;
 	}
-	// test
-	string strVal = AMX_CONTROL[10001];
-	_log(strVal.c_str());
 	return TRUE;
 }
 
@@ -71,10 +68,15 @@ int CServerAMX::sendCommand(string strCommand)
 {
 	int nResult = FALSE;
 
+	strCommand.append("\n");
 	if (0 < mnSocketAMX)
 	{
 		nResult = socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
 		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
+	}
+	else
+	{
+		_log("[Server AMX] Send Command Fail Invalid Socket, Data:%s Socket:%d", strCommand.c_str(), mnSocketAMX);
 	}
 	return nResult;
 }

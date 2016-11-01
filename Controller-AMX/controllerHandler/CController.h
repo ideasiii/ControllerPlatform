@@ -33,26 +33,19 @@ public:
 	int startServerAMX(const int nPort, const int nMsqId);
 	int startServerDevice(const int nPort, const int nMsqId);
 	void stopServer();
+	void onAMXCommand(string strCommand);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 private:
 	explicit CController();
-	void onCMP(int nClientFD, int nDataLen, const void *pData);
 	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket);
 
 	/**  Receive CMP Request **/
-	//int cmpUnknow(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData);
-	int cmpDeviceControl(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpDeviceState(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
-
-	/** Send CMP Request **/
-	int cmpPowerPortRequest(int nSocket, std::string strWire, std::string strPort, std::string strState);
-	int cmpPowerPortStateRequest(int nSocket, std::string strWire);
 
 	/** Send CMP Response **/
 	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData = 0);
