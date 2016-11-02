@@ -7,6 +7,8 @@
 
 #pragma once
 
+#define CB_AMX_COMMAND			1
+
 typedef void (*CBFun)(void* param);
 
-extern void onAMXCommand(void* param);
+extern int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket);

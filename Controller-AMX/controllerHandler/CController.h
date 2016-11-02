@@ -56,10 +56,12 @@ private:
 	void onReceiveDevice(const int nSocketFD, const void *pData);
 	void onReceiveAMX(const int nSocketFD, char * pCommand);
 
+public:
+	CCmpHandler *cmpParser;
+
 private:
 	CServerAMX *serverAMX;
 	CServerDevice *serverDevice;
-	CCmpHandler *cmpParser;
 	CSqliteHandler *sqlite;
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;

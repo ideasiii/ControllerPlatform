@@ -22,6 +22,7 @@
 #include "CServerDevice.h"
 #include "AMXCommand.h"
 #include "JSONObject.h"
+#include "ICallback.h"
 
 using namespace std;
 
@@ -60,9 +61,38 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
+/**
+ *  Define extern function.
+ */
+int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
+{
+	if (NULL == socket)
+	{
+		_log("Send Command Fail, Socket invalid");
+		return -1;
+	}
+	int nRet = -1;
+	int nCommandSend;
+	CMP_HEADER cmpHeader;
+	void *pHeader = &cmpHeader;
+
+	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+	nCommandSend = nCommand;
+
+	if (isResp)
+	{
+		nCommandSend = generic_nack | nCommand;
+	}
+
+	controller->cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
+	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
+	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", nSocket);
+	return nRet;
+}
+
 CController::CController() :
-		CObject(), serverAMX(CServerAMX::getInstance()), serverDevice(CServerDevice::getInstance()), cmpParser(
-				CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
+		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
+				CServerDevice::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
 				new CThreadHandler)
 {
 	mapFunc[amx_control_request] = &CController::cmpAmxControl;
@@ -197,6 +227,7 @@ int CController::startServerAMX(const int nPort, const int nMsqId)
 
 int CController::startServerDevice(const int nPort, const int nMsqId)
 {
+	serverDevice->setCallback(CB_AMX_COMMAND, IonAMXCommand);
 	return serverDevice->startServer(nPort, nMsqId);
 }
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 #include "CSocketServer.h"
 #include "ICallback.h"
@@ -25,8 +26,13 @@ public:
 	virtual ~CServerDevice();
 	int startServer(const int nPort, const int nMsqId);
 	void stopServer();
+	void setCallback(const int nId, CBFun cbfun);
 
 private:
 	CServerDevice();
 	CCmpHandler *cmpParser;
+	typedef int (CServerDevice::*MemFn)(int, int, int, const void *);
+	map<int, MemFn> mapFunc;
+	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
+	map<int, CBFun> mapCallback;
 };
