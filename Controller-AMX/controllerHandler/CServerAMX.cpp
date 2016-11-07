@@ -16,7 +16,7 @@
 static CServerAMX * serverAMX = 0;
 
 CServerAMX::CServerAMX() :
-		CSocketServer(), mnSocketAMX(-1)
+		CSocketServer()
 {
 
 }
@@ -48,8 +48,8 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX);
 	}
 
-	/** Set Receive , Packet is CMP , Message Queue Handle **/
-	setPacketConf(PK_CMP, PK_MSQ);
+	/** Set Receive , Packet is BYTE , Message Queue Handle **/
+	setPacketConf(PK_BYTE, PK_MSQ);
 
 	if ( FAIL == start( AF_INET, NULL, nPort))
 	{
@@ -69,14 +69,12 @@ int CServerAMX::sendCommand(string strCommand)
 	int nResult = FALSE;
 
 	strCommand.append("\n");
-	if (0 < mnSocketAMX)
+
+	map<int, int>::iterator it;
+	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
-		nResult = socketSend(mnSocketAMX, strCommand.c_str(), strCommand.length());
+		nResult = socketSend(it->first, strCommand.c_str(), strCommand.length());
 		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
-	}
-	else
-	{
-		_log("[Server AMX] Send Command Fail Invalid Socket, Data:%s Socket:%d", strCommand.c_str(), mnSocketAMX);
 	}
 	return nResult;
 }
@@ -95,18 +93,14 @@ int CServerAMX::sendCommand(const int nSocketFD, string strCommand)
 
 void CServerAMX::bind(const int nSocketFD)
 {
-	mnSocketAMX = nSocketFD;
-	_log("[Server AMX] Bind Socket: %d", mnSocketAMX);
+	addAMXClient(nSocketFD);
+	_log("[Server AMX] Bind Socket: %d", nSocketFD);
 }
 
 void CServerAMX::unbind(const int nSocketFD)
 {
-
-	if (nSocketFD == mnSocketAMX)
-	{
-		_log("[Server AMX] Unbind Socket: %d", mnSocketAMX);
-		mnSocketAMX = -1;
-	}
+	deleteAMXClient(nSocketFD);
+	_log("[Server AMX] Unbind Socket: %d", nSocketFD);
 }
 
 bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
@@ -137,4 +131,14 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 		_log("[Server AMX] Error Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
 	}
 	return false;
+}
+
+void CServerAMX::addAMXClient(const int nSocketFD)
+{
+	mapClient[nSocketFD] = nSocketFD;
+}
+
+void CServerAMX::deleteAMXClient(const int nSocketFD)
+{
+	mapClient.erase(nSocketFD);
 }

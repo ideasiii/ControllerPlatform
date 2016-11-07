@@ -67,7 +67,7 @@ void CServerDevice::stopServer()
 	stop();
 }
 
-void CServerDevice::onReceive(const int nSocketFD, const void *pData, CBFun cbfun)
+void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 {
 	int nRet = -1;
 	int nPacketLen = 0;
@@ -102,16 +102,17 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData, CBFun cbfu
 
 	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
 
-//	(*cbfun)(static_cast<void*>(const_cast<char*>("dddddxxxxxx")));
 }
 
 int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
 {
+	int nStatus = STATUS_RINVBODY;
+
 	CDataHandler<string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
-		_log("[Controller] cmpAmxControl Body: %s", rData["data"].c_str());
+		_log("[Server Device] cmpAmxControl Body: %s", rData["data"].c_str());
 
 		/** get AMX string command **/
 		JSONObject jobj(rData["data"].c_str());
@@ -123,18 +124,26 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 			string strCommand = getAMXControl(nFunction, nDevice, nControl);
 			if (!strCommand.empty())
 			{
-				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+				nStatus = STATUS_ROK;
 				(*mapCallback[CB_AMX_COMMAND])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-				return TRUE;
+			}
+			else
+			{
+				_log("[Controller] cmpAmxControl Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
+				nStatus = STATUS_RINVJSON;
 			}
 		}
-		_log("[Controller] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVJSON, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+		else
+		{
+			_log("[Controller] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
+			nStatus = STATUS_RINVJSON;
+		}
 	}
-
-	_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-	sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-
+	else
+	{
+		_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+	}
+	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	rData.clear();
 	return FALSE;
 }

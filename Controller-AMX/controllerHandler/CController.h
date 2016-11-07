@@ -40,7 +40,6 @@ protected:
 
 private:
 	explicit CController();
-	int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket);
 
 	/**  Receive CMP Request **/
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void * pData);
@@ -53,7 +52,6 @@ private:
 	int getControllerSocketFD(std::string strControllerID);
 	int getBindSocket(std::list<int> &listValue);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-	void onReceiveDevice(const int nSocketFD, const void *pData);
 	void onReceiveAMX(const int nSocketFD, char * pCommand);
 
 public:

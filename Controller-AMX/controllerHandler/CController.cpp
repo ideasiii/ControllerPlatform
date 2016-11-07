@@ -38,6 +38,7 @@ void IonAMXCommand(void* param)
 void CController::onAMXCommand(string strCommand)
 {
 	_log("[Controller] callback parameter: %s", strCommand.c_str());
+	serverAMX->sendCommand(strCommand);
 }
 
 /** Enquire link function declare for enquire link thread **/
@@ -142,18 +143,18 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		//onReceiveDevice(nId, static_cast<char*>(const_cast<void*>(pData)));
-		serverDevice->onReceive(nId, pData, IonAMXCommand);
+		serverDevice->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
+		serverAMX->addAMXClient(nId);
 		_log("[Controller] AMX Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
 		_log("[Controller] Device Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
+		serverAMX->deleteAMXClient(nId);
 		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
-		serverAMX->unbind(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
 		_log("[Controller] Device Socket Client FD:%d Close", (int) nId);
@@ -162,43 +163,6 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log("[Controller] Unknow message command: %d", nCommand);
 		break;
 	}
-}
-
-void CController::onReceiveDevice(const int nSocketFD, const void *pData)
-{
-	int nRet = -1;
-	int nPacketLen = 0;
-	CMP_HEADER cmpHeader;
-	char *pPacket;
-
-	pPacket = (char*) const_cast<void*>(pData);
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-
-	cmpHeader.command_id = cmpParser->getCommand(pPacket);
-	cmpHeader.command_length = cmpParser->getLength(pPacket);
-	cmpHeader.command_status = cmpParser->getStatus(pPacket);
-	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
-
-	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Controller Recv]", nSocketFD);
-
-	if (cmpParser->isAckPacket(cmpHeader.command_id))
-	{
-		return;
-	}
-
-	map<int, MemFn>::iterator iter;
-	iter = mapFunc.find(cmpHeader.command_id);
-
-	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
-	{
-		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true,
-				dynamic_cast<CSocket*>(serverDevice));
-		return;
-	}
-
-	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
-
 }
 
 void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
@@ -246,32 +210,6 @@ void CController::stopServer()
 		delete serverDevice;
 		serverDevice = 0;
 	}
-}
-
-int CController::sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
-{
-	if (NULL == socket)
-	{
-		_log("Send Command Fail, Socket invalid");
-		return -1;
-	}
-	int nRet = -1;
-	int nCommandSend;
-	CMP_HEADER cmpHeader;
-	void *pHeader = &cmpHeader;
-
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-	nCommandSend = nCommand;
-
-	if (isResp)
-	{
-		nCommandSend = generic_nack | nCommand;
-	}
-
-	cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", nSocket);
-	return nRet;
 }
 
 int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)

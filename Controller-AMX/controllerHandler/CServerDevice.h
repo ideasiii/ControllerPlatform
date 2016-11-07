@@ -20,7 +20,7 @@ class CCmpHandler;
 class CServerDevice: public CSocketServer
 {
 public:
-	void onReceive(const int nSocketFD, const void *pData, CBFun cbfun);
+	void onReceive(const int nSocketFD, const void *pData);
 public:
 	static CServerDevice * getInstance();
 	virtual ~CServerDevice();

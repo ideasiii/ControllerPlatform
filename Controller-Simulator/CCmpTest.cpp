@@ -409,8 +409,6 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 			if (enquire_link_response == nCommand)
 				continue;
 
-			printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
-
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if (0 < nBodyLen)
@@ -447,6 +445,8 @@ void CCmpTest::runSMSSocketReceive(int nSocketFD)
 
 void CCmpTest::runSocketReceive(int nSocketFD)
 {
+	_log("run Socket Receive");
+
 	int nFD;
 	int result;
 	char pBuf[BUF_SIZE];
@@ -468,8 +468,8 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 		if (0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
 		{
 			memset(pBuf, 0, sizeof(pBuf));
-			memcpy(pBuf, "CTL_OK", 6);
-			send(nSocketFD, pBuf, 6, MSG_NOSIGNAL);
+			memcpy(pBuf, "CTL_OK\n", 7);
+			send(nSocketFD, pBuf, 7, MSG_NOSIGNAL);
 			printf("[Socket Client] socket send : %s\n", pBuf);
 		}
 	}

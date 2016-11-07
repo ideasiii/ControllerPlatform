@@ -9,6 +9,7 @@
 
 #include "CSocketServer.h"
 #include <string>
+#include <map>
 
 using namespace std;
 
@@ -24,8 +25,11 @@ public:
 	void bind(const int nSocketFD);
 	void unbind(const int nSocketFD);
 	bool onReceive(const int nSocketFD, string strCommand);
+	void addAMXClient(const int nSocketFD);
+	void deleteAMXClient(const int nSocketFD);
 
 private:
 	CServerAMX();
-	int mnSocketAMX;
+	map<int, int> mapClient;
+
 };

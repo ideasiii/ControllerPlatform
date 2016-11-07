@@ -160,7 +160,7 @@ rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_requ
 		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
 semantic_request, "semantic_request")(semantic_response, "semantic_response")(amx_control_request,
 		"amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request, "amx_status_request")(
-		amx_status_response, "amx_status_response");
+amx_status_response, "amx_status_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
@@ -171,7 +171,7 @@ STATUS_RBINDFAIL, "Bind Failed")( STATUS_RINVBODY, "Invalid Packet Body Data")( 
 		"Invalid Controller ID")(
 STATUS_RINVJSON, "Invalid JSON Data");
 
-__attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
+__attribute__ ((unused)) inline static void printPacket(int nCommand, int nStatus, int nSequence, int nLength,
 		const char * szDesc, int nClienFD = 0)
 {
 	char szCmd[48];
@@ -187,7 +187,7 @@ __attribute__ ((unused)) static void printPacket(int nCommand, int nStatus, int 
 }
 
 static int msnSequence = 0x00000000;
-__attribute__ ((unused)) static int getSequence()
+__attribute__ ((unused)) inline static int getSequence()
 {
 	++msnSequence;
 	if (0x7FFFFFFF <= msnSequence)

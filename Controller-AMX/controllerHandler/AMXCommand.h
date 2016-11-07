@@ -118,7 +118,7 @@ static map<string, int> AMX_STATUS_RESP = create_amx_map<string, int>("STATUS_SY
 		70502)("STATUS_LIGHT6_ON", 70601)("STATUS_LIGHT6_OFF", 70602)("STATUS_LIGHT7_ON", 70701)("STATUS_LIGHT7_OFF",
 		70702)("STATUS_BD_POWER_ON", 80001)("STATUS_BD_POWER_OFF", 80002);
 
-static string getAMXControl(const int nFunction, const int nDevice, const int nControl)
+inline static string getAMXControl(const int nFunction, const int nDevice, const int nControl)
 {
 	int nId = (10000 * nFunction) + (100 * nDevice) + nControl;
 	return AMX_CONTROL[nId];
