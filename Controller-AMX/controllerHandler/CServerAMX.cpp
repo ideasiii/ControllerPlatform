@@ -120,7 +120,8 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 
 		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
-			sendCommand(nSocketFD, CTL_OK);
+			// Get Status Response
+
 		}
 
 		return true;

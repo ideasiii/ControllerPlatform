@@ -7,7 +7,8 @@
 
 #pragma once
 
-#define CB_AMX_COMMAND			1
+#define CB_AMX_COMMAND_CONTROL			1
+#define CB_AMX_COMMAND_STATUS			2
 
 typedef void (*CBFun)(void* param);
 

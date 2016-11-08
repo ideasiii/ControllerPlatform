@@ -29,7 +29,13 @@ using namespace std;
 static CController * controller = 0;
 
 /** Callback Function **/
-void IonAMXCommand(void* param)
+void IonAMXCommandControl(void* param)
+{
+	string strParam = reinterpret_cast<const char*>(param);
+	controller->onAMXCommand(strParam);
+}
+
+void IonAMXCommandStatus(void *param)
 {
 	string strParam = reinterpret_cast<const char*>(param);
 	controller->onAMXCommand(strParam);
@@ -96,7 +102,7 @@ CController::CController() :
 				CServerDevice::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
 				new CThreadHandler)
 {
-	mapFunc[amx_control_request] = &CController::cmpAmxControl;
+
 }
 
 CController::~CController()
@@ -165,25 +171,6 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-void CController::onReceiveAMX(const int nSocketFD, char * pCommand)
-{
-	string strCommand = pCommand;
-	_log("[Controller] Receive AMX Command: %s", strCommand.c_str());
-
-	if (0 == strCommand.substr(0, 4).compare("bind"))
-	{
-		serverAMX->bind(nSocketFD);
-		return;
-	}
-
-	if (0 == strCommand.substr(0, 6).compare("unbind"))
-	{
-		serverAMX->unbind(nSocketFD);
-		return;
-	}
-
-}
-
 int CController::startServerAMX(const int nPort, const int nMsqId)
 {
 	return serverAMX->startServer(nPort, nMsqId);
@@ -191,7 +178,8 @@ int CController::startServerAMX(const int nPort, const int nMsqId)
 
 int CController::startServerDevice(const int nPort, const int nMsqId)
 {
-	serverDevice->setCallback(CB_AMX_COMMAND, IonAMXCommand);
+	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
+	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
 	return serverDevice->startServer(nPort, nMsqId);
 }
 
@@ -212,44 +200,6 @@ void CController::stopServer()
 	}
 }
 
-int CController::cmpBind(int nSocket, int nCommand, int nSequence, const void * pData)
-{
-	CDataHandler<std::string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet)
-	{
-		_log("[Controller] Bind Get Controller ID:%s Socket FD:%d", rData["id"].c_str(), nSocket);
-		string strSql = "DELETE FROM controller WHERE id = '" + rData["id"] + "';";
-		nRet = sqlite->controllerSqlExec(strSql.c_str());
-
-		if ( SUCCESS == nRet)
-		{
-			//const string strSocketFD = ConvertToString(nSocket);
-			strSql = "INSERT INTO controller(id, status, socket_fd, created_date)values('" + rData["id"] + "',1,"
-					+ ConvertToString(nSocket) + ",datetime());";
-			nRet = sqlite->controllerSqlExec(strSql.c_str());
-			if ( SUCCESS == nRet)
-			{
-				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
-				rData.clear();
-				return nRet;
-			}
-		}
-	}
-
-	_log("[Controller] Bind Fail, Invalid Controller ID Socket FD:%d", nSocket);
-	sendCommand(nSocket, nCommand, STATUS_RINVCTRLID, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
-	rData.clear();
-
-	return FAIL;
-}
-
-int CController::cmpUnbind(int nSocket, int nCommand, int nSequence, const void * pData)
-{
-	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverAMX));
-	return 0;
-}
-
 int CController::getControllerSocketFD(std::string strControllerID)
 {
 	int nRet = FAIL;
@@ -263,41 +213,6 @@ int CController::getControllerSocketFD(std::string strControllerID)
 	}
 	listValue.clear();
 	return nRet;
-}
-
-int CController::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	CDataHandler<string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("data"))
-	{
-		_log("[Controller] cmpAmxControl Body: %s", rData["data"].c_str());
-
-		/** get AMX string command **/
-		JSONObject jobj(rData["data"].c_str());
-		if (jobj.isValid())
-		{
-			int nFunction = jobj.getInt("function");
-			int nDevice = jobj.getInt("device");
-			int nControl = jobj.getInt("control");
-			string strCommand = getAMXControl(nFunction, nDevice, nControl);
-			if (!strCommand.empty())
-			{
-				_log("[Controller] AMX Command: %s", strCommand.c_str());
-				sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-				serverAMX->sendCommand(strCommand);
-				return TRUE;
-			}
-		}
-		_log("[Controller] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
-		sendCommand(nSocket, nCommand, STATUS_RINVJSON, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-	}
-
-	_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-	sendCommand(nSocket, nCommand, STATUS_RINVBODY, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-
-	rData.clear();
-	return FALSE;
 }
 
 int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)

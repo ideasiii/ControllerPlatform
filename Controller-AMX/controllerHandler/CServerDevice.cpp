@@ -21,6 +21,7 @@ CServerDevice::CServerDevice() :
 		CSocketServer(), cmpParser(CCmpHandler::getInstance())
 {
 	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
+	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
 }
 
 CServerDevice::~CServerDevice()
@@ -112,7 +113,7 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
-		_log("[Server Device] cmpAmxControl Body: %s", rData["data"].c_str());
+		_log("[Server Device] AMX Control Request Body: %s", rData["data"].c_str());
 
 		/** get AMX string command **/
 		JSONObject jobj(rData["data"].c_str());
@@ -121,11 +122,63 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 			int nFunction = jobj.getInt("function");
 			int nDevice = jobj.getInt("device");
 			int nControl = jobj.getInt("control");
-			string strCommand = getAMXControl(nFunction, nDevice, nControl);
+			string strCommand = getAMXControlRequest(nFunction, nDevice, nControl);
 			if (!strCommand.empty())
 			{
 				nStatus = STATUS_ROK;
-				(*mapCallback[CB_AMX_COMMAND])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
+				(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
+			}
+			else
+			{
+				_log("[Controller] AMX Control Request Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
+				nStatus = STATUS_RINVJSON;
+			}
+		}
+		else
+		{
+			_log("[Controller] AMX Control Request Fail, Invalid JSON Data Socket FD:%d", nSocket);
+			nStatus = STATUS_RINVJSON;
+		}
+	}
+	else
+	{
+		_log("[Controller] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+	}
+	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	rData.clear();
+	return FALSE;
+}
+
+/**
+ * AMX Status Request
+ * {
+ "function": 1,
+ "device": 0,
+ " request-status ": 1
+ }
+ */
+int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	int nStatus = STATUS_RINVBODY;
+
+	CDataHandler<string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Server Device] AMX Status Request Body: %s", rData["data"].c_str());
+
+		/** get AMX string command **/
+		JSONObject jobj(rData["data"].c_str());
+		if (jobj.isValid())
+		{
+			int nFunction = jobj.getInt("function");
+			int nDevice = jobj.getInt("device");
+			int nRqStatus = jobj.getInt("request-status");
+			string strCommand = getAMXStatusRequest(nFunction, nDevice, nRqStatus);
+			if (!strCommand.empty())
+			{
+				nStatus = STATUS_ROK;
+				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
 			}
 			else
 			{
