@@ -270,7 +270,6 @@ int CSocketServer::runCMPHandler(int nClientFD)
 
 	if (externalEvent.isValid() && -1 != externalEvent.m_nEventConnect)
 	{
-		_log("send message socket connected");
 		sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventConnect, nClientFD, 0, 0);
 	}
 

@@ -12,6 +12,7 @@
 #include "common.h"
 #include "AMXCommand.h"
 #include "IReceiver.h"
+#include "utility.h"
 
 static CServerAMX * serverAMX = 0;
 
@@ -108,6 +109,8 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 	if (0 < nSocketFD && !strCommand.empty())
 	{
 		_log("[Server AMX] Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
+
+		strCommand = trim(strCommand);
 		if (0 == strCommand.substr(0, 4).compare("bind"))
 		{
 			bind(nSocketFD);
@@ -121,7 +124,12 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
 			// Get Status Response
+			if (AMX_STATUS.find(strCommand) != AMX_STATUS.end())
+			{
+				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
 
+				// Update AMX_STATUS Hashmap
+			}
 		}
 
 		return true;
@@ -142,4 +150,9 @@ void CServerAMX::addAMXClient(const int nSocketFD)
 void CServerAMX::deleteAMXClient(const int nSocketFD)
 {
 	mapClient.erase(nSocketFD);
+}
+
+void CServerAMX::setCallback(const int nId, CBFun cbfun)
+{
+	mapCallback[nId] = cbfun;
 }

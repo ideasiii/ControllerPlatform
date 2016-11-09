@@ -28,7 +28,7 @@ public:
 	void connectController(const std::string strIP, const int nPort);
 	void closeConnect();
 	int getSocketfd() const;
-	void runSMSSocketReceive(int nSocketFD);
+	void runCMPSocketReceive(int nSocketFD);
 	void runSocketReceive(int nSocketFD);
 
 private:

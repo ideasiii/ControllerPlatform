@@ -206,3 +206,39 @@ void CServerDevice::setCallback(const int nId, CBFun cbfun)
 	mapCallback[nId] = cbfun;
 }
 
+void CServerDevice::addClient(const int nSocketFD)
+{
+	mapClient[nSocketFD] = nSocketFD;
+}
+
+void CServerDevice::deleteClient(const int nSocketFD)
+{
+	mapClient.erase(nSocketFD);
+}
+
+/**
+ * AMX Status Response
+ {
+ “function”:1,
+ “device”:0,
+ “status”:1
+ }
+ *
+ */
+void CServerDevice::broadcastAMXStatus(string strStatus)
+{
+	int nId = AMX_STATUS_RESP[strStatus];
+	if (10000 > nId)
+		return;
+
+	JSONObject jobjStatus;
+	jobjStatus.put("function", nId / 10000);
+	jobjStatus.put("device", (nId % 10000) / 100);
+	jobjStatus.put("status", (nId % 10000) % 100);
+
+	string strJSON = jobjStatus.toString();
+	jobjStatus.release();
+
+	_log("[Server Device] Broadcast AMX Status: %s", strJSON.c_str());
+}
+

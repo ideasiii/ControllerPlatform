@@ -28,7 +28,7 @@ using namespace std;
 
 static CController * controller = 0;
 
-/** Callback Function **/
+/** Callback Function AMX Request from Mobile **/
 void IonAMXCommandControl(void* param)
 {
 	string strParam = reinterpret_cast<const char*>(param);
@@ -43,8 +43,19 @@ void IonAMXCommandStatus(void *param)
 
 void CController::onAMXCommand(string strCommand)
 {
-	_log("[Controller] callback parameter: %s", strCommand.c_str());
 	serverAMX->sendCommand(strCommand);
+}
+
+/** Callback Function AMX Response from AMX **/
+void IonAMXResponseStatus(void *param)
+{
+	string strParam = reinterpret_cast<const char*>(param);
+	controller->onAMXResponseStatus(strParam);
+}
+
+void CController::onAMXResponseStatus(string strStatus)
+{
+	serverDevice->broadcastAMXStatus(strStatus);
 }
 
 /** Enquire link function declare for enquire link thread **/
@@ -156,6 +167,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log("[Controller] AMX Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
+		serverDevice->addClient(nId);
 		_log("[Controller] Device Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
@@ -163,6 +175,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
+		serverDevice->deleteClient(nId);
 		_log("[Controller] Device Socket Client FD:%d Close", (int) nId);
 		break;
 	default:
@@ -173,6 +186,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::startServerAMX(const int nPort, const int nMsqId)
 {
+	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
 	return serverAMX->startServer(nPort, nMsqId);
 }
 

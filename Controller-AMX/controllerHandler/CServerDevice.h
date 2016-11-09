@@ -27,6 +27,9 @@ public:
 	int startServer(const int nPort, const int nMsqId);
 	void stopServer();
 	void setCallback(const int nId, CBFun cbfun);
+	void addClient(const int nSocketFD);
+	void deleteClient(const int nSocketFD);
+	void broadcastAMXStatus(string strStatus);
 
 private:
 	CServerDevice();
@@ -36,4 +39,5 @@ private:
 	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData);
 	map<int, CBFun> mapCallback;
+	map<int, int> mapClient;
 };

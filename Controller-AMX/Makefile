@@ -78,7 +78,6 @@ clean:
 	@for libName in ${EXT_MODULES} ; do \
 		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
-	@$(MAKE) v=99 -C Tester clean > /dev/null;
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log

@@ -34,6 +34,7 @@ public:
 	int startServerDevice(const int nPort, const int nMsqId);
 	void stopServer();
 	void onAMXCommand(string strCommand);
+	void onAMXResponseStatus(string strStatus);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);

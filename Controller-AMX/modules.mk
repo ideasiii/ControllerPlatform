@@ -13,4 +13,4 @@ export MODULES=global_inc \
 			 logHandler \
 			 processHandler
 			 
-export EXT_MODULES=extInclude
+#export EXT_MODULES=extInclude

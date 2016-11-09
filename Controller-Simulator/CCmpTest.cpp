@@ -39,7 +39,7 @@ void *threadSocketRecvHandler(void *argv)
 #ifdef AMX
 	ss->runSocketReceive(nFD);
 #else
-	ss->runSMSSocketReceive(nFD);
+	ss->runCMPSocketReceive(nFD);
 #endif
 	return NULL;
 }
@@ -199,7 +199,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strLogout = "{\"id\":\"" + strMAC + "\"}";
 	string strSemantic = "{\"type\":0\"local\":0\"text\":\"Ivy Hello\"}";
 	string strAMXControl = "{\"function\":1,\"device\":0,\"control\":1}";
-	string strAMXStatus = "{\"function\":1,\"device\":0,\"request-status\":1}";
+	string strAMXStatus = "{\"function\":3,\"device\":0,\"request-status\":4}";
 
 	switch (nCommand)
 	{
@@ -364,8 +364,10 @@ void CCmpTest::ioPressure()
 	}
 }
 
-void CCmpTest::runSMSSocketReceive(int nSocketFD)
+void CCmpTest::runCMPSocketReceive(int nSocketFD)
 {
+	_log("run Socket CMP Receive");
+
 	int result = 0;
 	char szTmp[16];
 	int nTotalLen = 0;
@@ -468,9 +470,31 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 		if (0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
 		{
 			memset(pBuf, 0, sizeof(pBuf));
-			memcpy(pBuf, "CTL_OK\n", 7);
-			send(nSocketFD, pBuf, 7, MSG_NOSIGNAL);
-			printf("[Socket Client] socket send : %s\n", pBuf);
+			int nSize = 0;
+			if (0 == strPacket.substr(0, 13).compare("STATUS_SYSTEM"))
+			{
+				nSize = strlen("STATUS_SYSTEM_ON\n");
+				memcpy(pBuf, "STATUS_SYSTEM_ON\n", nSize);
+			}
+			else if (0 == strPacket.substr(0, 13).compare("STATUS_MATRIX"))
+			{
+				nSize = strlen("STATUS_MATRIX_INPUT3\n");
+				memcpy(pBuf, "STATUS_MATRIX_INPUT3\n", nSize);
+			}
+			else
+			{
+				nSize = strlen("CTL_OK\n");
+				memcpy(pBuf, "CTL_OK\n", nSize);
+			}
+
+			result = send(nSocketFD, pBuf, nSize, MSG_NOSIGNAL);
+			if (0 >= result)
+			{
+				close(nSocketFD);
+				break;
+			}
+
+			printf("[Socket Client] socket send size: %d , data: %s , ", result, pBuf);
 		}
 	}
 

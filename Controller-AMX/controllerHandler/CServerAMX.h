@@ -10,6 +10,7 @@
 #include "CSocketServer.h"
 #include <string>
 #include <map>
+#include "ICallback.h"
 
 using namespace std;
 
@@ -27,9 +28,11 @@ public:
 	bool onReceive(const int nSocketFD, string strCommand);
 	void addAMXClient(const int nSocketFD);
 	void deleteAMXClient(const int nSocketFD);
+	void setCallback(const int nId, CBFun cbfun);
 
 private:
 	CServerAMX();
 	map<int, int> mapClient;
+	map<int, CBFun> mapCallback;
 
 };
