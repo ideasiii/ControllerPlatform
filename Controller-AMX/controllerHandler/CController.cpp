@@ -58,9 +58,6 @@ void CController::onAMXResponseStatus(string strStatus)
 	serverDevice->broadcastAMXStatus(strStatus);
 }
 
-/** Enquire link function declare for enquire link thread **/
-void *threadEnquireLinkRequest(void *argv);
-
 /**
  * Define Socket Client ReceiveFunction
  */
@@ -130,28 +127,6 @@ CController* CController::getInstance()
 	return controller;
 }
 
-int CController::startSqlite(const int nDBId, const std::string strDB)
-{
-	int nResult = FALSE;
-	switch (nDBId)
-	{
-	case DB_CONTROLLER:
-		nResult = sqlite->openControllerDB(strDB.c_str());
-		break;
-	case DB_USER:
-		nResult = sqlite->openUserDB(strDB.c_str());
-		break;
-	case DB_IDEAS:
-		nResult = sqlite->openIdeasDB(strDB.c_str());
-		break;
-	case DB_MDM:
-		nResult = sqlite->openMdmDB(strDB.c_str());
-		break;
-	}
-
-	return nResult;
-}
-
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	switch (nCommand)
@@ -163,20 +138,16 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		serverDevice->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
-		serverAMX->addAMXClient(nId);
-		_log("[Controller] AMX Socket Client FD:%d Connected", (int) nId);
+		serverAMX->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
 		serverDevice->addClient(nId);
-		_log("[Controller] Device Socket Client FD:%d Connected", (int) nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
-		serverAMX->deleteAMXClient(nId);
-		_log("[Controller] AMX Socket Client FD:%d Close", (int) nId);
+		serverAMX->deleteClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
 		serverDevice->deleteClient(nId);
-		_log("[Controller] Device Socket Client FD:%d Close", (int) nId);
 		break;
 	default:
 		_log("[Controller] Unknow message command: %d", nCommand);
@@ -212,112 +183,4 @@ void CController::stopServer()
 		delete serverDevice;
 		serverDevice = 0;
 	}
-}
-
-int CController::getControllerSocketFD(std::string strControllerID)
-{
-	int nRet = FAIL;
-	string strSQL = "SELECT socket_fd FROM controller WHERE status = 1 and id = '" + strControllerID + "';";
-	list<int> listValue;
-
-	if (0 < sqlite->getControllerColumeValueInt(strSQL.c_str(), listValue, 0))
-	{
-		list<int>::iterator i = listValue.begin();
-		nRet = *i;
-	}
-	listValue.clear();
-	return nRet;
-}
-
-int CController::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
-
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
-	memcpy(pIndex, szData, strlen(szData));
-	pIndex += strlen(szData);
-	nBody_len += strlen(szData);
-	memcpy(pIndex, "\0", 1);
-	pIndex += 1;
-	nBody_len += 1;
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-
-//	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] cmpResponse", nSocket);
-
-	string strLog;
-	if (0 >= nRet)
-	{
-		_log("[Controller] cmpResponse Fail socket: %d", nSocket);
-	}
-
-	return nRet;
-}
-
-void CController::runEnquireLinkRequest()
-{
-	int nSocketFD = -1;
-	list<int> listValue;
-	string strSql;
-	string strLog;
-
-	while (1)
-	{
-		tdEnquireLink->threadSleep(10);
-
-		/** Check Enquire link response **/
-		if (vEnquireLink.size())
-		{
-			/** Close socket that doesn't deliver enquire link response within 10 seconds **/
-			for (vector<int>::iterator it = vEnquireLink.begin(); it != vEnquireLink.end(); ++it)
-			{
-				strSql = "DELETE FROM controller WHERE socket_fd = " + ConvertToString(*it) + ";";
-				sqlite->controllerSqlExec(strSql.c_str());
-				close(*it);
-				_log("[Controller] Dropped connection, Close socket file descriptor filedes: %d", *it);
-			}
-		}
-		vEnquireLink.clear();
-
-		if (0 < getBindSocket(listValue))
-		{
-			for (list<int>::iterator i = listValue.begin(); i != listValue.end(); ++i)
-			{
-				nSocketFD = *i;
-				vEnquireLink.push_back(nSocketFD);
-				cmpEnquireLinkRequest(nSocketFD);
-			}
-		}
-
-		listValue.clear();
-	}
-}
-
-int CController::cmpEnquireLinkRequest(const int nSocketFD)
-{
-	return sendCommand(nSocketFD, enquire_link_request, STATUS_ROK, getSequence(), false, NULL);
-}
-
-int CController::getBindSocket(list<int> &listValue)
-{
-	string strSql = "SELECT socket_fd FROM controller WHERE status = 1;";
-	return sqlite->getControllerColumeValueInt(strSql.c_str(), listValue, 0);
-}
-
-/************************************* thread function **************************************/
-void *threadEnquireLinkRequest(void *argv)
-{
-	CController* ss = reinterpret_cast<CController*>(argv);
-	ss->runEnquireLinkRequest();
-	return NULL;
 }

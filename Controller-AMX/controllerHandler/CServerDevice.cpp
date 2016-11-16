@@ -56,7 +56,7 @@ int CServerDevice::startServer(const int nPort, const int nMsqId)
 
 	if (FAIL == start( AF_INET, NULL, nPort))
 	{
-		_log("Device Server Socket Create Fail");
+		_log("[Server Device] Socket Create Fail");
 		return FALSE;
 	}
 
@@ -84,7 +84,7 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Server Device Recv]", nSocketFD);
+			"[Server Device] Recv ", nSocketFD);
 
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
@@ -130,19 +130,20 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 			}
 			else
 			{
-				_log("[Controller] AMX Control Request Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
+				_log("[Server Device] AMX Control Request Fail, Invalid JSON Data, No AMX Command Socket FD:%d",
+						nSocket);
 				nStatus = STATUS_RINVJSON;
 			}
 		}
 		else
 		{
-			_log("[Controller] AMX Control Request Fail, Invalid JSON Data Socket FD:%d", nSocket);
+			_log("[Server Device] AMX Control Request Fail, Invalid JSON Data Socket FD:%d", nSocket);
 			nStatus = STATUS_RINVJSON;
 		}
 	}
 	else
 	{
-		_log("[Controller] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		_log("[Server Device] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
 	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	rData.clear();
@@ -182,19 +183,19 @@ int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const 
 			}
 			else
 			{
-				_log("[Controller] cmpAmxControl Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
+				_log("[Server Device] cmpAmxControl Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
 				nStatus = STATUS_RINVJSON;
 			}
 		}
 		else
 		{
-			_log("[Controller] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
+			_log("[Server Device] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
 			nStatus = STATUS_RINVJSON;
 		}
 	}
 	else
 	{
-		_log("[Controller] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+		_log("[Server Device] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
 	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	rData.clear();
@@ -209,11 +210,13 @@ void CServerDevice::setCallback(const int nId, CBFun cbfun)
 void CServerDevice::addClient(const int nSocketFD)
 {
 	mapClient[nSocketFD] = nSocketFD;
+	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
 }
 
 void CServerDevice::deleteClient(const int nSocketFD)
 {
 	mapClient.erase(nSocketFD);
+	_log("[Server Device] Socket Client FD:%d Closed", nSocketFD);
 }
 
 /**

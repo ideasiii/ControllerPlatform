@@ -94,13 +94,13 @@ int CServerAMX::sendCommand(const int nSocketFD, string strCommand)
 
 void CServerAMX::bind(const int nSocketFD)
 {
-	addAMXClient(nSocketFD);
+	addClient(nSocketFD);
 	_log("[Server AMX] Bind Socket: %d", nSocketFD);
 }
 
 void CServerAMX::unbind(const int nSocketFD)
 {
-	deleteAMXClient(nSocketFD);
+	deleteClient(nSocketFD);
 	_log("[Server AMX] Unbind Socket: %d", nSocketFD);
 }
 
@@ -142,14 +142,16 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 	return false;
 }
 
-void CServerAMX::addAMXClient(const int nSocketFD)
+void CServerAMX::addClient(const int nSocketFD)
 {
 	mapClient[nSocketFD] = nSocketFD;
+	_log("[Server AMX] Socket Client FD:%d Connected", nSocketFD);
 }
 
-void CServerAMX::deleteAMXClient(const int nSocketFD)
+void CServerAMX::deleteClient(const int nSocketFD)
 {
 	mapClient.erase(nSocketFD);
+	_log("[Server AMX] Socket Client FD:%d Closed", nSocketFD);
 }
 
 void CServerAMX::setCallback(const int nId, CBFun cbfun)

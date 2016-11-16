@@ -26,8 +26,8 @@ public:
 	void bind(const int nSocketFD);
 	void unbind(const int nSocketFD);
 	bool onReceive(const int nSocketFD, string strCommand);
-	void addAMXClient(const int nSocketFD);
-	void deleteAMXClient(const int nSocketFD);
+	void addClient(const int nSocketFD);
+	void deleteClient(const int nSocketFD);
 	void setCallback(const int nId, CBFun cbfun);
 
 private:

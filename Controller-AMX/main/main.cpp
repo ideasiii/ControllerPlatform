@@ -48,7 +48,6 @@ void runService()
 	int nInit = TRUE;
 	int nTmp = -1;
 	int nMsgID = -1;
-	string strConf;
 	extern char *__progname;
 
 	LogHandler *logAgent = LogHandler::getInstance();
@@ -94,15 +93,6 @@ void runService()
 			if (0 == config->getValue("CENTER", "enable").compare("yes"))
 			{
 				convertFromString(nTmp, config->getValue("CENTER", "port"));
-			}
-
-			strConf = config->getValue("SQLITE", "db_controller");
-			if (!strConf.empty())
-			{
-				if (!controller->startSqlite(DB_CONTROLLER, strConf))
-				{
-					nInit = FALSE;
-				}
 			}
 		}
 		else

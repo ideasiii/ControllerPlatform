@@ -28,8 +28,6 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	void runEnquireLinkRequest();
-	int startSqlite(const int nDBId, const std::string strDB);
 	int startServerAMX(const int nPort, const int nMsqId);
 	int startServerDevice(const int nPort, const int nMsqId);
 	void stopServer();
@@ -41,13 +39,6 @@ protected:
 
 private:
 	explicit CController();
-
-	/** Send CMP Response **/
-	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData = 0);
-
-	int getControllerSocketFD(std::string strControllerID);
-	int getBindSocket(std::list<int> &listValue);
-	int cmpEnquireLinkRequest(const int nSocketFD);
 
 public:
 	CCmpHandler *cmpParser;
