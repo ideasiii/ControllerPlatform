@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 ("amx control", amx_control_request)\
 (
 			"amx status", amx_status_request)\
-("semantic", semantic_request);
+("semantic", semantic_request)("amx status2", 1166);
 
 	printf("This process is a Controller testing process!.\n");
 
@@ -138,6 +138,7 @@ int main(int argc, char* argv[])
 			case semantic_request:
 			case amx_control_request:
 			case amx_status_request:
+			case 1166:
 				cmpTest->sendRequest(nCommand);
 				break;
 			case AMX_BIND:

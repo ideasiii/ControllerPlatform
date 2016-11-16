@@ -198,8 +198,9 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
 	string strLogout = "{\"id\":\"" + strMAC + "\"}";
 	string strSemantic = "{\"type\":0\"local\":0\"text\":\"Ivy Hello\"}";
-	string strAMXControl = "{\"function\":1,\"device\":0,\"control\":1}";
-	string strAMXStatus = "{\"function\":3,\"device\":0,\"request-status\":4}";
+	string strAMXControl = "{\"function\":4,\"device\":1,\"control\":2}";
+	string strAMXStatus = "{\"function\":4,\"device\":1,\"request-status\":1}";
+	string strAMXStatus2 = "{\"function\":4,\"device\":1,\"request-status\":2}";
 
 	switch (nCommand)
 	{
@@ -301,6 +302,14 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		memcpy(pIndex, strAMXStatus.c_str(), strAMXStatus.size());
 		pIndex += strAMXStatus.size();
 		nBody_len += strAMXStatus.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case 1166:
+		memcpy(pIndex, strAMXStatus2.c_str(), strAMXStatus2.size());
+		pIndex += strAMXStatus2.size();
+		nBody_len += strAMXStatus2.size();
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;

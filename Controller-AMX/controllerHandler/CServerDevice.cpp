@@ -234,6 +234,7 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 	if (10000 > nId)
 		return;
 
+	int nResult = 0;
 	JSONObject jobjStatus;
 	jobjStatus.put("function", nId / 10000);
 	jobjStatus.put("device", (nId % 10000) / 100);
@@ -242,6 +243,46 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 	string strJSON = jobjStatus.toString();
 	jobjStatus.release();
 
-	_log("[Server Device] Broadcast AMX Status: %s", strJSON.c_str());
+	map<int, int>::iterator it;
+	for (it = mapClient.begin(); it != mapClient.end(); ++it)
+	{
+//		nResult = cmpResponse(it->first, amx_status_response, getSequence(),strJSON.c_str());
+		_log("[Server Device] Broadcast AMX Status: %s to Socket:%d", strJSON.c_str(), it->first);
+	}
+}
+
+int CServerDevice::cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset(&packet, 0, sizeof(CMP_PACKET));
+
+	cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
+	memcpy(pIndex, szData, strlen(szData));
+	pIndex += strlen(szData);
+	nBody_len += strlen(szData);
+	memcpy(pIndex, "\0", 1);
+	pIndex += 1;
+	nBody_len += 1;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl(nTotal_len);
+
+//	nRet = cmpServer->socketSend(nSocket, &packet, nTotal_len);
+	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] cmpResponse", nSocket);
+
+	string strLog;
+	if (0 >= nRet)
+	{
+		_log("[Controller] cmpResponse Fail socket: %d", nSocket);
+	}
+
+	return nRet;
 }
 

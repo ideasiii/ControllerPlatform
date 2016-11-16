@@ -33,6 +33,7 @@ public:
 
 private:
 	CServerDevice();
+	int cmpResponse(const int nSocket, const int nCommandId, const int nSequence, const char * szData);
 	CCmpHandler *cmpParser;
 	typedef int (CServerDevice::*MemFn)(int, int, int, const void *);
 	map<int, MemFn> mapFunc;
