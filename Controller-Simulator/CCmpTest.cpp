@@ -193,10 +193,10 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
-//string strLogin = "{\"account\": \"akado\",	\"password\": \"oxymoron\",\"id\": \"000c29d0013c\",\"device\":0}";
-	string strLogin = "{\"account\": \"akado\",	\"password\": \"akado\",\"id\": \"" + strMAC
-			+ "\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
-	string strLogout = "{\"id\":\"" + strMAC + "\"}";
+	string strBind = "{\"id\":\"000c29d0013c\"}";
+	string strLogin =
+			"{\"account\":\"akado\",\"password\":\"akado\",\"id\":\"000c29d0013c\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
+	string strLogout = "{\"id\":\"000c29d0013c\"}";
 	string strSemantic = "{\"type\":0\"local\":0\"text\":\"Ivy Hello\"}";
 	string strAMXControl = "{\"function\":4,\"device\":1,\"control\":2}";
 	string strAMXStatus = "{\"function\":4,\"device\":1,\"request-status\":1}";
@@ -205,9 +205,9 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	switch (nCommand)
 	{
 	case bind_request:
-		memcpy(pIndex, strMAC.c_str(), strMAC.size());
-		pIndex += strMAC.size();
-		nBody_len += strMAC.size();
+		memcpy(pIndex, strBind.c_str(), strBind.size());
+		pIndex += strBind.size();
+		nBody_len += strBind.size();
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
@@ -489,6 +489,11 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 			{
 				nSize = strlen("STATUS_MATRIX_INPUT3\n");
 				memcpy(pBuf, "STATUS_MATRIX_INPUT3\n", nSize);
+			}
+			else if (0 == strPacket.substr(0, strlen("STATUS_PROJ_POWER_LEFT")).compare("STATUS_PROJ_POWER_LEFT"))
+			{
+				nSize = strlen("STATUS_PROJ_ON_LEFT\n");
+				memcpy(pBuf, "STATUS_PROJ_ON_LEFT\n", nSize);
 			}
 			else
 			{

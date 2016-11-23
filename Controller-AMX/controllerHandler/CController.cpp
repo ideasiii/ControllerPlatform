@@ -83,7 +83,7 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 {
 	if (NULL == socket)
 	{
-		_log("Send Command Fail, Socket invalid");
+		_log("[Controller] Send Command Fail, Socket invalid");
 		return -1;
 	}
 	int nRet = -1;
@@ -101,7 +101,7 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 
 	controller->cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
 	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller Send]", nSocket);
+	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller] Send", nSocket);
 	return nRet;
 }
 
@@ -141,7 +141,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		serverAMX->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
+		//serverDevice->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
 		serverAMX->deleteClient(nId);

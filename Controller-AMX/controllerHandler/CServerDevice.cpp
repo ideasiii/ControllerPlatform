@@ -22,11 +22,14 @@ CServerDevice::CServerDevice() :
 {
 	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
 	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
+	mapFunc[bind_request] = &CServerDevice::cmpBind;
+	mapFunc[unbind_request] = &CServerDevice::cmpUnbind;
 }
 
 CServerDevice::~CServerDevice()
 {
 	stop();
+	mapClient.clear();
 }
 
 CServerDevice * CServerDevice::getInstance()
@@ -47,8 +50,8 @@ int CServerDevice::startServer(const int nPort, const int nMsqId)
 	if (0 < nMsqId)
 	{
 		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE);
-		setClientConnectCommand (EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE);
-		setClientDisconnectCommand (EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE);
+		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE);
+		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE);
 	}
 
 	/** Set Receive , Packet is CMP , Message Queue Handle **/
@@ -107,34 +110,24 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	int nStatus = STATUS_RINVBODY;
 
-	CDataHandler<string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("data"))
-	{
-		_log("[Server Device] Bind Request Body: %s", rData["data"].c_str());
-		/** get AMX string command **/
-		JSONObject jobj(rData["data"].c_str());
-		if (jobj.isValid())
-		{
+	addClient(nSocket);
+	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	return TRUE;
+}
 
-		}
-	}
-	else
-	{
-		_log("[Server Device] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-	}
-	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
-	rData.clear();
-	return FALSE;
+int CServerDevice::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	deleteClient(nSocket);
+	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	return TRUE;
 }
 
 int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	int nStatus = STATUS_RINVBODY;
 
-	CDataHandler < string > rData;
+	CDataHandler<string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
@@ -187,7 +180,7 @@ int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const 
 {
 	int nStatus = STATUS_RINVBODY;
 
-	CDataHandler < string > rData;
+	CDataHandler<string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 	if (0 < nRet && rData.isValidKey("data"))
 	{
@@ -227,11 +220,6 @@ int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const 
 	return FALSE;
 }
 
-int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-
-}
-
 void CServerDevice::setCallback(const int nId, CBFun cbfun)
 {
 	mapCallback[nId] = cbfun;
@@ -240,13 +228,13 @@ void CServerDevice::setCallback(const int nId, CBFun cbfun)
 void CServerDevice::addClient(const int nSocketFD)
 {
 	mapClient[nSocketFD] = nSocketFD;
-	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
+	_log("[Server Device] Socket Client FD:%d Binded", nSocketFD);
 }
 
 void CServerDevice::deleteClient(const int nSocketFD)
 {
 	mapClient.erase(nSocketFD);
-	_log("[Server Device] Socket Client FD:%d Closed", nSocketFD);
+	_log("[Server Device] Socket Client FD:%d Unbinded", nSocketFD);
 }
 
 /**
@@ -262,7 +250,10 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 {
 	int nId = AMX_STATUS_RESP[strStatus];
 	if (10000 > nId)
+	{
+		_log("[Server Device] Invalid status: %s , code:%d", strStatus.c_str(), nId);
 		return;
+	}
 
 	int nResult = 0;
 	JSONObject jobjStatus;

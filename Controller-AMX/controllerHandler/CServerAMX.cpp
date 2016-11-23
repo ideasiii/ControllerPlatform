@@ -124,12 +124,12 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
 			// Get Status Response
-			if (AMX_STATUS.find(strCommand) != AMX_STATUS.end())
+			if (AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
 			{
 				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-
-				// Update AMX_STATUS Hashmap
 			}
+
+			// Update AMX_STATUS Hashmap
 		}
 
 		return true;
