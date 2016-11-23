@@ -39,6 +39,7 @@ private:
 	map<int, MemFn> mapFunc;
 	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
 	map<int, CBFun> mapCallback;
 	map<int, int> mapClient;
 };

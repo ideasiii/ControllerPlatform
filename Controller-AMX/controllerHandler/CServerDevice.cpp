@@ -105,6 +105,31 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 }
 
+int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	int nStatus = STATUS_RINVBODY;
+
+	CDataHandler<string> rData;
+	int nRet = cmpParser->parseBody(nCommand, pData, rData);
+	if (0 < nRet && rData.isValidKey("data"))
+	{
+		_log("[Server Device] Bind Request Body: %s", rData["data"].c_str());
+		/** get AMX string command **/
+		JSONObject jobj(rData["data"].c_str());
+		if (jobj.isValid())
+		{
+
+		}
+	}
+	else
+	{
+		_log("[Server Device] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
+	}
+	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	rData.clear();
+	return FALSE;
+}
+
 int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	int nStatus = STATUS_RINVBODY;
