@@ -2,6 +2,7 @@
 # ControllerAmx make file
 # Created on: 2016-07-05
 # Author: Jugo
+# Project: Smart Building
 #####################################
 
 include env.mk
