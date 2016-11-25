@@ -13,4 +13,5 @@
 typedef void (*CBFun)(void* param);
 
 extern int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket);
-extern int cmpSend(const int nSocket, const int nCommandId, const int nSequence, const char * szData);
+extern int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int nSequence, const char * szData =
+		0);

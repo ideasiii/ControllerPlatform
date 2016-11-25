@@ -256,7 +256,6 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 		return;
 	}
 
-	int nResult = 0;
 	JSONObject jobjStatus;
 	jobjStatus.put("function", nId / 10000);
 	jobjStatus.put("device", (nId % 10000) / 100);
@@ -265,10 +264,14 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 	string strJSON = jobjStatus.toString();
 	jobjStatus.release();
 
+	int nRet = 0;
 	map<int, int>::iterator it;
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
 		_log("[Server Device] Broadcast AMX Status: %s to Socket:%d", strJSON.c_str(), it->first);
-		nResult = cmpSend(it->first, amx_broadcast_status_request, getSequence(), strJSON.c_str());
+		nRet = cmpSend(dynamic_cast<CSocket*>(serverDevice), it->first, amx_broadcast_status_request, getSequence(),
+				strJSON.c_str());
+		if (0 >= nRet)
+			break;
 	}
 }
