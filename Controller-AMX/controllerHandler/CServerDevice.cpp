@@ -113,7 +113,7 @@ int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void 
 {
 
 	mapClient[nSocket] = nSocket;
-	_log("[Server Device] Bind Client, Socket FD:%d", nSocket);
+	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
 	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
 	return TRUE;
 }
@@ -230,13 +230,17 @@ void CServerDevice::setCallback(const int nId, CBFun cbfun)
 void CServerDevice::addClient(const int nSocketFD)
 {
 	//mapClient[nSocketFD] = nSocketFD;
-	_log("[Server Device] Socket Client FD:%d Binded", nSocketFD);
+	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
 }
 
 void CServerDevice::deleteClient(const int nSocketFD)
 {
-	mapClient.erase(nSocketFD);
-	_log("[Server Device] Socket Client FD:%d Unbinded", nSocketFD);
+	if (mapClient.end() != mapClient.find(nSocketFD))
+	{
+		mapClient.erase(nSocketFD);
+		_log("[Server Device] Socket Client FD:%d Unbinded", nSocketFD);
+	}
+	_log("[Server Device] Socket Client FD:%d Disconnected", nSocketFD);
 }
 
 /**
