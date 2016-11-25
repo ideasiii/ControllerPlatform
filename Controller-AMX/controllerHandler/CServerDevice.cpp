@@ -229,7 +229,6 @@ void CServerDevice::setCallback(const int nId, CBFun cbfun)
 
 void CServerDevice::addClient(const int nSocketFD)
 {
-	//mapClient[nSocketFD] = nSocketFD;
 	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
 }
 

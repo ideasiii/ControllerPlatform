@@ -129,7 +129,13 @@ bool CServerAMX::onReceive(const int nSocketFD, string strCommand)
 				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
 			}
 
-			// Update AMX_STATUS Hashmap
+			// Update AMX_STATUS_CURRENT Hashmap
+			if (AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
+			{
+				string strDevice = AMX_STATUS_TO_CMD[strCommand];
+				AMX_STATUS_CURRENT[strDevice] = strCommand;
+				_log("[Server ANX] Update AMX %s Current Status: %s", strDevice.c_str(), strCommand.c_str());
+			}
 		}
 
 		return true;
