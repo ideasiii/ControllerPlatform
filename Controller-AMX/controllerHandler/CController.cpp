@@ -131,7 +131,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 	nRet = socket->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] CMP Send", nSocket);
+	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] Send", nSocket);
 
 	string strLog;
 	if (0 >= nRet)

@@ -162,7 +162,8 @@ rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_requ
 		"rdm_operate_response")(rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
 semantic_request, "semantic_request")(semantic_response, "semantic_response")(amx_control_request,
 		"amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request, "amx_status_request")(
-amx_status_response, "amx_status_response");
+amx_status_response, "amx_status_response")(amx_broadcast_status_request, "amx_broadcast_status_request")(
+		amx_broadcast_status_response, "amx_broadcast_status_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
