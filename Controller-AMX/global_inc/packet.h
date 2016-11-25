@@ -93,6 +93,8 @@ struct CMP_PACKET
 #define amx_control_response					0x80000040
 #define amx_status_request						0x00000041
 #define amx_status_response						0x80000041
+#define amx_broadcast_status_request			0x00000042
+#define amx_broadcast_status_response			0x80000042
 #define MAX_COMMAND								0x000000FF
 
 /*

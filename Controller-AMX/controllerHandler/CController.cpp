@@ -105,6 +105,40 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 	return nRet;
 }
 
+int cmpSend(const int nSocket, const int nCommandId, const int nSequence, const char * szData)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	void *pHeader = &packet.cmpHeader;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset(&packet, 0, sizeof(CMP_PACKET));
+
+	controller->cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
+	memcpy(pIndex, szData, strlen(szData));
+	pIndex += strlen(szData);
+	nBody_len += strlen(szData);
+	memcpy(pIndex, "\0", 1);
+	pIndex += 1;
+	nBody_len += 1;
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl(nTotal_len);
+
+	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] CMP Send", nSocket);
+
+	string strLog;
+	if (0 >= nRet)
+	{
+		_log("[Controller] CMP Send Fail socket: %d", nSocket);
+	}
+
+	return nRet;
+}
+
 CController::CController() :
 		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
 				CServerDevice::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
