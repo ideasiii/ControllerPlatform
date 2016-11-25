@@ -178,7 +178,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		serverAMX->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		//serverDevice->addClient(nId);
+		serverDevice->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
 		serverAMX->deleteClient(nId);
