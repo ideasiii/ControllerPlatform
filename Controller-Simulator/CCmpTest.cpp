@@ -21,6 +21,7 @@
 #include "packet.h"
 #include "utility.h"
 #include "CThreadHandler.h"
+#include "AMXCommand.h"
 
 #define TRACKER_MOBILE		1
 #define TRACKER_CHARGIN		2
@@ -480,27 +481,42 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 		{
 			memset(pBuf, 0, sizeof(pBuf));
 			int nSize = 0;
-			if (0 == strPacket.substr(0, 13).compare("STATUS_SYSTEM"))
+			string strCommand = trim(strPacket);
+			if (AMX_STATUS_CURRENT.find(strCommand) != AMX_STATUS_CURRENT.end())
 			{
-				nSize = strlen("STATUS_SYSTEM_ON\n");
-				memcpy(pBuf, "STATUS_SYSTEM_ON\n", nSize);
-			}
-			else if (0 == strPacket.substr(0, 13).compare("STATUS_MATRIX"))
-			{
-				nSize = strlen("STATUS_MATRIX_INPUT3\n");
-				memcpy(pBuf, "STATUS_MATRIX_INPUT3\n", nSize);
-			}
-			else if (0 == strPacket.substr(0, strlen("STATUS_PROJ_POWER_LEFT")).compare("STATUS_PROJ_POWER_LEFT"))
-			{
-				nSize = strlen("STATUS_PROJ_ON_LEFT\n");
-				memcpy(pBuf, "STATUS_PROJ_ON_LEFT\n", nSize);
+				string strCurrent = AMX_STATUS_CURRENT[strCommand] + "\n";
+
+				nSize = strCurrent.length();
+				memcpy(pBuf, strCurrent.c_str(), nSize);
 			}
 			else
 			{
 				nSize = strlen("CTL_OK\n");
 				memcpy(pBuf, "CTL_OK\n", nSize);
 			}
+			/*
+			 if (0 == strPacket.substr(0, 13).compare("STATUS_SYSTEM"))
+			 {
+			 nSize = strlen("STATUS_SYSTEM_ON\n");
+			 memcpy(pBuf, "STATUS_SYSTEM_ON\n", nSize);
+			 }
+			 else if (0 == strPacket.substr(0, 13).compare("STATUS_MATRIX"))
+			 {
+			 nSize = strlen("STATUS_MATRIX_INPUT3\n");
+			 memcpy(pBuf, "STATUS_MATRIX_INPUT3\n", nSize);
+			 }
+			 else if (0 == strPacket.substr(0, strlen("STATUS_PROJ_POWER_LEFT")).compare("STATUS_PROJ_POWER_LEFT"))
+			 {
+			 nSize = strlen("STATUS_PROJ_ON_LEFT\n");
+			 memcpy(pBuf, "STATUS_PROJ_ON_LEFT\n", nSize);
+			 }
 
+			 else
+			 {
+			 nSize = strlen("CTL_OK\n");
+			 memcpy(pBuf, "CTL_OK\n", nSize);
+			 }
+			 */
 			result = send(nSocketFD, pBuf, nSize, MSG_NOSIGNAL);
 			if (0 >= result)
 			{
