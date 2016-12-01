@@ -15,6 +15,8 @@
 #include "common.h"
 #include "packet.h"
 
+using namespace std;
+
 class CCmpHandler;
 class CSqliteHandler;
 class CThreadHandler;
@@ -28,8 +30,8 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerAMX(const int nPort, const int nMsqId);
-	int startServerDevice(const int nPort, const int nMsqId);
+	int startServerAMX(string strIP, const int nPort, const int nMsqId);
+	int startServerDevice(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void onAMXCommand(string strCommand);
 	void onAMXResponseStatus(string strStatus);

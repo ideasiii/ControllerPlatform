@@ -36,7 +36,7 @@ CServerAMX * CServerAMX::getInstance()
 	return serverAMX;
 }
 
-int CServerAMX::startServer(const int nPort, const int nMsqId)
+int CServerAMX::startServer(string strIP, const int nPort, const int nMsqId)
 {
 	if (0 >= nPort || 0 >= nMsqId)
 		return FALSE;
@@ -52,7 +52,10 @@ int CServerAMX::startServer(const int nPort, const int nMsqId)
 	/** Set Receive , Packet is BYTE , Message Queue Handle **/
 	setPacketConf(PK_BYTE, PK_MSQ);
 
-	if ( FAIL == start( AF_INET, NULL, nPort))
+	const char* cszAddr = NULL;
+	if (!strIP.empty())
+		cszAddr = strIP.c_str();
+	if ( FAIL == start( AF_INET, cszAddr, nPort))
 	{
 		_log("AMX Server Socket Create Fail");
 		return FALSE;

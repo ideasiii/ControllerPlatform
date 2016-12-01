@@ -192,17 +192,17 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-int CController::startServerAMX(const int nPort, const int nMsqId)
+int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
 {
 	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(nPort, nMsqId);
+	return serverAMX->startServer(strIP, nPort, nMsqId);
 }
 
-int CController::startServerDevice(const int nPort, const int nMsqId)
+int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
 {
 	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
 	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
-	return serverDevice->startServer(nPort, nMsqId);
+	return serverDevice->startServer(strIP, nPort, nMsqId);
 }
 
 void CController::stopServer()

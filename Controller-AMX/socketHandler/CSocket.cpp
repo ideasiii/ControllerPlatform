@@ -66,6 +66,10 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 				perror("inet_aton");
 				return -1;
 			}
+			else
+			{
+				_log("[CSocket] Socket Bind IP: %s", szIP);
+			}
 		}
 		inAddr.sin_port = htons(m_nPort);
 		break;

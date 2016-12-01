@@ -19,7 +19,7 @@ class CServerAMX: public CSocketServer
 public:
 	static CServerAMX * getInstance();
 	virtual ~CServerAMX();
-	int startServer(const int nPort, const int nMsqId);
+	int startServer(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
 	int sendCommand(string strCommand);
 	int sendCommand(const int nSocketFD, string strCommand);

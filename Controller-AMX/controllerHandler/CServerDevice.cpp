@@ -42,7 +42,7 @@ CServerDevice * CServerDevice::getInstance()
 	return serverDevice;
 }
 
-int CServerDevice::startServer(const int nPort, const int nMsqId)
+int CServerDevice::startServer(string strIP, const int nPort, const int nMsqId)
 {
 	if (0 >= nPort || 0 >= nMsqId)
 		return FALSE;
@@ -58,7 +58,11 @@ int CServerDevice::startServer(const int nPort, const int nMsqId)
 	/** Set Receive , Packet is CMP , Message Queue Handle **/
 	setPacketConf(PK_CMP, PK_MSQ);
 
-	if (FAIL == start(AF_INET, NULL, nPort))
+	const char* cszAddr = NULL;
+	if (!strIP.empty())
+		cszAddr = strIP.c_str();
+
+	if (FAIL == start(AF_INET, cszAddr, nPort))
 	{
 		_log("[Server Device] Socket Create Fail");
 		return FALSE;

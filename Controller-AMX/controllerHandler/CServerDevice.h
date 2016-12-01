@@ -24,7 +24,7 @@ public:
 public:
 	static CServerDevice * getInstance();
 	virtual ~CServerDevice();
-	int startServer(const int nPort, const int nMsqId);
+	int startServer(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void setCallback(const int nId, CBFun cbfun);
 	void broadcastAMXStatus(string strStatus);
