@@ -82,23 +82,12 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	{
 	case SOCK_STREAM:
 		m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-//			if ( AF_UNIX == nSocketType && -1 != m_nSocketFD)
-//			{
-//				//_log("[Socket] create doamin socket success , socket FD = %d", m_nSocketFD);
-//			}
-//			if ( AF_INET == nSocketType && -1 != m_nSocketFD)
-//			{
-//				//_log("[Socket] create TCP socket success , socket FD = %d\n", m_nSocketFD);
-//			}
 		break;
 	case SOCK_DGRAM:
 		m_nSocketFD = socket(nSocketType, SOCK_DGRAM, IPPROTO_UDP);
-		//if (-1 != m_nSocketFD)
-		//_log("[Socket] create UDP socket success , socket FD = %d", m_nSocketFD);
 		break;
 	default:
 		m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
-		//_log("[Socket] create stream socket");
 		break;
 	}
 
