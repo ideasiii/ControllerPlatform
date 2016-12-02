@@ -8,7 +8,7 @@
 include env.mk
 include modules.mk
 
-TARGET    := mongodbController
+TARGET    := controller-mongodb
 CC        := g++
 LD        := g++
 
