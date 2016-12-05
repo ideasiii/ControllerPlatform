@@ -1,217 +1,115 @@
 /*
  * main.cpp
  *
- *  Created on: 2015年10月20日
- *      Author: Louis Ju
+ *  Created on: 2016年07月01日
+ *      Author: Jugo
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
 
-#include "CConfig.h"
-#include "CControlCenter.h"
+#include "CController.h"
+#include "CProcessHandler.h"
 #include "CMessageHandler.h"
-#include "common.h"
 #include "event.h"
 #include "LogHandler.h"
+#include "CConfig.h"
 #include "utility.h"
-#include "config.h"
+#include "common.h"
+#include "CSqliteHandler.h"
 
 using namespace std;
 
-volatile int flag = 0;
-pid_t child_pid = -1; //Global
-
-int Watching();
-void CSigHander(int signo);
-void PSigHander(int signo);
-void closeMessage();
-void runService(int argc, char* argv[]);
+string getConfName(string strProcessName);
 void options(int argc, char **argv);
+static void runService();
 
 int main(int argc, char* argv[])
 {
+	extern char *__progname;
+	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
-	// parent process run process monitor
-	Watching();
+	// Run Process
+	CProcessHandler::runProcess(runService);
 
-	// child process run service
-	runService(argc, argv);
-
-	closeMessage();
-
+	closelog();
 	return EXIT_SUCCESS;
 }
 
-/**
- * Parent watch child status
- */
-int Watching()
+string getConfName(std::string strProcessName)
 {
-	pid_t w;
-	int status;
+	size_t found = strProcessName.find_last_of("/\\");
+	return (strProcessName.substr(++found) + ".conf");
+}
 
-	openlog("ControlCenter", LOG_PID, LOG_LOCAL0);
+void runService()
+{
+	int nInit = TRUE;
+	int nTmp = -1;
+	int nMsgID = -1;
+	extern char *__progname;
 
-	do
+	LogHandler *logAgent = LogHandler::getInstance();
+	CController *controller = CController::getInstance();
+	CConfig *config = new CConfig();
+	string *pstrConf = new string(getConfName(__progname));
+	_log("Get Config File : %s", pstrConf->c_str());
+	if (FALSE != config->loadConfig(*pstrConf))
 	{
-		child_pid = fork();
-		if (child_pid == -1)
+		logAgent->setLogPath(config->getValue("LOG", "log"));
+		convertFromString(nMsgID, config->getValue("MSQ", "id"));
+		if (controller->initMessage(nMsgID))
 		{
-			exit( EXIT_FAILURE);
-		}
+			if (0 == config->getValue("SERVER CENTER", "enable").compare("yes"))
+			{
+				convertFromString(nTmp, config->getValue("SERVER CENTER", "port"));
+				if (!controller->startServerCenter(config->getValue("SERVER CENTER", "ip"), nTmp, nMsgID))
+				{
+					nInit = FALSE;
+					_log("[Controller] Create Server Center Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+				}
+				else
+				{
+					_log("[Controller] Create Server Center Service Success. Port : %d , Message ID : %d", nTmp,
+							nMsgID);
+				}
+			}
 
-		if (child_pid == 0)
-		{
-			/**
-			 * Child process
-			 */
-			signal( SIGINT, CSigHander);
-			signal( SIGTERM, CSigHander);
-			signal( SIGPIPE, SIG_IGN);
-			return 0;
-		}
-
-		/**
-		 * Parent process
-		 */
-		signal( SIGINT, PSigHander);
-		signal( SIGTERM, PSigHander);
-		signal( SIGHUP, PSigHander);
-		signal( SIGPIPE, SIG_IGN);
-
-		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
-
-		if (w == -1)
-		{
-			perror("waitpid");
-			exit( EXIT_FAILURE);
-		}
-		if (WIFEXITED(status))
-		{
-			_DBG("[Process] child exited, status=%d\n", WEXITSTATUS(status));
-		}
-		else if (WIFSIGNALED(status))
-		{
-			_DBG("[Process] child killed by signal %d\n", WTERMSIG(status));
-		}
-		else if (WIFSTOPPED(status))
-		{
-			_DBG("[Process] child stopped by signal %d\n", WSTOPSIG(status));
-		}
-		else if (WIFCONTINUED(status))
-		{
-			_DBG("[Process] continued\n");
+			if (!controller->startIdeasSqlite(config->getValue("SQLITE", "db_ideas")))
+			{
+				nInit = FALSE;
+				_log("[Controller] Start db_ideas Sqlite Service Fail.");
+			}
+			else
+			{
+				_log("[Controller] Start db_ideas Sqlite Service Success.");
+			}
 		}
 		else
 		{
-			_DBG("[Process] receive signal: %d\n", status);
+			nInit = FALSE;
+			_log("[Controller] Create Message Queue Fail");
 		}
-		sleep(3);
-	}
-	while ( SIGTERM != WTERMSIG(status) && !flag);
-
-	closelog();
-	exit( EXIT_SUCCESS);
-	return 1;
-}
-
-/**
- * Child signal handler
- */
-void CSigHander(int signo)
-{
-	_DBG("[Signal] Child Received signal %d", signo);
-	flag = 1;
-}
-
-/**
- * Parent signal handler
- */
-void PSigHander(int signo)
-{
-	if ( SIGHUP == signo)
-		return;
-	_DBG("[Signal] Parent Received signal %d", signo);
-	flag = 1;
-	sleep(3);
-	kill(child_pid, SIGKILL);
-}
-
-/**
- * clean message queue
- */
-void closeMessage()
-{
-	int nMsqId = CMessageHandler::registerMsq(MSG_ID);
-	if (0 < nMsqId)
-	{
-		CMessageHandler::closeMsg(nMsqId);
-	}
-}
-
-/**
- *Controller Service Run
- */
-void runService(int argc, char* argv[])
-{
-	std::string strArgv;
-	std::string strConf;
-	std::string strSqliteDBController;
-	std::string strSqliteDBIdeas;
-	int nServerPort = 6607;
-
-	LogHandler *logAgent = LogHandler::getInstance();
-	logAgent->setLogPath("/data/opt/tomcat/webapps/logs/center.log");
-
-	options(argc, argv);
-
-	CControlCenter *controlCenter = CControlCenter::getInstance();
-
-	strArgv = argv[0];
-
-	size_t found = strArgv.find_last_of("/\\");
-	std::string strProcessName = strArgv.substr(++found);
-
-	strConf = strProcessName + ".conf";
-
-	if (!strConf.empty())
-	{
-		CConfig *config = new CConfig();
-		if ( FALSE != config->loadConfig(strConf))
-		{
-			logAgent->setLogPath(config->getValue("LOG", "log"));
-			convertFromString(nServerPort, config->getValue("SERVER", "port"));
-			strSqliteDBController = config->getValue("SQLITE", "db_controller");
-			strSqliteDBIdeas = config->getValue("SQLITE", "db_ideas");
-		}
-		delete config;
-	}
-
-	if (controlCenter->initMessage( MSG_ID) && controlCenter->startSqlite(ID_DB_CONTROLLER, strSqliteDBController)
-			&& controlCenter->startSqlite(ID_DB_IDEAS, strSqliteDBIdeas) && controlCenter->startServer(nServerPort)
-			&& controlCenter->startMongo("127.0.0.1", 27027))
-	{
-		_log("<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>");
-		controlCenter->run( EVENT_FILTER_CONTROL_CENTER);
-		_log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>");
-		controlCenter->stopServer();
 	}
 	else
 	{
-		closeMessage();
-		PSigHander(SIGINT);
+		nInit = FALSE;
+		_log("[Controller] Load Configuration File Fail");
 	}
+	delete pstrConf;
+	delete config;
 
-	_log("[Process] Child process say: good bye~");
-	delete logAgent;
+	if (TRUE == nInit)
+	{
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
+		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
+		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+		controller->stopServer();
+	}
+	delete controller;
 }
-
 /**
  * process options
  */
@@ -223,10 +121,10 @@ void options(int argc, char **argv)
 	{
 		switch (c)
 		{
-			case 'H':
-			case 'h':
-				printf("this is help\n");
-				break;
+		case 'H':
+		case 'h':
+			printf("this is help\n");
+			break;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 export MODULES=global_inc \
 			 main \
-			 controlCenter \
+			 controllerHandler \
 			 configHandler	\
 			 messageHandler	\
 			 objectHandler	\
@@ -10,6 +10,7 @@ export MODULES=global_inc \
 			 cmpHandler	\
 			 sqliteHandler	\
 			 jsonHandler \
-			 logHandler
+			 logHandler \
+			 processHandler
 			 
-export EXT_MODULES=extInclude
+#export EXT_MODULES=extInclude

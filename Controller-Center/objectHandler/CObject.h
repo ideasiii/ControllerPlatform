@@ -15,8 +15,8 @@ using std::runtime_error;
 class CException: public runtime_error
 {
 public:
-	CException(const std::string& _message)
-			: std::runtime_error(_message)
+	CException(const std::string& _message) :
+			std::runtime_error(_message)
 	{
 	}
 };
@@ -57,7 +57,7 @@ public:
 	CObject();
 	virtual ~CObject();
 	int initMessage(int nKey);
-	int run(int nRecvEvent);
+	int run(int nRecvEvent, const char * szDescript = 0);
 	void clearMessage();
 	void throwException(const char * szMsg);
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -65,7 +65,8 @@ public:
 protected:
 	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 	{
-		printf("onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x", nEvent, nCommand, nId, nDataLen, *(unsigned int *) pData);
+		printf("onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x", nEvent, nCommand, nId, nDataLen,
+				*(unsigned int *) pData);
 	}
 	;
 

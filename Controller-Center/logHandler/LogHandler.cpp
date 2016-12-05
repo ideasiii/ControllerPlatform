@@ -27,7 +27,7 @@ void *threadExportLog(void *argv)
 }
 
 LogHandler::LogHandler() :
-		tdExportLog(new CThreadHandler), mstrLogPath("run.log")
+		tdExportLog(new CThreadHandler), mstrLogPath("./run.log")
 {
 	tdExportLog->createThread(threadExportLog, this);
 }

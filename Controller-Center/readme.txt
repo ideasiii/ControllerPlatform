@@ -20,7 +20,6 @@ db.mobile.remove({})			// remove all record
 [sqlite]
 sqlite3 xxxx.db
 
-
 [Socket]
 # Check socket status
 netstat -npt
@@ -29,6 +28,9 @@ ss -t -a
 [Process]
 # Check ELF File
 readelf -a xxxx
+
+# test child process reload
+kill -11 [child process pid]
 
 # Check Linking Library
 ldd xxx

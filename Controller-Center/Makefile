@@ -1,7 +1,8 @@
 #####################################
-# Control Center make file
-# Created on: Nor 02,2015
-# Author: Louis Ju
+# ControllerAmx make file
+# Created on: 2016-07-05
+# Author: Jugo
+# Project: Smart Building
 #####################################
 
 include env.mk
@@ -44,6 +45,11 @@ all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
+	
+init: package-u checkdirs bin/$(TARGET)
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo "\n"
 
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
@@ -73,7 +79,6 @@ clean:
 	@for libName in ${EXT_MODULES} ; do \
 		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
-	@$(MAKE) v=99 -C Tester clean > /dev/null;
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log

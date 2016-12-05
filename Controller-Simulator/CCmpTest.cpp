@@ -411,7 +411,7 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl(nCommandResp);
-				cmpHeader.command_status = htonl( STATUS_ROK);
+				cmpHeader.command_status = htonl(nStatus);
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				send(nSocketFD, pHeaderResp, sizeof(CMP_HEADER), MSG_NOSIGNAL);
