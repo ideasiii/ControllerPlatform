@@ -18,6 +18,9 @@
 #include "CDataHandler.cpp"
 #include "packet.h"
 #include "IReceiver.h"
+#include<netinet/if_ether.h>
+#include<net/if.h>
+#include<linux/sockios.h>
 
 int CSocketServer::m_nInternalEventFilter = 7000;
 
@@ -404,6 +407,18 @@ void CSocketServer::runSocketAccept()
 		{
 			_log("[CSocketServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
 			sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
+			/** Get Client MAC **/
+			struct arpreq arpreq_;
+			bzero(&arpreq_, sizeof(struct arpreq));
+			int n = 0;
+			if ((n = ioctl(nChildSocketFD, SIOCGARP, &arpreq_)) > 0)
+			{
+				unsigned char *ptr = (unsigned char *) (&arpreq_.arp_ha.sa_data[0]);
+				_log("[CSocketServer] Client MAC: %x:%x:%x:%x:%x:%x\n", *ptr, *(ptr + 1), *(ptr + 2), *(ptr + 3),
+						*(ptr + 4), *(ptr + 5));
+			}
+			_log("[CSocketServer] ioctl = %d", n);
+
 		}
 		else
 		{
