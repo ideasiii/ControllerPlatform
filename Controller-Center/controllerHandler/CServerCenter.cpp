@@ -14,15 +14,34 @@
 #include "JSONObject.h"
 #include "CServerCenter.h"
 #include "ICallback.h"
+#include "CSqliteHandler.h"
 
 static CServerCenter * serverCenter = 0;
 
+#define RESP_INIT "{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 2307	}]}"
+
+typedef struct _SIGNUP_DATA
+{
+	string id;
+	string app_id;
+	string mac;
+	string os;
+	string phone;
+	string fb_id;
+	string fb_name;
+	string fb_email;
+	string fb_account;
+	string g_account;
+	string t_account;
+} SIGNUP_DATA;
+
 CServerCenter::CServerCenter() :
-		CSocketServer(), cmpParser(CCmpHandler::getInstance())
+		CSocketServer(), cmpParser(CCmpHandler::getInstance()), sqlite(CSqliteHandler::getInstance())
 {
 	mapFunc[bind_request] = &CServerCenter::cmpBind;
 	mapFunc[unbind_request] = &CServerCenter::cmpUnbind;
 	mapFunc[initial_request] = &CServerCenter::cmpInitial;
+	mapFunc[sign_up_request] = &CServerCenter::cmpSignup;
 }
 
 CServerCenter::~CServerCenter()
@@ -156,7 +175,6 @@ int CServerCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const vo
 	int nType = ntohl(*((int*) pBody));
 	_log("[Server Center] Receice CMP Init: type=%d ", nType);
 
-	string strData;
 	switch (nType)
 	{
 	case TYPE_MOBILE_SERVICE:
@@ -166,23 +184,88 @@ int CServerCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const vo
 	case TYPE_TRACKER_APPLIENCE:
 	case TYPE_TRACKER_TOY:
 	case TYPE_TRACKER_IOT:
-		strData =
-				"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 2307	}]}";
-		break;
-
-	}
-
-	if (strData.empty())
-	{
-		_log("[Server Center] Initial Fail, Can't get initial data Socket FD:%d, Service Type: %d", nSocket, nType);
-		sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR, nSequence);
-	}
-	else
-	{
 		sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence,
-				strData.c_str());
+		RESP_INIT);
+		return 0;
+
 	}
+
+	_log("[Server Center] Initial Fail, Can't get initial data Socket FD:%d, Service Type: %d", nSocket, nType);
+	sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR, nSequence);
 
 	return 0;
+}
+
+int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+	int nType = ntohl(*((int*) pBody));
+	pBody += 4;
+
+	if (isValidStr((const char*) pBody, MAX_SIZE))
+	{
+		char temp[MAX_SIZE];
+		memset(temp, 0, sizeof(temp));
+		strcpy(temp, pBody);
+		if (0 < strlen(temp))
+		{
+			JSONObject jsonData(temp);
+			if (jsonData.isValid())
+			{
+				SIGNUP_DATA signupData;
+				signupData.id = jsonData.getString("id");
+				if (!signupData.id.empty())
+				{
+					signupData.app_id = jsonData.getString("app_id");
+					signupData.fb_account = jsonData.getString("fb_account");
+					signupData.fb_email = jsonData.getString("fb_email");
+					signupData.fb_id = jsonData.getString("fb_id");
+					signupData.fb_name = jsonData.getString("fb_name");
+					signupData.g_account = jsonData.getString("g_account");
+					signupData.mac = jsonData.getString("mac");
+					signupData.os = jsonData.getString("os");
+					signupData.phone = jsonData.getString("phone");
+					signupData.t_account = jsonData.getString("t_account");
+
+					/** Check ID exist in user Table. **/
+					string strSQL = "SELECT id FROM user WHERE id = '" + signupData.id + "';";
+					list<string> listValue;
+					int nRow = sqlite->ideasSqlExec(strSQL.c_str(), listValue, 0);
+					if (0 >= nRow)
+					{
+						strSQL =
+								"INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
+										+ signupData.id + "','" + signupData.app_id + "','" + signupData.mac + "','"
+										+ signupData.os + "','" + signupData.phone + "','" + signupData.fb_id + "','"
+										+ signupData.fb_name + "','" + signupData.fb_email + "','"
+										+ signupData.fb_account + "','" + signupData.g_account + "','"
+										+ signupData.t_account + "');";
+						if ( SUCCESS == sqlite->ideasSqlExec(strSQL.c_str()))
+						{
+							_log("[Server Center] Add User Login Data Success.");
+						}
+						else
+							return sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand,
+							STATUS_RSYSERR, nSequence);
+
+					}
+					_log(
+							"[Server Center] Signup Request:id=%s app_id=%s fb_account=%s fb_email=%s fb_id=%s fb_name=%s g_account=%s mac=%s os=%s phone=%s t_account=%s",
+							signupData.id.c_str(), signupData.app_id.c_str(), signupData.fb_account.c_str(),
+							signupData.fb_email.c_str(), signupData.fb_id.c_str(), signupData.fb_name.c_str(),
+							signupData.g_account.c_str(), signupData.mac.c_str(), signupData.os.c_str(),
+							signupData.phone.c_str(), signupData.t_account.c_str());
+					return sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand,
+					STATUS_ROK, nSequence);
+				}
+
+			}
+		}
+	}
+
+	_log("[Server Center] Signup Fail, Can't get Signup data Socket FD:%d, Service Type: %d", nSocket, nType);
+	return sendCommand(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR,
+			nSequence);
+
 }
 

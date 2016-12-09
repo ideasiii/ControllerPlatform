@@ -16,6 +16,7 @@
 using namespace std;
 
 class CCmpHandler;
+class CSqliteHandler;
 
 class CServerCenter: public CSocketServer
 {
@@ -39,7 +40,9 @@ private:
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
 	map<int, CBFun> mapCallback;
 	map<int, int> mapClient;
+	CSqliteHandler *sqlite;
 
 };
