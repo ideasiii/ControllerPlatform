@@ -11,6 +11,7 @@ export MODULES=global_inc \
 			 sqliteHandler	\
 			 jsonHandler \
 			 logHandler \
-			 processHandler
+			 processHandler \
+			 timerHandler
 			 
 #export EXT_MODULES=extInclude

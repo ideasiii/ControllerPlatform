@@ -15,11 +15,19 @@
 #include "JSONObject.h"
 #include "AMXCommand.h"
 #include "ICallback.h"
+#include "CTimer.h"
+
+#define TIMER_BUSY	666
 
 static CServerDevice * serverDevice = 0;
 
+void OnTimer(int param)
+{
+	serverDevice->onTimer(param);
+}
+
 CServerDevice::CServerDevice() :
-		CSocketServer(), cmpParser(CCmpHandler::getInstance())
+		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mTimerId(0)
 {
 	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
 	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
@@ -149,8 +157,19 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 			string strCommand = getAMXControlRequest(nFunction, nDevice, nControl);
 			if (!strCommand.empty())
 			{
-				nStatus = STATUS_ROK;
-				(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
+				if (mnBusy)
+				{
+					nStatus = STATUS_RSYSBUSY;
+					_log("[Server Device] AMX Control Request Fail, System Busy, Socket FD:%d", nSocket);
+				}
+				else
+				{
+					mnBusy = TRUE;
+					_log("[Server Device] AMX Controller Busy set to True");
+					nStatus = STATUS_ROK;
+					(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
+					mTimerId = SetTimer(TIMER_BUSY, 5, 0, OnTimer);
+				}
 			}
 			else
 			{
@@ -281,5 +300,14 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 				strJSON.c_str());
 		if (0 >= nRet)
 			break;
+	}
+}
+
+void CServerDevice::onTimer(int nId)
+{
+	if (TIMER_BUSY == nId)
+	{
+		mnBusy = FALSE;
+		_log("[Server Device] AMX Controller Busy set to False");
 	}
 }

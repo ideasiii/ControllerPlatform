@@ -30,6 +30,7 @@ public:
 	void broadcastAMXStatus(string strStatus);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
+	void onTimer(int nId);
 
 private:
 	CServerDevice();
@@ -42,5 +43,7 @@ private:
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
 	map<int, CBFun> mapCallback;
 	map<int, int> mapClient;
+	volatile int mnBusy;
+	timer_t mTimerId;
 
 };
