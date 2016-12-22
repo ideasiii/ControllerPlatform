@@ -17,7 +17,7 @@
 #include "ICallback.h"
 #include "CTimer.h"
 
-#define TIMER_BUSY	666
+#define TIMER_ID_AMX_BUSY	666
 
 static CServerDevice * serverDevice = 0;
 
@@ -27,7 +27,7 @@ void OnTimer(int param)
 }
 
 CServerDevice::CServerDevice() :
-		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mTimerId(0)
+		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mAmxBusyTimeout(5)
 {
 	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
 	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
@@ -168,7 +168,7 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 					_log("[Server Device] AMX Controller Busy set to True");
 					nStatus = STATUS_ROK;
 					(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-					mTimerId = SetTimer(TIMER_BUSY, 5, 0, OnTimer);
+					SetTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0, OnTimer);
 				}
 			}
 			else
@@ -305,9 +305,15 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 
 void CServerDevice::onTimer(int nId)
 {
-	if (TIMER_BUSY == nId)
+	if (TIMER_ID_AMX_BUSY == nId)
 	{
 		mnBusy = FALSE;
 		_log("[Server Device] AMX Controller Busy set to False");
 	}
+}
+
+void CServerDevice::setAmxBusyTimeout(int nSec)
+{
+	mAmxBusyTimeout = nSec;
+	_log("[Server Device] Set AMX Busy Timeout: %d seconds", mAmxBusyTimeout);
 }

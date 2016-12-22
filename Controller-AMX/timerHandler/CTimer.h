@@ -16,4 +16,4 @@ typedef void (*TimerCBFun)(int param);
  *   TimerCBFun: callback function
  */
 extern timer_t SetTimer(int nId, int nSec, int nInterSec, TimerCBFun);
-extern void KillTimer(timer_t ntId, int nId);
+extern void KillTimer(int nId);

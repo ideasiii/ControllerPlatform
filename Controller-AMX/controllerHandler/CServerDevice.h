@@ -31,6 +31,7 @@ public:
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
 	void onTimer(int nId);
+	void setAmxBusyTimeout(int nSec);
 
 private:
 	CServerDevice();
@@ -44,6 +45,6 @@ private:
 	map<int, CBFun> mapCallback;
 	map<int, int> mapClient;
 	volatile int mnBusy;
-	timer_t mTimerId;
+	int mAmxBusyTimeout;
 
 };

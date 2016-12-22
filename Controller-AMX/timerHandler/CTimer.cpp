@@ -12,12 +12,12 @@
 #include <string.h>
 #include <unistd.h>
 #include "CTimer.h"
-#include "LogHandler.h"
 #include <map>
 
 using namespace std;
 
 map<int, TimerCBFun> mapCBF;
+map<int, timer_t> mapTimerId;
 
 void handle(union sigval v)
 {
@@ -29,6 +29,8 @@ void handle(union sigval v)
 
 timer_t SetTimer(int nId, int nSec, int nInterSec, TimerCBFun tcbf)
 {
+
+	KillTimer(nId);
 
 	struct sigevent evp;
 	struct itimerspec ts;
@@ -43,12 +45,12 @@ timer_t SetTimer(int nId, int nSec, int nInterSec, TimerCBFun tcbf)
 
 	if (-1 == timer_create(CLOCK_REALTIME, &evp, &timerid))
 	{
-		_log("timer_create fail");
+		printf("[Timer] timer_create fail\n");
 		return 0;
 	}
 
-	_log("Set Timer %d Seconds, Id = %d", nSec, nId);
 	mapCBF[nId] = tcbf;
+	mapTimerId[nId] = timerid;
 
 	ts.it_interval.tv_sec = nInterSec; // after first start then every time due.
 	ts.it_interval.tv_nsec = 0;
@@ -59,20 +61,33 @@ timer_t SetTimer(int nId, int nSec, int nInterSec, TimerCBFun tcbf)
 	{
 		if (mapCBF.find(nId) != mapCBF.end())
 			mapCBF.erase(nId);
+		if (mapTimerId.find(nId) != mapTimerId.end())
+			mapTimerId.erase(nId);
+		printf("[Timer] timer_settime fail");
 		return 0;
 	}
 
-	_log("Set Timer Success, Timer Id = %d", timerid);
-	return timerid;
+	printf("[Timer] Timer Create Success Id = %ld\n", (long) mapTimerId[nId]);
+	return mapTimerId[nId];
 }
 
-void KillTimer(timer_t ntId, int nId)
+void KillTimer(int nId)
 {
-	if (0 >= ntId)
-		return;
-	timer_delete(ntId);
 	if (mapCBF.find(nId) != mapCBF.end())
+	{
 		mapCBF.erase(nId);
-	_log("[Timer] Kill Timer, timer id = %d, id = %d", ntId, nId);
+	}
+
+	if (mapTimerId.find(nId) != mapTimerId.end())
+	{
+		struct itimerspec curr_value;
+		if (-1 != timer_gettime(mapTimerId[nId], &curr_value))
+		{
+			timer_delete(mapTimerId[nId]);
+			printf("[Timer] Kill timer id = %ld\n", (long) mapTimerId[nId]);
+		}
+
+		mapTimerId.erase(nId);
+	}
 }
 

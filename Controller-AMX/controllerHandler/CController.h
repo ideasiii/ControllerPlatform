@@ -35,6 +35,7 @@ public:
 	void stopServer();
 	void onAMXCommand(string strCommand);
 	void onAMXResponseStatus(string strStatus);
+	void setAMXBusyTimer(int nSec);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);

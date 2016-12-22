@@ -87,12 +87,13 @@ void runService()
 				{
 					_log("[Controller] Create Server DEVICE Service Success. Port : %d , Message ID : %d", nTmp,
 							nMsgID);
+					string strTimer = config->getValue("TIMER", "amx_busy");
+					if (!strTimer.empty())
+					{
+						convertFromString(nTmp, strTimer);
+						controller->setAMXBusyTimer(nTmp);
+					}
 				}
-			}
-
-			if (0 == config->getValue("CENTER", "enable").compare("yes"))
-			{
-				convertFromString(nTmp, config->getValue("CENTER", "port"));
 			}
 		}
 		else
