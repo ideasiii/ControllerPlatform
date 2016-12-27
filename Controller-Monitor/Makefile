@@ -1,14 +1,14 @@
 #####################################
-# ControllerAmx make file
-# Created on: 2016-07-05
+# Controller Monitor make file
+# Created on: 2016-12-27
 # Author: Jugo
-# Project: Smart Building
+# Project: Process Monitor
 #####################################
 
 include env.mk
 include modules.mk
 
-TARGET    := controller-amx
+TARGET    := controller-monitor
 CC        := g++
 LD        := g++
 
