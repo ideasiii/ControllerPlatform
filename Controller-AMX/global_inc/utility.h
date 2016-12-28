@@ -15,6 +15,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <cstdarg>
+#include <cstdio>
+#include <string.h>
 
 using namespace std;
 
@@ -113,4 +116,21 @@ __attribute__ ((unused)) static bool isValidStr(const char *szStr, int nMaxSize)
 		return true;
 	else
 		return false;
+}
+
+__attribute__ ((unused)) static std::string format(const char* fmt, ...)
+{
+	va_list vl;
+
+	va_start(vl, fmt);
+	int size = vsnprintf(0, 0, fmt, vl) + sizeof('\0');
+	va_end(vl);
+
+	char buffer[size];
+
+	va_start(vl, fmt);
+	size = vsnprintf(buffer, size, fmt, vl);
+	va_end(vl);
+
+	return std::string(buffer, size);
 }

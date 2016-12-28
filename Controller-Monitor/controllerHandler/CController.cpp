@@ -18,45 +18,13 @@
 #include "CDataHandler.cpp"
 #include "CSqliteHandler.h"
 #include "CThreadHandler.h"
-#include "CServerAMX.h"
-#include "CServerDevice.h"
-#include "AMXCommand.h"
 #include "JSONObject.h"
+#include "JSONArray.h"
 #include "ICallback.h"
 
 using namespace std;
 
 static CController * controller = 0;
-
-/** Callback Function AMX Request from Mobile **/
-void IonAMXCommandControl(void* param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void IonAMXCommandStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void CController::onAMXCommand(string strCommand)
-{
-	serverAMX->sendCommand(strCommand);
-}
-
-/** Callback Function AMX Response from AMX **/
-void IonAMXResponseStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXResponseStatus(strParam);
-}
-
-void CController::onAMXResponseStatus(string strStatus)
-{
-	serverDevice->broadcastAMXStatus(strStatus);
-}
 
 /**
  * Define Socket Client ReceiveFunction
@@ -74,35 +42,6 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
 	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
 	return 0;
-}
-
-/**
- *  Define extern function.
- */
-int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
-{
-	if (NULL == socket)
-	{
-		_log("[Controller] Send Command Fail, Socket invalid");
-		return -1;
-	}
-	int nRet = -1;
-	int nCommandSend;
-	CMP_HEADER cmpHeader;
-	void *pHeader = &cmpHeader;
-
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-	nCommandSend = nCommand;
-
-	if (isResp)
-	{
-		nCommandSend = generic_nack | nCommand;
-	}
-
-	controller->cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller] Send", nSocket);
-	return nRet;
 }
 
 int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int nSequence, const char * szData)
@@ -143,9 +82,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 }
 
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
-				CServerDevice::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
-				new CThreadHandler)
+		CObject(), cmpParser(CCmpHandler::getInstance()), sqlite(0), tdEnquireLink(new CThreadHandler)
 {
 
 }
@@ -168,23 +105,8 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
-		break;
-	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		serverDevice->onReceive(nId, pData);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
-		serverAMX->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
-		serverAMX->deleteClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
-		serverDevice->deleteClient(nId);
+	case EVENT_COMMAND_SOCKET_TCP_RECEIVE:
+
 		break;
 	default:
 		_log("[Controller] Unknow message command: %d", nCommand);
@@ -192,32 +114,41 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
+int CController::start(string strDB)
 {
-	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(strIP, nPort, nMsqId);
-}
+	if (strDB.empty())
+		return FALSE;
 
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
-{
-	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
-}
+	sqlite = new CSqliteHandler();
+	if (0 == sqlite)
+		return FALSE;
 
-void CController::stopServer()
-{
-	if (serverAMX)
+	string strSQL =
+			"CREATE TABLE IF NOT EXISTS cpu(pre_cpu_time TEXT , cur_cpu_time TEXT, total_delta_time TEXT, total_cpu_idle TEXT, cpu_usage TEXT,`create_time`	date DEFAULT (datetime('now','localtime')) );";
+	;
+	list<string> listTable;
+	listTable.push_back(strSQL);
+	if (!sqlite->connectDB(strDB, listTable))
+		return FALSE;
+
+	// test
+	for (int i = 0; i < 100; ++i)
 	{
-		serverAMX->stopServer();
-		delete serverAMX;
-		serverAMX = 0;
+		strSQL =
+				format(
+						"INSERT INTO cpu(pre_cpu_time , cur_cpu_time , total_delta_time , total_cpu_idle , cpu_usage ) VALUES('%d','%d','%d','%d','%d')",
+						100 + i, 200 + i, 300 + i, 400 + i, 500 + i);
+		sqlite->sqlExec(strSQL);
 	}
 
-	if (serverDevice)
-	{
-		serverDevice->stopServer();
-		delete serverDevice;
-		serverDevice = 0;
-	}
+	JSONArray jsonArray;
+	sqlite->query("SELECT * FROM cpu", jsonArray);
+	_log("[Controller] monitor data: %s", jsonArray.toString().c_str());
+
+	return TRUE;
+}
+
+int CController::stop()
+{
+	return FALSE;
 }

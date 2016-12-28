@@ -61,38 +61,10 @@ void runService()
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
 		if (controller->initMessage(nMsgID))
 		{
-			if (0 == config->getValue("SERVER AMX", "enable").compare("yes"))
+			if (!controller->start(config->getValue("SQLITE", "db_monitor")))
 			{
-				convertFromString(nTmp, config->getValue("SERVER AMX", "port"));
-				if (!controller->startServerAMX(config->getValue("SERVER AMX", "ip"), nTmp, nMsgID))
-				{
-					nInit = FALSE;
-					_log("[Controller] Create Server AMX Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
-				else
-				{
-					_log("[Controller] Create Server AMX Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
-			}
-
-			if (0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
-			{
-				convertFromString(nTmp, config->getValue("SERVER DEVICE", "port"));
-				if (!controller->startServerDevice(config->getValue("SERVER DEVICE", "ip"), nTmp, nMsgID))
-				{
-					nInit = FALSE;
-					_log("[Controller] Create Server DEVICE Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
-				else
-				{
-					_log("[Controller] Create Server DEVICE Service Success. Port : %d , Message ID : %d", nTmp,
-							nMsgID);
-				}
-			}
-
-			if (0 == config->getValue("CENTER", "enable").compare("yes"))
-			{
-				convertFromString(nTmp, config->getValue("CENTER", "port"));
+				nInit = FALSE;
+				_log("[Controller] Start Service Fail");
 			}
 		}
 		else
@@ -111,11 +83,11 @@ void runService()
 
 	if (TRUE == nInit)
 	{
-		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
+		controller->stop();
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
-		controller->stopServer();
 	}
 	delete controller;
 }
