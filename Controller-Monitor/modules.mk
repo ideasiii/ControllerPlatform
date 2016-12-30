@@ -12,6 +12,7 @@ controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/timerHandler
+../Global/timerHandler \
+../Global/monitorHandler
 			 
 #export EXT_MODULES=

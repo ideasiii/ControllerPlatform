@@ -8,7 +8,6 @@
 #include <list>
 #include <ctime>
 
-
 #include "CSocketServer.h"
 #include "CSocketClient.h"
 #include "event.h"
@@ -20,12 +19,26 @@
 #include "CThreadHandler.h"
 #include "JSONObject.h"
 #include "JSONArray.h"
-#include "ICallback.h"
 #include "packet.h"
+#include "CTimer.h"
+#include "CCpuInfo.h"
 
 using namespace std;
 
 static CController * controller = 0;
+
+void onTimer(int nId)
+{
+	if (controller)
+	{
+		controller->OnTimer(nId);
+	}
+}
+
+void CController::OnTimer(int nId)
+{
+	_log("[Controller] Start Monitor");
+}
 
 /**
  * Define Socket Client ReceiveFunction
@@ -44,8 +57,6 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
 	return 0;
 }
-
-
 
 CController::CController() :
 		CObject(), cmpParser(CCmpHandler::getInstance()), sqlite(0), tdEnquireLink(new CThreadHandler)
@@ -98,19 +109,22 @@ int CController::start(string strDB)
 		return FALSE;
 
 	// test
-	for (int i = 0; i < 100; ++i)
-	{
-		strSQL =
-				format(
-						"INSERT INTO cpu(pre_cpu_time , cur_cpu_time , total_delta_time , total_cpu_idle , cpu_usage ) VALUES('%d','%d','%d','%d','%d')",
-						100 + i, 200 + i, 300 + i, 400 + i, 500 + i);
-		sqlite->sqlExec(strSQL);
-	}
+	/*
+	 for (int i = 0; i < 100; ++i)
+	 {
+	 strSQL =
+	 format(
+	 "INSERT INTO cpu(pre_cpu_time , cur_cpu_time , total_delta_time , total_cpu_idle , cpu_usage ) VALUES('%d','%d','%d','%d','%d')",
+	 100 + i, 200 + i, 300 + i, 400 + i, 500 + i);
+	 sqlite->sqlExec(strSQL);
+	 }
 
-	JSONArray jsonArray;
-	sqlite->query("SELECT * FROM cpu", jsonArray);
-	_log("[Controller] monitor data: %s", jsonArray.toString().c_str());
+	 JSONArray jsonArray;
+	 sqlite->query("SELECT * FROM cpu", jsonArray);
+	 _log("[Controller] monitor data: %s", jsonArray.toString().c_str());
+	 */
 
+	SetTimer(666, 3, 3, onTimer);
 	return TRUE;
 }
 

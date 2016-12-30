@@ -29,6 +29,7 @@ public:
 	static CController* getInstance();
 	int start(string strDB);
 	int stop();
+	void OnTimer(int nId);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
