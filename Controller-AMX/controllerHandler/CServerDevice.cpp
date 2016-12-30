@@ -8,7 +8,6 @@
 #include "CServerDevice.h"
 #include "IReceiver.h"
 #include "event.h"
-#include "packet.h"
 #include "common.h"
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
@@ -16,6 +15,7 @@
 #include "AMXCommand.h"
 #include "ICallback.h"
 #include "CTimer.h"
+#include "packet.h"
 
 #define TIMER_ID_AMX_BUSY	666
 
@@ -112,8 +112,9 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
 	{
-		sendCommand(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, true,
-				dynamic_cast<CSocket*>(serverDevice));
+		sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocketFD, generic_nack | cmpHeader.command_id,
+		STATUS_RINVCMDID, cmpHeader.sequence_number, 0);
+
 		return;
 	}
 
@@ -126,14 +127,14 @@ int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void 
 
 	mapClient[nSocket] = nSocket;
 	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
-	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 
 int CServerDevice::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	deleteClient(nSocket);
-	sendCommand(nSocket, nCommand, STATUS_ROK, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 
@@ -188,7 +189,7 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 	{
 		_log("[Server Device] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
-	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, nStatus, nSequence, 0);
 	rData.clear();
 	return FALSE;
 }
@@ -240,7 +241,7 @@ int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const 
 	{
 		_log("[Server Device] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
 	}
-	sendCommand(nSocket, nCommand, nStatus, nSequence, true, dynamic_cast<CSocket*>(serverDevice));
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, nStatus, nSequence, 0);
 	rData.clear();
 	return FALSE;
 }
@@ -296,8 +297,8 @@ void CServerDevice::broadcastAMXStatus(string strStatus)
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
 		_log("[Server Device] Broadcast AMX Status: %s to Socket:%d", strJSON.c_str(), it->first);
-		nRet = cmpSend(dynamic_cast<CSocket*>(serverDevice), it->first, amx_broadcast_status_request, getSequence(),
-				strJSON.c_str());
+		nRet = sendPacket(dynamic_cast<CSocket*>(serverDevice), it->first, amx_broadcast_status_request, STATUS_ROK,
+				getSequence(), strJSON.c_str());
 		if (0 >= nRet)
 			break;
 	}

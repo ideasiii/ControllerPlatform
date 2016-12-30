@@ -8,7 +8,7 @@
 #include <list>
 #include <ctime>
 
-#include "CSocket.h"
+
 #include "CSocketServer.h"
 #include "CSocketClient.h"
 #include "event.h"
@@ -21,6 +21,7 @@
 #include "JSONObject.h"
 #include "JSONArray.h"
 #include "ICallback.h"
+#include "packet.h"
 
 using namespace std;
 
@@ -44,42 +45,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int nSequence, const char * szData)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
 
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	controller->cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
-	if (0 != szData)
-	{
-		memcpy(pIndex, szData, strlen(szData));
-		pIndex += strlen(szData);
-		nBody_len += strlen(szData);
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-	}
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-	nRet = socket->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] Send", nSocket);
-
-	string strLog;
-	if (0 >= nRet)
-	{
-		_log("[Controller] CMP Send Fail socket: %d", nSocket);
-	}
-
-	return nRet;
-}
 
 CController::CController() :
 		CObject(), cmpParser(CCmpHandler::getInstance()), sqlite(0), tdEnquireLink(new CThreadHandler)

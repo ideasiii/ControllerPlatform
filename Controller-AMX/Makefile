@@ -28,7 +28,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lm -lrt -ldl \
 			-lsqlite3
 					
-vpath %.cpp $(SRC_DIR)
+vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 
 define make-goal
 $1/%.o: %.cpp
@@ -81,6 +81,7 @@ clean:
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
+	@rm -rf $(DIR_APP_ROOT)Global
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs
