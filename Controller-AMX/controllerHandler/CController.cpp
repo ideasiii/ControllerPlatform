@@ -16,7 +16,6 @@
 #include "CCmpHandler.h"
 #include "CController.h"
 #include "CDataHandler.cpp"
-#include "CSqliteHandler.h"
 #include "CThreadHandler.h"
 #include "CServerAMX.h"
 #include "CServerDevice.h"
@@ -144,8 +143,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 
 CController::CController() :
 		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
-				CServerDevice::getInstance()), sqlite(CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(
-				new CThreadHandler)
+				CServerDevice::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler)
 {
 
 }

@@ -11,6 +11,7 @@ controllerHandler \
 ../Global/sqliteHandler	\
 ../Global/jsonHandler \
 ../Global/logHandler \
-../Global/processHandler
+../Global/processHandler \
+../Global/timerHandler
 			 
 #export EXT_MODULES=

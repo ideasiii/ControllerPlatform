@@ -67,7 +67,6 @@ lib:
 checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
-	@mkdir -p libs
 	
 clean:
 	@for libName in ${MODULES} ; do \

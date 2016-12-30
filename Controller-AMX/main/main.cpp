@@ -17,7 +17,6 @@
 #include "CConfig.h"
 #include "utility.h"
 #include "common.h"
-#include "CSqliteHandler.h"
 
 using namespace std;
 
@@ -112,7 +111,7 @@ void runService()
 
 	if (TRUE == nInit)
 	{
-		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;

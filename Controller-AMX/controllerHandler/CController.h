@@ -18,7 +18,6 @@
 using namespace std;
 
 class CCmpHandler;
-class CSqliteHandler;
 class CThreadHandler;
 class CJsonHandler;
 class CServerAMX;
@@ -49,7 +48,6 @@ public:
 private:
 	CServerAMX *serverAMX;
 	CServerDevice *serverDevice;
-	CSqliteHandler *sqlite;
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
