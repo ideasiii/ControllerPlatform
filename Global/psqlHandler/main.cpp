@@ -69,8 +69,25 @@ int main()
 		do_exit(conn);
 	}
 
-	PQclear(res);
+	res = PQexec(conn, "SELECT * FROM tracker_user");
 
+	if (PQresultStatus(res) != PGRES_TUPLES_OK)
+	{
+
+		printf("No data retrieved\n");
+		PQclear(res);
+		do_exit(conn);
+	}
+
+	int rows = PQntuples(res);
+
+	for (int i = 0; i < rows; i++)
+	{
+
+		printf("%s %s %s\n", PQgetvalue(res, i, 0), PQgetvalue(res, i, 1), PQgetvalue(res, i, 11));
+	}
+
+	PQclear(res);
 	PQfinish(conn);
 
 	return 0;
