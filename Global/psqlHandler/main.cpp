@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <libpq-fe.h>
 #include <string>
+#include <map>
+#include <list>
+
+#include "CPsqlHandler.h"
 
 using namespace std;
 
@@ -19,9 +23,58 @@ void do_exit(PGconn *conn)
 	exit(1);
 }
 
+void handler()
+{
+	CPsqlHandler *psql = new CPsqlHandler();
+	if (psql->open("175.98.119.121", "5432", "tracker", "tracker", "ideas123!"))
+	{
+		printf("Connect Postgresql Success\n");
+		time_t now = time(0);
+		struct tm tstruct;
+		char buf[80];
+		tstruct = *localtime(&now);
+		strftime(buf, sizeof(buf), "%Y%m%d%X", &tstruct);
+
+		// insert record
+		string strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "','testhandler')";
+		psql->sqlExec(strSQL.c_str());
+
+		// insert record use trans
+		list<string> listSQL;
+		strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "2" + "','testhandlerttttt1')";
+		listSQL.push_back(strSQL);
+		strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "3" + "','testhandlerttttt22222')";
+		listSQL.push_back(strSQL);
+		psql->sqlExec(listSQL);
+
+		// query db
+		strSQL = "SELECT * FROM tracker_user";
+		list<map<string, string> > listRest;
+		psql->query(strSQL.c_str(), listRest);
+
+		string strField;
+		string strValue;
+		map<string, string> mapItem;
+		int nCount = 1;
+		for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
+		{
+			mapItem = *i;
+			for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+			{
+				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+			}
+			printf("=============================%d================================\n", nCount);
+		}
+
+		psql->close();
+	}
+	delete psql;
+}
+
 int main()
 {
-
+	handler();
+	return 0;
 	//char *conninfo = "hostaddr=175.98.119.121 port=5432 dbname=tracker user=tracker password=ideas123!";
 	//PGconn *conn = PQconnectdb(conninfo);
 	PGconn *conn = PQsetdbLogin("175.98.119.121", "5432", NULL, NULL, "tracker", "tracker", "ideas123!");

@@ -14,6 +14,7 @@ SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/postgresql
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
+
 		
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
@@ -48,6 +49,7 @@ bin/$(TARGET): $(OBJ)
 	@echo "\n"
 		
 checkdirs:
+	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
 	
 clean:

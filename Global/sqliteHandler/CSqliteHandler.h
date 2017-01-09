@@ -10,6 +10,7 @@
 #include <string>
 #include <list>
 
+
 class sqlite3;
 class JSONArray;
 
@@ -19,8 +20,8 @@ public:
 	explicit CSqliteHandler();
 	virtual ~CSqliteHandler();
 
-	int connectDB(std::string strDBPath, std::list<std::string> listTable);
 	int sqlExec(std::string strSQL);
+	int connectDB(std::string strDBPath, std::list<std::string> listTable);
 	int query(std::string strSQL, JSONArray &jsonArray);
 	void close();
 
