@@ -188,7 +188,6 @@ int CSocketClient::runDataHandler(int nClientFD)
 	int result;
 	char pBuf[BUF_SIZE];
 	void* pvBuf = pBuf;
-	char szTmp[16];
 
 	/**
 	 * clientSockaddr is used for UDP server send packet to client.
@@ -247,7 +246,6 @@ int CSocketClient::runDataHandler(int nClientFD)
 int CSocketClient::runCMPHandler(int nClientFD)
 {
 	int result = 0;
-	char szTmp[16];
 	int nTotalLen = 0;
 	int nBodyLen = 0;
 	int nCommand = generic_nack;
@@ -258,7 +256,6 @@ int CSocketClient::runCMPHandler(int nClientFD)
 	void* pBody = &cmpPacket.cmpBody;
 
 	CMP_HEADER cmpHeader;
-	void *pHeaderResp = &cmpHeader;
 	int nCommandResp;
 
 	/**

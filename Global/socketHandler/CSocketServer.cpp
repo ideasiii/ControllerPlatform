@@ -259,7 +259,7 @@ int CSocketServer::runCMPHandler(int nClientFD)
 	void* pBody = &cmpPacket.cmpBody;
 
 	CMP_HEADER cmpHeader;
-	void *pHeaderResp = &cmpHeader;
+	//void *pHeaderResp = &cmpHeader;
 	int nCommandResp;
 
 	/**

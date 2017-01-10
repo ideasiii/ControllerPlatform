@@ -1,19 +1,102 @@
 #####################################
-# make file
-# Created on: 2016-07-26
+# Controller Module make file
+# Created on: 2017-01-10
 # Author: Jugo
+# Project: Build Library
 #####################################
 
+include env.mk
+include modules.mk
+include libs.mk
 
-.PHONY: all clean
+TARGET    := controller-module
+CC        := g++
+LD        := g++
 
-all:
-	@echo -ne '\n###### Just Global Module not to Build ######\n'
+SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
+BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
+SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
+OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+
+LDLIBS    := $(LIB_LINK) \
+			-L$(DIR_APP_ROOT)libs \
+			-L/lib64 \
+			-L/usr/lib64 \
+			-L/usr/lib64/x86_64-linux-gnu \
+			-L/usr/lib/x86_64-linux-gnu \
+			-lpthread \
+			-lm -lrt -ldl \
+			-lpq \
+			-lsqlite3
+					
+vpath %.cpp $(SRC_DIR)
+
+define make-goal
+$1/%.o: %.cpp
+	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	@echo -ne '###### $1 Object Build Done. ######\n'
+	@echo "\n"
+endef
+
+.PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
+
+.IGNORE: clean cleanAll
+
+all: checkdirs lib bin/$(TARGET)
+	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
-clean:
-	@echo -ne '\n###### Just Global Module not to Clean ######\n'
+init: package-u checkdirs bin/$(TARGET)
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
+
+bin/$(TARGET): $(OBJ)
+	@echo -ne '\n###### Start Build $(TARGET) ######\n'
+	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
+	strip -s $@
+	@echo "\n"
+
+lib:
+	@for libName in ${LIB_NAMES} ; do \
+		$(MAKE) V=99 -C $$libName static; \
+		mkdir -p $(DIR_APP_ROOT)libs/${LIB_NAMES}/heads; \
+		cp ${LIB_NAMES}/lib/*.a $(DIR_APP_ROOT)libs/${LIB_NAMES}; \
+		cp ${LIB_NAMES}/*.h $(DIR_APP_ROOT)libs/${LIB_NAMES}/heads; \
+	done
+	@echo -ne '\n###### All Library Build Done. ######\n'
+	@echo "\n"
+		
+checkdirs:
+	@mkdir -p $(BUILD_DIR)
+	@mkdir -p bin
+	@mkdir -p libs
+	
+clean:
+	@for libName in ${MODULES} ; do \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
+	done
+	@for libName in ${LIB_NAMES} ; do \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
+	done
+	@rm -rf $(DIR_APP_ROOT)build
+	@rm -rf $(DIR_APP_ROOT)bin
+
+cleanAll: clean
+	@rm -rf $(DIR_APP_ROOT)libs
+	
+mk_debug:
+	@echo "\n"
+	@echo 'Program Name    : '$(TARGET)
+	@echo 'Program Version : '$(VERSION)"\n"
+	@echo 'Source Director : '$(SRC_DIR)"\n"
+	@echo 'Source  : '$(SRC)"\n"
+	@echo 'Build Director  : '$(BUILD_DIR)"\n"
+	@echo 'Link Library    : '$(LDLIBS)"\n"
+	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
+	@echo 'Libs:'${LIB_NAMES}"\n"
 	
 package-s:
 	yum -y install sqlite-devel.x86_64
@@ -27,7 +110,7 @@ package-u:
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
-	apt-get -y install libpq-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
-
+	
+$(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

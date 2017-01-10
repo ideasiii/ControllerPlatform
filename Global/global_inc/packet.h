@@ -216,7 +216,7 @@ __attribute__ ((unused)) static int sendPacket(CSocket *socket, const int nSocke
 	int nTotal_len = 0;
 
 	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
+	//void *pHeader = &packet.cmpHeader;
 	char *pIndex = packet.cmpBody.cmpdata;
 
 	memset(&packet, 0, sizeof(CMP_PACKET));
