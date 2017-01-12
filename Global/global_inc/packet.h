@@ -208,44 +208,4 @@ __attribute__ ((unused)) inline static int getSequence()
 	return msnSequence;
 }
 
-__attribute__ ((unused)) static int sendPacket(CSocket *socket, const int nSocket, const int nCommandId,
-		const int nStatus, const int nSequence, const char * szData)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
 
-	CMP_PACKET packet;
-	//void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	packet.cmpHeader.command_id = htonl(nCommandId);
-	packet.cmpHeader.command_status = htonl(nStatus);
-	packet.cmpHeader.sequence_number = htonl(nSequence);
-	packet.cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
-
-	if (0 != szData)
-	{
-		memcpy(pIndex, szData, strlen(szData));
-		pIndex += strlen(szData);
-		nBody_len += strlen(szData);
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-	}
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-	nRet = socket->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Packet] Send", nSocket);
-
-	string strLog;
-	if (0 >= nRet)
-	{
-		_log("[Packet] CMP Send Fail socket: %d", nSocket);
-	}
-
-	return nRet;
-}

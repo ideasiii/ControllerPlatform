@@ -62,9 +62,9 @@ bin/$(TARGET): $(OBJ)
 lib:
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName static; \
-		mkdir -p $(DIR_APP_ROOT)libs/${LIB_NAMES}/heads; \
-		cp ${LIB_NAMES}/lib/*.a $(DIR_APP_ROOT)libs/${LIB_NAMES}; \
-		cp ${LIB_NAMES}/*.h $(DIR_APP_ROOT)libs/${LIB_NAMES}/heads; \
+		mkdir -p $(DIR_APP_ROOT)libs/$$libName/heads; \
+		cp $$libName/lib/*.a $(DIR_APP_ROOT)libs/$$libName; \
+		cp $$libName/*.h $(DIR_APP_ROOT)libs/$$libName/heads; \
 	done
 	@echo -ne '\n###### All Library Build Done. ######\n'
 	@echo "\n"

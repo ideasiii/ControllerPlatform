@@ -8,7 +8,11 @@
 #LIB_NAMES := httpServerHandler \
 #			 socketHandler
 			 
-LIB_NAMES := socketHandler
+LIB_NAMES := \
+socketHandler \
+cmpHandler \
+configHandler \
+dataHandler
 				   
 LIB_INCLUDE := $(addprefix -I,$(LIB_NAMES))
 

@@ -8,6 +8,9 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "packet.h"
+#include "LogHandler.h"
+
 template<typename T>
 class CDataHandler;
 
@@ -15,24 +18,65 @@ using namespace std;
 
 class CCmpHandler
 {
-	public:
-		static CCmpHandler* getInstance();
-		virtual ~CCmpHandler();
-		int getCommand(const void *pData);
-		int getLength(const void *pData);
-		int getStatus(const void *pData);
-		int getSequence(const void *pData);
-		void formatHeader(int nCommand, int nStatus, int nSequence, void ** pHeader);
-		void formatRespPacket(int nCommand, int nStatus, int nSequence, void ** pHeader);
-		void formatReqPacket(int nCommand, int nStatus, int nSequence, void ** pHeader);
-		int formatPacket(int nCommand, void ** pPacket, int nBodyLen);
-		void getSourcePath(const void *pData, char **pPath);
-		int parseBody(int nCommand, const void *pData, CDataHandler<std::string> &rData);
-		bool isAckPacket(int nCommand);
-		int parseBody(const void *pData, vector<string> &vData);
+public:
+	static CCmpHandler* getInstance();
+	virtual ~CCmpHandler();
+	int getCommand(const void *pData);
+	int getLength(const void *pData);
+	int getStatus(const void *pData);
+	int getSequence(const void *pData);
+	void formatHeader(int nCommand, int nStatus, int nSequence, void ** pHeader);
+	void formatRespPacket(int nCommand, int nStatus, int nSequence, void ** pHeader);
+	void formatReqPacket(int nCommand, int nStatus, int nSequence, void ** pHeader);
+	int formatPacket(int nCommand, void ** pPacket, int nBodyLen);
+	void getSourcePath(const void *pData, char **pPath);
+	int parseBody(int nCommand, const void *pData, CDataHandler<std::string> &rData);
+	bool isAckPacket(int nCommand);
+	int parseBody(const void *pData, vector<string> &vData);
 
-	private:
-		CCmpHandler();
+private:
+	CCmpHandler();
 
 };
+
+__attribute__ ((unused)) static int sendPacket(CSocket *socket, const int nSocket, const int nCommandId,
+		const int nStatus, const int nSequence, const char * szData)
+{
+	int nRet = -1;
+	int nBody_len = 0;
+	int nTotal_len = 0;
+
+	CMP_PACKET packet;
+	char *pIndex = packet.cmpBody.cmpdata;
+
+	memset(&packet, 0, sizeof(CMP_PACKET));
+
+	packet.cmpHeader.command_id = htonl(nCommandId);
+	packet.cmpHeader.command_status = htonl(nStatus);
+	packet.cmpHeader.sequence_number = htonl(nSequence);
+	packet.cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
+
+	if (0 != szData)
+	{
+		memcpy(pIndex, szData, strlen(szData));
+		pIndex += strlen(szData);
+		nBody_len += strlen(szData);
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+	}
+
+	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
+	packet.cmpHeader.command_length = htonl(nTotal_len);
+	nRet = socket->socketSend(nSocket, &packet, nTotal_len);
+	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Packet] Send", nSocket);
+
+	string strLog;
+	if (0 >= nRet)
+	{
+		_log("[Packet] CMP Send Fail socket: %d", nSocket);
+	}
+
+	return nRet;
+}
 
