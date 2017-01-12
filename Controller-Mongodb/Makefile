@@ -106,11 +106,12 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	apt-get -y install scons
+	apt-get -y install libmongo-client-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
 mongoDB:
-	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install;
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
 	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
