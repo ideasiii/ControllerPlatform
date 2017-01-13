@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <list>
 #include "LogHandler.h"
-#include "CSocket.h"
 
 using namespace std;
 /*
@@ -207,5 +206,4 @@ __attribute__ ((unused)) inline static int getSequence()
 		msnSequence = 0x00000001;
 	return msnSequence;
 }
-
 
