@@ -14,4 +14,7 @@ psqlHandler \
 socketHandler	\
 sqliteHandler	\
 threadHandler	\
-timerHandler
+timerHandler \
+mongoDBHandler
+
+export EXT_MODULES=extInclude

@@ -10,7 +10,6 @@
 #include <string>
 #include <list>
 
-
 class sqlite3;
 class JSONArray;
 
@@ -22,6 +21,7 @@ public:
 
 	int sqlExec(std::string strSQL);
 	int connectDB(std::string strDBPath, std::list<std::string> listTable);
+	int connectDB(std::string strDBPath);
 	int query(std::string strSQL, JSONArray &jsonArray);
 	void close();
 

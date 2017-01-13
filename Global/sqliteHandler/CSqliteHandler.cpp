@@ -74,6 +74,32 @@ int CSqliteHandler::connectDB(string strDBPath, list<string> listTable)
 	return TRUE;
 }
 
+int CSqliteHandler::connectDB(string strDBPath)
+{
+	// initialize engine
+	int nRet;
+	if (SQLITE_OK != (nRet = sqlite3_initialize()))
+	{
+		_log("[Sqlite] Failed to initialize library: %d\n", nRet);
+		return FALSE;
+	}
+
+	if (0 != database)
+	{
+		close();
+	}
+
+	// open connection to a DB
+	if (SQLITE_OK
+			!= (nRet = sqlite3_open_v2(strDBPath.c_str(), &database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)))
+	{
+		_log("[Sqlite] Can't open database: %s", sqlite3_errmsg(database));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 void CSqliteHandler::close()
 {
 	sqlite3_close(database);

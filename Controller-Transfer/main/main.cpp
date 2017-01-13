@@ -61,7 +61,7 @@ void runService()
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
 		if (controller->initMessage(nMsgID))
 		{
-			if (!controller->start(config->getValue("SQLITE", "db_monitor")))
+			if (!controller->start())
 			{
 				nInit = FALSE;
 				_log("[Controller] Start Service Fail");

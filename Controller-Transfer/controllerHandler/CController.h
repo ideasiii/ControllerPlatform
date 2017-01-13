@@ -18,15 +18,15 @@
 using namespace std;
 
 class CSqliteHandler;
-class CThreadHandler;
-class CJsonHandler;
+class CPsqlHandler;
+class CMongoDBHandler;
 
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int start(string strDB);
+	int start();
 	int stop();
 	void OnTimer(int nId);
 
@@ -38,6 +38,7 @@ private:
 
 private:
 	CSqliteHandler *sqlite;
-	CThreadHandler *tdEnquireLink;
-	std::vector<int> vEnquireLink;
+	CPsqlHandler *psql;
+	CMongoDBHandler *mongo;
+
 };

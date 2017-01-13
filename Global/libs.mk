@@ -12,7 +12,8 @@ LIB_NAMES := \
 socketHandler \
 cmpHandler \
 configHandler \
-dataHandler
+dataHandler \
+mongoDBHandler
 				   
 LIB_INCLUDE := $(addprefix -I,$(LIB_NAMES))
 

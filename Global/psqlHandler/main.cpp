@@ -87,13 +87,9 @@ int main()
 		do_exit(conn);
 	}
 
-	char *user = PQuser(conn);
-	char *db_name = PQdb(conn);
-	char *pswd = PQpass(conn);
-
-	printf("User: %s\n", user);
-	printf("Database name: %s\n", db_name);
-	printf("Password: %s\n", pswd);
+	printf("User: %s\n", PQuser(conn));
+	printf("Database name: %s\n", PQdb(conn));
+	printf("Password: %s\n", PQpass(conn));
 
 	// PQparameterStatus
 	//

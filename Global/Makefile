@@ -19,6 +19,7 @@ SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdi
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
 LDLIBS    := $(LIB_LINK) \
 			-L$(DIR_APP_ROOT)libs \
@@ -29,13 +30,19 @@ LDLIBS    := $(LIB_LINK) \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lpq \
-			-lsqlite3
+			-lsqlite3 \
+			-lmongoclient \
+			-lboost_thread \
+			-lboost_system \
+			-lboost_filesystem \
+			-lboost_regex \
+			-lboost_program_options
 					
 vpath %.cpp $(SRC_DIR)
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) $(EXT_INCLUDES)
 	@echo -ne '###### $1 Object Build Done. ######\n'
 	@echo "\n"
 endef
@@ -81,6 +88,9 @@ clean:
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
+	@for libName in ${EXT_MODULES} ; do \
+		$(MAKE) V=99 -C $$libName clean; \
+	done
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 
@@ -111,6 +121,13 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
+	@echo "\n"
+	
+mongoDB:
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
+	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
+	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
+	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

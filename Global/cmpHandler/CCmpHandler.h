@@ -10,6 +10,7 @@
 #include <vector>
 #include "packet.h"
 #include "LogHandler.h"
+#include "CSocket.h"
 
 template<typename T>
 class CDataHandler;

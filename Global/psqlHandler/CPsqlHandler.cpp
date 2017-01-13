@@ -32,6 +32,18 @@ int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbNam
 		return 0;
 	}
 
+	printf("[CPsqlHandler] Connection to database Success\n");
+	printf("User: %s\n", PQuser(conn));
+	printf("Database name: %s\n", PQdb(conn));
+	printf("Password: %s\n", PQpass(conn));
+	printf("server_version: %s\n", PQparameterStatus(conn, "server_version"));
+	printf("server_encoding: %s\n", PQparameterStatus(conn, "server_encoding"));
+	printf("client_encoding: %s\n", PQparameterStatus(conn, "client_encoding"));
+	printf("session_authorization: %s\n", PQparameterStatus(conn, "session_authorization"));
+	printf("DateStyle: %s\n", PQparameterStatus(conn, "DateStyle"));
+	printf("TimeZone: %s\n", PQparameterStatus(conn, "TimeZone"));
+	printf("integer_datetimes: %s\n", PQparameterStatus(conn, "integer_datetimes"));
+	printf("standard_conforming_strings: %s\n", PQparameterStatus(conn, "standard_conforming_strings"));
 	return 1;
 }
 
