@@ -17,9 +17,8 @@
 
 using namespace std;
 
-class CSqliteHandler;
-class CPsqlHandler;
 class CMongoDBHandler;
+class CTransferUser;
 
 class CController: public CObject
 {
@@ -37,8 +36,8 @@ private:
 	explicit CController();
 
 private:
-	CSqliteHandler *sqlite;
-	CPsqlHandler *psql;
 	CMongoDBHandler *mongo;
+	CTransferUser *transUser;
+	volatile int mnBusy;
 
 };

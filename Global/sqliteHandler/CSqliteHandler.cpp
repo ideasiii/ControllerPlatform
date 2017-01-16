@@ -110,6 +110,7 @@ int CSqliteHandler::sqlExec(string strSQL)
 {
 	char *zErrMsg = 0;
 	_log("[Sqlite] SQL exec: %s", strSQL.c_str());
+	sqlite3_exec(database, "PRAGMA synchronous=OFF", callback, 0, &zErrMsg);
 	int rc = sqlite3_exec(database, strSQL.c_str(), callback, 0, &zErrMsg);
 	if (rc != SQLITE_OK)
 	{
@@ -128,6 +129,8 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 	int nValue = -1;
 	const unsigned char * text;
 
+	sqlExec("PRAGMA synchronous=OFF");
+
 	sqlite3_prepare_v2(database, strSQL.c_str(), -1, &stmt, 0);
 
 	int cols = sqlite3_column_count(stmt);
@@ -137,7 +140,7 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 	for (int nColumeIndex = 0; nColumeIndex < cols; ++nColumeIndex)
 	{
 		mapColumn[nColumeIndex] = sqlite3_column_name(stmt, nColumeIndex);
-		_log("[Sqlite] query, colume: %s", mapColumn[nColumeIndex].c_str());
+		//_log("[Sqlite] query, colume: %s", mapColumn[nColumeIndex].c_str());
 	}
 
 	while (1)
@@ -152,8 +155,6 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 				jsonItem.put(mapColumn[nColumeIndex], strValue);
 			}
 			jsonArray.add(jsonItem);
-			//jsonItem.release();
-			//_log("[Sqlite] query, value: %s", strValue.c_str());
 		}
 		else
 		{

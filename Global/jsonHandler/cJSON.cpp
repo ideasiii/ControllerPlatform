@@ -692,9 +692,7 @@ static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 			out = print_string(item, 0);
 			break;
 		case cJSON_Array:
-			printf("[cJSON] print_array start depth=%d , fmt=%d\n", depth, fmt);
 			out = print_array(item, depth, fmt, 0);
-			printf("[cJSON] print_array end out=%s\n", out);
 			break;
 		case cJSON_Object:
 			out = print_object(item, depth, fmt, 0);
@@ -949,7 +947,7 @@ static char *print_array(cJSON *item, int depth, int fmt, printbuffer *p)
 		*ptr++ = ']';
 		*ptr++ = 0;
 	}
-	printf("[cJSON] print_array ========== 866\n");
+
 	return out;
 }
 

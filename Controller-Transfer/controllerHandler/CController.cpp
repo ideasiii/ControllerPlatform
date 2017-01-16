@@ -11,14 +11,14 @@
 #include "utility.h"
 #include "CController.h"
 #include "CDataHandler.cpp"
-#include "CSqliteHandler.h"
+
 #include "CThreadHandler.h"
 #include "JSONObject.h"
 #include "JSONArray.h"
-#include "packet.h"
 #include "CTimer.h"
-#include "CPsqlHandler.h"
+
 #include "CMongoDBHandler.h"
+#include "CTransferUser.h"
 
 using namespace std;
 
@@ -34,20 +34,34 @@ void onTimer(int nId)
 
 void CController::OnTimer(int nId)
 {
-	_log("[Controller] Start Monitor , Timer ID: %d", nId);
-
-	sqlite->connectDB("/data/sqlite/ideas.db");
-	sqlite->close();
-	if (!mongo->connectDB())
+	if (mnBusy)
 	{
-		_log("[Controller] MongoDB Connect Fail");
+		_log("[Controller] System Busy, Ignore Sync.");
 		return;
 	}
-	mongo->close();
+
+	mnBusy = TRUE;
+
+	_log("[Controller] Start Monitor , Timer ID: %d", nId);
+
+	_log("[Controller] sync ideas.db user start");
+	transUser->start();
+	_log("[Controller] sync ideas.db user finish");
+
+//	if (!mongo->connectDB())
+//	{
+//		_log("[Controller] MongoDB Connect Fail");
+//	}
+//	else
+//	{
+//		mongo->close();
+//	}
+
+	mnBusy = FALSE;
 }
 
 CController::CController() :
-		CObject(), sqlite(0), psql(0), mongo(0)
+		CObject(), mongo(0), transUser(new CTransferUser()), mnBusy(FALSE)
 {
 
 }
@@ -73,14 +87,6 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	sqlite = new CSqliteHandler();
-	if (0 == sqlite)
-		return FALSE;
-
-	psql = new CPsqlHandler();
-	if (!psql->open("175.98.119.121", "5432", "tracker", "tracker", "ideas123!"))
-		return FALSE;
-
 	mongo = CMongoDBHandler::getInstance();
 
 	SetTimer(666, 3, 3, onTimer);
@@ -89,9 +95,6 @@ int CController::start()
 
 int CController::stop()
 {
-	psql->close();
-	delete psql;
-	psql = 0;
 
 	mongo->close();
 	delete mongo;
