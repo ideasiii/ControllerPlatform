@@ -15,7 +15,9 @@
 #include "CMongoDBHandler.h"
 
 #define DB_PATH_IDEAS "/data/sqlite/ideas.db"
-#define SQL_QUERY_USER "SELECT * FROM user"
+#define SQL_QUERY_USER "SELECT * FROM user WHERE app_id = '1456802830286'"
+
+using namespace std;
 
 CTransferUser::CTransferUser() :
 		sqlite(new CSqliteHandler()), psql(new CPsqlHandler())
@@ -37,14 +39,25 @@ int CTransferUser::start()
 	if (!sqlite->connectDB(DB_PATH_IDEAS))
 		return FALSE;
 
-	JSONArray jsonArray;
-	sqlite->query(SQL_QUERY_USER, jsonArray);
-	//_log("[CTransferUser] query: %s", jsonArray.toString().c_str());
+	string strSQL = "SELECT * FROM user WHERE created_date >= '" + getPSqlLastDate() + "'";
+	_log("[TransferUser] Run SQL in Sqlite: %s", strSQL.c_str());
 
+	JSONArray jsonArray;
+	sqlite->query(strSQL, jsonArray);
+
+	_log("[CTransferUser] JSON Item count: %d", jsonArray.size());
 	for (int i = 0; i < jsonArray.size(); ++i)
 	{
 		JSONObject jsonItem(jsonArray.getJsonObject(i));
-		_log("[CTransferUser] JSON Item : %s", jsonItem.toString().c_str());
+		strSQL =
+				"INSERT INTO tracker_user (id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,created_date)VALUES('"
+						+ jsonItem.getString("id") + "','" + jsonItem.getString("app_id") + "','"
+						+ jsonItem.getString("mac", "") + "','" + jsonItem.getString("os", "") + "','"
+						+ jsonItem.getString("phone", "") + "','" + jsonItem.getString("fb_id", "") + "','"
+						+ jsonItem.getString("fb_name", "") + "','" + jsonItem.getString("fb_email", "") + "','"
+						+ jsonItem.getString("fb_account", "") + "','" + jsonItem.getString("g_account", "") + "','"
+						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("created_date") + "')";
+		psql->sqlExec(strSQL.c_str());
 	}
 
 	sqlite->close();
@@ -53,5 +66,23 @@ int CTransferUser::start()
 void CTransferUser::stop()
 {
 	sqlite->close();
+}
+
+string CTransferUser::getPSqlLastDate()
+{
+	string strRet;
+	if (psql)
+	{
+		string strSQL = "select max(created_date) as maxdate from tracker_user";
+		list<map<string, string> > listRest;
+		psql->query(strSQL.c_str(), listRest);
+		if (0 < listRest.size())
+		{
+			strRet = (*listRest.begin())["maxdate"];
+		}
+	}
+	if (strRet.empty())
+		strRet = "2015-07-27 00:00:00";
+	return strRet;
 }
 

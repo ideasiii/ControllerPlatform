@@ -38,6 +38,10 @@ void handler()
 		// insert record
 		string strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "','testhandler')";
 		psql->sqlExec(strSQL.c_str());
+		psql->sqlExec(strSQL.c_str());
+
+		strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "xxxx" + "','testhandler')";
+		psql->sqlExec(strSQL.c_str());
 
 		// insert record use trans
 		list<string> listSQL;
@@ -45,6 +49,9 @@ void handler()
 		listSQL.push_back(strSQL);
 		strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "3" + "','testhandlerttttt22222')";
 		listSQL.push_back(strSQL);
+		strSQL = "INSERT INTO tracker_user (id,app_id)VALUES('" + string(buf) + "2" + "','testhandlerttttt1')";
+		listSQL.push_back(strSQL);
+
 		psql->sqlExec(listSQL);
 
 		// query db

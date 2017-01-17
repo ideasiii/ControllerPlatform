@@ -10,6 +10,7 @@
 #include "JSONObject.h"
 #include "cJSON.h"
 #include "utility.h"
+#include "LogHandler.h"
 
 JSONArray::JSONArray() :
 		cjsonArray(0)
@@ -139,6 +140,19 @@ bool JSONArray::isNull(int index)
 
 string JSONArray::toString()
 {
-	return cJSON_Print(cjsonArray);
+	string strOut = "[";
+
+	for (int i = 0; i < this->size(); ++i)
+	{
+		JSONObject jsonItem(this->getJsonObject(i));
+		strOut += jsonItem.toString();
+		if (i != this->size() - 1)
+		{
+			strOut += ",";
+		}
+		_log("%s", strOut.c_str());
+	}
+	strOut += "]";
+	return strOut;
 }
 

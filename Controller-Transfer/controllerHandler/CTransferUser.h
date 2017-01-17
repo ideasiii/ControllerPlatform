@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+
 class CSqliteHandler;
 class CPsqlHandler;
 
@@ -17,6 +19,9 @@ public:
 	virtual ~CTransferUser();
 	int start();
 	void stop();
+
+private:
+	std::string getPSqlLastDate();
 
 private:
 	CSqliteHandler *sqlite;
