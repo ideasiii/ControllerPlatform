@@ -71,10 +71,18 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		_log("[CPsqlHandler] sqlExec Fail: %s\nSQL:%s", PQerrorMessage(conn), szSQL);
-		nRet = ERROR_FAIL_EXECSQL;
+		// already exists , not show error
+		string strError = PQerrorMessage(conn);
+		if (0 >= strError.find("already exists"))
+		{
+			_log("[CPsqlHandler] sqlExec Fail: %s\rSQL:%s", PQerrorMessage(conn), szSQL);
+			nRet = ERROR_FAIL_EXECSQL;
+		}
 	}
-	_log("[CPsqlHandler] sqlExec Success: %s", szSQL);
+	else
+	{
+		_log("[CPsqlHandler] sqlExec Success: %s", szSQL);
+	}
 	PQclear(res);
 	return nRet;
 }
