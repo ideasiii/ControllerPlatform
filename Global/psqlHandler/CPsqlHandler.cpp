@@ -71,9 +71,10 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		printf("[CPsqlHandler] sqlExec Fail: %s", szSQL);
+		_log("[CPsqlHandler] sqlExec Fail: %s\nSQL:%s", PQerrorMessage(conn), szSQL);
 		nRet = ERROR_FAIL_EXECSQL;
 	}
+	_log("[CPsqlHandler] sqlExec Success: %s", szSQL);
 	PQclear(res);
 	return nRet;
 }

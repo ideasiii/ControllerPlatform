@@ -89,7 +89,7 @@ int CController::start()
 {
 	mongo = CMongoDBHandler::getInstance();
 
-	SetTimer(666, 3, 60, onTimer);
+	SetTimer(666, 3, 3, onTimer);
 	return TRUE;
 }
 
