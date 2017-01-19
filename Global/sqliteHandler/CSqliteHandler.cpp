@@ -15,8 +15,6 @@
 #include "JSONObject.h"
 #include "JSONArray.h"
 
-using namespace std;
-
 int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
 	int i;
@@ -169,4 +167,28 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 	sqlite3_finalize(stmt);
 
 	return TRUE;
+}
+
+int CSqliteHandler::getFields(string strTableName, set<string> &sFields)
+{
+	sqlite3_stmt * stmt;
+	int row = 0;
+	int s = -1;
+	int nValue = -1;
+	const unsigned char * text;
+
+	string strSQL = "SELECT * FROM " + strTableName + "LIMIT 1";
+
+	sqlite3_prepare_v2(database, strSQL.c_str(), -1, &stmt, 0);
+
+	int cols = sqlite3_column_count(stmt);
+	string strColumn;
+	string strValue;
+	map<int, string> mapColumn;
+	for (int nColumeIndex = 0; nColumeIndex < cols; ++nColumeIndex)
+	{
+		mapColumn[nColumeIndex] = sqlite3_column_name(stmt, nColumeIndex);
+		//_log("[Sqlite] query, colume: %s", mapColumn[nColumeIndex].c_str());
+	}
+	return sFields.size();
 }

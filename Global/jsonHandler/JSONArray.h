@@ -38,6 +38,7 @@ public:
 	string getString(int index, string defaultValue);
 	bool isNull(int index);
 	string toString();
+	void release();
 
 private:
 	cJSON * cjsonArray;

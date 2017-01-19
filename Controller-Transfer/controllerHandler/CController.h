@@ -17,8 +17,8 @@
 
 using namespace std;
 
-class CMongoDBHandler;
 class CTransferUser;
+class CTransferTracker;
 
 class CController: public CObject
 {
@@ -36,7 +36,7 @@ private:
 	explicit CController();
 
 private:
-	CMongoDBHandler *mongo;
+	CTransferTracker *transTracker;
 	CTransferUser *transUser;
 	volatile int mnBusy;
 

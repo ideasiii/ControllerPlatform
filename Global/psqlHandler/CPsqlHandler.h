@@ -9,6 +9,8 @@
 #include <list>
 #include <map>
 #include <string>
+#include <set>
+
 using namespace std;
 
 typedef enum
@@ -33,6 +35,7 @@ public:
 	int sqlExec(const char *szSQL);
 	int sqlExec(list<string> listSQL);
 	int query(const char *szSQL, list<map<string, string> > &listRest);
+	int getFields(string strTableName, set<string> &sFields);
 
 private:
 

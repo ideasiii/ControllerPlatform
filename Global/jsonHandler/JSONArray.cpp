@@ -156,3 +156,8 @@ string JSONArray::toString()
 	return strOut;
 }
 
+void JSONArray::release()
+{
+	cJSON_Delete(cjsonArray);
+}
+

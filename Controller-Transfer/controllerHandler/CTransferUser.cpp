@@ -29,6 +29,7 @@ CTransferUser::~CTransferUser()
 {
 	stop();
 	delete sqlite;
+	delete psql;
 }
 
 int CTransferUser::start()
@@ -40,7 +41,6 @@ int CTransferUser::start()
 		return FALSE;
 
 	string strSQL = "SELECT * FROM user WHERE created_date >= '" + getPSqlLastDate() + "'";
-	_log("[TransferUser] Run SQL in Sqlite: %s", strSQL.c_str());
 
 	JSONArray jsonArray;
 	sqlite->query(strSQL, jsonArray);

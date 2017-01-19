@@ -173,3 +173,26 @@ int CPsqlHandler::query(const char *szSQL, list<map<string, string> > &listRest)
 	PQclear(res);
 	return listRest.size();
 }
+
+int CPsqlHandler::getFields(string strTableName, set<string> &sFields)
+{
+	string strSQL = "SELECT * FROM " + strTableName + "LIMIT 1";
+	if (0 == conn)
+	{
+		printf("[CPsqlHandler] Invalid PGconn");
+		return ERROR_INVALID_CONN;
+	}
+
+	PGresult *res = PQexec(conn, strSQL.c_str());
+	if (res)
+	{
+		sFields.clear();
+		int nCount = PQnfields(res);
+		for (int i = 0; i < nCount; ++i)
+		{
+			sFields.insert(PQfname(res, i));
+		}
+	}
+
+	return sFields.size();
+}

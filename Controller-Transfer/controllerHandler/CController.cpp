@@ -11,13 +11,11 @@
 #include "utility.h"
 #include "CController.h"
 #include "CDataHandler.cpp"
-
 #include "CThreadHandler.h"
 #include "JSONObject.h"
 #include "JSONArray.h"
 #include "CTimer.h"
-
-#include "CMongoDBHandler.h"
+#include "CTransferTracker.h"
 #include "CTransferUser.h"
 
 using namespace std;
@@ -42,26 +40,14 @@ void CController::OnTimer(int nId)
 
 	mnBusy = TRUE;
 
-	_log("[Controller] Start Monitor , Timer ID: %d", nId);
-
-	_log("[Controller] sync ideas.db user start");
-	transUser->start();
-	_log("[Controller] sync ideas.db user finish");
-
-//	if (!mongo->connectDB())
-//	{
-//		_log("[Controller] MongoDB Connect Fail");
-//	}
-//	else
-//	{
-//		mongo->close();
-//	}
+//	transUser->start();
+	transTracker->start();
 
 	mnBusy = FALSE;
 }
 
 CController::CController() :
-		CObject(), mongo(0), transUser(new CTransferUser()), mnBusy(FALSE)
+		CObject(), transTracker(new CTransferTracker()), transUser(new CTransferUser()), mnBusy(FALSE)
 {
 
 }
@@ -87,17 +73,12 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	mongo = CMongoDBHandler::getInstance();
-
-	SetTimer(666, 3, 3, onTimer);
+	SetTimer(666, 3, 10, onTimer);
 	return TRUE;
 }
 
 int CController::stop()
 {
-
-	mongo->close();
-	delete mongo;
-
+	KillTimer(666);
 	return FALSE;
 }
