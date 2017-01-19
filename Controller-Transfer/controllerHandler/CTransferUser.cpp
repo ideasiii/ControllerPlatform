@@ -61,6 +61,7 @@ int CTransferUser::start()
 	}
 
 	sqlite->close();
+	psql->close();
 	return TRUE;
 }
 void CTransferUser::stop()

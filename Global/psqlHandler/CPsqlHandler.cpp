@@ -22,6 +22,7 @@ CPsqlHandler::~CPsqlHandler()
 
 int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbName, const char *login, const char *pwd)
 {
+	close();
 	conn = PQsetdbLogin(pghost, pgport, NULL, NULL, dbName, login, pwd);
 
 	//ConnStatusType的值最常用的两个是CONNECTION_OK或 CONNECTION_BAD。
