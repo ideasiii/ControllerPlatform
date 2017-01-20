@@ -7,6 +7,7 @@
 
 #include "CPsqlHandler.h"
 #include "LogHandler.h"
+#include "common.h"
 #include <libpq-fe.h>
 
 PGconn *conn = 0;
@@ -29,12 +30,12 @@ int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbNam
 	//ConnStatusType的值最常用的两个是CONNECTION_OK或 CONNECTION_BAD。
 	if (PQstatus(conn) != CONNECTION_OK)
 	{
-		printf("[CPsqlHandler] Connection to database failed: %s", PQerrorMessage(conn));
+		_log("[CPsqlHandler] Connection to database failed: %s", PQerrorMessage(conn));
 		close();
 		return 0;
 	}
 
-	printf("[CPsqlHandler] Connection to database Success\n");
+	_log("[CPsqlHandler] Connection to database Success\n");
 //	printf("User: %s\n", PQuser(conn));
 //	printf("Database name: %s\n", PQdb(conn));
 //	printf("Password: %s\n", PQpass(conn));
@@ -60,12 +61,12 @@ void CPsqlHandler::close()
 
 int CPsqlHandler::sqlExec(const char *szSQL)
 {
-	int nRet = ERROR_SUCCESS;
+	int nRet = TRUE;
 
 	if (0 == conn)
 	{
-		printf("[CPsqlHandler] Invalid PGconn");
-		return ERROR_INVALID_CONN;
+		_log("[CPsqlHandler] Invalid PGconn");
+		return FALSE;
 	}
 	PGresult *res = PQexec(conn, szSQL);
 
@@ -76,12 +77,13 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 		if (0 >= strError.find("already exists"))
 		{
 			_log("[CPsqlHandler] sqlExec Fail: %s\rSQL:%s", PQerrorMessage(conn), szSQL);
-			nRet = ERROR_FAIL_EXECSQL;
+			nRet = FALSE;
 		}
 	}
 	else
 	{
 		_log("[CPsqlHandler] sqlExec Success: %s", szSQL);
+		nRet = TRUE;
 	}
 	PQclear(res);
 	return nRet;
@@ -91,17 +93,17 @@ int CPsqlHandler::sqlExec(list<string> listSQL)
 {
 	if (0 == conn)
 	{
-		printf("[CPsqlHandler] Invalid PGconn");
-		return ERROR_INVALID_CONN;
+		_log("[CPsqlHandler] Invalid PGconn");
+		return FALSE;
 	}
 
 	PGresult *res = PQexec(conn, "BEGIN");
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		printf("BEGIN command failed\n");
+		_log("[CPsqlHandler] BEGIN command failed\n");
 		PQclear(res);
-		return ERROR_FAIL_BEGIN;
+		return FALSE;
 	}
 
 	string strItem;
@@ -114,7 +116,7 @@ int CPsqlHandler::sqlExec(list<string> listSQL)
 
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
-				printf("SQL Exec failed: %s\n", PQerrorMessage(conn));
+				_log("[CPsqlHandler] SQL Exec failed: %s\n", PQerrorMessage(conn));
 				PQclear(res);
 			}
 		}
@@ -124,14 +126,14 @@ int CPsqlHandler::sqlExec(list<string> listSQL)
 
 	if (PQresultStatus(res) != PGRES_COMMAND_OK)
 	{
-		printf("COMMIT command failed\n");
+		_log("[CPsqlHandler] COMMIT command failed\n");
 		PQclear(res);
-		return ERROR_FAIL_COMMIT;
+		return FALSE;
 	}
 
 	PQclear(res);
 
-	return ERROR_SUCCESS;
+	return TRUE;
 }
 
 int CPsqlHandler::query(const char *szSQL, list<map<string, string> > &listRest)

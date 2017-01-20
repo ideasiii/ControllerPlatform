@@ -15,9 +15,6 @@
 #include "CMongoDBHandler.h"
 
 #define DB_PATH_IDEAS "/data/sqlite/ideas.db"
-#define SQL_QUERY_USER "SELECT * FROM user WHERE app_id = '1456802830286'"
-
-using namespace std;
 
 CTransferUser::CTransferUser() :
 		sqlite(new CSqliteHandler()), psql(new CPsqlHandler())

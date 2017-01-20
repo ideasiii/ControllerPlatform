@@ -24,8 +24,9 @@ public:
 	int start();
 
 private:
-	string getPSqlLastDate();
+	string getPSqlLastDate(string strTableName);
 	int syncColume();
+	int syncData();
 
 private:
 	CMongoDBHandler *mongo;
