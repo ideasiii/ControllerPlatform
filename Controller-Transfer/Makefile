@@ -27,7 +27,6 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lm -lrt -ldl \
 			-lpq \
 			-lsqlite3 \
-			-lmongoDBHandler \
 			-lmongoclient \
 			-lboost_thread \
 			-lboost_system \

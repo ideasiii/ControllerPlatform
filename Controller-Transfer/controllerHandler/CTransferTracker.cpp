@@ -161,7 +161,8 @@ int CTransferTracker::syncData()
 	strDate = getPSqlLastDate("tracker_poya_ios");
 	_log("[CTransferTracker] tracker_poya_ios last date: %s", strDate.c_str());
 	list<string> listJSON;
-	mongo->query("access", "mobile", "created_date", "2017-01-21", listJSON);
+	//mongo->query("access", "mobile", "created_date", "2017-01-21", listJSON);
+	mongo->query( "access", "mobile", "ID", "080027efda60155552155541456802938790", listJSON );
 	string strJSON;
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{

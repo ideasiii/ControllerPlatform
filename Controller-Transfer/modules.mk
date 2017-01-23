@@ -11,6 +11,7 @@ controllerHandler \
 ../Global/logHandler \
 ../Global/processHandler \
 ../Global/timerHandler \
-../Global/psqlHandler
+../Global/psqlHandler \
+../Global/mongoDBHandler
 			 
 #export EXT_MODULES=
