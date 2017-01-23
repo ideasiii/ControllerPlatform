@@ -10,6 +10,8 @@
 #include <map>
 #include <list>
 
+using namespace std;
+
 class CMongoDBHandler
 {
 public:
@@ -17,16 +19,16 @@ public:
 	virtual ~CMongoDBHandler();
 
 	int connectDB();
-	int connectDB(std::string strIP, std::string strPort);
-	int connectDB(std::string strIP, std::string strPort, std::string strDBName, std::string strUser,
-			std::string strPasswd);
+	int connectDB(string strIP, string strPort);
+	int connectDB(string strIP, string strPort, string strDBName, string strUser, string strPasswd);
 	void close();
-	void insert(std::string strDB, std::string strCollection, std::map<std::string, std::string> &mapData);
-	void insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue);
-	std::string insert(std::string strDB, std::string strCollection, std::string strJSON);
-	int query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition,
-			std::list<std::string> &listJSON);
+	void insert(string strDB, string strCollection, map<string, string> &mapData);
+	void insert(string strDB, string strCollection, string strColumn, string strValue);
+	std::string insert(string strDB, string strCollection, string strJSON);
+	int query(string strDB, string strCollection, string strField, string strCondition, list<string> &listJSON);
 	bool isValid();
+	int query(string strDB, string strCollection, string strField, string strFilter, string strCondition,
+			list<string> &listJSON);
 
 private:
 	explicit CMongoDBHandler();

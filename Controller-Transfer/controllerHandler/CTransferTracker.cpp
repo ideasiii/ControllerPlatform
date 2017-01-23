@@ -39,14 +39,7 @@ int CTransferTracker::start()
 		return FALSE;
 	}
 
-	if (!mongo->connectDB())
-	{
-		psql->close();
-		_log("[CTransferTracker] MongoDB Connect Fail");
-		return FALSE;
-	}
-
-	// 動態欄位同步處理
+// 動態欄位同步處理
 	if (syncColume())
 	{
 		syncData();
@@ -56,10 +49,7 @@ int CTransferTracker::start()
 		_log("[CTransferTracker] Sync Database Colume Fail.");
 	}
 
-	// Query POYA IOS Tracker Data from MongoDB
-
 	psql->close();
-	mongo->close();
 
 	return TRUE;
 }
@@ -155,23 +145,17 @@ int CTransferTracker::syncColume()
 
 int CTransferTracker::syncData()
 {
-	string strDate;
-
-	// Get last data date from postgresql
-	strDate = getPSqlLastDate("tracker_poya_ios");
-	_log("[CTransferTracker] tracker_poya_ios last date: %s", strDate.c_str());
+	mongo->connectDB("127.0.0.1", "27017");
 	list<string> listJSON;
-	//mongo->query("access", "mobile", "created_date", "2017-01-21", listJSON);
-	mongo->query( "access", "mobile", "ID", "080027efda60155552155541456802938790", listJSON );
+	mongo->query("access", "mobile", "ID", "826BB4DE-A54E-42E8-BD9C-DFE15CF2F4EB1472188091474", listJSON);
+	mongo->close();
+
 	string strJSON;
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
 		strJSON = *i;
 		cout << strJSON << endl;
 	}
-
-	strDate = getPSqlLastDate("tracker_poya_android");
-	_log("[CTransferTracker] tracker_poya_android last date: %s", strDate.c_str());
 
 	return TRUE;
 }

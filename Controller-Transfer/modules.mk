@@ -14,4 +14,4 @@ controllerHandler \
 ../Global/psqlHandler \
 ../Global/mongoDBHandler
 			 
-#export EXT_MODULES=
+export EXT_MODULES=extInclude

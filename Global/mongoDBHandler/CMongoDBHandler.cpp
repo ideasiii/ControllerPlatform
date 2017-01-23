@@ -59,7 +59,7 @@ int CMongoDBHandler::connectDB()
 {
 	close();
 	DBconn = new DBClientConnection();
-	string uri = "mongodb://localhost:27017";
+	string uri = "mongodb://127.0.0.1:27017";
 	string errmsg;
 
 	ConnectionString cs = ConnectionString::parse(uri, errmsg);
@@ -219,6 +219,7 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		return FAIL;
 
 	string strCon = strDB + "." + strCollection;
+	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
 
 	try
 	{
@@ -239,6 +240,60 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 		mongo::Query query(message_condition.obj());
 		mongo::Query query2(query);
 		mongo::Query query_with_sort(query.sort(sortBuilder.obj()));
+
+		//	BSONObjBuilder update_field;
+		//	update_field.append( "status", "waiting" );
+		//BSONObjBuilder set_field;
+		//set_field.append( "$set", update_field.obj() );
+		//session.update( "mydb.mycoll", query2, set_field.obj(), false, true );
+		//con.done();
+
+		BSONObj bsonobj;
+		auto_ptr<DBClientCursor> cursor = DBconn->query(strCon, query2);
+		while (cursor->more())
+		{
+			bsonobj = cursor->next();
+			listJSON.push_back(bsonobj.jsonString());
+		}
+
+	}
+	catch (const exception &e)
+	{
+		_log("[Mongodb] Query Data Fail, Error:%s", e.what());
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+int CMongoDBHandler::query(string strDB, string strCollection, string strField, string strFilter, string strCondition,
+		list<string> &listJSON)
+{
+	if (!isValid())
+		return FAIL;
+
+	string strCon = strDB + "." + strCollection;
+	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
+
+	try
+	{
+		BSONArrayBuilder display_ids;
+		//display_ids.append( mongo::OID( "5061f915e4b045bab5e0c957" ) );
+		display_ids.append(strCondition);
+
+		BSONObjBuilder in_condition;
+		in_condition.append(strFilter, display_ids.arr());
+
+		BSONObjBuilder message_condition;
+		message_condition.append(strField, in_condition.obj());
+		//message_condition.append("status", "sending");
+
+		//BSONObjBuilder sortBuilder;
+		//sortBuilder.append("_id", 1);
+
+		mongo::Query query(message_condition.obj());
+		mongo::Query query2(query);
+		//mongo::Query query_with_sort(query.sort(sortBuilder.obj()));
 
 		//	BSONObjBuilder update_field;
 		//	update_field.append( "status", "waiting" );
