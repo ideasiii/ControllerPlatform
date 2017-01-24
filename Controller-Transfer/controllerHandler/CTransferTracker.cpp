@@ -147,7 +147,8 @@ int CTransferTracker::syncData()
 {
 	mongo->connectDB("127.0.0.1", "27017");
 	list<string> listJSON;
-	mongo->query("access", "mobile", "ID", "826BB4DE-A54E-42E8-BD9C-DFE15CF2F4EB1472188091474", listJSON);
+	//mongo->query("access", "mobile", "create_date", "2016-12-20 10:18:45", listJSON);
+	mongo->query("access", "mobile", "create_date", "$gte", "2016-12-30 00:00:00", listJSON);
 	mongo->close();
 
 	string strJSON;
