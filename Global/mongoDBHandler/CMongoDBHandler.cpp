@@ -275,21 +275,24 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 	string strCon = strDB + "." + strCollection;
 	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
 
-	mongo::BSONObj query = BSON("create_date" << BSON( strFilter << strCondition ));
+	mongo::BSONObj query = BSON(
+			"create_date" << BSON( strFilter << strCondition ) << "ID" << BSON("$regex" << "1472188091474"));
 	//cout << query << endl;
 	_log("[CMongoDBHandler] query command: %s", query.toString().c_str());
 
 	auto_ptr<mongo::DBClientCursor> cursor = DBconn->query(strCon, query);
 	//cout << "using cursor" << endl;
-	_log("[CMongoDBHandler] query result count: %d", cursor->itcount());
-
-
+	//_log("[CMongoDBHandler] query result count: %d", cursor->itcount());
+	int nCount = 0;
 	while (cursor->more())
 	{
 		mongo::BSONObj obj = cursor->next();
+		++nCount;
+		listJSON.push_back(obj.jsonString());
 		//cout << "\t" << obj.jsonString() << endl;
 	}
-	_log("[CMongoDBHandler] query Finish!!");
+	_log("[CMongoDBHandler] query Finish count: %d", nCount);
+
 	return TRUE;
 }
 

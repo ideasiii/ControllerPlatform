@@ -55,7 +55,10 @@ int CTransferUser::start()
 						+ jsonItem.getString("fb_account", "") + "','" + jsonItem.getString("g_account", "") + "','"
 						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("created_date") + "')";
 		psql->sqlExec(strSQL.c_str());
+		jsonItem.release();
 	}
+
+	jsonArray.release();
 
 	sqlite->close();
 	psql->close();

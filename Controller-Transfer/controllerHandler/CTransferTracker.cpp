@@ -148,15 +148,17 @@ int CTransferTracker::syncData()
 	mongo->connectDB("127.0.0.1", "27017");
 	list<string> listJSON;
 	//mongo->query("access", "mobile", "create_date", "2016-12-20 10:18:45", listJSON);
-	mongo->query("access", "mobile", "create_date", "$gte", "2016-12-30 00:00:00", listJSON);
+	mongo->query("access", "mobile", "create_date", "$gte", "2017-01-24 00:00:00", listJSON);
 	mongo->close();
-
+//return TRUE;
 	string strJSON;
+	int nCount = 0;
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
 		strJSON = *i;
+		++nCount;
 		cout << strJSON << endl;
 	}
-
+	_log("[CTransferTracker] POYA IOS count: %d", nCount);
 	return TRUE;
 }
