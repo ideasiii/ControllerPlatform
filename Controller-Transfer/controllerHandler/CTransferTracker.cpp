@@ -135,7 +135,7 @@ int CTransferTracker::syncColume()
 			}
 		}
 	}
-	jsonArrayAndroid.release();
+
 	sPoyaFieldAndroid.clear();
 	psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
 
