@@ -194,12 +194,15 @@ int CTransferTracker::syncData()
 			{
 				strSQL_INSERT += "','";
 			}
+			else
+			{
+				strSQL_INSERT += "');";
+			}
 		}
-		strSQL_INSERT += "');";
 
-		//	_log(strSQL_INSERT.c_str());
-		//	break;
-		psql->sqlExec(strSQL.c_str());
+		_log(strSQL_INSERT.c_str());
+		break;
+		//psql->sqlExec(strSQL.c_str());
 	}
 	_log("[CTransferTracker] POYA IOS count: %d", nCount);
 	return TRUE;
