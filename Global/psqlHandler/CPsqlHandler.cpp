@@ -79,6 +79,10 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 			_log("[CPsqlHandler] sqlExec Fail: %s\rSQL:%s", PQerrorMessage(conn), szSQL);
 			nRet = FALSE;
 		}
+		else
+		{
+			_DBG("[CPsqlHandler] sqlExec Fail: %s\rSQL:%s", PQerrorMessage(conn), szSQL);
+		}
 	}
 	else
 	{
