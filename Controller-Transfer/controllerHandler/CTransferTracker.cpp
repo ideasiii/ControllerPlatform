@@ -176,7 +176,7 @@ int CTransferTracker::syncData()
 		}
 	}
 
-	strSQL += ")VALUES('";
+	strSQL += ")VALUES( '";
 
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
@@ -203,7 +203,7 @@ int CTransferTracker::syncData()
 
 		//_log(strSQL_INSERT.c_str());
 		//break;
-		psql->sqlExec(strSQL.c_str());
+		psql->sqlExec(strSQL_INSERT.c_str());
 	}
 	_log("[CTransferTracker] POYA IOS count: %d", nCount);
 	return TRUE;
