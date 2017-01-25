@@ -53,7 +53,7 @@ int CTransferUser::start()
 						+ jsonItem.getString("phone", "") + "','" + jsonItem.getString("fb_id", "") + "','"
 						+ jsonItem.getString("fb_name", "") + "','" + jsonItem.getString("fb_email", "") + "','"
 						+ jsonItem.getString("fb_account", "") + "','" + jsonItem.getString("g_account", "") + "','"
-						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("created_date") + "')";
+						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("create_date") + "')";
 		psql->sqlExec(strSQL.c_str());
 
 	}
