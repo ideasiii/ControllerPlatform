@@ -163,11 +163,12 @@ int CTransferTracker::syncData()
 	if (0 >= jsonArrayIOS.size())
 		return FALSE;
 
-	strSQL = "INSERT INTO tracker_poya_ios (ID,create_date,";
+	strSQL = "INSERT INTO tracker_poya_ios (id,create_date,";
 	for (int i = 0; i < jsonArrayIOS.size(); ++i)
 	{
 		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
 		strValue = jsonItem.getString("field");
+		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
 		strSQL += strValue;
 		if (jsonArrayIOS.size() != (i + 1))
 		{
