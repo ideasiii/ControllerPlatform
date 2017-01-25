@@ -37,7 +37,7 @@ int CTransferUser::start()
 	if (!sqlite->connectDB(DB_PATH_IDEAS))
 		return FALSE;
 
-	string strSQL = "SELECT * FROM user WHERE created_date >= '" + getPSqlLastDate() + "'";
+	string strSQL = "SELECT * FROM user WHERE create_date >= '" + getPSqlLastDate() + "'";
 
 	JSONArray jsonArray;
 	sqlite->query(strSQL, jsonArray);
