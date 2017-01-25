@@ -11,8 +11,6 @@
 #include <list>
 #include "mongo/client/dbclient.h"
 
-using namespace std;
-
 class CMongoDBHandler
 {
 public:
@@ -20,17 +18,19 @@ public:
 	virtual ~CMongoDBHandler();
 
 	int connectDB();
-	int connectDB(string strIP, string strPort);
-	int connectDB(string strIP, string strPort, string strDBName, string strUser, string strPasswd);
+	int connectDB(std::string strIP, std::string strPort);
+	int connectDB(std::string strIP, std::string strPort, std::string strDBName, std::string strUser,
+			std::string strPasswd);
 	void close();
-	void insert(string strDB, string strCollection, map<string, string> &mapData);
-	void insert(string strDB, string strCollection, string strColumn, string strValue);
-	std::string insert(string strDB, string strCollection, string strJSON);
-	int query(string strDB, string strCollection, string strField, string strCondition, list<string> &listJSON);
+	void insert(std::string strDB, std::string strCollection, std::map<std::string, std::string> &mapData);
+	void insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue);
+	std::string insert(std::string strDB, std::string strCollection, std::string strJSON);
+	int query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition,
+			std::list<std::string> &listJSON);
 	bool isValid();
-	int query(string strDB, string strCollection, string strField, string strFilter, string strCondition,
-			list<string> &listJSON);
-	int query(string strDB, string strCollection, mongo::BSONObj bsonobj, list<string> &listJSON);
+	int query(std::string strDB, std::string strCollection, std::string strField, std::string strFilter,
+			std::string strCondition, std::list<std::string> &listJSON);
+	int query(std::string strDB, std::string strCollection, mongo::BSONObj bsonobj, std::list<std::string> &listJSON);
 
 private:
 	explicit CMongoDBHandler();

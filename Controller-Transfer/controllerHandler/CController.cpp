@@ -41,7 +41,7 @@ void CController::OnTimer(int nId)
 	mnBusy = TRUE;
 
 	transUser->start();
-//	transTracker->start();
+	transTracker->start();
 
 	mnBusy = FALSE;
 }

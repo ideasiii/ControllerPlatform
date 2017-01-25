@@ -15,7 +15,9 @@
 #include "CSqliteHandler.h"
 #include "JSONArray.h"
 #include "JSONObject.h"
-//#include "mongo/client/dbclient.h"
+
+using namespace std;
+using namespace mongo;
 
 #define DB_PATH_FIELD				"/data/sqlite/field.db"
 #define APP_ID_POYA_ANDROID		"1472188038304"
@@ -60,7 +62,7 @@ string CTransferTracker::getPSqlLastDate(string strTableName)
 	string strRet;
 	if (psql)
 	{
-		string strSQL = "select max(created_date) as maxdate from " + strTableName;
+		string strSQL = "select max(create_date) as maxdate from " + strTableName;
 		list<map<string, string> > listRest;
 		psql->query(strSQL.c_str(), listRest);
 		if (0 < listRest.size())
@@ -80,16 +82,8 @@ int CTransferTracker::syncColume()
 	if (!sqlite->connectDB(DB_PATH_FIELD))
 		return FALSE;
 
-	// Get POYA IOS & Android Fields From PostgreSQL
-	if (0 >= sPoyaFieldIos.size())
-	{
-		psql->getFields("tracker_poya_ios", sPoyaFieldIos);
-	}
-
-	if (0 >= sPoyaFieldAndroid.size())
-	{
-		psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
-	}
+	// Get POYA IOS Fields From PostgreSQL
+	psql->getFields("tracker_poya_ios", sPoyaFieldIos);
 
 	// Get POYA IOS Field From Sqlite
 	string strSQL = "select * from device_field where id = '1472188091474'";
@@ -100,7 +94,8 @@ int CTransferTracker::syncColume()
 	{
 		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
 		strValue = jsonItem.getString("field");
-
+		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+		_log("[CTransferTracker] ios check field name: %s", strValue.c_str());
 		// Sync sqlite & postgresql fields
 		if (sPoyaFieldIos.find(strValue) == sPoyaFieldIos.end())
 		{
@@ -112,10 +107,9 @@ int CTransferTracker::syncColume()
 			}
 		}
 	}
-	jsonArrayIOS.release();
-	sPoyaFieldIos.clear();
-	psql->getFields("tracker_poya_ios", sPoyaFieldIos);
 
+	// Get POYA Android Fields From PostgreSQL
+	psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
 	// Get POYA Android Field From Sqlite
 	strSQL = "select * from device_field where id = '1472188038304'";
 	JSONArray jsonArrayAndroid;
@@ -124,7 +118,8 @@ int CTransferTracker::syncColume()
 	{
 		JSONObject jsonItem(jsonArrayAndroid.getJsonObject(j));
 		strValue = jsonItem.getString("field");
-
+		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+		_log("[CTransferTracker] android check field name: %s", strValue.c_str());
 		// Sync sqlite & postgresql fields
 		if (sPoyaFieldAndroid.find(strValue) == sPoyaFieldAndroid.end())
 		{
@@ -137,31 +132,74 @@ int CTransferTracker::syncColume()
 		}
 	}
 
-	sPoyaFieldAndroid.clear();
-	psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
-
 	sqlite->close();
 	return TRUE;
 }
 
 int CTransferTracker::syncData()
 {
-	mongo->connectDB("127.0.0.1", "27017");
+	string strSQL;
+	string strSQL_INSERT;
+	int nCount = 0;
 	list<string> listJSON;
-	//mongo->query("access", "mobile", "create_date", "2016-12-20 10:18:45", listJSON);
-	mongo::BSONObj query = BSON(
-			"create_date" << BSON("$gte" << "2016-12-20 00:00:00") << "ID" << BSON("$regex" << "1472188091474"));
-	//mongo->query("access", "mobile", "create_date", "$gte", "2016-12-20 00:00:00", listJSON);
+	string strValue;
+
+	mongo->connectDB("127.0.0.1", "27017");
+
+	BSONObj query =
+			BSON(
+					"create_date" << BSON("$gte" << getPSqlLastDate("tracker_poya_ios") ) << "ID" << BSON("$regex" << "1472188091474"));
 	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
-//return TRUE;
-	string strJSON;
-	int nCount = 0;
+
+	// Get POYA IOS Field From Sqlite
+	if (!sqlite->connectDB(DB_PATH_FIELD))
+		return FALSE;
+	strSQL = "select * from device_field where id = '1472188091474'";
+	JSONArray jsonArrayIOS;
+	sqlite->query(strSQL, jsonArrayIOS);
+	sqlite->close();
+
+	if (0 >= jsonArrayIOS.size())
+		return FALSE;
+
+	strSQL = "INSERT INTO tracker_poya_ios (ID,create_date,";
+	for (int i = 0; i < jsonArrayIOS.size(); ++i)
+	{
+		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
+		strValue = jsonItem.getString("field");
+		strSQL += strValue;
+		if (jsonArrayIOS.size() != (i + 1))
+		{
+			strSQL += ",";
+		}
+	}
+
+	strSQL += ")VALUES('";
+
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
-		strJSON = *i;
 		++nCount;
-		cout << strJSON << endl;
+		JSONObject jsonItem(*i);
+
+		strSQL_INSERT = strSQL + jsonItem.getString("ID") + "','" + jsonItem.getString("create_date") + "','";
+
+		for (int i = 0; i < jsonArrayIOS.size(); ++i)
+		{
+			JSONObject jsonField(jsonArrayIOS.getJsonObject(i));
+			strValue = jsonField.getString("field");
+			strSQL_INSERT += jsonItem.getString(strValue, "");
+
+			if (jsonArrayIOS.size() != (i + 1))
+			{
+				strSQL_INSERT += "','";
+			}
+		}
+		strSQL_INSERT += "');";
+
+		//	_log(strSQL_INSERT.c_str());
+		//	break;
+		psql->sqlExec(strSQL.c_str());
 	}
 	_log("[CTransferTracker] POYA IOS count: %d", nCount);
 	return TRUE;

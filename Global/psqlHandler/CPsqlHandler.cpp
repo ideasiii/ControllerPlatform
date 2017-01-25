@@ -81,7 +81,7 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 		}
 		else
 		{
-			_DBG("[CPsqlHandler] sqlExec Fail: %s", PQerrorMessage(conn));
+			_DBG("[CPsqlHandler] sqlExec Fail: %s\nSQL:%s", PQerrorMessage(conn), szSQL);
 		}
 	}
 	else
@@ -182,7 +182,7 @@ int CPsqlHandler::query(const char *szSQL, list<map<string, string> > &listRest)
 
 int CPsqlHandler::getFields(string strTableName, set<string> &sFields)
 {
-	string strSQL = "SELECT * FROM " + strTableName + "LIMIT 1";
+	string strSQL = "SELECT * FROM " + strTableName + " LIMIT 1";
 	if (0 == conn)
 	{
 		printf("[CPsqlHandler] Invalid PGconn");
@@ -190,6 +190,7 @@ int CPsqlHandler::getFields(string strTableName, set<string> &sFields)
 	}
 
 	PGresult *res = PQexec(conn, strSQL.c_str());
+
 	if (res)
 	{
 		sFields.clear();
@@ -197,6 +198,7 @@ int CPsqlHandler::getFields(string strTableName, set<string> &sFields)
 		for (int i = 0; i < nCount; ++i)
 		{
 			sFields.insert(PQfname(res, i));
+			//_log("[CPsqlHandler] get Field Name: %s", PQfname(res, i));
 		}
 	}
 

@@ -11,19 +11,18 @@
 #include <string>
 #include <map>
 #include <memory>
-//#include "mongo/client/dbclient.h"
 #include "common.h"
 #include "CMongoDBHandler.h"
 #include "utility.h"
 #include "packet.h"
 #include "LogHandler.h"
 
+using namespace std;
+using namespace mongo;
+
 #ifndef verify
 #define verify(x) MONGO_verify(x)
 #endif
-
-using namespace std;
-using namespace mongo;
 
 CMongoDBHandler* CMongoDBHandler::mInstance = 0;
 static DBClientConnection *DBconn = 0;
@@ -275,8 +274,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 	string strCon = strDB + "." + strCollection;
 	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
 
-	mongo::BSONObj query = BSON(
-			"create_date" << BSON(strFilter << strCondition) << "ID" << BSON("$regex" << "1472188091474"));
+	BSONObj query = BSON("create_date" << BSON(strFilter << strCondition) << "ID" << BSON("$regex" << "1472188091474"));
 
 	_log("[CMongoDBHandler] query command: %s", query.toString().c_str());
 
@@ -291,7 +289,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 	return TRUE;
 }
 
-int CMongoDBHandler::query(string strDB, string strCollection, mongo::BSONObj bsonobj, list<string> &listJSON)
+int CMongoDBHandler::query(string strDB, string strCollection, BSONObj bsonobj, list<string> &listJSON)
 {
 	if (!isValid())
 		return FAIL;
@@ -300,7 +298,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, mongo::BSONObj bs
 
 	_log("[CMongoDBHandler] conn: %s , query command: %s", strCon.c_str(), bsonobj.toString().c_str());
 
-	auto_ptr<mongo::DBClientCursor> cursor = DBconn->query(strCon, bsonobj);
+	auto_ptr<DBClientCursor> cursor = DBconn->query(strCon, bsonobj);
 
 	while (cursor->more())
 	{
