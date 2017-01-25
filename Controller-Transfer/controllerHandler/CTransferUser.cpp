@@ -47,7 +47,7 @@ int CTransferUser::start()
 	{
 		JSONObject jsonItem(jsonArray.getJsonObject(i));
 		strSQL =
-				"INSERT INTO tracker_user (id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,created_date)VALUES('"
+				"INSERT INTO tracker_user (id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,create_date)VALUES('"
 						+ jsonItem.getString("id") + "','" + jsonItem.getString("app_id") + "','"
 						+ jsonItem.getString("mac", "") + "','" + jsonItem.getString("os", "") + "','"
 						+ jsonItem.getString("phone", "") + "','" + jsonItem.getString("fb_id", "") + "','"
@@ -72,7 +72,7 @@ string CTransferUser::getPSqlLastDate()
 	string strRet;
 	if (psql)
 	{
-		string strSQL = "select max(created_date) as maxdate from tracker_user";
+		string strSQL = "select max(create_date) as maxdate from tracker_user";
 		list<map<string, string> > listRest;
 		psql->query(strSQL.c_str(), listRest);
 		if (0 < listRest.size())
