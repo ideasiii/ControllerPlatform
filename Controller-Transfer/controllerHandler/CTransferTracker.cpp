@@ -163,7 +163,7 @@ int CTransferTracker::syncData()
 	if (0 >= jsonArrayIOS.size())
 		return FALSE;
 
-	strSQL = "INSERT INTO tracker_poya_ios (id,create_date,";
+	strSQL = "INSERT INTO tracker_poya_ios (_id,id,create_date,";
 	for (int i = 0; i < jsonArrayIOS.size(); ++i)
 	{
 		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
@@ -182,8 +182,9 @@ int CTransferTracker::syncData()
 	{
 		++nCount;
 		JSONObject jsonItem(*i);
-
-		strSQL_INSERT = strSQL + jsonItem.getString("ID") + "','" + jsonItem.getString("create_date") + "','";
+		JSONObject oid(jsonItem.getJsonObject("_id"));
+		strSQL_INSERT = strSQL + oid.getString("$oid") + "','" + jsonItem.getString("ID") + "','"
+				+ jsonItem.getString("create_date") + "','";
 
 		for (int i = 0; i < jsonArrayIOS.size(); ++i)
 		{
