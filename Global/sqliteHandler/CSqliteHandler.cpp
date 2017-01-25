@@ -121,13 +121,12 @@ int CSqliteHandler::sqlExec(string strSQL)
 
 int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 {
+	int nRet = TRUE;
 	sqlite3_stmt * stmt;
 	int row = 0;
 	int s = -1;
 	int nValue = -1;
 	const unsigned char * text;
-
-	sqlExec("PRAGMA synchronous=OFF");
 
 	sqlite3_prepare_v2(database, strSQL.c_str(), -1, &stmt, 0);
 
@@ -159,6 +158,7 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 			if (s != SQLITE_DONE)
 			{
 				_log("[Sqlite] SQL:%s exec fail", strSQL.c_str());
+				nRet = FALSE;
 			}
 			break;
 		}
@@ -166,7 +166,7 @@ int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
 
 	sqlite3_finalize(stmt);
 
-	return TRUE;
+	return nRet;
 }
 
 int CSqliteHandler::getFields(string strTableName, set<string> &sFields)

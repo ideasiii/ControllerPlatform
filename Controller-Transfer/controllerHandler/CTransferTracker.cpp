@@ -15,6 +15,7 @@
 #include "CSqliteHandler.h"
 #include "JSONArray.h"
 #include "JSONObject.h"
+//#include "mongo/client/dbclient.h"
 
 #define DB_PATH_FIELD				"/data/sqlite/field.db"
 #define APP_ID_POYA_ANDROID		"1472188038304"
@@ -148,7 +149,10 @@ int CTransferTracker::syncData()
 	mongo->connectDB("127.0.0.1", "27017");
 	list<string> listJSON;
 	//mongo->query("access", "mobile", "create_date", "2016-12-20 10:18:45", listJSON);
-	mongo->query("access", "mobile", "create_date", "$gte", "2017-01-24 00:00:00", listJSON);
+	mongo::BSONObj query = BSON(
+			"create_date" << BSON("$gte" << "2016-12-20 00:00:00") << "ID" << BSON("$regex" << "1472188091474"));
+	//mongo->query("access", "mobile", "create_date", "$gte", "2016-12-20 00:00:00", listJSON);
+	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
 //return TRUE;
 	string strJSON;

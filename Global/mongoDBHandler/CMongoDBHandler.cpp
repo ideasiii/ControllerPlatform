@@ -11,7 +11,7 @@
 #include <string>
 #include <map>
 #include <memory>
-#include "mongo/client/dbclient.h"
+//#include "mongo/client/dbclient.h"
 #include "common.h"
 #include "CMongoDBHandler.h"
 #include "utility.h"
@@ -276,22 +276,37 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
 
 	mongo::BSONObj query = BSON(
-			"create_date" << BSON( strFilter << strCondition ) << "ID" << BSON("$regex" << "1472188091474"));
-	//cout << query << endl;
+			"create_date" << BSON(strFilter << strCondition) << "ID" << BSON("$regex" << "1472188091474"));
+
 	_log("[CMongoDBHandler] query command: %s", query.toString().c_str());
 
 	auto_ptr<mongo::DBClientCursor> cursor = DBconn->query(strCon, query);
-	//cout << "using cursor" << endl;
-	//_log("[CMongoDBHandler] query result count: %d", cursor->itcount());
-	int nCount = 0;
+
 	while (cursor->more())
 	{
-		mongo::BSONObj obj = cursor->next();
-		++nCount;
-		listJSON.push_back(obj.jsonString());
-		//cout << "\t" << obj.jsonString() << endl;
+		listJSON.push_back(cursor->next().jsonString());
 	}
-	_log("[CMongoDBHandler] query Finish count: %d", nCount);
+	_log("[CMongoDBHandler] query Finish count: %d", listJSON.size());
+
+	return TRUE;
+}
+
+int CMongoDBHandler::query(string strDB, string strCollection, mongo::BSONObj bsonobj, list<string> &listJSON)
+{
+	if (!isValid())
+		return FAIL;
+
+	string strCon = strDB + "." + strCollection;
+
+	_log("[CMongoDBHandler] conn: %s , query command: %s", strCon.c_str(), bsonobj.toString().c_str());
+
+	auto_ptr<mongo::DBClientCursor> cursor = DBconn->query(strCon, bsonobj);
+
+	while (cursor->more())
+	{
+		listJSON.push_back(cursor->next().jsonString());
+	}
+	_log("[CMongoDBHandler] query Finish count: %d", listJSON.size());
 
 	return TRUE;
 }
