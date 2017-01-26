@@ -7,15 +7,7 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <list>
-#include <map>
 #include "CObject.h"
-#include "common.h"
-#include "packet.h"
-
-using namespace std;
 
 class CTransferUser;
 class CTransferTracker;

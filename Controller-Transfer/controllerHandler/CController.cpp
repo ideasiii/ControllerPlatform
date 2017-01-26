@@ -5,20 +5,12 @@
  *      Author: Jugo
  */
 
-#include <list>
-#include <ctime>
-
-#include "utility.h"
+#include "common.h"
 #include "CController.h"
-#include "CDataHandler.cpp"
-#include "CThreadHandler.h"
-#include "JSONObject.h"
-#include "JSONArray.h"
 #include "CTimer.h"
 #include "CTransferTracker.h"
 #include "CTransferUser.h"
-
-using namespace std;
+#include "LogHandler.h"
 
 static CController * controller = 0;
 
@@ -73,7 +65,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	SetTimer(666, 3, 10, onTimer);
+	SetTimer(666, 3, 1, onTimer);
 	return TRUE;
 }
 

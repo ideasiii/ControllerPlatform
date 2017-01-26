@@ -13,12 +13,13 @@
 #include "LogHandler.h"
 
 JSONArray::JSONArray() :
-		cjsonArray(0)
+		cjsonArray(0), mnExtPointObj(0)
 {
 	cjsonArray = cJSON_CreateArray();
 }
 
-JSONArray::JSONArray(cJSON *pcJSON)
+JSONArray::JSONArray(cJSON *pcJSON) :
+		mnExtPointObj(1)
 {
 	cjsonArray = pcJSON;
 	if (cjsonArray)
@@ -158,6 +159,14 @@ string JSONArray::toString()
 
 void JSONArray::release()
 {
-	cJSON_Delete(cjsonArray);
+	if (mnExtPointObj)
+		return;
+	if (0 != cjsonArray)
+	{
+		printf("[JSONArray] release start\n");
+		cJSON_Delete(cjsonArray);
+		cjsonArray = 0;
+		printf("[JSONArray] release finish\n");
+	}
 }
 

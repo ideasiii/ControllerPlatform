@@ -31,6 +31,11 @@ CTransferTracker::CTransferTracker() :
 
 CTransferTracker::~CTransferTracker()
 {
+	mongo->close();
+	psql->close();
+	sqlite->close();
+	delete psql;
+	delete sqlite;
 	delete mongo;
 }
 
@@ -69,6 +74,7 @@ string CTransferTracker::getPSqlLastDate(string strTableName)
 		{
 			strRet = (*listRest.begin())["maxdate"];
 		}
+		listRest.clear();
 	}
 	if (strRet.empty())
 		strRet = "2015-07-27 00:00:00";
@@ -103,10 +109,12 @@ int CTransferTracker::syncColume()
 			if (!psql->sqlExec(strSQL.c_str()))
 			{
 				sqlite->close();
+				jsonArrayIOS.release();
 				return FALSE;
 			}
 		}
 	}
+	jsonArrayIOS.release();
 
 	// Get POYA Android Fields From PostgreSQL
 	psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
@@ -127,10 +135,12 @@ int CTransferTracker::syncColume()
 			if (!psql->sqlExec(strSQL.c_str()))
 			{
 				sqlite->close();
+				jsonArrayAndroid.release();
 				return FALSE;
 			}
 		}
 	}
+	jsonArrayAndroid.release();
 
 	sqlite->close();
 	return TRUE;
@@ -161,7 +171,10 @@ int CTransferTracker::syncData()
 	sqlite->close();
 
 	if (0 >= jsonArrayIOS.size())
+	{
+		jsonArrayIOS.release();
 		return FALSE;
+	}
 
 	strSQL = "INSERT INTO tracker_poya_ios (_id,id,create_date,";
 	for (int i = 0; i < jsonArrayIOS.size(); ++i)
@@ -202,10 +215,13 @@ int CTransferTracker::syncData()
 			}
 		}
 
+		jsonItem.release();
+		oid.release();
 		//_log(strSQL_INSERT.c_str());
 		//break;
 		psql->sqlExec(strSQL_INSERT.c_str());
 	}
+	jsonArrayIOS.release();
 	_log("[CTransferTracker] POYA IOS count: %d", nCount);
 	return TRUE;
 }

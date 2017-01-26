@@ -10,8 +10,6 @@
 #include <string>
 #include <set>
 
-
-
 class CMongoDBHandler;
 class CSqliteHandler;
 class CPsqlHandler;
@@ -24,7 +22,7 @@ public:
 	int start();
 
 private:
-	string getPSqlLastDate(string strTableName);
+	std::string getPSqlLastDate(std::string strTableName);
 	int syncColume();
 	int syncData();
 
@@ -32,7 +30,6 @@ private:
 	CMongoDBHandler *mongo;
 	CSqliteHandler *sqlite;
 	CPsqlHandler *psql;
-	set<string> sPoyaFieldIos;
-	set<string> sPoyaFieldAndroid;
-
+	std::set<std::string> sPoyaFieldIos;
+	std::set<std::string> sPoyaFieldAndroid;
 };

@@ -9,8 +9,6 @@
 
 #include <string>
 
-using namespace std;
-
 class CSqliteHandler;
 class CPsqlHandler;
 
@@ -23,7 +21,7 @@ public:
 	void stop();
 
 private:
-	string getPSqlLastDate();
+	std::string getPSqlLastDate();
 
 private:
 	CSqliteHandler *sqlite;

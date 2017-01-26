@@ -16,6 +16,8 @@
 
 #define DB_PATH_IDEAS "/data/sqlite/ideas.db"
 
+using namespace std;
+
 CTransferUser::CTransferUser() :
 		sqlite(new CSqliteHandler()), psql(new CPsqlHandler())
 {
@@ -35,7 +37,10 @@ int CTransferUser::start()
 		return FALSE;
 
 	if (!sqlite->connectDB(DB_PATH_IDEAS))
+	{
+		psql->close();
 		return FALSE;
+	}
 
 	string strSQL = "SELECT * FROM user WHERE create_date >= '" + getPSqlLastDate() + "'";
 
@@ -54,16 +59,18 @@ int CTransferUser::start()
 						+ jsonItem.getString("fb_name", "") + "','" + jsonItem.getString("fb_email", "") + "','"
 						+ jsonItem.getString("fb_account", "") + "','" + jsonItem.getString("g_account", "") + "','"
 						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("create_date") + "')";
+		jsonItem.release();
 		psql->sqlExec(strSQL.c_str());
 
 	}
+	jsonArray.release();
 
-	sqlite->close();
-	psql->close();
+	stop();
 	return TRUE;
 }
 void CTransferUser::stop()
 {
+	psql->close();
 	sqlite->close();
 }
 
@@ -79,6 +86,7 @@ string CTransferUser::getPSqlLastDate()
 		{
 			strRet = (*listRest.begin())["maxdate"];
 		}
+		listRest.clear();
 	}
 	if (strRet.empty())
 		strRet = "2015-07-27 00:00:00";

@@ -42,4 +42,5 @@ public:
 
 private:
 	cJSON * cjsonArray;
+	int mnExtPointObj;
 };

@@ -28,7 +28,7 @@ LDLIBS  = -L/usr/lib/x86_64-linux-gnu \
 			-lboost_regex \
 			-lboost_program_options
 
-_OBJS   = CMongoDBHandler.o main.o
+_OBJS   = CMongoDBHandler.o #main.o
 OBJECTS = $(patsubst %, $(OBJDIR)/%, $(_OBJS))
 
 all: $(TARGET)
