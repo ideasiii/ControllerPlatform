@@ -46,10 +46,8 @@ void JSONObject::release()
 
 	if (0 != cjsonObj)
 	{
-		printf("[JSONObject] release start\n");
 		cJSON_Delete(cjsonObj);
 		cjsonObj = 0;
-		printf("[JSONObject] release finish\n");
 	}
 }
 

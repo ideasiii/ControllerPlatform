@@ -23,13 +23,11 @@ public:
 
 private:
 	std::string getPSqlLastDate(std::string strTableName);
-	int syncColume();
-	int syncData();
+	int syncColume(std::string strTable, std::string strAppId);
+	int syncData(std::string strTable, std::string strAppId);
 
 private:
 	CMongoDBHandler *mongo;
 	CSqliteHandler *sqlite;
 	CPsqlHandler *psql;
-	std::set<std::string> sPoyaFieldIos;
-	std::set<std::string> sPoyaFieldAndroid;
 };

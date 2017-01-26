@@ -163,10 +163,8 @@ void JSONArray::release()
 		return;
 	if (0 != cjsonArray)
 	{
-		printf("[JSONArray] release start\n");
 		cJSON_Delete(cjsonArray);
 		cjsonArray = 0;
-		printf("[JSONArray] release finish\n");
 	}
 }
 

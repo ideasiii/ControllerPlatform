@@ -47,14 +47,22 @@ int CTransferTracker::start()
 		return FALSE;
 	}
 
-// 動態欄位同步處理
-	if (syncColume())
+	if (syncColume("tracker_poya_ios", APP_ID_POYA_IOS))
 	{
-		syncData();
+		syncData("tracker_poya_ios", APP_ID_POYA_IOS);
 	}
 	else
 	{
-		_log("[CTransferTracker] Sync Database Colume Fail.");
+		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_ios");
+	}
+
+	if (syncColume("tracker_poya_android", APP_ID_POYA_ANDROID))
+	{
+		syncData("tracker_poya_android", APP_ID_POYA_ANDROID);
+	}
+	else
+	{
+		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_android");
 	}
 
 	psql->close();
@@ -81,72 +89,46 @@ string CTransferTracker::getPSqlLastDate(string strTableName)
 	return strRet;
 }
 
-int CTransferTracker::syncColume()
+int CTransferTracker::syncColume(string strTable, string strAppId)
 {
 	string strValue;
 
 	if (!sqlite->connectDB(DB_PATH_FIELD))
 		return FALSE;
 
-	// Get POYA IOS Fields From PostgreSQL
-	psql->getFields("tracker_poya_ios", sPoyaFieldIos);
+	// Get Fields From PostgreSQL
+	set<string> sFields;
+	psql->getFields(strTable, sFields);
 
-	// Get POYA IOS Field From Sqlite
-	string strSQL = "select * from device_field where id = '1472188091474'";
-	JSONArray jsonArrayIOS;
-	sqlite->query(strSQL, jsonArrayIOS);
+	// Get Field From Sqlite
+	string strSQL = "select * from device_field where id = '" + strAppId + "'";
+	JSONArray jsonArray;
+	sqlite->query(strSQL, jsonArray);
 
-	for (int i = 0; i < jsonArrayIOS.size(); ++i)
+	for (int i = 0; i < jsonArray.size(); ++i)
 	{
-		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
+		JSONObject jsonItem(jsonArray.getJsonObject(i));
 		strValue = jsonItem.getString("field");
 		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-		_log("[CTransferTracker] ios check field name: %s", strValue.c_str());
+
 		// Sync sqlite & postgresql fields
-		if (sPoyaFieldIos.find(strValue) == sPoyaFieldIos.end())
+		if (sFields.find(strValue) == sFields.end())
 		{
-			strSQL = format("ALTER TABLE tracker_poya_ios ADD COLUMN %s TEXT;", strValue.c_str());
+			strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), strValue.c_str());
 			if (!psql->sqlExec(strSQL.c_str()))
 			{
 				sqlite->close();
-				jsonArrayIOS.release();
+				jsonArray.release();
 				return FALSE;
 			}
 		}
 	}
-	jsonArrayIOS.release();
-
-	// Get POYA Android Fields From PostgreSQL
-	psql->getFields("tracker_poya_android", sPoyaFieldAndroid);
-	// Get POYA Android Field From Sqlite
-	strSQL = "select * from device_field where id = '1472188038304'";
-	JSONArray jsonArrayAndroid;
-	sqlite->query(strSQL, jsonArrayAndroid);
-	for (int j = 0; j < jsonArrayAndroid.size(); ++j)
-	{
-		JSONObject jsonItem(jsonArrayAndroid.getJsonObject(j));
-		strValue = jsonItem.getString("field");
-		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-		_log("[CTransferTracker] android check field name: %s", strValue.c_str());
-		// Sync sqlite & postgresql fields
-		if (sPoyaFieldAndroid.find(strValue) == sPoyaFieldAndroid.end())
-		{
-			strSQL = format("ALTER TABLE tracker_poya_android ADD COLUMN %s TEXT;", strValue.c_str());
-			if (!psql->sqlExec(strSQL.c_str()))
-			{
-				sqlite->close();
-				jsonArrayAndroid.release();
-				return FALSE;
-			}
-		}
-	}
-	jsonArrayAndroid.release();
-
+	jsonArray.release();
 	sqlite->close();
 	return TRUE;
 }
 
-int CTransferTracker::syncData()
+int CTransferTracker::syncData(string strTable, string strAppId)
 {
 	string strSQL;
 	string strSQL_INSERT;
@@ -156,16 +138,15 @@ int CTransferTracker::syncData()
 
 	mongo->connectDB("127.0.0.1", "27017");
 
-	BSONObj query =
-			BSON(
-					"create_date" << BSON("$gte" << getPSqlLastDate("tracker_poya_ios") ) << "ID" << BSON("$regex" << "1472188091474"));
+	BSONObj query = BSON(
+			"create_date" << BSON("$gte" << getPSqlLastDate(strTable) ) << "ID" << BSON("$regex" << strAppId));
 	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
 
 	// Get POYA IOS Field From Sqlite
 	if (!sqlite->connectDB(DB_PATH_FIELD))
 		return FALSE;
-	strSQL = "select * from device_field where id = '1472188091474'";
+	strSQL = "select * from device_field where id = '" + strAppId + "'";
 	JSONArray jsonArrayIOS;
 	sqlite->query(strSQL, jsonArrayIOS);
 	sqlite->close();
@@ -176,7 +157,7 @@ int CTransferTracker::syncData()
 		return FALSE;
 	}
 
-	strSQL = "INSERT INTO tracker_poya_ios (_id,id,create_date,";
+	strSQL = "INSERT INTO " + strTable + " (_id,id,create_date,";
 	for (int i = 0; i < jsonArrayIOS.size(); ++i)
 	{
 		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
@@ -193,7 +174,6 @@ int CTransferTracker::syncData()
 
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
-		++nCount;
 		JSONObject jsonItem(*i);
 		JSONObject oid(jsonItem.getJsonObject("_id"));
 		strSQL_INSERT = strSQL + oid.getString("$oid") + "','" + jsonItem.getString("ID") + "','"
@@ -219,9 +199,12 @@ int CTransferTracker::syncData()
 		oid.release();
 		//_log(strSQL_INSERT.c_str());
 		//break;
-		psql->sqlExec(strSQL_INSERT.c_str());
+		if (psql->sqlExec(strSQL_INSERT.c_str()))
+		{
+			++nCount;
+		}
 	}
 	jsonArrayIOS.release();
-	_log("[CTransferTracker] POYA IOS count: %d", nCount);
+	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
 	return TRUE;
 }

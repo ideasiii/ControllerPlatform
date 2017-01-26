@@ -77,12 +77,12 @@ int CPsqlHandler::sqlExec(const char *szSQL)
 		if (0 >= strError.find("already exists"))
 		{
 			_log("[CPsqlHandler] sqlExec Fail: %s\rSQL:%s", PQerrorMessage(conn), szSQL);
-			nRet = FALSE;
 		}
 		else
 		{
 			_DBG("[CPsqlHandler] sqlExec Fail: %s\nSQL:%s", PQerrorMessage(conn), szSQL);
 		}
+		nRet = FALSE;
 	}
 	else
 	{
