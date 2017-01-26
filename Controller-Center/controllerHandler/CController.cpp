@@ -5,22 +5,15 @@
  *      Author: Jugo
  */
 
-#include <list>
-#include <ctime>
-
-#include "CSocket.h"
-#include "CSocketServer.h"
-#include "CSocketClient.h"
 #include "event.h"
-#include "utility.h"
 #include "CCmpHandler.h"
 #include "CController.h"
-#include "CDataHandler.cpp"
-#include "CSqliteHandler.h"
-#include "CThreadHandler.h"
 #include "CServerCenter.h"
-#include "JSONObject.h"
 #include "ICallback.h"
+#include "LogHandler.h"
+#include "CSqliteHandler.h"
+#include "utility.h"
+#include "packet.h"
 
 using namespace std;
 
@@ -46,7 +39,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 
 CController::CController() :
 		CObject(), cmpParser(CCmpHandler::getInstance()), serverCenter(CServerCenter::getInstance()), sqlite(
-				CSqliteHandler::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler)
+				CSqliteHandler::getInstance())
 {
 
 }

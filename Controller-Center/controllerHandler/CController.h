@@ -13,16 +13,12 @@
 #include <map>
 #include "CObject.h"
 #include "common.h"
-#include "packet.h"
 
 using namespace std;
 
 class CCmpHandler;
 class CSqliteHandler;
-class CThreadHandler;
-class CJsonHandler;
 class CServerCenter;
-class CSocket;
 
 class CController: public CObject
 {
@@ -45,7 +41,4 @@ public:
 private:
 	CServerCenter *serverCenter;
 	CSqliteHandler *sqlite;
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
-	std::vector<int> vEnquireLink;
 };

@@ -85,7 +85,7 @@ string CTransferTracker::getPSqlLastDate(string strTableName)
 		listRest.clear();
 	}
 	if (strRet.empty())
-		strRet = "2015-07-27 00:00:00";
+		strRet = "2015-07-27 00:00:00"; // ^_^ Jugo 到職日
 	return strRet;
 }
 
@@ -147,24 +147,24 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	if (!sqlite->connectDB(DB_PATH_FIELD))
 		return FALSE;
 	strSQL = "select * from device_field where id = '" + strAppId + "'";
-	JSONArray jsonArrayIOS;
-	sqlite->query(strSQL, jsonArrayIOS);
+	JSONArray jsonArray;
+	sqlite->query(strSQL, jsonArray);
 	sqlite->close();
 
-	if (0 >= jsonArrayIOS.size())
+	if (0 >= jsonArray.size())
 	{
-		jsonArrayIOS.release();
+		jsonArray.release();
 		return FALSE;
 	}
 
 	strSQL = "INSERT INTO " + strTable + " (_id,id,create_date,";
-	for (int i = 0; i < jsonArrayIOS.size(); ++i)
+	for (int i = 0; i < jsonArray.size(); ++i)
 	{
-		JSONObject jsonItem(jsonArrayIOS.getJsonObject(i));
+		JSONObject jsonItem(jsonArray.getJsonObject(i));
 		strValue = jsonItem.getString("field");
 		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
 		strSQL += strValue;
-		if (jsonArrayIOS.size() != (i + 1))
+		if (jsonArray.size() != (i + 1))
 		{
 			strSQL += ",";
 		}
@@ -179,13 +179,13 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		strSQL_INSERT = strSQL + oid.getString("$oid") + "','" + jsonItem.getString("ID") + "','"
 				+ jsonItem.getString("create_date") + "','";
 
-		for (int i = 0; i < jsonArrayIOS.size(); ++i)
+		for (int i = 0; i < jsonArray.size(); ++i)
 		{
-			JSONObject jsonField(jsonArrayIOS.getJsonObject(i));
+			JSONObject jsonField(jsonArray.getJsonObject(i));
 			strValue = jsonField.getString("field");
 			strSQL_INSERT += jsonItem.getString(strValue, "");
 
-			if (jsonArrayIOS.size() != (i + 1))
+			if (jsonArray.size() != (i + 1))
 			{
 				strSQL_INSERT += "','";
 			}
@@ -204,7 +204,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 			++nCount;
 		}
 	}
-	jsonArrayIOS.release();
+	jsonArray.release();
 	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
 	return TRUE;
 }

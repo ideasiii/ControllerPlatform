@@ -260,6 +260,7 @@ int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const voi
 				}
 
 			}
+			jsonData.release();
 		}
 	}
 

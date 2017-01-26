@@ -501,6 +501,7 @@ static char *print_string(cJSON *item, printbuffer *p)
 static const char *parse_value(cJSON *item, const char *value);
 static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p);
 static const char *parse_array(cJSON *item, const char *value);
+static char *print_array(cJSON *item);
 static char *print_array(cJSON *item, int depth, int fmt, printbuffer *p);
 static const char *parse_object(cJSON *item, const char *value);
 static char *print_object(cJSON *item, int depth, int fmt, printbuffer *p);
@@ -555,6 +556,13 @@ char *cJSON_Print(cJSON *item)
 {
 	return print_value(item, 0, 1, 0);
 }
+
+char *cJSON_Print_Array(cJSON *item)
+{
+	printf("[cJSON] cJSON_Print_Array\n");
+	return print_array(item);
+}
+
 char *cJSON_PrintUnformatted(cJSON *item)
 {
 	return print_value(item, 0, 0, 0);
@@ -617,7 +625,11 @@ static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 {
 	char *out = 0;
 	if (!item)
+	{
+		printf("[cJSON] Invalid Item!!\n");
 		return 0;
+	}
+
 	if (p)
 	{
 		switch ((item->type) & 255)
@@ -655,6 +667,9 @@ static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 		case cJSON_Object:
 			out = print_object(item, depth, fmt, p);
 			break;
+		default:
+			printf("[cJSON] Unknow Item Type!!\n");
+			break;
 		}
 	}
 	else
@@ -681,6 +696,9 @@ static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 			break;
 		case cJSON_Object:
 			out = print_object(item, depth, fmt, 0);
+			break;
+		default:
+			printf("[cJSON] Unknow Item Type!!\n");
 			break;
 		}
 	}
@@ -726,6 +744,88 @@ static const char *parse_array(cJSON *item, const char *value)
 		return value + 1; /* end of array */
 	ep = value;
 	return 0; /* malformed. */
+}
+
+static char *print_array(cJSON *item)
+{
+	char **entries;
+	char *out = 0;
+	char *ptr, *ret;
+	int len = 5;
+	cJSON *child = item->child;
+	int numentries = 0, i = 0, fail = 0;
+	size_t tmplen = 0;
+
+	/* How many entries in the array? */
+	while (child)
+		numentries++, child = child->next;
+	/* Explicitly handle numentries==0 */
+	if (!numentries)
+	{
+		out = (char*) cJSON_malloc(3);
+		if (out)
+			strcpy(out, "[]");
+		return out;
+	}
+
+	/* Allocate an array to hold the values for each */
+	entries = (char**) cJSON_malloc(numentries * sizeof(char*));
+	if (!entries)
+		return 0;
+	memset(entries, 0, numentries * sizeof(char*));
+	/* Retrieve all the results: */
+	child = item->child;
+	while (child && !fail)
+	{
+		ret = print_value(child, 1, 1, 0);
+		entries[i++] = ret;
+		if (ret)
+			len += strlen(ret) + 2 + (1 ? 1 : 0);
+		else
+			fail = 1;
+		child = child->next;
+	}
+
+	/* If we didn't fail, try to malloc the output string */
+	if (!fail)
+		out = (char*) cJSON_malloc(len);
+	/* If that fails, we fail. */
+	if (!out)
+		fail = 1;
+
+	/* Handle failure. */
+	if (fail)
+	{
+		for (i = 0; i < numentries; i++)
+			if (entries[i])
+				cJSON_free(entries[i]);
+		cJSON_free(entries);
+		return 0;
+	}
+
+	/* Compose the output array. */
+	*out = '[';
+	ptr = out + 1;
+	*ptr = 0;
+	for (i = 0; i < numentries; i++)
+	{
+		tmplen = strlen(entries[i]);
+		memcpy(ptr, entries[i], tmplen);
+		ptr += tmplen;
+		if (i != numentries - 1)
+		{
+			*ptr++ = ',';
+			*ptr++ = ' ';
+			*ptr = 0;
+		}
+		cJSON_free(entries[i]);
+	}
+	cJSON_free(entries);
+	*ptr++ = ']';
+	*ptr++ = 0;
+
+	printf("[cJSON] print_array ========== 866\n");
+	return out;
 }
 
 /* Render an array to text */
@@ -847,6 +947,7 @@ static char *print_array(cJSON *item, int depth, int fmt, printbuffer *p)
 		*ptr++ = ']';
 		*ptr++ = 0;
 	}
+
 	return out;
 }
 

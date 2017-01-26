@@ -13,13 +13,13 @@
 using namespace std;
 
 JSONObject::JSONObject() :
-		cjsonObj(0)
+		cjsonObj(0), mnExtPointObj(0)
 {
 	cjsonObj = cJSON_CreateObject();
 }
 
 JSONObject::JSONObject(string strSource) :
-		cjsonObj(0)
+		cjsonObj(0), mnExtPointObj(0)
 {
 	cjsonObj = cJSON_Parse(strSource.c_str());
 	if (!cjsonObj)
@@ -28,7 +28,8 @@ JSONObject::JSONObject(string strSource) :
 	}
 }
 
-JSONObject::JSONObject(cJSON *pcJSON)
+JSONObject::JSONObject(cJSON *pcJSON) :
+		mnExtPointObj(1)
 {
 	cjsonObj = pcJSON;
 }
@@ -40,7 +41,14 @@ JSONObject::~JSONObject()
 
 void JSONObject::release()
 {
-	cJSON_Delete(cjsonObj);
+	if (mnExtPointObj)
+		return;
+
+	if (0 != cjsonObj)
+	{
+		cJSON_Delete(cjsonObj);
+		cjsonObj = 0;
+	}
 }
 
 bool JSONObject::isValid()

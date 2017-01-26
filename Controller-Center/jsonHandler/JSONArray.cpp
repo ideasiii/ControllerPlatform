@@ -5,19 +5,25 @@
  *      Author: root
  */
 
+#include <stdio.h>
 #include "JSONArray.h"
 #include "JSONObject.h"
 #include "cJSON.h"
+#include "utility.h"
+#include "LogHandler.h"
 
 JSONArray::JSONArray() :
-		cjsonArray(0)
+		cjsonArray(0), mnExtPointObj(0)
 {
 	cjsonArray = cJSON_CreateArray();
 }
 
-JSONArray::JSONArray(cJSON *pcJSON)
+JSONArray::JSONArray(cJSON *pcJSON) :
+		mnExtPointObj(1)
 {
 	cjsonArray = pcJSON;
+	if (cjsonArray)
+		cjsonArray->type = cJSON_Array;
 }
 
 JSONArray::~JSONArray()
@@ -131,5 +137,34 @@ bool JSONArray::isNull(int index)
 	if (value)
 		return true;
 	return false;
+}
+
+string JSONArray::toString()
+{
+	string strOut = "[";
+
+	for (int i = 0; i < this->size(); ++i)
+	{
+		JSONObject jsonItem(this->getJsonObject(i));
+		strOut += jsonItem.toString();
+		if (i != this->size() - 1)
+		{
+			strOut += ",";
+		}
+		_log("%s", strOut.c_str());
+	}
+	strOut += "]";
+	return strOut;
+}
+
+void JSONArray::release()
+{
+	if (mnExtPointObj)
+		return;
+	if (0 != cjsonArray)
+	{
+		cJSON_Delete(cjsonArray);
+		cjsonArray = 0;
+	}
 }
 

@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 	rjobjRoot.release();
 
 	//========================== cJSON Example ====================================================//
-	/*
+	/* 
 	 strJSON =
 	 "{\"Scrollable\":[{\"name\": \"Image67818\",\"Width\": 781,\"Offset\": { \"X\":591, \"Y\": 0},\"src\": \"images/13374i67818.jpg\",\"IsVisible\": true},{\"name\": \"Image67854\",\"Width\": 249,\"Offset\": { \"X\":0, \"Y\": 88},\"src\": \"images/13374i67854.png\",\"IsVisible\": false}]}";
 	 cJSON * root;
