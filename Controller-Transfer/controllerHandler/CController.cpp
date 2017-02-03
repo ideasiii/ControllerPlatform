@@ -35,7 +35,7 @@ void CController::OnTimer(int nId)
 
 	CTransferUser transUser;
 	CTransferTracker transTracker;
-//	transUser.start();
+	transUser.start();
 	transTracker.start();
 
 	mnBusy = FALSE;

@@ -29,7 +29,7 @@ CTransferUser::~CTransferUser()
 
 int CTransferUser::start()
 {
-	_log("[CTransferUser] Start");
+	_log("============== Transfer Uer Table Start ============");
 	string strLastDate;
 	CPsqlHandler psql;
 	CSqliteHandler sqlite;

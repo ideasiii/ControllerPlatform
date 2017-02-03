@@ -33,6 +33,7 @@ CTransferTracker::~CTransferTracker()
 
 int CTransferTracker::start()
 {
+	_log("============== Transfer Tracker Table Start ============");
 
 	if (syncColume("tracker_poya_ios", APP_ID_POYA_IOS))
 	{
