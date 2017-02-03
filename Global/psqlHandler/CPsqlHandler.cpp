@@ -19,12 +19,15 @@ CPsqlHandler::CPsqlHandler()
 
 CPsqlHandler::~CPsqlHandler()
 {
-	close();
+	if (0 != conn)
+		PQfinish(conn);
 }
 
 int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbName, const char *login, const char *pwd)
 {
-	close();
+	if (0 != conn)
+		PQfinish(conn);
+
 	conn = PQsetdbLogin(pghost, pgport, NULL, NULL, dbName, login, pwd);
 
 	//ConnStatusType的值最常用的两个是CONNECTION_OK或 CONNECTION_BAD。
@@ -35,7 +38,6 @@ int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbNam
 		return 0;
 	}
 
-	_log("[CPsqlHandler] Connection to database Success\n");
 //	printf("User: %s\n", PQuser(conn));
 //	printf("Database name: %s\n", PQdb(conn));
 //	printf("Password: %s\n", PQpass(conn));
@@ -56,7 +58,6 @@ void CPsqlHandler::close()
 	if (0 != conn)
 		PQfinish(conn);
 	conn = 0;
-	_log("[CPsqlHandler] PQfinish");
 }
 
 int CPsqlHandler::sqlExec(const char *szSQL)
@@ -144,7 +145,7 @@ int CPsqlHandler::query(const char *szSQL, list<map<string, string> > &listRest)
 {
 	if (0 == conn)
 	{
-		printf("[CPsqlHandler] Invalid PGconn");
+		_log("[CPsqlHandler] Invalid PGconn");
 		return ERROR_INVALID_CONN;
 	}
 
@@ -185,22 +186,22 @@ int CPsqlHandler::getFields(string strTableName, set<string> &sFields)
 	string strSQL = "SELECT * FROM " + strTableName + " LIMIT 1";
 	if (0 == conn)
 	{
-		printf("[CPsqlHandler] Invalid PGconn");
+		_log("[CPsqlHandler] Invalid PGconn");
 		return ERROR_INVALID_CONN;
 	}
 
 	PGresult *res = PQexec(conn, strSQL.c_str());
+	sFields.clear();
 
 	if (res)
 	{
-		sFields.clear();
-		int nCount = PQnfields(res);
-		for (int i = 0; i < nCount; ++i)
+		for (int i = 0; i < PQnfields(res); ++i)
 		{
 			sFields.insert(PQfname(res, i));
-			//_log("[CPsqlHandler] get Field Name: %s", PQfname(res, i));
 		}
 	}
+	PQclear(res);
+	res = 0;
 
 	return sFields.size();
 }

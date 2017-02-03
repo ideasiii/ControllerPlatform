@@ -9,9 +9,6 @@
 
 #include "CObject.h"
 
-class CTransferUser;
-class CTransferTracker;
-
 class CController: public CObject
 {
 public:
@@ -28,8 +25,6 @@ private:
 	explicit CController();
 
 private:
-	CTransferTracker *transTracker;
-	CTransferUser *transUser;
 	volatile int mnBusy;
 
 };

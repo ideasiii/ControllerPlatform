@@ -15,37 +15,24 @@
 #include "CSqliteHandler.h"
 #include "JSONArray.h"
 #include "JSONObject.h"
+#include "config.h"
 
 using namespace std;
 using namespace mongo;
 
-#define DB_PATH_FIELD				"/data/sqlite/field.db"
-#define APP_ID_POYA_ANDROID		"1472188038304"
-#define APP_ID_POYA_IOS			"1472188091474"
-
 CTransferTracker::CTransferTracker() :
-		mongo(CMongoDBHandler::getInstance()), sqlite(new CSqliteHandler()), psql(new CPsqlHandler())
+		mongo(CMongoDBHandler::getInstance())
 {
 
 }
 
 CTransferTracker::~CTransferTracker()
 {
-	mongo->close();
-	psql->close();
-	sqlite->close();
-	delete psql;
-	delete sqlite;
-	delete mongo;
+
 }
 
 int CTransferTracker::start()
 {
-	if (!psql->open("175.98.119.121", "5432", "tracker", "tracker", "ideas123!"))
-	{
-		_log("[CTransferTracker] Postgresql Connect Fail");
-		return FALSE;
-	}
 
 	if (syncColume("tracker_poya_ios", APP_ID_POYA_IOS))
 	{
@@ -65,45 +52,62 @@ int CTransferTracker::start()
 		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_android");
 	}
 
-	psql->close();
-
 	return TRUE;
 }
 
 string CTransferTracker::getPSqlLastDate(string strTableName)
 {
-	string strRet;
-	if (psql)
+	string strRet = DEFAULT_LAST_DATE;
+	CPsqlHandler psql;
+	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	{
+		_log("[CTransferTracker] Error: Postgresql Connect Fail");
+	}
+	else
 	{
 		string strSQL = "select max(create_date) as maxdate from " + strTableName;
 		list<map<string, string> > listRest;
-		psql->query(strSQL.c_str(), listRest);
+		psql.query(strSQL.c_str(), listRest);
 		if (0 < listRest.size())
 		{
 			strRet = (*listRest.begin())["maxdate"];
 		}
 		listRest.clear();
+		psql.close();
 	}
-	if (strRet.empty())
-		strRet = "2015-07-27 00:00:00"; // ^_^ Jugo 到職日
 	return strRet;
 }
 
 int CTransferTracker::syncColume(string strTable, string strAppId)
 {
 	string strValue;
+	set<string> sFields;
+	CSqliteHandler sqlite;
+	CPsqlHandler psql;
 
-	if (!sqlite->connectDB(DB_PATH_FIELD))
+	if (!sqlite.connectDB(DB_PATH_FIELD))
+	{
+		_log("[CTransferTracker] Error: Sqlite Connect Fail: %s", DB_PATH_FIELD);
 		return FALSE;
+	}
 
 	// Get Fields From PostgreSQL
-	set<string> sFields;
-	psql->getFields(strTable, sFields);
+	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	{
+		_log("[CTransferTracker] Error: Postgresql Connect Fail");
+		sqlite.close();
+		return FALSE;
+	}
+	else
+	{
+		psql.getFields(strTable, sFields);
+	}
 
 	// Get Field From Sqlite
 	string strSQL = "select * from device_field where id = '" + strAppId + "'";
+
 	JSONArray jsonArray;
-	sqlite->query(strSQL, jsonArray);
+	sqlite.query(strSQL, jsonArray);
 
 	for (int i = 0; i < jsonArray.size(); ++i)
 	{
@@ -115,16 +119,18 @@ int CTransferTracker::syncColume(string strTable, string strAppId)
 		if (sFields.find(strValue) == sFields.end())
 		{
 			strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), strValue.c_str());
-			if (!psql->sqlExec(strSQL.c_str()))
+			if (!psql.sqlExec(strSQL.c_str()))
 			{
-				sqlite->close();
+				psql.close();
+				sqlite.close();
 				jsonArray.release();
 				return FALSE;
 			}
 		}
 	}
 	jsonArray.release();
-	sqlite->close();
+	sqlite.close();
+	psql.close();
 	return TRUE;
 }
 
@@ -135,21 +141,34 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	int nCount = 0;
 	list<string> listJSON;
 	string strValue;
+	CSqliteHandler sqlite;
+	CPsqlHandler psql;
 
-	mongo->connectDB("127.0.0.1", "27017");
+	mongo->connectDB(MONGO_HOST, MONGO_PORT);
 
 	BSONObj query = BSON(
 			"create_date" << BSON("$gte" << getPSqlLastDate(strTable) ) << "ID" << BSON("$regex" << strAppId));
 	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
 
-	// Get POYA IOS Field From Sqlite
-	if (!sqlite->connectDB(DB_PATH_FIELD))
+	if (!sqlite.connectDB(DB_PATH_FIELD))
+	{
+		_log("[CTransferTracker] Error: Sqlite Connect Fail: %s", DB_PATH_FIELD);
 		return FALSE;
+	}
+
+	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	{
+		_log("[CTransferTracker] Error: Postgresql Connect Fail");
+		sqlite.close();
+		return FALSE;
+	}
+
+	// Get POYA IOS Field From Sqlite
 	strSQL = "select * from device_field where id = '" + strAppId + "'";
 	JSONArray jsonArray;
-	sqlite->query(strSQL, jsonArray);
-	sqlite->close();
+	sqlite.query(strSQL, jsonArray);
+	sqlite.close();
 
 	if (0 >= jsonArray.size())
 	{
@@ -196,15 +215,14 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		}
 
 		jsonItem.release();
-		oid.release();
-		//_log(strSQL_INSERT.c_str());
-		//break;
-		if (psql->sqlExec(strSQL_INSERT.c_str()))
+		//oid.release();
+		if (psql.sqlExec(strSQL_INSERT.c_str()))
 		{
 			++nCount;
 		}
 	}
 	jsonArray.release();
+	psql.close();
 	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
 	return TRUE;
 }

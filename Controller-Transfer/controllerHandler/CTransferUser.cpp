@@ -13,39 +13,46 @@
 #include "JSONObject.h"
 #include "CPsqlHandler.h"
 #include "CMongoDBHandler.h"
-
-#define DB_PATH_IDEAS "/data/sqlite/ideas.db"
+#include "config.h"
 
 using namespace std;
 
-CTransferUser::CTransferUser() :
-		sqlite(new CSqliteHandler()), psql(new CPsqlHandler())
+CTransferUser::CTransferUser()
 {
 
 }
 
 CTransferUser::~CTransferUser()
 {
-	stop();
-	delete sqlite;
-	delete psql;
+
 }
 
 int CTransferUser::start()
 {
-	if (!psql->open("175.98.119.121", "5432", "tracker", "tracker", "ideas123!"))
-		return FALSE;
+	_log("[CTransferUser] Start");
+	string strLastDate;
+	CPsqlHandler psql;
+	CSqliteHandler sqlite;
 
-	if (!sqlite->connectDB(DB_PATH_IDEAS))
+	strLastDate = getPSqlLastDate();
+
+	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
 	{
-		psql->close();
+		_log("[CTransferUser] Error: Postgresql Connect Fail");
 		return FALSE;
 	}
 
-	string strSQL = "SELECT * FROM user WHERE create_date >= '" + getPSqlLastDate() + "'";
+	if (!sqlite.connectDB(DB_PATH_IDEAS))
+	{
+		_log("[CTransferUser] Error: Sqlite Connect Fail");
+		psql.close();
+		return FALSE;
+	}
+
+	string strSQL = "SELECT * FROM user WHERE create_date >= '" + strLastDate + "'";
 
 	JSONArray jsonArray;
-	sqlite->query(strSQL, jsonArray);
+	sqlite.query(strSQL, jsonArray);
 
 	_log("[CTransferUser] JSON Item count: %d", jsonArray.size());
 	for (int i = 0; i < jsonArray.size(); ++i)
@@ -60,36 +67,37 @@ int CTransferUser::start()
 						+ jsonItem.getString("fb_account", "") + "','" + jsonItem.getString("g_account", "") + "','"
 						+ jsonItem.getString("t_account", "") + "','" + jsonItem.getString("create_date") + "')";
 		jsonItem.release();
-		psql->sqlExec(strSQL.c_str());
+		psql.sqlExec(strSQL.c_str());
 
 	}
 	jsonArray.release();
+	psql.close();
+	sqlite.close();
 
-	stop();
 	return TRUE;
-}
-void CTransferUser::stop()
-{
-	psql->close();
-	sqlite->close();
 }
 
 string CTransferUser::getPSqlLastDate()
 {
-	string strRet;
-	if (psql)
+	string strRet = DEFAULT_LAST_DATE;
+	CPsqlHandler psql;
+
+	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	{
+		_log("[CTransferUser] Error: Postgresql Connect Fail");
+	}
+	else
 	{
 		string strSQL = "select max(create_date) as maxdate from tracker_user";
 		list<map<string, string> > listRest;
-		psql->query(strSQL.c_str(), listRest);
+		psql.query(strSQL.c_str(), listRest);
 		if (0 < listRest.size())
 		{
 			strRet = (*listRest.begin())["maxdate"];
 		}
 		listRest.clear();
+		psql.close();
 	}
-	if (strRet.empty())
-		strRet = "2015-07-27 00:00:00";
 	return strRet;
 }
 

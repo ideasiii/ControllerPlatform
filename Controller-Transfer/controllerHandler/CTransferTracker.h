@@ -11,8 +11,6 @@
 #include <set>
 
 class CMongoDBHandler;
-class CSqliteHandler;
-class CPsqlHandler;
 
 class CTransferTracker
 {
@@ -28,6 +26,5 @@ private:
 
 private:
 	CMongoDBHandler *mongo;
-	CSqliteHandler *sqlite;
-	CPsqlHandler *psql;
+
 };

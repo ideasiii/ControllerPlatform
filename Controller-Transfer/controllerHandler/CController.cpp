@@ -11,6 +11,7 @@
 #include "CTransferTracker.h"
 #include "CTransferUser.h"
 #include "LogHandler.h"
+#include "config.h"
 
 static CController * controller = 0;
 
@@ -32,14 +33,16 @@ void CController::OnTimer(int nId)
 
 	mnBusy = TRUE;
 
-	transUser->start();
-	transTracker->start();
+	CTransferUser transUser;
+	CTransferTracker transTracker;
+//	transUser.start();
+	transTracker.start();
 
 	mnBusy = FALSE;
 }
 
 CController::CController() :
-		CObject(), transTracker(new CTransferTracker()), transUser(new CTransferUser()), mnBusy(FALSE)
+		CObject(), mnBusy(FALSE)
 {
 
 }
@@ -65,7 +68,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	SetTimer(666, 3, 10, onTimer);
+	SetTimer(666, 3, TIMER_DU, onTimer);
 	return TRUE;
 }
 

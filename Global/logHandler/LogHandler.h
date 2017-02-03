@@ -13,16 +13,16 @@ class CThreadHandler;
 
 class LogHandler
 {
-	public:
-		static LogHandler* getInstance();
-		virtual ~LogHandler();
-		void run();
-		void setLogPath(std::string strPath);
+public:
+	static LogHandler* getInstance();
+	virtual ~LogHandler();
+	void run();
+	void setLogPath(std::string strPath);
 
-	private:
-		LogHandler();
-		CThreadHandler *tdExportLog;
-		std::string mstrLogPath;
+private:
+	LogHandler();
+	CThreadHandler *tdExportLog;
+	std::string mstrLogPath;
 };
 
 extern void _log(const char* format, ...);
