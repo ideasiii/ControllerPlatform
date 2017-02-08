@@ -248,6 +248,23 @@ int CSocketServer::runSMSHandler(int nClientFD)
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
 
+	//********get client address START  *********************************
+	bool getCLientIP = false;
+	char ipstrp[INET6_ADDRSTRLEN];
+	int port;
+		socklen_t sockaddrlen = sizeof(sockaddr_in);
+	int ret = getpeername(nClientFD,(struct sockaddr *)clientSockaddr, &sockaddrlen);
+	if(ret != 0)
+	{
+		_log("[CSocketClient]getPeerName ERROR");
+	}
+	else
+	{
+		inet_ntop(AF_INET, &clientSockaddr->sin_addr,ipstrp,sizeof(ipstrp));
+		_log("[CSocketClient]Client Connect START: Socket Client FD: %d Connected From %s",nClientFD,ipstrp);
+		getCLientIP = true;
+	}
+	//********get client address END *********************************
 	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(cmpPacket));
@@ -258,7 +275,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
-/*			if ( enquire_link_request == nCommand)
+			if ( enquire_link_request == nCommand)
 			{
 				printf("*********enquire_link_request******\n");
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
@@ -268,9 +285,9 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
+				_DBG("[Socket Server] Send Enquire Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 				continue;
-			}*/
+			}
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
@@ -353,6 +370,10 @@ int CSocketServer::runSMSHandler(int nClientFD)
 		}
 	} // while
 
+	if(getCLientIP == true)
+	{
+		_log("[CSocketServer]Client Connect END: Socket Client FD: %d Connected From %s",nClientFD,ipstrp);
+	}
 	delete clientSockaddr;
 
 	sendMessage(m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);

@@ -65,6 +65,7 @@ class CSocket
 		int getIfAddress();
 		int make_socket_non_blocking(int nSocketFD);
 		int isValidSocketFD();
+		char *getMac();
 
 	private:
 		void setLastError(int nErrNo);

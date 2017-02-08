@@ -180,7 +180,7 @@ void runService(int argc, char* argv[])
 	{
 		if (controller->startServer())
 		{
-			controller->connectCenter();
+			//controller->connectCenter();
 			controller->connectMongoDBController();
 			_log("<=============Controller-Tracker Service Start Run =============>\n");
 			controller->run( EVENT_FILTER_CONTROLLER);
