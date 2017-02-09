@@ -16,6 +16,8 @@
 #include <sys/epoll.h>
 #include "CSocket.h"
 #include "LogHandler.h"
+#include <string.h>
+
 #define FLAGS	MSG_NOSIGNAL // send & recv flag
 CSocket::CSocket() :
 		m_nSocketType( AF_INET ), m_nSocketFD( -1 ), m_nPort( -1 ), m_nLastError( 0 ), m_nSocketStyle( SOCK_STREAM )
@@ -622,6 +624,7 @@ int CSocket::getSocketStyle() const
 
 char *CSocket::getMac(const char *iface)
 {
+
 	char *ret = (char*) malloc( 13 );
 	struct ifreq s;
 	int fd = socket( PF_INET, SOCK_DGRAM, IPPROTO_IP );
@@ -638,6 +641,34 @@ char *CSocket::getMac(const char *iface)
 		perror( "malloc/socket/ioctl failed" );
 	}
 	return (ret);
+}
+
+char *CSocket::getMac()
+{
+		struct ifaddrs *addrs,*tmp;
+		char *ifaName = (char *) malloc(sizeof(char) * IFNAMSIZ);
+		getifaddrs(&addrs);
+		tmp = addrs;
+
+		while (tmp)
+		{
+		    if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_PACKET)
+		    {
+		    	printf("%s\n", tmp->ifa_name);
+		    	if(strcmp("lo",tmp->ifa_name) !=0)
+		    	{
+		    		strcpy(ifaName,tmp->ifa_name);
+		    		break;
+		    	}
+
+		    }
+		    tmp = tmp->ifa_next;
+		}
+
+		freeifaddrs(addrs);
+
+		return getMac(ifaName);
+
 }
 
 int CSocket::getIfAddress()

@@ -21,7 +21,7 @@
 #include <map>
 #include "ClientHandler.h"
 #include "CSqlite.h"
-#include "cJSON.h"
+#include "JSONObject.h"
 #include <vector>
 
 using namespace std;
@@ -124,7 +124,7 @@ int Controller::init(std::string strConf)
 	mConfig.strServerPort = config->getValue("SERVER", "port");
 	_DBG("[Controller] Server Port:%s", mConfig.strServerPort.c_str());
 
-	char *szMAC = cmpServer->getMac("eth0");
+	char *szMAC = cmpServer->getMac();
 	mConfig.strMAC = szMAC;
 	free(szMAC);
 	_DBG("[Controller] MAC Address:%s", mConfig.strMAC.c_str());
@@ -438,7 +438,6 @@ int Controller::cmpBindRequest(const int nSocket, CSocketClient * client)
 int Controller::cmpAccessLogRequest(const int nSocketFD, std::string strType, std::string strLog)
 {
 
-
 	int nRet = -1;
 	int nBody_len = 0;
 	int nTotal_len = 0;
@@ -606,32 +605,44 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 
-	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
+	JSONObject  mJSONObject = JSONObject((rData["data"].c_str()));
+	if(mJSONObject.isValid())
 	{
-		_log("[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket);
-
-		int result = cmpAccessLogRequest(mongoDBClient->getSocketfd(), rData["type"], rData["data"]);
-		if (result > 0)
+		if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 		{
-			_log("[Controller] AccessLog send to MongoDB Controller success result = %d", result);
+			_log("[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket);
+
+
+			int result = cmpAccessLogRequest(mongoDBClient->getSocketfd(), rData["type"], rData["data"]);
+			if (result > 0)
+			{
+				_log("[Controller] AccessLog send to MongoDB Controller success result = %d", result);
+			}
+			else
+			{
+				_log("[Controller] AccessLog send to MongoDB Controller FAIL!");
+			}
+
+			// lock and auto add device id and device field
+			//mCSqlite->sendMessage(EVENT_FILTER_CSQLITE, 1, 0, rData["data"].capacity(), (void *) (rData["data"]).c_str());
+			mCSqlite->createThread(rData["data"]);
+			// unlock
+
 		}
 		else
 		{
-			_log("[Controller] AccessLog send to MongoDB Controller FAIL!");
+			_log("[Controller] Access Log Fail, Invalid Body Parameters Socket FD: %d", nSocket);
+			//sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
 		}
-
-		/* lock and auto add device id and device field */
-		//mCSqlite->sendMessage(EVENT_FILTER_CSQLITE, 1, 0, rData["data"].capacity(), (void *) (rData["data"]).c_str());
-		mCSqlite->createThread(rData["data"]);
-		/* unlock */
-
 	}
 	else
 	{
-		_log("[Controller] Access Log Fail, Invalid Body Parameters Socket FD: %d", nSocket);
-		//sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
+		_log("[Controller] Invaild JSON format!!  data: %s",rData["data"].c_str());
 	}
 	rData.clear();
+
+	mJSONObject.release();
+
 	return 0;
 }
 
@@ -757,7 +768,7 @@ void Controller::runEnquireLinkRequest()
 
 	while (1)
 	{
-		tdEnquireLink->threadSleep(20);
+		tdEnquireLink->threadSleep(60);
 		strLog = "Run Enquire Link Request";
 		_DBG("[Controller] %s", strLog.c_str());
 		/** Check Enquire link response **/
@@ -789,11 +800,11 @@ void Controller::runEnquireLinkRequest()
 			listValue.clear();
 		}
 
-		_DBG("*********Cmp Client socket fd %d", cmpClient->getSocketfd());
+		//_DBG("*********Cmp Client socket fd %d", cmpClient->getSocketfd());
 		_DBG("*********MongoDB Client socket fd %d", mongoDBClient->getSocketfd());
 
 		/**  Check Control Center Connection **/
-		if (!cmpClient->isValidSocketFD())
+		/*if (!cmpClient->isValidSocketFD())
 		{
 			_log("[Controller] Control Center Disconnect will reconnect");
 			connectCenter();
@@ -801,7 +812,8 @@ void Controller::runEnquireLinkRequest()
 		else
 		{
 			cmpEnquireLinkRequest(cmpClient->getSocketfd());
-		}
+		}*/
+
 
 		/**  Check MongoDB Controller Connection **/
 		if (!mongoDBClient->isValidSocketFD())

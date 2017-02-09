@@ -117,6 +117,8 @@ void CSocketClient::runMessageReceive()
 
 void CSocketClient::runSMSSocketReceive(int nSocketFD)
 {
+	bool getCLientIP = false;
+
 	int result = 0;
 	char szTmp[16];
 	int nTotalLen = 0;
@@ -135,10 +137,34 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 	struct sockaddr_in *clientSockaddr;
 	clientSockaddr = new struct sockaddr_in;
 
+
+	//get client address START
+	char ipstrp[INET6_ADDRSTRLEN];
+	int port;
+	socklen_t sockaddrlen = sizeof(clientSockaddr);
+
+	int ret = getpeername(nSocketFD,(struct sockaddr *)&clientSockaddr, &sockaddrlen);
+	//ret = -1;
+	if(ret != 0)
+	{
+		_log("[CSocketClient]getPeerName ERROR");
+	}
+	else
+	{
+		inet_ntop(AF_INET, &clientSockaddr,ipstrp,sizeof(ipstrp));
+		_log("[CSocketClient]Server Connect START: Socket Client FD: %d Connected From %s",nSocketFD,ipstrp);
+		getCLientIP = true;
+	}
+
+
+
+	//get client address END
+
 	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(CMP_PACKET));
 		result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr);
+
 		if (sizeof(CMP_HEADER) == result)
 		{
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
@@ -148,7 +174,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			if ( enquire_link_request == nCommand)
 			{
-				_DBG("[Socket Client] Receive Enquir Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_DBG("[Socket Client] Receive Enquire Link Request Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
 				cmpHeader.command_id = htonl(nCommandResp);
@@ -156,7 +182,7 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 				cmpHeader.sequence_number = htonl(nSequence);
 				cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 				socketSend(nSocketFD, &cmpHeader, sizeof(CMP_HEADER));
-				_DBG("[Socket Client] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
+				_DBG("[Socket Client] Send Enquire Link Response Sequence:%d Socket FD:%d", nSequence, nSocketFD);
 				continue;
 			}
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
@@ -214,6 +240,10 @@ void CSocketClient::runSMSSocketReceive(int nSocketFD)
 		}
 	} // while
 
+	if(getCLientIP == true)
+	{
+		_log("[CSocketClient]Server Connect END: Socket Client FD: %d Connected From %s",nSocketFD,ipstrp);
+	}
 	sendMessage(m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, threadHandler->getThreadID(), 0, NULL);
 
 	threadHandler->threadSleep(1);
