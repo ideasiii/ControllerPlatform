@@ -216,7 +216,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		}
 
 		jsonItem.release();
-		//oid.release();
+
 		if (psql.sqlExec(strSQL_INSERT.c_str()))
 		{
 			++nCount;

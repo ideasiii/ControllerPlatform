@@ -12,7 +12,8 @@ SRC_DIR   := $(DIR_APP_ROOT)
 BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I./ -I../global_inc
+
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
 		
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \

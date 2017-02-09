@@ -9,14 +9,12 @@
 
 #include <string>
 #include <map>
-
 #include "CSocketServer.h"
 #include "ICallback.h"
 
 using namespace std;
 
 class CCmpHandler;
-class CSqliteHandler;
 
 class CServerCenter: public CSocketServer
 {
@@ -43,6 +41,5 @@ private:
 	int cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData);
 	map<int, CBFun> mapCallback;
 	map<int, int> mapClient;
-	CSqliteHandler *sqlite;
 
 };

@@ -7,6 +7,8 @@
 
 include env.mk
 include modules.mk
+include libs.mk
+
 
 TARGET    := controller-center
 CC        := g++
@@ -16,7 +18,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE)
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
@@ -67,7 +69,6 @@ lib:
 checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
-	@mkdir -p libs
 	
 clean:
 	@for libName in ${MODULES} ; do \

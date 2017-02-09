@@ -14,61 +14,75 @@
 #include "cJSON.h"
 #include "JSONObject.h"
 #include "JSONArray.h"
-
+#include <unistd.h>
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-	printf("==================== JSONObject Write ============================\n");
-	JSONObject jobjRoot;
-	JSONObject jobjCtrl;
-	JSONArray jArray;
-	JSONObject jobjItem;
-	JSONObject jobjItem2;
-
-	jobjRoot.put("result", 0);
-	jobjCtrl.put("count", 2);
-
-	jobjItem.put("type", 0);
-	jobjItem.put("value", 0);
-	jArray.add(jobjItem);
-
-	jobjItem2.put("type", 1);
-	jobjItem2.put("value", 1);
-	jobjItem2.put("ssid", "xxxxxx");
-	jArray.add(jobjItem2);
-	jArray.add("jtest");
-
-	jobjCtrl.put("list", jArray);
-
-	jobjRoot.put("control", jobjCtrl);
-
-	printf("%s\n", jobjRoot.toString().c_str());
-
-	string strJSON = jobjRoot.toString();
-
-	jobjRoot.release();
-
-	printf("==================== JSONObject Read ============================\n");
-	JSONObject rjobjRoot(strJSON);
-	printf("result:%d\n", rjobjRoot.getInt("result"));
-	JSONObject rjobjCtrl(rjobjRoot.getJsonObject("control"));
-	printf("count:%d\n", rjobjCtrl.getInt("count"));
-	JSONArray rjlist(rjobjCtrl.getJsonArray("list"));
-
-	for (int i = 0; i < 2; ++i)
+	while (1)
 	{
-		JSONObject rjitem(rjlist.getJsonObject(i));
-		printf("type:%d\n", rjitem.getInt("type"));
-		printf("value:%d\n", rjitem.getInt("value"));
-		if (!rjitem.isNull("ssid"))
+		JSONObject *jobjRoot = new JSONObject("{\"key\":10000}");
+		if (jobjRoot->isValid())
 		{
-			printf("ssid:%s\n", rjitem.getString("ssid").c_str());
+			printf("JSON Valid\n");
 		}
+		jobjRoot->release();
+		delete jobjRoot;
+		jobjRoot = 0;
+		sleep(0.3);
 	}
 
-	rjobjRoot.release();
+	/*
+	 printf("==================== JSONObject Write ============================\n");
+	 JSONObject jobjRoot;
+	 JSONObject jobjCtrl;
+	 JSONArray jArray;
+	 JSONObject jobjItem;
+	 JSONObject jobjItem2;
 
+	 jobjRoot.put("result", 0);
+	 jobjCtrl.put("count", 2);
+
+	 jobjItem.put("type", 0);
+	 jobjItem.put("value", 0);
+	 jArray.add(jobjItem);
+
+	 jobjItem2.put("type", 1);
+	 jobjItem2.put("value", 1);
+	 jobjItem2.put("ssid", "xxxxxx");
+	 jArray.add(jobjItem2);
+	 jArray.add("jtest");
+
+	 jobjCtrl.put("list", jArray);
+
+	 jobjRoot.put("control", jobjCtrl);
+
+	 printf("%s\n", jobjRoot.toString().c_str());
+
+	 string strJSON = jobjRoot.toString();
+
+	 jobjRoot.release();
+
+	 printf("==================== JSONObject Read ============================\n");
+	 JSONObject rjobjRoot(strJSON);
+	 printf("result:%d\n", rjobjRoot.getInt("result"));
+	 JSONObject rjobjCtrl(rjobjRoot.getJsonObject("control"));
+	 printf("count:%d\n", rjobjCtrl.getInt("count"));
+	 JSONArray rjlist(rjobjCtrl.getJsonArray("list"));
+
+	 for (int i = 0; i < 2; ++i)
+	 {
+	 JSONObject rjitem(rjlist.getJsonObject(i));
+	 printf("type:%d\n", rjitem.getInt("type"));
+	 printf("value:%d\n", rjitem.getInt("value"));
+	 if (!rjitem.isNull("ssid"))
+	 {
+	 printf("ssid:%s\n", rjitem.getString("ssid").c_str());
+	 }
+	 }
+
+	 rjobjRoot.release();
+	 */
 	//========================== cJSON Example ====================================================//
 	/* 
 	 strJSON =

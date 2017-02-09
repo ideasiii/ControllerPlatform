@@ -258,7 +258,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
-/*			if ( enquire_link_request == nCommand)
+			if ( enquire_link_request == nCommand)
 			{
 				printf("*********enquire_link_request******\n");
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
@@ -270,7 +270,7 @@ int CSocketServer::runSMSHandler(int nClientFD)
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
 				_DBG("[Socket Server] Send Enquir Link Response Sequence:%d Socket FD:%d", nSequence, nClientFD);
 				continue;
-			}*/
+			}
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 

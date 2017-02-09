@@ -16,8 +16,6 @@
 
 using namespace std;
 
-class CCmpHandler;
-class CSqliteHandler;
 class CServerCenter;
 
 class CController: public CObject
@@ -26,7 +24,6 @@ public:
 	virtual ~CController();
 	static CController* getInstance();
 	int startServerCenter(string strIP, const int nPort, const int nMsqId);
-	int startIdeasSqlite(string strDBPath);
 	void stopServer();
 
 protected:
@@ -35,10 +32,6 @@ protected:
 private:
 	explicit CController();
 
-public:
-	CCmpHandler *cmpParser;
-
 private:
 	CServerCenter *serverCenter;
-	CSqliteHandler *sqlite;
 };

@@ -75,16 +75,6 @@ void runService()
 							nMsgID);
 				}
 			}
-
-			if (!controller->startIdeasSqlite(config->getValue("SQLITE", "db_ideas")))
-			{
-				nInit = FALSE;
-				_log("[Controller] Start db_ideas Sqlite Service Fail.");
-			}
-			else
-			{
-				_log("[Controller] Start db_ideas Sqlite Service Success.");
-			}
 		}
 		else
 		{

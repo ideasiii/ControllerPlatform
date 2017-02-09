@@ -106,6 +106,7 @@ void CSqliteHandler::close()
 
 int CSqliteHandler::sqlExec(string strSQL)
 {
+	int nRet = TRUE;
 	char *zErrMsg = 0;
 	_log("[Sqlite] SQL exec: %s", strSQL.c_str());
 	sqlite3_exec(database, "PRAGMA synchronous=OFF", callback, 0, &zErrMsg);
@@ -114,9 +115,10 @@ int CSqliteHandler::sqlExec(string strSQL)
 	{
 		_log("[Sqlite] SQL exec error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
+		nRet = FALSE;
 	}
 
-	return rc;
+	return nRet;
 }
 
 int CSqliteHandler::query(string strSQL, JSONArray &jsonArray)
