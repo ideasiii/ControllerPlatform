@@ -24,11 +24,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>global_inc</name>
-			<type>2</type>
-			<location>/data/opt/ControllerPlatform/Global/global_inc</location>
-		</link>
-	</linkedResources>
 </projectDescription>
