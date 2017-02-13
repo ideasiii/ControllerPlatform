@@ -15,6 +15,7 @@ socketHandler	\
 sqliteHandler	\
 threadHandler	\
 timerHandler \
-mongoDBHandler
+mongoDBHandler \
+mysqlHandler
 
 export EXT_MODULES=extInclude

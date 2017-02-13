@@ -17,7 +17,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
@@ -36,7 +36,9 @@ LDLIBS    := $(LIB_LINK) \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
-			-lboost_program_options
+			-lboost_program_options \
+			-L/usr/local/lib \
+			-lmysqlclient
 					
 vpath %.cpp $(SRC_DIR)
 
@@ -122,6 +124,7 @@ package-u:
 	apt-get -y install autoconf automake libtool
 	apt-get -y install libmongo-client-dev
 	apt-get -y install libpq-dev
+	apt-get -y install libmysqld-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 	
