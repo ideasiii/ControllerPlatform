@@ -608,7 +608,7 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 	JSONObject  mJSONObject = JSONObject((rData["data"].c_str()));
 	if(mJSONObject.isValid())
 	{
-		if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
+	/*	if (0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
 		{
 			_log("[Controller] Access Log Type:%s Data:%s FD:%d", rData["type"].c_str(), rData["data"].c_str(), nSocket);
 
@@ -633,15 +633,17 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 		{
 			_log("[Controller] Access Log Fail, Invalid Body Parameters Socket FD: %d", nSocket);
 			//sendCommandtoClient(nSocket, nCommand, STATUS_RINVBODY, nSequence, true);
-		}
+		}*/
 	}
 	else
 	{
 		_log("[Controller] Invaild JSON format!!  data: %s",rData["data"].c_str());
 	}
+	mJSONObject.release();
+
 	rData.clear();
 
-	mJSONObject.release();
+
 
 	return 0;
 }

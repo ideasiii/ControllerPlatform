@@ -1,14 +1,14 @@
 #####################################
-# Controller make file
-# Created on: Nor 02,2015
-# Author: Louis Ju
-# This is controller service prototype
+# ControllerAmx make file
+# Created on: 2016-07-05
+# Author: Jugo
+# Project: Smart Building
 #####################################
 
 include env.mk
 include modules.mk
 
-TARGET    := controller-tracker2
+TARGET    := controller-meeting
 CC        := g++
 LD        := g++
 
@@ -18,6 +18,7 @@ SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdi
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
@@ -25,27 +26,27 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lboost_thread \
-			-lboost_system \
-			-lboost_filesystem \
-			-lboost_regex \
-			-lboost_program_options \
 			-lsqlite3
-			
-vpath %.cpp $(SRC_DIR)
+					
+vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	$(CC) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
 	@echo -ne '###### $1 Object Build Done. ######\n'
 	@echo "\n"
 endef
 
 .PHONY: all bin/$(TARGET) lib checkdirs clean cleanAll
 
-.IGNORE: clean
+.IGNORE: clean cleanAll
 
-all: checkdirs package-u lib bin/$(TARGET)
+all: checkdirs bin/$(TARGET)
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo "\n"
+	
+init: package-u checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
@@ -53,7 +54,7 @@ all: checkdirs package-u lib bin/$(TARGET)
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
-	strip -s $@
+	#strip -s $@
 	@echo "\n"
 
 lib:
@@ -66,33 +67,35 @@ lib:
 checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
-	@mkdir -p libs
 	
 clean:
 	@for libName in ${MODULES} ; do \
-		$(MAKE) V=99 -C $$libName clean; \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
 	@for libName in ${LIB_NAMES} ; do \
-		$(MAKE) V=99 -C $$libName clean; \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
 	@for libName in ${EXT_MODULES} ; do \
-		$(MAKE) V=99 -C $$libName clean; \
+		$(MAKE) V=99 -C $$libName clean > /dev/null; \
 	done
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
+	@rm -rf $(DIR_APP_ROOT)Global
 
 cleanAll: clean
-	@rm -rf $(DIR_APP_ROOT)libs/*
-	#@rm -rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build
+	@rm -rf $(DIR_APP_ROOT)libs
 	
 mk_debug:
 	@echo "\n"
 	@echo 'Program Name    : '$(TARGET)
 	@echo 'Program Version : '$(VERSION)"\n"
 	@echo 'Source Director : '$(SRC_DIR)"\n"
+	@echo 'Source  : '$(SRC)"\n"
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
+	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
+	@echo 'Libs:'${LIB_NAMES}"\n"
 	
 package-s:
 	yum -y install sqlite-devel.x86_64
@@ -108,12 +111,5 @@ package-u:
 	apt-get -y install autoconf automake libtool
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
-
-#mongoDB:
-#	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install;
-#	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
-#	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
-#	@echo -ne '\n###### MongoDB Build Done. ######\n'
-#	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

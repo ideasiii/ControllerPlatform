@@ -9,8 +9,7 @@
 #include "JSONArray.h"
 #include "JSONObject.h"
 #include "cJSON.h"
-#include "utility.h"
-#include "LogHandler.h"
+
 
 JSONArray::JSONArray() :
 		cjsonArray(0), mnExtPointObj(0)
@@ -151,7 +150,7 @@ string JSONArray::toString()
 		{
 			strOut += ",";
 		}
-		_log("%s", strOut.c_str());
+		//_log("%s", strOut.c_str());
 	}
 	strOut += "]";
 	return strOut;
