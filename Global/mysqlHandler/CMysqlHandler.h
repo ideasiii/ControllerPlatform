@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include<mysql/mysql.h>
 #include <string>
 #include <list>
 #include <map>
@@ -22,11 +21,13 @@ public:
 	int sqlExec(std::string strSQL);
 	int query(std::string strSQL, std::list<std::map<std::string, std::string> > &listRest);
 	std::string getLastError();
+	int getLastErrorNo();
 
 private:
 	void setError(std::string strMsg);
 
 private:
-	MYSQL *mpMySQL;
 	std::string mstrLastError;
+	int mnLastErrorNo;
+
 };

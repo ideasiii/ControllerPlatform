@@ -6,21 +6,18 @@
  */
 
 #include <iostream>
-
+#include <mysql/mysql.h>
 #include "CMysqlHandler.h"
 #include "common.h"
 
 using namespace std;
 
-CMysqlHandler::CMysqlHandler()
+MYSQL *mpMySQL;
+
+CMysqlHandler::CMysqlHandler() :
+		mnLastErrorNo(0)
 {
-	mpMySQL = mysql_init(NULL);
-	if (NULL == mpMySQL)
-	{
-		setError("MySQL Init Fail");
-	}
-	else
-		cout << "[CMysqlHandler] MySQL Init Success" << endl;
+	mpMySQL = 0;
 }
 
 CMysqlHandler::~CMysqlHandler()
@@ -30,13 +27,15 @@ CMysqlHandler::~CMysqlHandler()
 
 int CMysqlHandler::connect(string strHost, string strDB, string strUser, string strPassword)
 {
+	close();
+	mpMySQL = mysql_init(NULL);
 	if (NULL == mpMySQL)
 	{
-		setError("MySQL Client not Init");
+		setError("MySQL Init Fail");
 		return FALSE;
 	}
-
-	cout << "mysql stat: " << mysql_stat(mpMySQL) << endl;
+	else
+		cout << "[CMysqlHandler] MySQL Init Success" << endl;
 
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
@@ -62,18 +61,27 @@ void CMysqlHandler::close()
 	}
 }
 
+/**
+ * Error: 1062 SQLSTATE: 23000 (ER_DUP_ENTRY)
+ */
 void CMysqlHandler::setError(string strMsg)
 {
 	if (NULL != mpMySQL)
 	{
 		mstrLastError = mysql_error(mpMySQL);
-		cout << "[CMysqlHandler] " << strMsg << ": " << mstrLastError << endl;
+		mnLastErrorNo = mysql_errno(mpMySQL);
+		cout << "[CMysqlHandler] " << strMsg << ": (" << mnLastErrorNo << ") " << mstrLastError << endl;
 	}
 }
 
 string CMysqlHandler::getLastError()
 {
 	return mstrLastError;
+}
+
+int CMysqlHandler::getLastErrorNo()
+{
+	return mnLastErrorNo;
 }
 
 int CMysqlHandler::sqlExec(string strSQL)
@@ -111,7 +119,17 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 	else
 	{
 		MYSQL_RES *result = mysql_use_result(mpMySQL); // 獲取結果集
+		if (NULL == result)
+		{
+			setError("MySQL Result Fail");
+			return FALSE;
+		}
+
+		MYSQL_FIELD *fields = mysql_fetch_fields(result); // 獲取欄位
 		MYSQL_ROW row;
+
+		fields = mysql_fetch_fields(result);
+		map<string, string> dataItem;
 		// mysql_field_count()返回connection查詢的列數
 		for (unsigned int i = 0; i < mysql_field_count(mpMySQL); ++i)
 		{
@@ -122,11 +140,13 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 				break;
 			}
 			// mysql_num_fields()返回結果集中的字段數
+			dataItem.clear();
 			for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
 			{
-				cout << row[j] << " ";
+				//			cout << fields[j].name << ":" << row[j] << endl;
+				dataItem[fields[j].name] = row[j];
 			}
-			cout << endl;
+			listRest.push_back(dataItem);
 		}
 		// 釋放結果集的內存
 		mysql_free_result(result);

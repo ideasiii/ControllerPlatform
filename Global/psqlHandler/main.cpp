@@ -62,7 +62,7 @@ void handler()
 		string strField;
 		string strValue;
 		map<string, string> mapItem;
-		int nCount = 1;
+		int nCount = 0;
 		for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
 		{
 			mapItem = *i;
@@ -70,8 +70,9 @@ void handler()
 			{
 				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
 			}
-			printf("=============================%d================================\n", nCount);
+
 		}
+		printf("=============================%d================================\n", nCount);
 
 		psql->close();
 	}
