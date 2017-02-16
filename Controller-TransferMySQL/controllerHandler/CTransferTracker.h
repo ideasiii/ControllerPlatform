@@ -10,6 +10,9 @@
 #include <string>
 #include <set>
 
+class CMysqlHandler;
+class CPsqlHandler;
+
 class CTransferTracker
 {
 public:
@@ -21,5 +24,7 @@ private:
 	std::string getPSqlLastDate(std::string strTableName);
 	int syncColume(std::string strTable, std::string strAppId);
 	int syncData(std::string strTable, std::string strAppId);
+	CMysqlHandler *pmysql;
+	CPsqlHandler *ppsql;
 
 };

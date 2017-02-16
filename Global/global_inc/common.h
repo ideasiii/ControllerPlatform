@@ -31,7 +31,8 @@ extern "C"
 
 #define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)
 
-#define _TRACE(msg, arg...) printf("[DEBUG] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg)
+#define _TRACE(msg, arg...) printf("[TRACE] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg)
+#define _BREAK printf("[BREAK] %s:%s(%d): \n" ,__FILE__, __FUNCTION__, __LINE__)
 
 #define BUF_SIZE		2048	// socket send & recv buffer
 #define BACKLOG		128		// How many pending connections queue will hold

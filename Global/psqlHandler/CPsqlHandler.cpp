@@ -12,6 +12,8 @@
 
 PGconn *conn = 0;
 
+using namespace std;
+
 CPsqlHandler::CPsqlHandler()
 {
 	conn = 0;
@@ -19,15 +21,14 @@ CPsqlHandler::CPsqlHandler()
 
 CPsqlHandler::~CPsqlHandler()
 {
-	if (0 != conn)
-		PQfinish(conn);
+	close();
 }
 
 int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbName, const char *login, const char *pwd)
 {
-	if (0 != conn)
-		PQfinish(conn);
+	close();
 
+	_log("[CPsqlHandler] Login: %s %s %s %s %s", pghost, pgport, dbName, login, pwd);
 	conn = PQsetdbLogin(pghost, pgport, NULL, NULL, dbName, login, pwd);
 
 	//ConnStatusType的值最常用的两个是CONNECTION_OK或 CONNECTION_BAD。
@@ -56,8 +57,11 @@ int CPsqlHandler::open(const char *pghost, const char *pgport, const char *dbNam
 void CPsqlHandler::close()
 {
 	if (0 != conn)
+	{
 		PQfinish(conn);
-	conn = 0;
+		conn = 0;
+		_log("[CPsqlHandler] Psql Finish");
+	}
 }
 
 int CPsqlHandler::sqlExec(const char *szSQL)
@@ -110,6 +114,7 @@ int CPsqlHandler::sqlExec(list<string> listSQL)
 		PQclear(res);
 		return FALSE;
 	}
+	PQclear(res);
 
 	string strItem;
 	for (list<string>::iterator it = listSQL.begin(); it != listSQL.end(); ++it)
@@ -122,8 +127,8 @@ int CPsqlHandler::sqlExec(list<string> listSQL)
 			if (PQresultStatus(res) != PGRES_COMMAND_OK)
 			{
 				_log("[CPsqlHandler] SQL Exec failed: %s\n", PQerrorMessage(conn));
-				PQclear(res);
 			}
+			PQclear(res);
 		}
 	}
 

@@ -14,15 +14,6 @@
 #define APP_ID_POYA_ANDROID		"1472188038304"
 #define APP_ID_POYA_IOS			"1472188091474"
 
-struct SETTING_DB
-{
-	std::string strHost;
-	std::string strPort;
-	std::string strUser;
-	std::string strPassword;
-	std::string strDatabase;
-};
 
-extern struct SETTING_DB psqlSetting;
-extern struct SETTING_DB mysqlSetting;
+
 

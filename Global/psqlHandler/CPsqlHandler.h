@@ -11,8 +11,6 @@
 #include <string>
 #include <set>
 
-using namespace std;
-
 typedef enum
 {
 	ERROR_FAIL = 0,
@@ -33,9 +31,9 @@ public:
 	int open(const char *pghost, const char *pgport, const char *dbName, const char *login, const char *pwd);
 	void close();
 	int sqlExec(const char *szSQL);
-	int sqlExec(list<string> listSQL);
-	int query(const char *szSQL, list<map<string, string> > &listRest);
-	int getFields(string strTableName, set<string> &sFields);
+	int sqlExec(std::list<std::string> listSQL);
+	int query(const char *szSQL, std::list<std::map<std::string, std::string> > &listRest);
+	int getFields(std::string strTableName, std::set<std::string> &sFields);
 
 private:
 

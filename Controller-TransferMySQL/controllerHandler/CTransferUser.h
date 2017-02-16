@@ -10,6 +10,7 @@
 #include <string>
 
 class CMysqlHandler;
+class CPsqlHandler;
 
 class CTransferUser
 {
@@ -21,4 +22,5 @@ public:
 private:
 	std::string getMysqlLastDate();
 	CMysqlHandler *pmysql;
+	CPsqlHandler *ppsql;
 };

@@ -9,6 +9,7 @@
 #include <mysql/mysql.h>
 #include "CMysqlHandler.h"
 #include "common.h"
+#include "LogHandler.h"
 
 using namespace std;
 
@@ -111,6 +112,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 	}
 
 	// mysql_query()執行成功返回0，失敗返回非0值。
+	_log("[CMysqlHandler] mysql_query: %s", strSQL.c_str());
 	if (mysql_query(mpMySQL, strSQL.c_str()))
 	{
 		setError("Query Error");
@@ -130,6 +132,8 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 
 		fields = mysql_fetch_fields(result);
 		map<string, string> dataItem;
+		string strItem;
+		string strField;
 		// mysql_field_count()返回connection查詢的列數
 		for (unsigned int i = 0; i < mysql_field_count(mpMySQL); ++i)
 		{
@@ -143,14 +147,24 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 			dataItem.clear();
 			for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
 			{
-				//			cout << fields[j].name << ":" << row[j] << endl;
-				dataItem[fields[j].name] = row[j];
+				//		printf("[CMysqlHandler] Query Result: %s : %s\n", fields[j].name, row[j]);
+				if (0 != row[j])
+				{
+					strField = fields[j].name;
+					strItem = row[j];
+					dataItem[strField] = strItem;
+				}
 			}
 			listRest.push_back(dataItem);
 		}
 		// 釋放結果集的內存
 		mysql_free_result(result);
 	}
+	return TRUE;
+}
+
+int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sFields)
+{
 	return TRUE;
 }
 

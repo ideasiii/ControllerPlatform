@@ -12,6 +12,10 @@
 #include "CTransferUser.h"
 #include "LogHandler.h"
 #include "config.h"
+#include <map>
+#include <string>
+
+using namespace std;
 
 static CController * controller = 0;
 
@@ -34,7 +38,7 @@ void CController::OnTimer(int nId)
 	mnBusy = TRUE;
 
 	transUser->start();
-//	transTracker->start();
+	transTracker->start();
 
 	mnBusy = FALSE;
 }
@@ -80,21 +84,21 @@ int CController::stop()
 void CController::setPsql(const char *szHost, const char *szPort, const char *szDB, const char *szUser,
 		const char *szPassword)
 {
-	SETTING_DB psqlSeting;
-	psqlSeting.strHost = szHost;
-	psqlSeting.strPort = szPort;
-	psqlSeting.strDatabase = szDB;
-	psqlSeting.strUser = szUser;
-	psqlSeting.strPassword = szPassword;
+	extern map<string, string> mapPsqlSetting;
+	mapPsqlSetting["host"] = szHost;
+	mapPsqlSetting["port"] = szPort;
+	mapPsqlSetting["database"] = szDB;
+	mapPsqlSetting["user"] = szUser;
+	mapPsqlSetting["password"] = szPassword;
 }
 
 void CController::setMysql(const char *szHost, const char *szPort, const char *szDB, const char *szUser,
 		const char *szPassword)
 {
-	SETTING_DB mysqlSetting;
-	mysqlSetting.strHost = szHost;
-	mysqlSetting.strPort = szPort;
-	mysqlSetting.strDatabase = szDB;
-	mysqlSetting.strUser = szUser;
-	mysqlSetting.strPassword = szPassword;
+	extern map<string, string> mapMysqlSetting;
+	mapMysqlSetting["host"] = szHost;
+	mapMysqlSetting["port"] = szPort;
+	mapMysqlSetting["database"] = szDB;
+	mapMysqlSetting["user"] = szUser;
+	mapMysqlSetting["password"] = szPassword;
 }

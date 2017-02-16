@@ -5,11 +5,11 @@
  *      Author: Jugo
  */
 
+#include <list>
+#include <map>
 #include "CTransferUser.h"
 #include "common.h"
 #include "LogHandler.h"
-#include "JSONArray.h"
-#include "JSONObject.h"
 #include "CPsqlHandler.h"
 #include "CMysqlHandler.h"
 #include "config.h"
@@ -17,7 +17,7 @@
 using namespace std;
 
 CTransferUser::CTransferUser() :
-		pmysql(new CMysqlHandler)
+		pmysql(new CMysqlHandler), ppsql(new CPsqlHandler)
 {
 
 }
@@ -26,31 +26,80 @@ CTransferUser::~CTransferUser()
 {
 	pmysql->close();
 	delete pmysql;
+
+	ppsql->close();
+	delete ppsql;
 }
 
 int CTransferUser::start()
 {
 
 	_log("============== Transfer Uer Table Start ============");
+
+	extern map<string, string> mapPsqlSetting;
+	extern map<string, string> mapMysqlSetting;
 	string strLastDate;
-	CPsqlHandler psql;
+	string strSQL;
+	string strValues;
+	int nRet;
+	map<string, string> mapItem;
 
 	strLastDate = getMysqlLastDate();
-	SETTING_DB psqlSeting;
-	_DBG("psql host: %s", psqlSeting.strHost.c_str());
-	_DBG("psql database: %s", psqlSeting.strDatabase.c_str());
 
-	if (!psql.open(psqlSeting.strHost.c_str(), psqlSeting.strPort.c_str(), psqlSeting.strDatabase.c_str(),
-			psqlSeting.strUser.c_str(), psqlSeting.strPassword.c_str()))
+	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
+			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
 	{
 		_log("[CTransferUser] Error: Postgresql Connect Fail");
 		return FALSE;
 	}
 
-	string strSQL = "SELECT * FROM user WHERE create_date >= '" + strLastDate + "'";
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+	if (FALSE == nRet)
+	{
+		_log("[CTransferUser] Mysql Error: %s", pmysql->getLastError().c_str());
+		ppsql->close();
+		return FALSE;
+	}
 
-	psql.close();
+	strSQL = "SELECT * FROM tracker_user WHERE create_date >= '" + strLastDate + "'";
+	_log("[CTransferUser] run PSQL: %s", strSQL.c_str());
 
+	list<map<string, string> > listRest;
+	ppsql->query(strSQL.c_str(), listRest);
+	ppsql->close();
+
+	int nCount = 0;
+	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
+	{
+		strSQL = "INSERT INTO tracker_user (";
+		strValues = "VALUES(";
+		mapItem = *i;
+		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+		{
+			strSQL += (*j).first;
+			strValues = strValues + "'" + (*j).second + "'";
+			if (mapItem.end() != ++j)
+			{
+				strSQL += ",";
+				strValues += ",";
+			}
+			else
+			{
+				strSQL += ") ";
+				strValues += ")";
+			}
+			--j;
+		}
+		strSQL += strValues;
+		_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
+		if (FALSE == pmysql->sqlExec(strSQL))
+		{
+			_log("[CTransferUser] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
+		}
+	}
+	pmysql->close();
+	_log("[CTransferUser] Query tracker_user count: %d to Insert to MySQL", nCount);
 	return TRUE;
 }
 
@@ -61,15 +110,17 @@ string CTransferUser::getMysqlLastDate()
 	int nRet;
 
 	list<map<string, string> > listRest;
-	SETTING_DB mysqlSeting;
-	nRet = pmysql->connect(mysqlSeting.strHost, mysqlSeting.strDatabase, mysqlSeting.strUser, mysqlSeting.strPassword);
+	extern map<string, string> mapMysqlSetting;
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
 	if (FALSE == nRet)
 	{
-		_log("[CTransferUser] %s", pmysql->getLastError());
+		_log("[CTransferUser] Mysql Error: %s", pmysql->getLastError());
 	}
 	else
 	{
 		strSQL = "select max(create_date) as maxdate from tracker_user";
+
 		if (TRUE == pmysql->query(strSQL, listRest))
 		{
 			string strField;
@@ -81,13 +132,14 @@ string CTransferUser::getMysqlLastDate()
 				mapItem = *i;
 				for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
 				{
-					printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+					//printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
 					strRet = (*j).second.c_str();
 				}
 			}
 		}
 	}
 	pmysql->close();
+
 	return strRet;
 }
 

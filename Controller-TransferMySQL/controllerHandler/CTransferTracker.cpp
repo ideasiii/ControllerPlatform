@@ -11,20 +11,24 @@
 #include "LogHandler.h"
 #include "CTransferTracker.h"
 #include "CPsqlHandler.h"
-#include "JSONArray.h"
-#include "JSONObject.h"
+#include "CMysqlHandler.h"
 #include "config.h"
 
 using namespace std;
 
-CTransferTracker::CTransferTracker()
+CTransferTracker::CTransferTracker() :
+		pmysql(new CMysqlHandler), ppsql(new CPsqlHandler)
 {
 
 }
 
 CTransferTracker::~CTransferTracker()
 {
+	pmysql->close();
+	delete pmysql;
 
+	ppsql->close();
+	delete ppsql;
 }
 
 int CTransferTracker::start()
@@ -56,47 +60,55 @@ string CTransferTracker::getPSqlLastDate(string strTableName)
 {
 	string strRet = DEFAULT_LAST_DATE;
 	CPsqlHandler psql;
-/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
-	{
-		_log("[CTransferTracker] Error: Postgresql Connect Fail");
-	}
-	else
-	{
-		string strSQL = "select max(create_date) as maxdate from " + strTableName;
-		list<map<string, string> > listRest;
-		psql.query(strSQL.c_str(), listRest);
-		if (0 < listRest.size())
-		{
-			strRet = (*listRest.begin())["maxdate"];
-		}
-		listRest.clear();
-		psql.close();
-	}
-	*/
+	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	 {
+	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
+	 }
+	 else
+	 {
+	 string strSQL = "select max(create_date) as maxdate from " + strTableName;
+	 list<map<string, string> > listRest;
+	 psql.query(strSQL.c_str(), listRest);
+	 if (0 < listRest.size())
+	 {
+	 strRet = (*listRest.begin())["maxdate"];
+	 }
+	 listRest.clear();
+	 psql.close();
+	 }
+	 */
 	return strRet;
 }
 
 int CTransferTracker::syncColume(string strTable, string strAppId)
 {
+	extern map<string, string> mapPsqlSetting;
+	extern map<string, string> mapMysqlSetting;
 	string strValue;
 	set<string> sFields;
-	CPsqlHandler psql;
 
 	// Get Fields From PostgreSQL
-/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
+			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
 	{
 		_log("[CTransferTracker] Error: Postgresql Connect Fail");
 		return FALSE;
 	}
-	else
-	{
-		psql.getFields(strTable, sFields);
-	}
-*/
+	ppsql->getFields(strTable, sFields);
+	ppsql->close();
+	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	 {
+	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
+	 return FALSE;
+	 }
+	 else
+	 {
+	 psql.getFields(strTable, sFields);
+	 }
+	 */
 	// Get Field From Sqlite
 	string strSQL = "select * from device_field where id = '" + strAppId + "'";
 
-	psql.close();
 	return TRUE;
 }
 
@@ -108,14 +120,14 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	list<string> listJSON;
 	string strValue;
 	CPsqlHandler psql;
-/*
-	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
-	{
-		_log("[CTransferTracker] Error: Postgresql Connect Fail");
+	/*
+	 if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
+	 {
+	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
 
-		return FALSE;
-	}
-*/
+	 return FALSE;
+	 }
+	 */
 	// Get POYA IOS Field From Sqlite
 	strSQL = "select * from device_field where id = '" + strAppId + "'";
 
@@ -125,10 +137,6 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 
 	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
 	{
-		JSONObject jsonItem(*i);
-		JSONObject oid(jsonItem.getJsonObject("_id"));
-		strSQL_INSERT = strSQL + oid.getString("$oid") + "','" + jsonItem.getString("ID") + "','"
-				+ jsonItem.getString("create_date") + "','";
 
 	}
 	psql.close();

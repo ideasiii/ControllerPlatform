@@ -22,6 +22,7 @@ public:
 	int query(std::string strSQL, std::list<std::map<std::string, std::string> > &listRest);
 	std::string getLastError();
 	int getLastErrorNo();
+	int getFields(std::string strTableName, std::set<std::string> &sFields);
 
 private:
 	void setError(std::string strMsg);
