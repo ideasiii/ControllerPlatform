@@ -1,15 +1,8 @@
-/*
- * CServerAMX.cpp
- *
- *  Created on: 2016年8月9日
- *      Author: Jugo
- */
-
 #include "CSocketServer.h"
 #include "event.h"
 #include "packet.h"
 #include "common.h"
-#include "AMXCommand.h"
+
 #include "CServerMeeting.h"
 #include "IReceiver.h"
 #include "utility.h"
@@ -57,7 +50,7 @@ int CServerMeeting::startServer(string strIP, const int nPort, const int nMsqId)
 		cszAddr = strIP.c_str();
 	if ( FAIL == start( AF_INET, cszAddr, nPort))
 	{
-		_log("AMX Server Socket Create Fail");
+		_log("[CServerMeeting]Socket Create Fail");
 		return FALSE;
 	}
 	return TRUE;
@@ -68,102 +61,13 @@ void CServerMeeting::stopServer()
 	stop();
 }
 
-int CServerMeeting::sendCommand(string strCommand)
+
+
+
+
+bool CServerMeeting::onReceive(const int nSocketFD, const void *pData)
 {
-	int nResult = FALSE;
 
-	strCommand.append("\n");
-
-	map<int, int>::iterator it;
-	for (it = mapClient.begin(); it != mapClient.end(); ++it)
-	{
-		nResult = socketSend(it->first, strCommand.c_str(), strCommand.length());
-		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
-	}
-	return nResult;
-}
-
-int CServerMeeting::sendCommand(const int nSocketFD, string strCommand)
-{
-	int nResult = FALSE;
-
-	if (0 < nSocketFD)
-	{
-		nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
-		_log("[Server AMX] Send Command, length:%d Data:%s", nResult, strCommand.c_str());
-	}
-	return nResult;
-}
-
-void CServerMeeting::bind(const int nSocketFD)
-{
-	addClient(nSocketFD);
-	_log("[Server AMX] Bind Socket: %d", nSocketFD);
-}
-
-void CServerMeeting::unbind(const int nSocketFD)
-{
-	deleteClient(nSocketFD);
-	_log("[Server AMX] Unbind Socket: %d", nSocketFD);
-}
-
-bool CServerMeeting::onReceive(const int nSocketFD, string strCommand)
-{
-	if (0 < nSocketFD && !strCommand.empty())
-	{
-		_log("[Server AMX] Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
-
-		strCommand = trim(strCommand);
-		if (0 == strCommand.substr(0, 4).compare("bind"))
-		{
-			bind(nSocketFD);
-		}
-
-		if (0 == strCommand.substr(0, 6).compare("unbind"))
-		{
-			unbind(nSocketFD);
-		}
-
-		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
-		{
-			// Get Status Response
-			if (AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
-			{
-				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-			}
-
-			// Update AMX_STATUS_CURRENT Hashmap
-			if (AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
-			{
-				string strDevice = AMX_STATUS_TO_CMD[strCommand];
-				AMX_STATUS_CURRENT[strDevice] = strCommand;
-				_log("[Server ANX] Update AMX %s Current Status: %s", strDevice.c_str(), strCommand.c_str());
-			}
-		}
-
-		return true;
-	}
-	else
-	{
-		sendCommand(nSocketFD, CTL_ERROR);
-		_log("[Server AMX] Error Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
-	}
 	return false;
 }
 
-void CServerMeeting::addClient(const int nSocketFD)
-{
-	mapClient[nSocketFD] = nSocketFD;
-	_log("[Server AMX] Socket Client FD:%d Connected", nSocketFD);
-}
-
-void CServerMeeting::deleteClient(const int nSocketFD)
-{
-	mapClient.erase(nSocketFD);
-	_log("[Server AMX] Socket Client FD:%d Closed", nSocketFD);
-}
-
-void CServerMeeting::setCallback(const int nId, CBFun cbfun)
-{
-	mapCallback[nId] = cbfun;
-}

@@ -1,9 +1,3 @@
-/*
- * CServerDevice.h
- *
- *  Created on: 2016撟�8���9�
- *      Author: root
- */
 
 #pragma once
 
@@ -26,25 +20,20 @@ public:
 	virtual ~CServerDevice();
 	int startServer(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
-	void setCallback(const int nId, CBFun cbfun);
-	void broadcastAMXStatus(string strStatus);
-	void addClient(const int nSocketFD);
-	void deleteClient(const int nSocketFD);
-	void onTimer(int nId);
-	void setAmxBusyTimeout(int nSec);
+
 
 private:
 	CServerDevice();
 	CCmpHandler *cmpParser;
 	typedef int (CServerDevice::*MemFn)(int, int, int, const void *);
 	map<int, MemFn> mapFunc;
-	int cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
-	map<int, CBFun> mapCallback;
-	map<int, int> mapClient;
-	volatile int mnBusy;
-	int mAmxBusyTimeout;
+	int cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpFBToken(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpWirelessPowerCharge(int nSocket, int nCommand, int nSequence, const void *pData);
+
 
 };

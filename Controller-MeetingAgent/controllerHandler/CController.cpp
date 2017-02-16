@@ -18,7 +18,6 @@
 #include "CDataHandler.cpp"
 #include "CThreadHandler.h"
 #include "CServerDevice.h"
-#include "AMXCommand.h"
 #include "CServerMeeting.h"
 #include "JSONObject.h"
 #include "ICallback.h"
@@ -27,35 +26,7 @@ using namespace std;
 
 static CController * controller = 0;
 
-/** Callback Function AMX Request from Mobile **/
-void IonAMXCommandControl(void* param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
 
-void IonAMXCommandStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void CController::onAMXCommand(string strCommand)
-{
-	serverAMX->sendCommand(strCommand);
-}
-
-/** Callback Function AMX Response from AMX **/
-void IonAMXResponseStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXResponseStatus(strParam);
-}
-
-void CController::onAMXResponseStatus(string strStatus)
-{
-	serverDevice->broadcastAMXStatus(strStatus);
-}
 
 /**
  * Define Socket Client ReceiveFunction
@@ -142,7 +113,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 }
 
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerMeeting::getInstance()), serverDevice(
+		CObject(), cmpParser(CCmpHandler::getInstance()), serverMeeting(CServerMeeting::getInstance()), serverDevice(
 				CServerDevice::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler)
 {
 
@@ -166,31 +137,31 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
+	case EVENT_COMMAND_SOCKET_TCP_MEETING_RECEIVE:
+		serverMeeting->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
 		serverDevice->onReceive(nId, pData);
 		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
-		serverAMX->addClient(nId);
+	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_MEETING:
+		//serverMeeting->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
+		//serverDevice->addClient(nId);
 		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
-		serverAMX->deleteClient(nId);
+	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_MEETING:
+		//serverMeeting->deleteClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
-		serverDevice->deleteClient(nId);
+		//serverDevice->deleteClient(nId);
 		break;
 	default:
-		_log("[Controller] Unknow message command: %d", nCommand);
+		_log("[Controller] Unknown message command: %d", nCommand);
 		break;
 	}
 }
 
-int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
+int CController::startServerMeeting(string strIP, const int nPort, const int nMsqId)
 {
 	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
 	return serverAMX->startServer(strIP, nPort, nMsqId);

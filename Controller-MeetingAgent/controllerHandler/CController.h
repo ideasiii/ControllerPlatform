@@ -20,7 +20,7 @@ using namespace std;
 class CCmpHandler;
 class CThreadHandler;
 class CJsonHandler;
-class CServerAMX;
+class CServerMeeting;
 class CServerDevice;
 class CSocket;
 

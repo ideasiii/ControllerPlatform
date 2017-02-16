@@ -21,18 +21,12 @@ public:
 	virtual ~CServerMeeting();
 	int startServer(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
-	int sendCommand(string strCommand);
-	int sendCommand(const int nSocketFD, string strCommand);
-	void bind(const int nSocketFD);
-	void unbind(const int nSocketFD);
-	bool onReceive(const int nSocketFD, string strCommand);
-	void addClient(const int nSocketFD);
-	void deleteClient(const int nSocketFD);
-	void setCallback(const int nId, CBFun cbfun);
+	bool onReceive(const int nSocketFD, const void *pData);
+
+
 
 private:
 	CServerMeeting();
-	map<int, int> mapClient;
-	map<int, CBFun> mapCallback;
+
 
 };

@@ -1,9 +1,4 @@
-/*
- * CServerDevice.cpp
- *
- *  Created on: 2016年8月9日
- *      Author: Jugo
- */
+
 
 #include "CServerDevice.h"
 #include "IReceiver.h"
@@ -12,27 +7,23 @@
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
 #include "JSONObject.h"
-#include "AMXCommand.h"
 #include "ICallback.h"
 #include "CTimer.h"
 #include "packet.h"
 
-#define TIMER_ID_AMX_BUSY	666
-
 static CServerDevice * serverDevice = 0;
 
-void OnTimer(int param)
-{
-	serverDevice->onTimer(param);
-}
-
 CServerDevice::CServerDevice() :
-		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mAmxBusyTimeout(5)
+		CSocketServer(), cmpParser(CCmpHandler::getInstance())
 {
-	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
-	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
-	mapFunc[bind_request] = &CServerDevice::cmpBind;
-	mapFunc[unbind_request] = &CServerDevice::cmpUnbind;
+	mapFunc[fcm_id_register_request] = &CServerDevice::cmpFCMIdRegister;
+	mapFunc[facebook_token_client_request] = &CServerDevice::cmpFBToken;
+	mapFunc[smart_building_qrcode_tokn_request] = &CServerDevice::cmpQRCodeToken;
+	mapFunc[smart_building_appversion_request] = &CServerDevice::cmpAPPVersion;
+	mapFunc[smart_building_getmeetingdata_request] = &CServerDevice::cmpGetMeetingData;
+	mapFunc[smart_building_amx_control_access_request] = &CServerDevice::cmpAMXControlAccess;
+	mapFunc[smart_building_wireless_power_charge_request] = &CServerDevice::cmpWirelessPowerCharge;
+
 }
 
 CServerDevice::~CServerDevice()
@@ -72,7 +63,7 @@ int CServerDevice::startServer(string strIP, const int nPort, const int nMsqId)
 
 	if (FAIL == start(AF_INET, cszAddr, nPort))
 	{
-		_log("[Server Device] Socket Create Fail");
+		_log("[CServerDevice] Socket Create Fail");
 		return FALSE;
 	}
 
@@ -100,7 +91,7 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 	cmpHeader.sequence_number = cmpParser->getSequence(pPacket);
 
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-			"[Server Device] Recv ", nSocketFD);
+			"[CServerDevice] Recv ", nSocketFD);
 
 	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
@@ -122,199 +113,51 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 }
 
-int CServerDevice::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerDevice::cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *pData)
 {
+	_DBG("[CServerDevice]cmpFCMIdRegister");
 
-	mapClient[nSocket] = nSocket;
-	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 
-int CServerDevice::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerDevice::cmpFBToken(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	deleteClient(nSocket);
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	_DBG("[CServerDevice]cmpFBToken");
 	return TRUE;
 }
 
-int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerDevice::cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	int nStatus = STATUS_RINVBODY;
+	_DBG("[CServerDevice]cmpQRCodeToken");
 
-	CDataHandler<string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("data"))
-	{
-		_log("[Server Device] AMX Control Request Body: %s", rData["data"].c_str());
-
-		/** get AMX string command **/
-		JSONObject jobj(rData["data"].c_str());
-		if (jobj.isValid())
-		{
-			int nFunction = jobj.getInt("function");
-			int nDevice = jobj.getInt("device");
-			int nControl = jobj.getInt("control");
-			string strCommand = getAMXControlRequest(nFunction, nDevice, nControl);
-			if (!strCommand.empty())
-			{
-				if (mnBusy)
-				{
-					nStatus = STATUS_RSYSBUSY;
-					_log("[Server Device] AMX Control Request Fail, System Busy, Socket FD:%d", nSocket);
-				}
-				else
-				{
-					mnBusy = TRUE;
-					_log("[Server Device] AMX Controller Busy set to True");
-					nStatus = STATUS_ROK;
-					(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-					SetTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0, OnTimer);
-				}
-			}
-			else
-			{
-				_log("[Server Device] AMX Control Request Fail, Invalid JSON Data, No AMX Command Socket FD:%d",
-						nSocket);
-				nStatus = STATUS_RINVJSON;
-			}
-		}
-		else
-		{
-			_log("[Server Device] AMX Control Request Fail, Invalid JSON Data Socket FD:%d", nSocket);
-			nStatus = STATUS_RINVJSON;
-		}
-	}
-	else
-	{
-		_log("[Server Device] AMX Control Request Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-	}
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, nStatus, nSequence, 0);
-	rData.clear();
-	return FALSE;
+	return TRUE;
 }
 
-/**
- * AMX Status Request
- * {
- "function": 1,
- "device": 0,
- " request-status ": 1
- }
- */
-int CServerDevice::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerDevice::cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	int nStatus = STATUS_RINVBODY;
+	_DBG("[CServerDevice]cmpAPPVersion");
 
-	CDataHandler<string> rData;
-	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if (0 < nRet && rData.isValidKey("data"))
-	{
-		_log("[Server Device] AMX Status Request Body: %s", rData["data"].c_str());
-
-		/** get AMX string command **/
-		JSONObject jobj(rData["data"].c_str());
-		if (jobj.isValid())
-		{
-			int nFunction = jobj.getInt("function");
-			int nDevice = jobj.getInt("device");
-			int nRqStatus = jobj.getInt("request-status");
-			string strCommand = getAMXStatusRequest(nFunction, nDevice, nRqStatus);
-			if (!strCommand.empty())
-			{
-				nStatus = STATUS_ROK;
-				(*mapCallback[CB_AMX_COMMAND_STATUS])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-			}
-			else
-			{
-				_log("[Server Device] cmpAmxControl Fail, Invalid JSON Data, No AMX Command Socket FD:%d", nSocket);
-				nStatus = STATUS_RINVJSON;
-			}
-		}
-		else
-		{
-			_log("[Server Device] cmpAmxControl Fail, Invalid JSON Data Socket FD:%d", nSocket);
-			nStatus = STATUS_RINVJSON;
-		}
-	}
-	else
-	{
-		_log("[Server Device] cmpAmxControl Fail, Invalid Body Parameters Socket FD:%d", nSocket);
-	}
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, nStatus, nSequence, 0);
-	rData.clear();
-	return FALSE;
+	return TRUE;
 }
 
-void CServerDevice::setCallback(const int nId, CBFun cbfun)
+int CServerDevice::cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	mapCallback[nId] = cbfun;
+	_DBG("[CServerDevice]cmpGetMeetingData");
+
+	return TRUE;
 }
 
-void CServerDevice::addClient(const int nSocketFD)
+int CServerDevice::cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
+	_DBG("[CServerDevice]cmpAMXControlAcess");
+;
+	return TRUE;
 }
 
-void CServerDevice::deleteClient(const int nSocketFD)
+int CServerDevice::cmpWirelessPowerCharge(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	if (mapClient.end() != mapClient.find(nSocketFD))
-	{
-		mapClient.erase(nSocketFD);
-		_log("[Server Device] Socket Client FD:%d Unbinded", nSocketFD);
-	}
-	_log("[Server Device] Socket Client FD:%d Disconnected", nSocketFD);
+	_DBG("[CServerDevice]cmpWirelessPowerCharge");
+
+	return TRUE;
 }
 
-/**
- * AMX Status Response
- {
- “function”:1,
- “device”:0,
- “status”:1
- }
- *
- */
-void CServerDevice::broadcastAMXStatus(string strStatus)
-{
-	int nId = AMX_STATUS_RESP[strStatus];
-	if (10000 > nId)
-	{
-		_log("[Server Device] Invalid status: %s , code:%d", strStatus.c_str(), nId);
-		return;
-	}
-
-	JSONObject jobjStatus;
-	jobjStatus.put("function", nId / 10000);
-	jobjStatus.put("device", (nId % 10000) / 100);
-	jobjStatus.put("status", (nId % 10000) % 100);
-
-	string strJSON = jobjStatus.toString();
-	jobjStatus.release();
-
-	int nRet = 0;
-	map<int, int>::iterator it;
-	for (it = mapClient.begin(); it != mapClient.end(); ++it)
-	{
-		_log("[Server Device] Broadcast AMX Status: %s to Socket:%d", strJSON.c_str(), it->first);
-		nRet = sendPacket(dynamic_cast<CSocket*>(serverDevice), it->first, amx_broadcast_status_request, STATUS_ROK,
-				getSequence(), strJSON.c_str());
-		if (0 >= nRet)
-			break;
-	}
-}
-
-void CServerDevice::onTimer(int nId)
-{
-	if (TIMER_ID_AMX_BUSY == nId)
-	{
-		mnBusy = FALSE;
-		_log("[Server Device] AMX Controller Busy set to False");
-	}
-}
-
-void CServerDevice::setAmxBusyTimeout(int nSec)
-{
-	mAmxBusyTimeout = nSec;
-	_log("[Server Device] Set AMX Busy Timeout: %d seconds", mAmxBusyTimeout);
-}
