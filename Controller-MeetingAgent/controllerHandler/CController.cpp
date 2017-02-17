@@ -163,24 +163,24 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::startServerMeeting(string strIP, const int nPort, const int nMsqId)
 {
-	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(strIP, nPort, nMsqId);
+	//serverMeeting->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
+	return serverMeeting->startServer(strIP, nPort, nMsqId);
 }
 
 int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
 {
-	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
+	//serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
+	//serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
 	return serverDevice->startServer(strIP, nPort, nMsqId);
 }
 
 void CController::stopServer()
 {
-	if (serverAMX)
+	if (serverMeeting)
 	{
-		serverAMX->stopServer();
-		delete serverAMX;
-		serverAMX = 0;
+		serverMeeting->stopServer();
+		delete serverMeeting;
+		serverMeeting = 0;
 	}
 
 	if (serverDevice)

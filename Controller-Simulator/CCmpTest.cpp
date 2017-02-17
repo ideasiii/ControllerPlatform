@@ -203,6 +203,18 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strAMXStatus = "{\"function\":4,\"device\":1,\"request-status\":1}";
 	string strAMXStatus2 = "{\"function\":4,\"device\":1,\"request-status\":2}";
 
+	string strFCMIdRegister =
+			"{\"FCM_ID\": \"fSk3qfqUxRk:APA91bHPz9WAsR5vxX9hNE-zoaKHwXVs2BJKW4V9guXnGWO1gSFh-EwjhJpZ00Y0DgOvGhVEg8u5iNDXC-ff6E14nuWzyuSq33H8SZPFbgUpIPiEggQYIbCnt1ZlZEjplZnU33akmPW+\",\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\"}";
+	string strFBToken = "";
+	string strQRCodeTokn =
+			"{\"QRCODE_TOKEN\": \"wWOoQaMc3bk0aKlFlKvCOBNS/QpXXxW9EztCVQHghDfTm7hgSHb9P8xjG3btILjpaDcaRymw9ckvgIoZKiydY3ceeSDzSiwtYT1/5SOqzdBMOwQYpkshP5Rf21OoUxVkAXWchywRXQ8ZYjazpcB42EPWwImDFY0HTyqwlqxrQBVxTNz1VGOWeIKU4HhGq6cvglShzHG0uF9C0KddPg1gL9UD5+CYoedDId90h723/7SvSOwcaxOI9t/HRTnM1GLTYwz7/jxjvkgh3xjwRHlRVGUWU3UoX5H\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\"}";
+	string strSBAPPVersion = "";
+	string strSBGetMeetingData = "{\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\"}";
+	string strSBAmxControlAccess = "{\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"ROOM_ID\":\"ITES_101\"}";
+
+	string strSBWirelessPowerCharge =
+			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
+
 	switch (nCommand)
 	{
 	case bind_request:
@@ -307,6 +319,62 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 		pIndex += 1;
 		nBody_len += 1;
 		break;
+
+	case fcm_id_register_request:
+		memcpy(pIndex, strFCMIdRegister.c_str(), strFCMIdRegister.size());
+		pIndex += strFCMIdRegister.size();
+		nBody_len += strFCMIdRegister.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case facebook_token_client_request:
+		memcpy(pIndex, strFBToken.c_str(), strFBToken.size());
+		pIndex += strFBToken.size();
+		nBody_len += strFBToken.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case smart_building_qrcode_tokn_request:
+		memcpy(pIndex, strQRCodeTokn.c_str(), strQRCodeTokn.size());
+		pIndex += strQRCodeTokn.size();
+		nBody_len += strQRCodeTokn.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case smart_building_appversion_request:
+
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case smart_building_getmeetingdata_request:
+		memcpy(pIndex, strSBGetMeetingData.c_str(), strSBGetMeetingData.size());
+		pIndex += strSBGetMeetingData.size();
+		nBody_len += strSBGetMeetingData.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case smart_building_amx_control_access_request:
+		memcpy(pIndex, strSBAmxControlAccess.c_str(), strSBAmxControlAccess.size());
+		pIndex += strSBAmxControlAccess.size();
+		nBody_len += strSBAmxControlAccess.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+	case smart_building_wireless_power_charge_request:
+		memcpy(pIndex, strSBWirelessPowerCharge.c_str(), strSBWirelessPowerCharge.size());
+		pIndex += strSBWirelessPowerCharge.size();
+		nBody_len += strSBWirelessPowerCharge.size();
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
+		break;
+
 	case 1166:
 		memcpy(pIndex, strAMXStatus2.c_str(), strAMXStatus2.size());
 		pIndex += strAMXStatus2.size();

@@ -45,6 +45,13 @@ int main(int argc, char* argv[])
 ("bye", BYE)\
 ("help", HELP)\
 ("pressure", PRESSURE)\
+("cmp fcm",fcm_id_register_request)\
+("cmp fbtoken",facebook_token_client_request)\
+("cmp qrcode",smart_building_qrcode_tokn_request)\
+("cmp sbversion",smart_building_appversion_request)\
+("cmp sbdata",smart_building_getmeetingdata_request)\
+("cmp amxaccess",smart_building_amx_control_access_request)\
+("cmp wpc",smart_building_wireless_power_charge_request)\
 (
 			"cmp init", initial_request)\
 ("cmp signup", sign_up_request)\
@@ -66,8 +73,7 @@ int main(int argc, char* argv[])
 ("amx bind", AMX_BIND)\
 ("amx system on", AMX_SYSTEM_ON)\
 ("amx control", amx_control_request)\
-(
-			"amx status", amx_status_request)\
+("amx status", amx_status_request)\
 ("semantic", semantic_request)("amx status2", 1166);
 
 	printf("This process is a Controller testing process!.\n");
@@ -138,6 +144,13 @@ int main(int argc, char* argv[])
 			case semantic_request:
 			case amx_control_request:
 			case amx_status_request:
+			case fcm_id_register_request:
+			case facebook_token_client_request:
+			case smart_building_qrcode_tokn_request:
+			case smart_building_appversion_request:
+			case smart_building_getmeetingdata_request:
+			case smart_building_amx_control_access_request:
+			case smart_building_wireless_power_charge_request:
 			case 1166:
 				cmpTest->sendRequest(nCommand);
 				break;

@@ -65,7 +65,7 @@ void runService()
 			if (0 == config->getValue("SERVER CONTROLLER_METTING", "enable").compare("yes"))
 			{
 				convertFromString(nTmp, config->getValue("SERVER CONTROLLER_METTING", "port"));
-				if (!controller->startServerAMX(config->getValue("SERVER CONTROLLER_METTING", "ip"), nTmp, nMsgID))
+				if (!controller->startServerMeeting(config->getValue("SERVER CONTROLLER_METTING", "ip"), nTmp, nMsgID))
 				{
 					nInit = FALSE;
 					_log("[Controller] Create Server CONTROLLER_METTING Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);

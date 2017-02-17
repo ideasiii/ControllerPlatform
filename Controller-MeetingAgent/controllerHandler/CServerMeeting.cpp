@@ -37,9 +37,9 @@ int CServerMeeting::startServer(string strIP, const int nPort, const int nMsqId)
 	/** Run socket server for CMP **/
 	if (0 < nMsqId)
 	{
-		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE);
-		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX);
-		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX);
+		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_MEETING_RECEIVE);
+		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_MEETING);
+		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_MEETING);
 	}
 
 	/** Set Receive , Packet is BYTE , Message Queue Handle **/
