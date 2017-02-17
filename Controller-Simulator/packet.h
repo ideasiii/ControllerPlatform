@@ -95,6 +95,23 @@ struct CMP_PACKET
 #define amx_status_response					0x80000041
 #define amx_broadcast_status_request		0x00000042
 #define amx_broadcast_status_response		0x80000042
+#define fcm_id_register_request             			0x00000044
+#define fcm_id_register_response        				0x80000044
+#define facebook_token_client_request      	 			0x00000045
+#define facebook_token_client_response 					0x80000045
+#define smart_building_qrcode_tokn_request 				0x00000050
+#define smart_building_qrcode_tokn_response  			0x80000050
+#define smart_building_appversion_request   			0x00000051
+#define smart_building_appversion_response 				0x80000051
+#define smart_building_getmeetingdata_request  			0x00000052
+#define smart_building_getmeetingdata_response 			0x80000052
+#define smart_building_amx_control_access_request  		0x00000053
+#define smart_building_amx_control_access_response  	0x80000053
+#define smart_building_wireless_power_charge_request 	0x00000055
+#define smart_building_wireless_power_charge_response 	0x80000055
+#define smart_building_door_control_request				0x00000056
+#define smart_building_door_control_response			0x80000056
+
 #define MAX_COMMAND								0x000000FF
 
 /*
@@ -171,7 +188,21 @@ rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_respo
 semantic_request, "semantic_request")(semantic_response, "semantic_response")(
 amx_control_request, "amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request,
 		"amx_status_request")(
-amx_status_response, "amx_status_response");
+amx_status_response, "amx_status_response")(fcm_id_register_request,
+		"fcm_id_register_request")(fcm_id_register_response,
+		"fcm_id_register_response")(facebook_token_client_request,
+				"facebook_token_client_request")(facebook_token_client_response,
+				"facebook_token_client_response")(smart_building_qrcode_tokn_request,
+					"smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
+						"smart_building_qrcode_tokn_response")(smart_building_appversion_request,
+					"smart_building_appversion_request" )(smart_building_appversion_response,
+						"smart_building_appversion_response")(smart_building_getmeetingdata_request,
+						"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
+						"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
+						"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
+						"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
+						"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
+					"smart_building_wireless_power_charge_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

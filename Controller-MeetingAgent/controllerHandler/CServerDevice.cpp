@@ -8,7 +8,6 @@
 #include "CDataHandler.cpp"
 #include "JSONObject.h"
 #include "ICallback.h"
-#include "CTimer.h"
 #include "packet.h"
 
 static CServerDevice * serverDevice = 0;
@@ -117,18 +116,35 @@ int CServerDevice::cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, co
 {
 	_DBG("[CServerDevice]cmpFCMIdRegister");
 
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+
 	return TRUE;
 }
 
 int CServerDevice::cmpFBToken(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_DBG("[CServerDevice]cmpFBToken");
+
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+
+	return TRUE;
+}
+
+int CServerDevice::cmpWirelessPowerCharge(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	_DBG("[CServerDevice]cmpWirelessPowerCharge");
+	string chargeData = "{\"CHARGE_LOCATION\": \"1\"}";
+
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, chargeData.c_str());
+
 	return TRUE;
 }
 
 int CServerDevice::cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_DBG("[CServerDevice]cmpQRCodeToken");
+
+
 
 	return TRUE;
 }
@@ -154,10 +170,25 @@ int CServerDevice::cmpAMXControlAccess(int nSocket, int nCommand, int nSequence,
 	return TRUE;
 }
 
-int CServerDevice::cmpWirelessPowerCharge(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	_DBG("[CServerDevice]cmpWirelessPowerCharge");
 
-	return TRUE;
+
+void CServerDevice::setCallback(const int nId, CBFun cbfun)
+{
+	mapCallback[nId] = cbfun;
+}
+
+void CServerDevice::addClient(const int nSocketFD)
+{
+	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
+}
+
+void CServerDevice::deleteClient(const int nSocketFD)
+{
+	if (mapClient.end() != mapClient.find(nSocketFD))
+	{
+		mapClient.erase(nSocketFD);
+		_log("[Server Device] Socket Client FD:%d UnBinded", nSocketFD);
+	}
+	_log("[Server Device] Socket Client FD:%d Disconnected", nSocketFD);
 }
 
