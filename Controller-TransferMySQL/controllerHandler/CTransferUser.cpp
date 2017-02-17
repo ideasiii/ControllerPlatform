@@ -41,10 +41,17 @@ int CTransferUser::start()
 	string strLastDate;
 	string strSQL;
 	string strValues;
+	string strId;
 	int nRet;
 	map<string, string> mapItem;
+	list<map<string, string> > listRestMysqlId;
 
 	strLastDate = getMysqlLastDate();
+	if (strLastDate.empty())
+	{
+		_log("[CTransferUser] get mysql last create_date fail");
+		return FALSE;
+	}
 
 	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
 			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
@@ -52,6 +59,8 @@ int CTransferUser::start()
 		_log("[CTransferUser] Error: Postgresql Connect Fail");
 		return FALSE;
 	}
+
+	_BREAK;
 
 	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
 			mapMysqlSetting["password"]);
@@ -62,7 +71,9 @@ int CTransferUser::start()
 		return FALSE;
 	}
 
-	strSQL = "SELECT * FROM tracker_user WHERE create_date >= '" + strLastDate + "'";
+	_BREAK;
+
+	strSQL = "SELECT * FROM tracker_user";// WHERE create_date >= '" + strLastDate + "'";
 	_log("[CTransferUser] run PSQL: %s", strSQL.c_str());
 
 	list<map<string, string> > listRest;
@@ -90,7 +101,15 @@ int CTransferUser::start()
 				strValues += ")";
 			}
 			--j;
+			if (0 == (*j).first.compare("id"))
+			{
+				strId = (*j).second;
+			}
 		}
+		listRestMysqlId.clear();
+		pmysql->query("SELECT * FROM tracker_user WHERE id = '" + strId + "'", listRestMysqlId);
+		if (0 < listRestMysqlId.size())
+			continue;
 		strSQL += strValues;
 		_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
 		if (FALSE == pmysql->sqlExec(strSQL))
@@ -105,7 +124,7 @@ int CTransferUser::start()
 
 string CTransferUser::getMysqlLastDate()
 {
-	string strRet = DEFAULT_LAST_DATE;
+	string strRet;
 	string strSQL;
 	int nRet;
 
@@ -115,7 +134,7 @@ string CTransferUser::getMysqlLastDate()
 			mapMysqlSetting["password"]);
 	if (FALSE == nRet)
 	{
-		_log("[CTransferUser] Mysql Error: %s", pmysql->getLastError());
+		_log("[CTransferUser] getMysqlLastDate Mysql Error: %s", pmysql->getLastError().c_str());
 	}
 	else
 	{
@@ -123,6 +142,7 @@ string CTransferUser::getMysqlLastDate()
 
 		if (TRUE == pmysql->query(strSQL, listRest))
 		{
+			strRet = DEFAULT_LAST_DATE;
 			string strField;
 			string strValue;
 			map<string, string> mapItem;

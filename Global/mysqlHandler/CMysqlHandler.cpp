@@ -38,6 +38,8 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 	else
 		cout << "[CMysqlHandler] MySQL Init Success" << endl;
 
+	mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, "60");
+
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
 	mpMySQL = mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL,
@@ -94,7 +96,14 @@ int CMysqlHandler::sqlExec(string strSQL)
 	}
 
 	// mysql_query()執行成功返回0，失敗返回非0值。
-	if (mysql_query(mpMySQL, strSQL.c_str()))
+//	if (mysql_query(mpMySQL, strSQL.c_str()))
+//	{
+//		setError("Query Error");
+//		return FALSE;
+//	}
+
+	//如果查询成功，返回0。如果出现错误，返回非0值。
+	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
 		setError("Query Error");
 		return FALSE;
@@ -113,7 +122,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 
 	// mysql_query()執行成功返回0，失敗返回非0值。
 	_log("[CMysqlHandler] mysql_query: %s", strSQL.c_str());
-	if (mysql_query(mpMySQL, strSQL.c_str()))
+	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
 		setError("Query Error");
 		return FALSE;

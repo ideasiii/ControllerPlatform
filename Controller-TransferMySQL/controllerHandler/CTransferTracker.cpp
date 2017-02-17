@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <set>
 #include <list>
 #include "common.h"
 #include "utility.h"
@@ -59,7 +60,7 @@ int CTransferTracker::start()
 string CTransferTracker::getPSqlLastDate(string strTableName)
 {
 	string strRet = DEFAULT_LAST_DATE;
-	CPsqlHandler psql;
+
 	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
 	 {
 	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
@@ -96,6 +97,11 @@ int CTransferTracker::syncColume(string strTable, string strAppId)
 	}
 	ppsql->getFields(strTable, sFields);
 	ppsql->close();
+
+	for (set<string>::iterator it = sFields.begin(); sFields.end() != it; ++it)
+	{
+		_DBG("%s", (*it).c_str());
+	}
 	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
 	 {
 	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
@@ -129,17 +135,17 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	 }
 	 */
 	// Get POYA IOS Field From Sqlite
-	strSQL = "select * from device_field where id = '" + strAppId + "'";
-
-	strSQL = "INSERT INTO " + strTable + " (_id,id,create_date,";
-
-	strSQL += ")VALUES( '";
-
-	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
-	{
-
-	}
-	psql.close();
-	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
+//	strSQL = "select * from device_field where id = '" + strAppId + "'";
+//
+//	strSQL = "INSERT INTO " + strTable + " (_id,id,create_date,";
+//
+//	strSQL += ")VALUES( '";
+//
+//	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
+//	{
+//
+//	}
+//	psql.close();
+//	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
 	return TRUE;
 }
