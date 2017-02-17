@@ -191,7 +191,4 @@ void CController::stopServer()
 	}
 }
 
-void CController::setAMXBusyTimer(int nSec)
-{
-	serverDevice->setAmxBusyTimeout(nSec);
-}
+

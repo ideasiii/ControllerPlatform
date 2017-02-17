@@ -109,6 +109,8 @@ struct CMP_PACKET
 #define smart_building_amx_control_access_response  	0x80000053
 #define smart_building_wireless_power_charge_request 	0x00000055
 #define smart_building_wireless_power_charge_response 	0x80000055
+#define smart_building_door_control_request				0x00000056
+#define smart_building_door_control_response			0x80000056
 
 #define MAX_COMMAND								0x000000FF
 
@@ -128,7 +130,7 @@ struct CMP_PACKET
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
 #define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
 
-/*
+/*8
  * Service Type
  */
 #define TYPE_MOBILE_SERVICE					1
