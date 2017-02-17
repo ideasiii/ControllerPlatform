@@ -21,10 +21,10 @@ public:
 	int start();
 
 private:
-	std::string getPSqlLastDate(std::string strTableName);
 	int syncColume(std::string strTable, std::string strAppId);
 	int syncData(std::string strTable, std::string strAppId);
 	CMysqlHandler *pmysql;
 	CPsqlHandler *ppsql;
+	std::string getMysqlLastDate(std::string strTable);
 
 };

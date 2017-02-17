@@ -110,6 +110,7 @@ package-u:
 	apt-get -y install autoconf automake libtool
 	apt-get -y install libmongo-client-dev
 	apt-get -y install libpq-dev
+	apt-get -y install libmysqld-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 

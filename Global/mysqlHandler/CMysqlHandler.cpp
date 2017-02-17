@@ -95,13 +95,6 @@ int CMysqlHandler::sqlExec(string strSQL)
 		return FALSE;
 	}
 
-	// mysql_query()執行成功返回0，失敗返回非0值。
-//	if (mysql_query(mpMySQL, strSQL.c_str()))
-//	{
-//		setError("Query Error");
-//		return FALSE;
-//	}
-
 	//如果查询成功，返回0。如果出现错误，返回非0值。
 	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
@@ -139,7 +132,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		MYSQL_FIELD *fields = mysql_fetch_fields(result); // 獲取欄位
 		MYSQL_ROW row;
 
-		fields = mysql_fetch_fields(result);
+		//fields = mysql_fetch_fields(result);
 		map<string, string> dataItem;
 		string strItem;
 		string strField;
@@ -174,6 +167,40 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 
 int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sFields)
 {
+	string strSQL;
+
+	if ( NULL == mpMySQL)
+	{
+		setError("MySQL Connector Invalid");
+		return FALSE;
+	}
+
+	// mysql_query()執行成功返回0，失敗返回非0值。
+	strSQL = "SELECT * FROM " + strTableName + " LIMIT 1";
+	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
+	{
+		setError("Query Error");
+		return FALSE;
+	}
+	else
+	{
+		MYSQL_RES *result = mysql_use_result(mpMySQL); // 獲取結果集
+		if (NULL == result)
+		{
+			setError("MySQL Result Fail");
+			return FALSE;
+		}
+
+		MYSQL_FIELD *fields = mysql_fetch_fields(result); // 獲取欄位
+		MYSQL_ROW row;
+
+		for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
+		{
+			sFields.insert(fields[j].name);
+		}
+		// 釋放結果集的內存
+		mysql_free_result(result);
+	}
 	return TRUE;
 }
 

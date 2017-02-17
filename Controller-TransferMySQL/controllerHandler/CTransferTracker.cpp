@@ -57,36 +57,14 @@ int CTransferTracker::start()
 	return TRUE;
 }
 
-string CTransferTracker::getPSqlLastDate(string strTableName)
-{
-	string strRet = DEFAULT_LAST_DATE;
-
-	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
-	 {
-	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
-	 }
-	 else
-	 {
-	 string strSQL = "select max(create_date) as maxdate from " + strTableName;
-	 list<map<string, string> > listRest;
-	 psql.query(strSQL.c_str(), listRest);
-	 if (0 < listRest.size())
-	 {
-	 strRet = (*listRest.begin())["maxdate"];
-	 }
-	 listRest.clear();
-	 psql.close();
-	 }
-	 */
-	return strRet;
-}
-
 int CTransferTracker::syncColume(string strTable, string strAppId)
 {
+	int nRet;
 	extern map<string, string> mapPsqlSetting;
 	extern map<string, string> mapMysqlSetting;
-	string strValue;
-	set<string> sFields;
+	set<string> sFieldsPSQL;
+	set<string> sFieldsMYSQL;
+	string strSQL;
 
 	// Get Fields From PostgreSQL
 	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
@@ -95,57 +73,152 @@ int CTransferTracker::syncColume(string strTable, string strAppId)
 		_log("[CTransferTracker] Error: Postgresql Connect Fail");
 		return FALSE;
 	}
-	ppsql->getFields(strTable, sFields);
+	ppsql->getFields(strTable, sFieldsPSQL);
 	ppsql->close();
 
-	for (set<string>::iterator it = sFields.begin(); sFields.end() != it; ++it)
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+	if (FALSE == nRet)
 	{
-		_DBG("%s", (*it).c_str());
+		_log("[CTransferTracker] syncColume Mysql Error: %s", pmysql->getLastError().c_str());
+		return FALSE;
 	}
-	/*	if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
-	 {
-	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
-	 return FALSE;
-	 }
-	 else
-	 {
-	 psql.getFields(strTable, sFields);
-	 }
-	 */
-	// Get Field From Sqlite
-	string strSQL = "select * from device_field where id = '" + strAppId + "'";
+	pmysql->getFields(strTable, sFieldsMYSQL);
 
-	return TRUE;
+	// Compare PSQL & MYSQL Data fields.
+	for (set<string>::iterator it = sFieldsPSQL.begin(); sFieldsPSQL.end() != it; ++it)
+	{
+		if (sFieldsMYSQL.end() == sFieldsMYSQL.find(*it))
+		{
+			strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), (*it).c_str());
+			_log("[CTransferTracker] Sync Field: %s", strSQL.c_str());
+			nRet = pmysql->sqlExec(strSQL);
+		}
+	}
+	pmysql->close();
+
+	return nRet;
 }
 
 int CTransferTracker::syncData(string strTable, string strAppId)
 {
+	int nRet;
+	extern map<string, string> mapPsqlSetting;
+	extern map<string, string> mapMysqlSetting;
+	string strLastDate;
 	string strSQL;
-	string strSQL_INSERT;
-	int nCount = 0;
-	list<string> listJSON;
-	string strValue;
-	CPsqlHandler psql;
-	/*
-	 if (!psql.open(PSQL_HOST, PSQL_PORT, PSQL_DB, PSQL_USER, PSQL_PASSWORD))
-	 {
-	 _log("[CTransferTracker] Error: Postgresql Connect Fail");
+	string strValues;
+	string strId;
+	map<string, string> mapItem;
+	list<map<string, string> > listRestMysqlId;
 
-	 return FALSE;
-	 }
-	 */
-	// Get POYA IOS Field From Sqlite
-//	strSQL = "select * from device_field where id = '" + strAppId + "'";
-//
-//	strSQL = "INSERT INTO " + strTable + " (_id,id,create_date,";
-//
-//	strSQL += ")VALUES( '";
-//
-//	for (list<string>::iterator i = listJSON.begin(); i != listJSON.end(); ++i)
-//	{
-//
-//	}
-//	psql.close();
-//	_log("[CTransferTracker] %s insert count: %d", strTable.c_str(), nCount);
+	strLastDate = getMysqlLastDate(strTable);
+	if (strLastDate.empty())
+	{
+		_log("[CTransferTracker] get mysql table:%s last create_date fail", strTable.c_str());
+		return FALSE;
+	}
+
+	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
+			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
+	{
+		_log("[CTransferUser] Error: Postgresql Connect Fail");
+		return FALSE;
+	}
+
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+	if (FALSE == nRet)
+	{
+		_log("[CTransferUser] Mysql Error: %s", pmysql->getLastError().c_str());
+		ppsql->close();
+		return FALSE;
+	}
+
+	strSQL = "SELECT * FROM " + strTable + " WHERE create_date >= '" + strLastDate + "'";
+	_log("[CTransferTracker] syncData run PSQL: %s", strSQL.c_str());
+	list<map<string, string> > listRest;
+	ppsql->query(strSQL.c_str(), listRest);
+	ppsql->close();
+
+	int nCount = 0;
+	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
+	{
+		strSQL = "INSERT INTO " + strTable + " (";
+		strValues = "VALUES(";
+		mapItem = *i;
+		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+		{
+			strSQL += (*j).first;
+			strValues = strValues + "'" + (*j).second + "'";
+			if (mapItem.end() != ++j)
+			{
+				strSQL += ",";
+				strValues += ",";
+			}
+			else
+			{
+				strSQL += ") ";
+				strValues += ")";
+			}
+			--j;
+			if (0 == (*j).first.compare("_id"))
+			{
+				strId = (*j).second;
+			}
+		}
+		listRestMysqlId.clear();
+		pmysql->query("SELECT * FROM " + strTable + " WHERE id = '" + strId + "'", listRestMysqlId);
+		if (0 < listRestMysqlId.size())
+			continue;
+		strSQL += strValues;
+		_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
+		if (FALSE == pmysql->sqlExec(strSQL))
+		{
+			_log("[CTransferTracker] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
+		}
+	}
+	pmysql->close();
+
 	return TRUE;
+}
+
+string CTransferTracker::getMysqlLastDate(string strTable)
+{
+	string strRet;
+	string strSQL;
+	int nRet;
+
+	list<map<string, string> > listRest;
+	extern map<string, string> mapMysqlSetting;
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+	if (FALSE == nRet)
+	{
+		_log("[CTransferTracker] getMysqlLastDate Mysql Error: %s", pmysql->getLastError().c_str());
+	}
+	else
+	{
+		strSQL = "select max(create_date) as maxdate from " + strTable;
+
+		if (TRUE == pmysql->query(strSQL, listRest))
+		{
+			strRet = DEFAULT_LAST_DATE;
+			string strField;
+			string strValue;
+			map<string, string> mapItem;
+			int nCount = 0;
+			for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i)
+			{
+				mapItem = *i;
+				for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+				{
+					strRet = (*j).second.c_str();
+				}
+			}
+		}
+	}
+	pmysql->close();
+
+	return strRet;
 }

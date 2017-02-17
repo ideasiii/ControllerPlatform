@@ -60,8 +60,6 @@ int CTransferUser::start()
 		return FALSE;
 	}
 
-	_BREAK;
-
 	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
 			mapMysqlSetting["password"]);
 	if (FALSE == nRet)
@@ -71,9 +69,7 @@ int CTransferUser::start()
 		return FALSE;
 	}
 
-	_BREAK;
-
-	strSQL = "SELECT * FROM tracker_user";// WHERE create_date >= '" + strLastDate + "'";
+	strSQL = "SELECT * FROM tracker_user WHERE create_date >= '" + strLastDate + "'";
 	_log("[CTransferUser] run PSQL: %s", strSQL.c_str());
 
 	list<map<string, string> > listRest;
