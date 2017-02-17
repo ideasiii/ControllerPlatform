@@ -166,7 +166,8 @@ int CServerDevice::cmpGetMeetingData(int nSocket, int nCommand, int nSequence, c
 int CServerDevice::cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_DBG("[CServerDevice]cmpAMXControlAcess");
-;
+
+
 	return TRUE;
 }
 

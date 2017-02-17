@@ -56,6 +56,30 @@ int CServerMeeting::startServer(string strIP, const int nPort, const int nMsqId)
 	return TRUE;
 }
 
+
+
+
+
+
+int CServerMeeting::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+
+	mapClient[nSocket] = nSocket;
+	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
+	sendPacket(dynamic_cast<CSocket*>(serverMeeting), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	return TRUE;
+}
+
+int CServerMeeting::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	deleteClient(nSocket);
+	sendPacket(dynamic_cast<CSocket*>(serverMeeting), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	return TRUE;
+}
+
+
+
+
 void CServerMeeting::stopServer()
 {
 	stop();
@@ -71,3 +95,18 @@ bool CServerMeeting::onReceive(const int nSocketFD, const void *pData)
 	return false;
 }
 
+
+void CServerMeeting::addClient(const int nSocketFD)
+{
+	_log("[CServerMeeting] Socket Client FD:%d Connected", nSocketFD);
+}
+
+void CServerMeeting::deleteClient(const int nSocketFD)
+{
+	if (mapClient.end() != mapClient.find(nSocketFD))
+	{
+		mapClient.erase(nSocketFD);
+		_log("[CServerMeeting] Socket Client FD:%d UnBinded", nSocketFD);
+	}
+	_log("[CServerMeeting] Socket Client FD:%d Disconnected", nSocketFD);
+}
