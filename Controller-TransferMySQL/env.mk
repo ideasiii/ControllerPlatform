@@ -20,4 +20,5 @@ export LOG=-DDEBUG
 #	sync all user: 		-DSYNCALL_USER
 #	sync all tracker:	-DSYNCALL_TRACKER
 ######################################
-export RUN=-DSYNCALL_TRACKER 
+#export RUN=-DSYNCALL_USER
+#export RUN=-DSYNCALL_TRACKER 
