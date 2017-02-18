@@ -171,7 +171,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 			}
 		}
 		listRestMysqlId.clear();
-		pmysql->query("SELECT * FROM " + strTable + " WHERE id = '" + strId + "'", listRestMysqlId);
+		pmysql->query("SELECT * FROM " + strTable + " WHERE _id = '" + strId + "'", listRestMysqlId);
 		if (0 < listRestMysqlId.size())
 			continue;
 		strSQL += strValues;
