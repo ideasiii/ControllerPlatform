@@ -44,7 +44,7 @@ int CTransferUser::start()
 	string strId;
 	int nRet;
 	map<string, string> mapItem;
-	list<map<string, string> > listRestMysqlId;
+	//list<map<string, string> > listRestMysqlId;
 
 	strLastDate = getMysqlLastDate();
 	if (strLastDate.empty())
@@ -105,16 +105,19 @@ int CTransferUser::start()
 				strId = (*j).second;
 			}
 		}
-		listRestMysqlId.clear();
-		pmysql->query("SELECT * FROM tracker_user WHERE id = '" + strId + "'", listRestMysqlId);
-		if (0 < listRestMysqlId.size())
-			continue;
+//		listRestMysqlId.clear();
+//		pmysql->query("SELECT * FROM tracker_user WHERE id = '" + strId + "'", listRestMysqlId);
+//		if (0 < listRestMysqlId.size())
+//			continue;
 		strSQL += strValues;
-		_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
+
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
-			_log("[CTransferUser] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
+			if (1062 != pmysql->getLastErrorNo())
+				_log("[CTransferUser] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
 		}
+		else
+			_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
 	}
 	pmysql->close();
 	_log("[CTransferUser] Query tracker_user count: %d to Insert to MySQL", nCount);

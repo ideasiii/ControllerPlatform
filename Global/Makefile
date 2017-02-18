@@ -57,11 +57,6 @@ all: checkdirs lib bin/$(TARGET)
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
-init: package-u checkdirs bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
-	@echo -ne '\n###### All Application Build Done. ######\n'
-	@echo "\n"
-
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
@@ -122,13 +117,13 @@ package-u:
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
-	apt-get -y install libmongo-client-dev
+	apt-get -y install libmongo-client-dev mongodb-clients
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 	
-mongoDB:
+mongodb:
 	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
 	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a

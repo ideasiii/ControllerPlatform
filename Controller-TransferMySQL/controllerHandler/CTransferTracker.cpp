@@ -110,7 +110,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	string strValues;
 	string strId;
 	map<string, string> mapItem;
-	list<map<string, string> > listRestMysqlId;
+	//list<map<string, string> > listRestMysqlId;
 
 	strLastDate = getMysqlLastDate(strTable);
 	if (strLastDate.empty())
@@ -170,16 +170,20 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 				strId = (*j).second;
 			}
 		}
-		listRestMysqlId.clear();
-		pmysql->query("SELECT * FROM " + strTable + " WHERE _id = '" + strId + "'", listRestMysqlId);
-		if (0 < listRestMysqlId.size())
-			continue;
+		//	listRestMysqlId.clear();
+		//	pmysql->query("SELECT * FROM " + strTable + " WHERE _id = '" + strId + "'", listRestMysqlId);
+		//	if (0 < listRestMysqlId.size())
+		//		continue;
 		strSQL += strValues;
-		_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
+
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
-			_log("[CTransferTracker] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
+			// mysql error no 1062 is Duplicate insert
+			if (1062 != pmysql->getLastErrorNo())
+				_log("[CTransferTracker] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
 		}
+		else
+			_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
 	}
 	pmysql->close();
 

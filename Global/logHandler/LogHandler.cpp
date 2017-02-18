@@ -6,7 +6,6 @@
  */
 #include <string>
 #include <list>
-#include <iostream>
 #include <ctime>
 #include <stdio.h>
 #include <cstdarg> // for Variable-length argument
@@ -124,6 +123,7 @@ void _log(const char* format, ...)
 	extern list<string> extListLog;
 	extListLog.push_back(strLog);
 
-	cout << strLog << endl;
+	printf("%s\n", strLog.c_str());
+	//cout << strLog << endl;
 }
 

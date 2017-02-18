@@ -5,7 +5,6 @@
  *      Author: jugo
  */
 
-#include <iostream>
 #include <mysql/mysql.h>
 #include "CMysqlHandler.h"
 #include "common.h"
@@ -36,7 +35,7 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 		return FALSE;
 	}
 	else
-		cout << "[CMysqlHandler] MySQL Init Success" << endl;
+		_log("[CMysqlHandler] MySQL Init Success");
 
 	mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, "60");
 
@@ -50,7 +49,7 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 		return FALSE;
 	}
 
-	cout << "[CMysqlHandler] MySQL Connect Success!!" << endl;
+	_log("[CMysqlHandler] MySQL Connect Success!!");
 	return TRUE;
 }
 
@@ -60,7 +59,7 @@ void CMysqlHandler::close()
 	{
 		mysql_close(mpMySQL);
 		mpMySQL = NULL;
-		cout << "[CMysqlHandler] MySQL Close" << endl;
+		_log("[CMysqlHandler] MySQL Close");
 	}
 }
 
@@ -73,7 +72,6 @@ void CMysqlHandler::setError(string strMsg)
 	{
 		mstrLastError = mysql_error(mpMySQL);
 		mnLastErrorNo = mysql_errno(mpMySQL);
-		cout << "[CMysqlHandler] " << strMsg << ": (" << mnLastErrorNo << ") " << mstrLastError << endl;
 	}
 }
 
