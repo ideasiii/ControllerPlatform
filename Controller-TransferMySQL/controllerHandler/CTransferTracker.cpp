@@ -134,8 +134,11 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		ppsql->close();
 		return FALSE;
 	}
-
+#ifdef SYNCALL_TRACKER
+	strSQL = "SELECT * FROM " + strTable;
+#else
 	strSQL = "SELECT * FROM " + strTable + " WHERE create_date >= '" + strLastDate + "'";
+#endif
 	_log("[CTransferTracker] syncData run PSQL: %s", strSQL.c_str());
 	list<map<string, string> > listRest;
 	ppsql->query(strSQL.c_str(), listRest);

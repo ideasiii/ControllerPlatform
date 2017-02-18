@@ -71,7 +71,18 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
+#ifdef SYNCALL_USER
+	_log("[Controller] Run SYNCALL_USER");
+	transUser->start();
+#else
+#ifdef SYNCALL_TRACKER
+	_log("[Controller] Run SYNCALL_TRACKER");
+	transTracker->start();
+#else
 	SetTimer(666, 3, TIMER_DU, onTimer);
+#endif
+#endif
+
 	return TRUE;
 }
 

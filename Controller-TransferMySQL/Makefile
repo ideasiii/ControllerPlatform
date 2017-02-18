@@ -46,8 +46,13 @@ all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
+
+sync_user: checkdirs bin/sync_user
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo "\n"
 	
-init: package-u checkdirs bin/$(TARGET)
+sync_tracker: checkdirs bin/sync_tracker
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
@@ -58,6 +63,23 @@ bin/$(TARGET): $(OBJ)
 	strip -s $@
 	@echo "\n"
 
+bin/sync_user: $(OBJ)
+	@echo -ne '\n###### Start Build SYNCALL_USER ######\n'
+	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS) -DSYNCALL_USER
+	strip -s $@
+	@echo "\n"
+	
+bin/sync_tracker: $(OBJ)
+	@echo -ne '\n###### Start Build SYNCALL_TRACKER ######\n'
+	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS) -DSYNCALL_TRACKER
+	strip -s $@
+	@echo "\n"
+
+init: package-u checkdirs bin/$(TARGET)
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo "\n"
+		
 lib:
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName static; \

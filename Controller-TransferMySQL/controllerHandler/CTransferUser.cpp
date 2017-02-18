@@ -68,8 +68,11 @@ int CTransferUser::start()
 		ppsql->close();
 		return FALSE;
 	}
-
+#ifdef SYNCALL_USER
+	strSQL = "SELECT * FROM tracker_user";
+#else
 	strSQL = "SELECT * FROM tracker_user WHERE create_date >= '" + strLastDate + "'";
+#endif
 	_log("[CTransferUser] run PSQL: %s", strSQL.c_str());
 
 	list<map<string, string> > listRest;
