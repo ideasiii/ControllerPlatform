@@ -48,12 +48,12 @@ all: checkdirs bin/$(TARGET)
 	@echo "\n"
 
 sync_user: checkdirs bin/sync_user
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/sync_user.conf
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
 sync_tracker: checkdirs bin/sync_tracker
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/sync_tracker.conf
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 
