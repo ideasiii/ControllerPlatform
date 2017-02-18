@@ -14,7 +14,7 @@
 #include "CObject.h"
 #include "common.h"
 #include "packet.h"
-
+#include "CMPData.h"
 using namespace std;
 
 class CCmpHandler;
@@ -24,6 +24,8 @@ class CServerMeeting;
 class CServerDevice;
 class CSocket;
 
+
+
 class CController: public CObject
 {
 public:
@@ -32,6 +34,7 @@ public:
 	int startServerMeeting(string strIP, const int nPort, const int nMsqId);
 	int startServerDevice(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
+	void onMeetingCommand(const CMPData *);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -48,4 +51,6 @@ private:
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
+	map<int, CMPData> deviceMapData;
+
 };
