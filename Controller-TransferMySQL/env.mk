@@ -13,4 +13,11 @@ export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Build Trace version use: -DTRACE
 # Build Release version use: -DRELEASE
 #####################################
-export LOG=-DDEBUG 
+export LOG=-DDEBUG
+
+######################################
+#
+#	sync all user: 		-DSYNCALL_USER
+#	sync all tracker:	-DSYNCALL_TRACKER
+######################################
+export RUN=-DSYNCALL_TRACKER 

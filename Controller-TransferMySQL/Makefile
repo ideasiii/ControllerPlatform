@@ -17,7 +17,7 @@ BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/postgresql -I /usr/include/mysql
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG) $(RUN)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -65,13 +65,13 @@ bin/$(TARGET): $(OBJ)
 
 bin/sync_user: $(OBJ)
 	@echo -ne '\n###### Start Build SYNCALL_USER ######\n'
-	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS) -DSYNCALL_USER
+	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
 	strip -s $@
 	@echo "\n"
 	
 bin/sync_tracker: $(OBJ)
 	@echo -ne '\n###### Start Build SYNCALL_TRACKER ######\n'
-	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS) -DSYNCALL_TRACKER
+	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
 	strip -s $@
 	@echo "\n"
 
