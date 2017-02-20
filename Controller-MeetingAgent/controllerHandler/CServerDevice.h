@@ -6,6 +6,7 @@
 
 #include "CSocketServer.h"
 #include "ICallback.h"
+#include "CMPData.h"
 
 using namespace std;
 
@@ -31,6 +32,8 @@ private:
 	CCmpHandler *cmpParser;
 	typedef int (CServerDevice::*MemFn)(int, int, int, const void *);
 	map<int, MemFn> mapFunc;
+
+	CMPData parseCMPData (int nSocket, int nCommand, int nSequence, const void *pData,bool isBodyExist);
 
 	//for other Controller Data
 	int cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *pData);

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define CB_AMX_COMMAND_CONTROL			1
-#define CB_AMX_COMMAND_STATUS			2
+#define CB_MEETING_COMMAND			1
+#define CB_DEVCIE_COMMAND			2
 
 

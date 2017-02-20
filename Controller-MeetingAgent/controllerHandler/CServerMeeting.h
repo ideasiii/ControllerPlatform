@@ -24,6 +24,7 @@ public:
 	bool onReceive(const int nSocketFD, const void *pData);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
+	void sendCommand(int commandID, int seqNum, string bodyData);
 
 private:
 

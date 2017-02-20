@@ -2,11 +2,12 @@
 #include "event.h"
 #include "packet.h"
 #include "common.h"
-
+#include "CDataHandler.cpp"
 #include "CServerMeeting.h"
 #include "IReceiver.h"
 #include "utility.h"
-
+#include "CMPData.h"
+#include "CCmpHandler.h"
 static CServerMeeting * serverMeeting = 0;
 
 CServerMeeting::CServerMeeting() :
@@ -50,22 +51,23 @@ int CServerMeeting::startServer(string strIP, const int nPort, const int nMsqId)
 		cszAddr = strIP.c_str();
 	if ( FAIL == start( AF_INET, cszAddr, nPort))
 	{
-		_log("[CServerMeeting]Socket Create Fail");
+		_log("[CServerMeeting] Socket Create Fail");
 		return FALSE;
 	}
 	return TRUE;
 }
 
+void CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
+{
+	_log("[CServerMeeting] command %d, seqNum is %d, data: %s\n", commandID, seqNum, bodyData.c_str());
 
-
-
-
+}
 
 int CServerMeeting::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 
 	mapClient[nSocket] = nSocket;
-	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
+	_log("[CServerMeeting] Socket Controller-Meeting Client FD:%d Binded", nSocket);
 	sendPacket(dynamic_cast<CSocket*>(serverMeeting), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
@@ -77,24 +79,16 @@ int CServerMeeting::cmpUnbind(int nSocket, int nCommand, int nSequence, const vo
 	return TRUE;
 }
 
-
-
-
 void CServerMeeting::stopServer()
 {
 	stop();
 }
-
-
-
-
 
 bool CServerMeeting::onReceive(const int nSocketFD, const void *pData)
 {
 
 	return false;
 }
-
 
 void CServerMeeting::addClient(const int nSocketFD)
 {

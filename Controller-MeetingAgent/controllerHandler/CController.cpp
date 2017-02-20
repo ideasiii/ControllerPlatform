@@ -22,11 +22,10 @@
 #include "JSONObject.h"
 #include "ICallback.h"
 
+
 using namespace std;
 
 static CController * controller = 0;
-
-
 
 /**
  * Define Socket Client ReceiveFunction
@@ -44,6 +43,20 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
 	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
 	return 0;
+}
+
+void IonMeetingCommand(void *param)
+{
+	const CMPData *strParam = reinterpret_cast<const CMPData*>(param);
+	controller->onMeetingCommand(strParam);
+}
+
+void CController::onMeetingCommand(const CMPData * mCMPData)
+{
+	int controllerMeetingSeqNum = getSequence();
+
+	deviceMapData[controllerMeetingSeqNum] = *mCMPData;
+	serverMeeting->sendCommand(mCMPData->nCommand, controllerMeetingSeqNum, mCMPData->bodyData);
 }
 
 /**
@@ -170,7 +183,7 @@ int CController::startServerMeeting(string strIP, const int nPort, const int nMs
 int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
 {
 	//serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	//serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
+	serverDevice->setCallback(CB_MEETING_COMMAND, IonMeetingCommand);
 	return serverDevice->startServer(strIP, nPort, nMsqId);
 }
 
@@ -190,5 +203,4 @@ void CController::stopServer()
 		serverDevice = 0;
 	}
 }
-
 
