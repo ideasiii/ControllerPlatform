@@ -36,15 +36,6 @@ int CTransferTracker::start()
 {
 	_log("============== Transfer Tracker Table Start ============");
 
-	if (syncColume("tracker_poya_ios", APP_ID_POYA_IOS))
-	{
-		syncData("tracker_poya_ios", APP_ID_POYA_IOS);
-	}
-	else
-	{
-		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_ios");
-	}
-
 	if (syncColume("tracker_poya_android", APP_ID_POYA_ANDROID))
 	{
 		syncData("tracker_poya_android", APP_ID_POYA_ANDROID);
@@ -52,6 +43,15 @@ int CTransferTracker::start()
 	else
 	{
 		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_android");
+	}
+
+	if (syncColume("tracker_poya_ios", APP_ID_POYA_IOS))
+	{
+		syncData("tracker_poya_ios", APP_ID_POYA_IOS);
+	}
+	else
+	{
+		_log("[CTransferTracker] Sync %s Colume Fail.", "tracker_poya_ios");
 	}
 
 	return TRUE;
@@ -176,6 +176,10 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		//		continue;
 		strSQL += strValues;
 
+#ifdef SYNCALL_TRACKER
+		_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
+#endif
+
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
 			// mysql error no 1062 is Duplicate insert
@@ -183,7 +187,11 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 				_log("[CTransferTracker] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
 		}
 		else
+		{
+#ifndef SYNCALL_TRACKER
 			_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
+#endif
+		}
 	}
 	pmysql->close();
 

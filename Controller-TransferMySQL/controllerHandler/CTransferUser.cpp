@@ -110,14 +110,20 @@ int CTransferUser::start()
 //		if (0 < listRestMysqlId.size())
 //			continue;
 		strSQL += strValues;
-
+#ifdef SYNCALL_USER
+		_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
+#endif
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
 			if (1062 != pmysql->getLastErrorNo())
 				_log("[CTransferUser] Mysql sqlExec Error: %s", pmysql->getLastError().c_str());
 		}
 		else
+		{
+#ifndef SYNCALL_USER
 			_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
+#endif
+		}
 	}
 	pmysql->close();
 	_log("[CTransferUser] Query tracker_user count: %d to Insert to MySQL", nCount);
