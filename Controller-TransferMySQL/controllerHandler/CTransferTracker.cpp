@@ -14,6 +14,8 @@
 #include "CPsqlHandler.h"
 #include "CMysqlHandler.h"
 #include "config.h"
+#include <string.h>
+#include <stddef.h>
 
 using namespace std;
 
@@ -108,9 +110,12 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	string strLastDate;
 	string strSQL;
 	string strValues;
-	string strId;
+	string strLa;
+	string strLo;
 	map<string, string> mapItem;
-	//list<map<string, string> > listRestMysqlId;
+	const char delimiters[] = ",";
+	char *running;
+	char *token;
 
 	strLastDate = getMysqlLastDate(strTable);
 	if (strLastDate.empty())
@@ -154,6 +159,29 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		{
 			strSQL += (*j).first;
 			strValues = strValues + "'" + (*j).second + "'";
+
+			if (0 == (*j).first.compare("location") && (0 < (*j).second.length()))
+			{
+				running = strdupa((*j).second.c_str());
+				if (0 != running)
+				{
+					token = strsep(&running, delimiters);
+					if (0 != token)
+						strLa = token;
+					else
+						strLa = "";
+
+					token = strsep(&running, delimiters);
+					if (0 != token)
+						strLo = token;
+					else
+						strLo = "";
+
+					strSQL += ",latitude,longitude";
+					strValues = strValues + ",'" + strLa + "','" + strLo + "'";
+				}
+			}
+
 			if (mapItem.end() != ++j)
 			{
 				strSQL += ",";
@@ -165,15 +193,8 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 				strValues += ")";
 			}
 			--j;
-			if (0 == (*j).first.compare("_id"))
-			{
-				strId = (*j).second;
-			}
 		}
-		//	listRestMysqlId.clear();
-		//	pmysql->query("SELECT * FROM " + strTable + " WHERE _id = '" + strId + "'", listRestMysqlId);
-		//	if (0 < listRestMysqlId.size())
-		//		continue;
+
 		strSQL += strValues;
 
 #ifdef SYNCALL_TRACKER

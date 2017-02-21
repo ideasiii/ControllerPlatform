@@ -31,7 +31,7 @@ void CController::OnTimer(int nId)
 {
 	if (mnBusy)
 	{
-		_log("[Controller] System Busy, Ignore Sync.");
+		printf("[Controller] System Busy, Ignore Sync.");
 		return;
 	}
 
