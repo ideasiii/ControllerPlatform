@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
 
 #include "CController.h"
 #include "CProcessHandler.h"
@@ -49,11 +48,10 @@ void runService()
 	int nMsgID = -1;
 	extern char *__progname;
 
-//	LogHandler *logAgent = LogHandler::getInstance();
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
-	_log("Get Config File : %s", pstrConf->c_str());
+	printf("Get Config File : %s\n", pstrConf->c_str());
 	if (FALSE != config->loadConfig(*pstrConf))
 	{
 		_setLogPath(config->getValue("LOG", "log").c_str());
@@ -88,12 +86,13 @@ void runService()
 
 	if (TRUE == nInit)
 	{
-		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
+		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->stop();
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
-		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+		_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
 	}
+	_close();
 	delete controller;
 }
 /**
