@@ -51,6 +51,35 @@ void IonMeetingCommand(void *param)
 	controller->onMeetingCommand(strParam);
 }
 
+void IonDeviceCommand(void *param)
+{
+	const CMPData *strParam = reinterpret_cast<const CMPData*>(param);
+	controller->onDeviceCommand(strParam);
+}
+
+void CController::onDeviceCommand(const CMPData * sendBackData)
+{
+	map<int, CMPData>::iterator itr = deviceMapData.find(sendBackData->nSequence);
+	if(itr == deviceMapData.end())
+	{
+		//not found
+		_log("[CController] Cannot find this data which nSequence = %d\n",sendBackData->nSequence);
+	}
+	else
+	{
+		//found it!
+
+		CMPData *deviceData = new CMPData(&(itr->second));
+
+		deviceMapData.erase(itr->first);
+
+		serverDevice->sendCommand(deviceData->nFD,sendBackData->nCommand, deviceData->nSequence, sendBackData->bodyData);
+
+	}
+
+
+}
+
 void CController::onMeetingCommand(const CMPData * mCMPData)
 {
 	int controllerMeetingSeqNum = getSequence();
@@ -157,13 +186,13 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		serverDevice->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_MEETING:
-		//serverMeeting->addClient(nId);
+		serverMeeting->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
 		//serverDevice->addClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_MEETING:
-		//serverMeeting->deleteClient(nId);
+		serverMeeting->deleteClient(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
 		//serverDevice->deleteClient(nId);
@@ -176,13 +205,12 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::startServerMeeting(string strIP, const int nPort, const int nMsqId)
 {
-	//serverMeeting->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
+	serverMeeting->setCallback(CB_DEVCIE_COMMAND, IonDeviceCommand);
 	return serverMeeting->startServer(strIP, nPort, nMsqId);
 }
 
 int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
 {
-	//serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
 	serverDevice->setCallback(CB_MEETING_COMMAND, IonMeetingCommand);
 	return serverDevice->startServer(strIP, nPort, nMsqId);
 }
@@ -203,4 +231,9 @@ void CController::stopServer()
 		serverDevice = 0;
 	}
 }
+
+
+
+
+
 

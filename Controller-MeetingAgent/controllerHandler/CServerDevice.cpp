@@ -110,6 +110,13 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 }
 
+void CServerDevice::sendCommand(int socketFD,int commandID, int seqNum, string bodyData)
+{
+	_log("[CServerDevice] Send Command back to Device socketFD:%d, command:%d, seqNum:%d, data:%s\n",socketFD, commandID, seqNum, bodyData.c_str());
+
+	sendPacket(dynamic_cast<CSocket*>(serverDevice), socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
+
+}
 int CServerDevice::cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_DBG("[CServerDevice]cmpFCMIdRegister");
@@ -214,7 +221,7 @@ CMPData CServerDevice::parseCMPData(int nSocket, int nCommand, int nSequence, co
 	}
 	else if (isBodyExist == false)
 	{
-		return CMPData(nSocket, nCommand, nSequence, NULL);
+		return CMPData(nSocket, nCommand, nSequence, "");
 	}
 	else
 	{

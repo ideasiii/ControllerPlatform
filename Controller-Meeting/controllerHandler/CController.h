@@ -20,8 +20,7 @@ using namespace std;
 class CCmpHandler;
 class CThreadHandler;
 class CJsonHandler;
-class CServerAMX;
-class CServerDevice;
+class CClientMeetingAgent;
 class CSocket;
 
 class CController: public CObject
@@ -29,12 +28,8 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerAMX(string strIP, const int nPort, const int nMsqId);
-	int startServerDevice(string strIP, const int nPort, const int nMsqId);
+	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
-	void onAMXCommand(string strCommand);
-	void onAMXResponseStatus(string strStatus);
-	void setAMXBusyTimer(int nSec);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -46,8 +41,8 @@ public:
 	CCmpHandler *cmpParser;
 
 private:
-	CServerAMX *serverAMX;
-	CServerDevice *serverDevice;
+	CClientMeetingAgent *mCClientMeetingAgent;
+
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;

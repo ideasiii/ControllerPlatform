@@ -26,7 +26,7 @@ public:
 	void setCallback(const int nId, CBFun cbfun);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
-
+	void sendCommand(int socketFD, int commandID, int seqNum, string bodyData);
 private:
 	CServerDevice();
 	CCmpHandler *cmpParser;

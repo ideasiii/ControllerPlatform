@@ -49,51 +49,33 @@ void runService()
 	int nMsgID = -1;
 	extern char *__progname;
 
-	LogHandler *logAgent = LogHandler::getInstance();
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
 	if (FALSE != config->loadConfig(*pstrConf))
 	{
-		logAgent->setLogPath(config->getValue("LOG", "log"));
+		_setLogPath(config->getValue("LOG", "log").c_str());
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
 		if (controller->initMessage(nMsgID))
 		{
-			if (0 == config->getValue("SERVER AMX", "enable").compare("yes"))
+			if (0 == config->getValue("SERVER MEETING_AGENT", "enable").compare("yes"))
 			{
-				convertFromString(nTmp, config->getValue("SERVER AMX", "port"));
-				if (!controller->startServerAMX(config->getValue("SERVER AMX", "ip"), nTmp, nMsgID))
+				//_log("############port %s", config->getValue("SERVER MEETING_AGENT", "port").c_str());
+				convertFromString(nTmp, config->getValue("SERVER MEETING_AGENT", "port"));
+				if (!controller->startClientMeetingAgent(config->getValue("SERVER MEETING_AGENT", "ip"), nTmp, nMsgID))
 				{
 					nInit = FALSE;
-					_log("[Controller] Create Server AMX Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+					_log("[Controller] Create Client Meeting-Agent Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
 				}
 				else
 				{
-					_log("[Controller] Create Server AMX Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
+					_log("[Controller] Create Client Meeting-Agent Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
+
 				}
 			}
 
-			if (0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
-			{
-				convertFromString(nTmp, config->getValue("SERVER DEVICE", "port"));
-				if (!controller->startServerDevice(config->getValue("SERVER DEVICE", "ip"), nTmp, nMsgID))
-				{
-					nInit = FALSE;
-					_log("[Controller] Create Server DEVICE Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
-				else
-				{
-					_log("[Controller] Create Server DEVICE Service Success. Port : %d , Message ID : %d", nTmp,
-							nMsgID);
-					string strTimer = config->getValue("TIMER", "amx_busy");
-					if (!strTimer.empty())
-					{
-						convertFromString(nTmp, strTimer);
-						controller->setAMXBusyTimer(nTmp);
-					}
-				}
-			}
+
 		}
 		else
 		{
@@ -117,6 +99,7 @@ void runService()
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
 	}
+	_close();
 	delete controller;
 }
 /**

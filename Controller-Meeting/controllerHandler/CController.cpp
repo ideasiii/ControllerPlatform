@@ -6,7 +6,6 @@
  */
 
 #include <list>
-#include <ctime>
 
 #include "CSocket.h"
 #include "CSocketServer.h"
@@ -17,45 +16,13 @@
 #include "CController.h"
 #include "CDataHandler.cpp"
 #include "CThreadHandler.h"
-#include "CServerAMX.h"
-#include "CServerDevice.h"
-#include "AMXCommand.h"
+#include "CClientMeetingAgent.h"
 #include "JSONObject.h"
 #include "ICallback.h"
 
 using namespace std;
 
 static CController * controller = 0;
-
-/** Callback Function AMX Request from Mobile **/
-void IonAMXCommandControl(void* param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void IonAMXCommandStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void CController::onAMXCommand(string strCommand)
-{
-	serverAMX->sendCommand(strCommand);
-}
-
-/** Callback Function AMX Response from AMX **/
-void IonAMXResponseStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXResponseStatus(strParam);
-}
-
-void CController::onAMXResponseStatus(string strStatus)
-{
-	serverDevice->broadcastAMXStatus(strStatus);
-}
 
 /**
  * Define Socket Client ReceiveFunction
@@ -142,8 +109,8 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 }
 
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
-				CServerDevice::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler)
+		CObject(), cmpParser(CCmpHandler::getInstance()), mCClientMeetingAgent(CClientMeetingAgent::getInstance()), tdEnquireLink(
+				new CThreadHandler), tdExportLog(new CThreadHandler)
 {
 
 }
@@ -166,61 +133,35 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
+
+	case EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE:
+		mCClientMeetingAgent->onReceive(nId, pData);
 		break;
-	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		serverDevice->onReceive(nId, pData);
+
+	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
+
 		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
-		serverAMX->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
-		serverAMX->deleteClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
-		serverDevice->deleteClient(nId);
-		break;
+
 	default:
-		_log("[Controller] Unknow message command: %d", nCommand);
+		_log("[Controller] Unknown message command: %d", nCommand);
 		break;
 	}
 }
 
-int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
+int CController::startClientMeetingAgent(string strIP, const int nPort, const int nMsqId)
 {
-	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(strIP, nPort, nMsqId);
-}
-
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
-{
-	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
+	_log("[Controller] start to connect IP: %s, port: %d \n",strIP.c_str(),nPort);
+	return mCClientMeetingAgent->startClient(strIP, nPort, nMsqId);
 }
 
 void CController::stopServer()
 {
-	if (serverAMX)
-	{
-		serverAMX->stopServer();
-		delete serverAMX;
-		serverAMX = 0;
-	}
 
-	if (serverDevice)
+	if (mCClientMeetingAgent)
 	{
-		serverDevice->stopServer();
-		delete serverDevice;
-		serverDevice = 0;
+		mCClientMeetingAgent->stopClient();
+		delete mCClientMeetingAgent;
+		mCClientMeetingAgent = 0;
 	}
 }
 
-void CController::setAMXBusyTimer(int nSec)
-{
-	serverDevice->setAmxBusyTimeout(nSec);
-}

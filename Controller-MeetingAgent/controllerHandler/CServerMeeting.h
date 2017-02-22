@@ -11,6 +11,10 @@
 #include <string>
 #include <map>
 #include "ICallback.h"
+#include "CMPData.h"
+
+#include "CThreadHandler.h"
+class CCmpHandler;
 
 using namespace std;
 
@@ -21,16 +25,36 @@ public:
 	virtual ~CServerMeeting();
 	int startServer(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
-	bool onReceive(const int nSocketFD, const void *pData);
+	void onReceive(const int nSocketFD, const void *pData);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
-	void sendCommand(int commandID, int seqNum, string bodyData);
-
+	int sendCommand(int commandID, int seqNum, string bodyData);
+	void setCallback(const int nId, CBFun cbfun);
+	void runEnquireLinkRequest();
 private:
 
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
+
 	CServerMeeting();
-	map<int, int> mapClient;
+
+	typedef int (CServerMeeting::*MemFn)(int, int, int, const void *);
+	map<int, MemFn> mapFunc;
+
+	vector<int> mapClient;
+	CCmpHandler *cmpParser;
+	map<int, CBFun> mapCallback;
+
+	//for Controller-Meeting Data
+	int cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
+	CMPData parseCMPData(int nSocket, int nCommand, int nSequence, const void *pData, bool isBodyExist);
+
+	int cmpEnquireLinkRequest(const int nSocketFD);
+	int getBindSocket(vector<int> &listValue);
+
+	CThreadHandler *tdEnquireLink;
 
 };

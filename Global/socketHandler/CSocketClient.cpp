@@ -307,7 +307,7 @@ int CSocketClient::runCMPHandler(int nClientFD)
 						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
 					}
 					socketClose(nClientFD);
-					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+					_log("[Socket Client] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
 							result);
 					break;
 				}
@@ -331,7 +331,7 @@ int CSocketClient::runCMPHandler(int nClientFD)
 		{
 			socketSend(nClientFD, "Control Center: Please use CMP to communicate\r\n",
 					strlen("Control Center: Please use CMP to communicate\r\n"));
-			_log("[Socket Server] Send Message: Please use CMP to communicate");
+			_log("[Socket Client] Send Message: Please use CMP to communicate");
 
 			if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
 			{
@@ -339,7 +339,7 @@ int CSocketClient::runCMPHandler(int nClientFD)
 			}
 
 			socketClose(nClientFD);
-			_log("[Socket Server] socket close client: %d , packet header length error: %d", nClientFD, result);
+			_log("[Socket Client] socket close client: %d , packet header length error: %d", nClientFD, result);
 			break;
 		}
 

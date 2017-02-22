@@ -35,7 +35,7 @@ public:
 	int startServerDevice(string strIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void onMeetingCommand(const CMPData *);
-
+	void onDeviceCommand(const CMPData * );
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
