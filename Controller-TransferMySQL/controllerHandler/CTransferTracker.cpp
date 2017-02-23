@@ -149,6 +149,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	ppsql->query(strSQL.c_str(), listRest);
 	ppsql->close();
 
+	_log("[CTransferTracker] Query PSQL Table %s Count: %d to Insert.", strTable.c_str(), listRest.size());
 	int nCount = 0;
 	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
 	{
@@ -197,10 +198,6 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 
 		strSQL += strValues;
 
-#ifdef SYNCALL_TRACKER
-		_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
-#endif
-
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
 			// mysql error no 1062 is Duplicate insert
@@ -209,12 +206,13 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		}
 		else
 		{
-#ifndef SYNCALL_TRACKER
 			_log("[CTransferTracker] run MYSQL: %s", strSQL.c_str());
-#endif
 		}
 	}
+
 	pmysql->close();
+
+	_log("[CTransferTracker] Mysql Table %s Total insert Count: %d", strTable.c_str(), nCount);
 
 	return TRUE;
 }

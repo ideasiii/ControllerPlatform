@@ -86,11 +86,11 @@ void runService()
 
 	if (TRUE == nInit)
 	{
-		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		_log("<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->stop();
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
-		_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
+		_log("<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
 	}
 	_close();
 	delete controller;

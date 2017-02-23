@@ -7,26 +7,24 @@
 
 #pragma once
 
-/*
- #include <string>
- #include <list>
+#include <string>
+#include <list>
 
- class CThreadHandler;
+class CThreadHandler;
 
- class LogHandler
- {
- public:
- static LogHandler* getInstance();
- virtual ~LogHandler();
- void run();
- void setLogPath(std::string strPath);
+class LogHandler
+{
+public:
+	static LogHandler* getInstance();
+	virtual ~LogHandler();
+	void run();
+	void setLogPath(std::string strPath);
 
- private:
- LogHandler();
- CThreadHandler *tdExportLog;
- //std::string mstrLogPath;
- };
- */
+private:
+	LogHandler();
+	CThreadHandler *tdExportLog;
+	//std::string mstrLogPath;
+};
 
 extern void _log(const char* format, ...);
 extern void _setLogPath(const char *ppath);

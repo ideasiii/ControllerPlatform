@@ -79,6 +79,7 @@ int CTransferUser::start()
 	ppsql->query(strSQL.c_str(), listRest);
 	ppsql->close();
 
+	_log("[CTransferUser] Query PSQL Table tracker_user Count: %d to Insert.", listRest.size());
 	int nCount = 0;
 	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
 	{
@@ -105,14 +106,9 @@ int CTransferUser::start()
 				strId = (*j).second;
 			}
 		}
-//		listRestMysqlId.clear();
-//		pmysql->query("SELECT * FROM tracker_user WHERE id = '" + strId + "'", listRestMysqlId);
-//		if (0 < listRestMysqlId.size())
-//			continue;
+
 		strSQL += strValues;
-#ifdef SYNCALL_USER
-		_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
-#endif
+
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
 			if (1062 != pmysql->getLastErrorNo())
@@ -120,13 +116,13 @@ int CTransferUser::start()
 		}
 		else
 		{
-#ifndef SYNCALL_USER
 			_log("[CTransferUser] run MYSQL: %s", strSQL.c_str());
-#endif
 		}
 	}
 	pmysql->close();
-	_log("[CTransferUser] Query tracker_user count: %d to Insert to MySQL", nCount);
+
+	_log("[CTransferUser] Mysql Table tracker_user Total run insert Count: %d", nCount);
+
 	return TRUE;
 }
 

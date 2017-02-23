@@ -16,15 +16,16 @@
 
 using namespace std;
 
-//static LogHandler* mInstance = 0;
+static LogHandler* mInstance = 0;
 /* Log list*/
-//__attribute__ ((unused)) static list<string> extListLog;
+__attribute__ ((unused)) static list<string> extListLog;
+
 static FILE *pstream = 0;
 static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
-char mbstr[16];
+static char mbstr[16];
 
-inline void writeLog(const char *pLog)
+inline void writeLog(int nSize, const char *pLog)
 {
 	std::time_t t;
 	t = std::time( NULL);
@@ -49,8 +50,12 @@ inline void writeLog(const char *pLog)
 		return;
 	}
 
-	fprintf(pstream, "%s\n", pLog);
+	flockfile(pstream);
+	fwrite(pLog, 1, nSize, pstream);
+	fwrite("\n", 1, 1, pstream);
+	//fprintf(pstream, "%s\n", pLog);
 	fflush(pstream);
+	funlockfile(pstream);
 }
 
 void _log(const char* format, ...)
@@ -75,7 +80,9 @@ void _log(const char* format, ...)
 		printf("[LogHandler] Log Path not Setting\n");
 	}
 	else
-		writeLog(strLog.c_str());
+	{
+		writeLog(strLog.length(), strLog.c_str());
+	}
 
 	printf("%s\n", strLog.c_str());
 
@@ -103,96 +110,94 @@ void _close()
 	}
 }
 
-/*
- void *threadExportLog(void *argv)
- {
- LogHandler* ss = reinterpret_cast<LogHandler*>(argv);
- ss->run();
- return NULL;
- }
+void *threadExportLog(void *argv)
+{
+	LogHandler* ss = reinterpret_cast<LogHandler*>(argv);
+	ss->run();
+	return NULL;
+}
 
- LogHandler::LogHandler() :
- tdExportLog(new CThreadHandler)
- {
- tdExportLog->createThread(threadExportLog, this);
- }
+LogHandler::LogHandler() :
+		tdExportLog(new CThreadHandler)
+{
+	tdExportLog->createThread(threadExportLog, this);
+}
 
- LogHandler::~LogHandler()
- {
- tdExportLog->threadCancel(tdExportLog->getThreadID());
- tdExportLog->threadJoin(tdExportLog->getThreadID());
- delete tdExportLog;
- fclose (pstream);
- }
+LogHandler::~LogHandler()
+{
+	tdExportLog->threadCancel(tdExportLog->getThreadID());
+	tdExportLog->threadJoin(tdExportLog->getThreadID());
+	delete tdExportLog;
+	fclose(pstream);
+}
 
- LogHandler* LogHandler::getInstance()
- {
- if (0 == mInstance)
- {
- mInstance = new LogHandler();
- }
- return mInstance;
- }
+LogHandler* LogHandler::getInstance()
+{
+	if (0 == mInstance)
+	{
+		mInstance = new LogHandler();
+	}
+	return mInstance;
+}
 
- void LogHandler::setLogPath(std::string strPath)
- {
- if (!strPath.empty() && 0 < strPath.length())
- {
- mstrLogPath = strPath;
- mkdirp (mstrLogPath);
- _log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
- }
- }
+void LogHandler::setLogPath(std::string strPath)
+{
+	if (!strPath.empty() && 0 < strPath.length())
+	{
+		mstrLogPath = strPath;
+		mkdirp(mstrLogPath);
+		_log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
+	}
+}
 
- void LogHandler::run()
- {
- string strLog;
- unsigned long nCount = 0;
+void LogHandler::run()
+{
+	string strLog;
+	unsigned long nCount = 0;
 
- char szPath[255];
- std::time_t t;
+	char szPath[255];
+	std::time_t t;
 
- string strLogDate = "2015-07-27";
+	string strLogDate = "2015-07-27";
 
- while (1)
- {
- tdExportLog->threadSleep(1);
- nCount = extListLog.size();
+	while (1)
+	{
+		tdExportLog->threadSleep(1);
+		nCount = extListLog.size();
 
- if (0 >= nCount)
- continue;
+		if (0 >= nCount)
+			continue;
 
- t = std::time( NULL);
- memset(mbstr, 0, 16);
- std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
+		t = std::time( NULL);
+		memset(mbstr, 0, 16);
+		std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
- if (0 != strLogDate.compare(mbstr))
- {
- if (0 != pstream)
- fclose (pstream);
+		if (0 != strLogDate.compare(mbstr))
+		{
+			if (0 != pstream)
+				fclose(pstream);
 
- strLogDate = mbstr;
- memset(szPath, 0, 255);
- sprintf(szPath, "%s.%s", mstrLogPath.c_str(), mbstr);
- pstream = fopen(szPath, "a");
- }
+			strLogDate = mbstr;
+			memset(szPath, 0, 255);
+			sprintf(szPath, "%s.%s", mstrLogPath.c_str(), mbstr);
+			pstream = fopen(szPath, "a");
+		}
 
- for (unsigned long i = 0; i < nCount; ++i)
- {
- strLog = *(extListLog.begin());
- extListLog.pop_front();
+		for (unsigned long i = 0; i < nCount; ++i)
+		{
+			strLog = *(extListLog.begin());
+			extListLog.pop_front();
 
- if ( NULL != pstream)
- {
- fprintf(pstream, "%s\n", strLog.c_str());
- fflush (pstream);
- }
- else
- {
- printf("[Error] Log file path open fail!!\n");
- }
- }
- }
- }
- */
+			if ( NULL != pstream)
+			{
+				fprintf(pstream, "%s\n", strLog.c_str());
+				fflush(pstream);
+			}
+			else
+			{
+				printf("[Error] Log file path open fail!!\n");
+			}
+		}
+	}
+}
 

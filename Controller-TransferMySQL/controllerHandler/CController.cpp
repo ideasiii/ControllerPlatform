@@ -31,7 +31,7 @@ void CController::OnTimer(int nId)
 {
 	if (mnBusy)
 	{
-		printf("[Controller] System Busy, Ignore Sync.");
+		_log("[Controller] System Busy, Ignore Sync.");
 		return;
 	}
 
@@ -79,6 +79,7 @@ int CController::start()
 	_log("[Controller] Run SYNCALL_TRACKER");
 	transTracker->start();
 #else
+	_log("[Controller] Run SYNCALL_TIMER");
 	SetTimer(666, 3, TIMER_DU, onTimer);
 #endif
 #endif
