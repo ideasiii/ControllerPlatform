@@ -122,6 +122,11 @@ package-u:
 	apt-get -y install libmysqld-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
+
+debug:
+	apt-get -y install libc6-dbg gdb valgrind	
+	@echo -ne '\n###### Package for Ubuntu Debug Tool install Completed. ######\n'
+	@echo "\n"
 	
 mongodb:
 	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";

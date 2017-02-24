@@ -29,4 +29,3 @@ private:
 extern void _log(const char* format, ...);
 extern void _setLogPath(const char *ppath);
 extern void _close();
-

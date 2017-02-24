@@ -11,6 +11,7 @@ controllerHandler \
 ../Global/processHandler \
 ../Global/timerHandler \
 ../Global/psqlHandler \
-../Global/mysqlHandler
+../Global/mysqlHandler \
+../Global/indicatorHandler
 			 
 #export EXT_MODULES=extInclude

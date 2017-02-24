@@ -14,6 +14,7 @@
 #include "CPsqlHandler.h"
 #include "CMysqlHandler.h"
 #include "config.h"
+#include "Indicator.h"
 #include <string.h>
 #include <stddef.h>
 
@@ -112,7 +113,6 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	string strValues;
 	string strLa;
 	string strLo;
-	map<string, string> mapItem;
 	const char delimiters[] = ",";
 	char *running;
 	char *token;
@@ -149,15 +149,20 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 	ppsql->query(strSQL.c_str(), listRest);
 	ppsql->close();
 
-	_log("[CTransferTracker] Query PSQL Table %s Count: %d to Insert.", strTable.c_str(), listRest.size());
 	int nCount = 0;
+	int nTotal = listRest.size();
+	_log("[CTransferTracker] Query PSQL Table %s Count: %d to Insert.", strTable.c_str(), nTotal);
+
 	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
 	{
 		strSQL = "INSERT INTO " + strTable + " (";
 		strValues = "VALUES(";
-		mapItem = *i;
-		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+
+		for (map<string, string>::iterator j = (*i).begin(); j != (*i).end(); ++j)
 		{
+			if ((*j).first.empty())
+				continue;
+
 			strSQL += (*j).first;
 			strValues = strValues + "'" + (*j).second + "'";
 
@@ -183,7 +188,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 				}
 			}
 
-			if (mapItem.end() != ++j)
+			if ((*i).end() != ++j)
 			{
 				strSQL += ",";
 				strValues += ",";
@@ -198,6 +203,8 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 
 		strSQL += strValues;
 
+		_load(nCount);
+
 		if (FALSE == pmysql->sqlExec(strSQL))
 		{
 			// mysql error no 1062 is Duplicate insert
@@ -210,6 +217,7 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		}
 	}
 
+	listRest.clear();
 	pmysql->close();
 
 	_log("[CTransferTracker] Mysql Table %s Total insert Count: %d", strTable.c_str(), nCount);

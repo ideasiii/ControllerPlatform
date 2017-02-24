@@ -25,6 +25,7 @@ static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
 static char mbstr[16];
 
+
 inline void writeLog(int nSize, const char *pLog)
 {
 	std::time_t t;
@@ -109,6 +110,8 @@ void _close()
 		pstream = 0;
 	}
 }
+
+//=============================Deprecated================================================//
 
 void *threadExportLog(void *argv)
 {
