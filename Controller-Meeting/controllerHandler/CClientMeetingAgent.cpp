@@ -189,9 +189,12 @@ int CClientMeetingAgent::cmpGetMeetingData(int nSocket, int nCommand, int nSeque
 {
 	_DBG("[CClientMeetingAgent]cmpGetMeetingData");
 
-	string bodyData = "";
+	string bodyData = "{\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"USER_NAME\": \"李二二\",\"MEETING_DATA\": [{\"MEETING_ID\": \"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\": \"XXX公司會議\",\"START_TIME\": \"2016-06-30 09:30:00\",\"END_TIME\": \"2016-06-30 12:30:00\",\"ROOM_ID\": \"ITES_101\",\"OWNER\": \"王一二\",\"OWNER_EMAIL\": \"qwer1234@iii.org.tw\"},{\"MEETING_ID\": \"95999b7e-f56f-46b0-b0c0-00eede1afd78\",\"SUPJECT\": \"促進XXX發展計畫\",\"START_TIME\": \"2016-07-30 09:30:00\",\"END_TIME\": \"2016-06-30 12:30:00\",\"ROOM_ID\": \"ITES_102\",\"OWNER\": \"王二一\",\"OWNER_EMAIL\": \"qoiu1234@iii.org.tw\"},{\"MEETING_ID\": \"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\": \"促進YYY發展計畫\",\"START_TIME\": \"2016-08-30 09:30:00\",\"END_TIME\": \"2016-08-30 12:30:00\",\"ROOM_ID\": \"ITES_102\",\"OWNER\": \"王二日\",\"OWNER_EMAIL\": \"qoiu1234222@iii.org.tw\"}]}";
 
-	sendCommand(generic_nack | nCommand, nSequence, bodyData);
+
+
+
+	sendCommand(long_data_response, nSequence, bodyData);
 
 	return TRUE;
 }

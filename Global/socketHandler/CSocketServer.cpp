@@ -292,10 +292,33 @@ int CSocketServer::runCMPHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 
+//			int nresp = (long_data_response >> 2 | 0x00000000) << 2;
+//			int nTemp = nCommand;
+//			nTemp = (nTemp >> 2 | 0x00000000) << 2;
+			_log("[CSocketServer] deal the Socket from Client!");
 			if ( enquire_link_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
 				continue;
+			}
+
+			/*if (static_cast<int>(nTotalLen) > 20000)
+			{
+				_log("[CSocketServer]Big data, Call Controller to deal it!");
+				ServerReceive(nClientFD, static_cast<int>(nTotalLen), &cmpPacket);
+				continue;
+			}*/
+			_log("[CSocketServer]now to check if long data request OR response");
+			if ((long_data_response & 0x000000FF) == (nCommand & 0x000000FF) || long_data_request == nCommand)
+			{
+				_log("[CSocketServer]long data request OR response");
+				ServerReceive(nClientFD, nTotalLen, &cmpPacket);
+				continue;
+			}
+			else
+			{
+				_log("long data response& 0x000000FF= %d   nCommand&0x000000FF= %d", (long_data_response & 0x000000FF),
+						(nCommand & 0x000000FF));
 			}
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);

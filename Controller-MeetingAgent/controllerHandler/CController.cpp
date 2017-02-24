@@ -22,7 +22,6 @@
 #include "JSONObject.h"
 #include "ICallback.h"
 
-
 using namespace std;
 
 static CController * controller = 0;
@@ -41,6 +40,11 @@ int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
  */
 int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
+
+	const CMP_PACKET *cmpPacket = reinterpret_cast<const CMP_PACKET*>(pData);
+
+
+	_log("[CController] socketFD:%d, Data Length:%d\n", nSocketFD, nDataLen);
 	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
 	return 0;
 }
@@ -60,10 +64,10 @@ void IonDeviceCommand(void *param)
 void CController::onDeviceCommand(const CMPData * sendBackData)
 {
 	map<int, CMPData>::iterator itr = deviceMapData.find(sendBackData->nSequence);
-	if(itr == deviceMapData.end())
+	if (itr == deviceMapData.end())
 	{
 		//not found
-		_log("[CController] Cannot find this data which nSequence = %d\n",sendBackData->nSequence);
+		_log("[CController] Cannot find this data which nSequence = %d\n", sendBackData->nSequence);
 	}
 	else
 	{
@@ -73,10 +77,10 @@ void CController::onDeviceCommand(const CMPData * sendBackData)
 
 		deviceMapData.erase(itr->first);
 
-		serverDevice->sendCommand(deviceData->nFD,sendBackData->nCommand, deviceData->nSequence, sendBackData->bodyData);
+		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,
+				sendBackData->bodyData);
 
 	}
-
 
 }
 
@@ -180,9 +184,11 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_TCP_MEETING_RECEIVE:
+		_log("[CController] get Controller-Meeting Socket Data from Message Queue");
 		serverMeeting->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
+		_log("[CController] get Device Socket Data from Message Queue");
 		serverDevice->onReceive(nId, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_MEETING:
@@ -231,9 +237,4 @@ void CController::stopServer()
 		serverDevice = 0;
 	}
 }
-
-
-
-
-
 

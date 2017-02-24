@@ -288,9 +288,19 @@ int CSocketClient::runCMPHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 
+
 			if ( enquire_link_request == nCommand)
 			{
+				_log("[CSocketClient] get Enquire Link Request!");
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+				continue;
+			}
+
+
+
+			if ((long_data_response & 0x000000FF) == (nCommand & 0x000000FF) || long_data_request == nCommand)
+			{
+				ClientReceive(nClientFD, nTotalLen, &cmpPacket);
 				continue;
 			}
 

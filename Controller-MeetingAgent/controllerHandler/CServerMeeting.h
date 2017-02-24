@@ -55,6 +55,9 @@ private:
 	int cmpEnquireLinkRequest(const int nSocketFD);
 	int getBindSocket(vector<int> &listValue);
 
+	int cmpEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *pData);
+
+
 	CThreadHandler *tdEnquireLink;
 
 };
