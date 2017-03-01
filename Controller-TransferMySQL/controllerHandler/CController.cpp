@@ -77,7 +77,7 @@ int CController::start()
 #else
 #ifdef SYNCALL_TRACKER
 	_log("[Controller] Run SYNCALL_TRACKER");
-	transTracker->start();
+	transTracker->syncDataAll();
 #else
 	_log("[Controller] Run SYNCALL_TIMER");
 	SetTimer(666, 3, TIMER_DU, onTimer);

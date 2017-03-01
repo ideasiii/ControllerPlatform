@@ -19,6 +19,7 @@ public:
 	explicit CTransferTracker();
 	virtual ~CTransferTracker();
 	int start();
+	int syncDataAll();
 
 private:
 	int syncColume(std::string strTable, std::string strAppId);
@@ -26,5 +27,6 @@ private:
 	CMysqlHandler *pmysql;
 	CPsqlHandler *ppsql;
 	std::string getMysqlLastDate(std::string strTable);
+	int getPsqlCount(const char* szTableName);
 
 };

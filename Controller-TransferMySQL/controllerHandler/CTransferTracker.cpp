@@ -139,11 +139,9 @@ int CTransferTracker::syncData(string strTable, string strAppId)
 		ppsql->close();
 		return FALSE;
 	}
-#ifdef SYNCALL_TRACKER
-	strSQL = "SELECT * FROM " + strTable;
-#else
+
 	strSQL = "SELECT * FROM " + strTable + " WHERE create_date >= '" + strLastDate + "'";
-#endif
+
 	_log("[CTransferTracker] syncData run PSQL: %s", strSQL.c_str());
 	list<map<string, string> > listRest;
 	ppsql->query(strSQL.c_str(), listRest);
@@ -263,4 +261,69 @@ string CTransferTracker::getMysqlLastDate(string strTable)
 	pmysql->close();
 
 	return strRet;
+}
+
+int CTransferTracker::syncDataAll()
+{
+	int nCount;
+	string strSQL;
+	int nRet;
+	extern map<string, string> mapPsqlSetting;
+	extern map<string, string> mapMysqlSetting;
+
+	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
+			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
+	{
+		_log("[CTransferUser] Error: Postgresql Connect Fail");
+		return FALSE;
+	}
+
+	nRet = pmysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+	if (FALSE == nRet)
+	{
+		_log("[CTransferUser] Mysql Error: %s", pmysql->getLastError().c_str());
+		ppsql->close();
+		return FALSE;
+	}
+
+	// 取得目前PSQL目前的筆數
+	nCount = getPsqlCount("tracker_poya_ios");
+	if (0 < nCount)
+	{
+		strSQL = "SELECT * FROM tracker_poya_ios sort by create_date LIMIT 10000";
+	}
+
+	return TRUE;
+}
+
+int CTransferTracker::getPsqlCount(const char* szTableName)
+{
+	string strRet;
+	string strSQL;
+	int nRet;
+	extern map<string, string> mapPsqlSetting;
+	extern map<string, string> mapMysqlSetting;
+	int nCount = 0;
+
+	if (!ppsql->open(mapPsqlSetting["host"].c_str(), mapPsqlSetting["port"].c_str(), mapPsqlSetting["database"].c_str(),
+			mapPsqlSetting["user"].c_str(), mapPsqlSetting["password"].c_str()))
+	{
+		_log("[CTransferUser] Error: Postgresql Connect Fail");
+	}
+	else
+	{
+
+		strSQL = "SELECT count(*) as count FROM " + szTableName;
+		list<map<string, string> > listRest;
+		ppsql->query(strSQL.c_str(), listRest);
+		if (0 < listRest.size())
+		{
+			strRet = (*listRest.begin())["count"];
+			nCount = atoi(strRet.c_str());
+		}
+		listRest.clear();
+	}
+	_log("[CTransferTracker] get table: %s record count: %d", szTableName, nCount);
+	return nCount;
 }
