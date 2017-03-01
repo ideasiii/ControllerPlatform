@@ -56,7 +56,9 @@ int CServerDevice::startServer(string strIP, const int nPort, const int nMsqId)
 
 	const char* cszAddr = NULL;
 	if (!strIP.empty())
+	{
 		cszAddr = strIP.c_str();
+	}
 
 	if (FAIL == start(AF_INET, cszAddr, nPort))
 	{
@@ -110,9 +112,10 @@ void CServerDevice::onReceive(const int nSocketFD, const void *pData)
 
 }
 
-void CServerDevice::sendCommand(int socketFD,int commandID, int seqNum, string bodyData)
+void CServerDevice::sendCommand(int socketFD, int commandID, int seqNum, string bodyData)
 {
-	_log("[CServerDevice] Send Command back to Device socketFD:%d, command:%d, seqNum:%d, data:%s\n",socketFD, commandID, seqNum, bodyData.c_str());
+	_log("[CServerDevice] Send Command back to Device socketFD:%d, command:%d, seqNum:%d, data:%s\n", socketFD,
+			commandID, seqNum, bodyData.c_str());
 
 	sendPacket(dynamic_cast<CSocket*>(serverDevice), socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
 

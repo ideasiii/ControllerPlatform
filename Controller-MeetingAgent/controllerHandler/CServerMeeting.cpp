@@ -27,6 +27,8 @@ CServerMeeting::CServerMeeting() :
 	mapFunc[smart_building_getmeetingdata_response] = &CServerMeeting::cmpGetMeetingData;
 	mapFunc[smart_building_amx_control_access_response] = &CServerMeeting::cmpAMXControlAccess;
 
+	mapFunc[enquire_link_response] = &CServerMeeting::cmpEnquireLinkResponse;
+
 }
 
 CServerMeeting::~CServerMeeting()
@@ -167,12 +169,14 @@ int CServerMeeting::startServer(string strIP, const int nPort, const int nMsqId)
 		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_MEETING);
 	}
 
-	/** Set Receive , Packet is BYTE , Message Queue Handle **/
-	setPacketConf(PK_BYTE, PK_MSQ);
+	setPacketConf(PK_CMP, PK_MSQ);
 
 	const char* cszAddr = NULL;
 	if (!strIP.empty())
+	{
 		cszAddr = strIP.c_str();
+	}
+
 	if ( FAIL == start( AF_INET, cszAddr, nPort))
 	{
 		_log("[CServerMeeting] Socket Create Fail");
@@ -287,6 +291,14 @@ void CServerMeeting::setCallback(const int nId, CBFun cbfun)
 	mapCallback[nId] = cbfun;
 }
 
+int CServerMeeting::cmpEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	_log("[CServerMeeting] Get Enquire Link Response!");
+
+
+
+}
+
 void CServerMeeting::runEnquireLinkRequest()
 {
 	int nSocketFD = -1;
@@ -295,7 +307,7 @@ void CServerMeeting::runEnquireLinkRequest()
 
 	while (1)
 	{
-		tdEnquireLink->threadSleep(1200);
+		tdEnquireLink->threadSleep(60);
 
 		for (int i = 0; i < mapClient.size(); i++)
 		{
