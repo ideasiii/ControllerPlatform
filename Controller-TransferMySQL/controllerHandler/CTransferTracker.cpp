@@ -20,6 +20,8 @@
 
 using namespace std;
 
+#define BATCH_COUNT	10000		// 批量處理，每次抓取的筆數
+
 CTransferTracker::CTransferTracker() :
 		pmysql(new CMysqlHandler), ppsql(new CPsqlHandler)
 {
@@ -265,6 +267,7 @@ string CTransferTracker::getMysqlLastDate(string strTable)
 
 int CTransferTracker::syncDataAll()
 {
+	int nRunCount;
 	int nCount;
 	string strSQL;
 	int nRet;
@@ -291,6 +294,8 @@ int CTransferTracker::syncDataAll()
 	nCount = getPsqlCount("tracker_poya_ios");
 	if (0 < nCount)
 	{
+		nRunCount = nCount / BATCH_COUNT;
+		++nRunCount;
 		strSQL = "SELECT * FROM tracker_poya_ios sort by create_date LIMIT 10000";
 	}
 
@@ -314,7 +319,7 @@ int CTransferTracker::getPsqlCount(const char* szTableName)
 	else
 	{
 
-		strSQL = "SELECT count(*) as count FROM " + szTableName;
+		strSQL = "SELECT count(*) as count FROM " + string(szTableName);
 		list<map<string, string> > listRest;
 		ppsql->query(strSQL.c_str(), listRest);
 		if (0 < listRest.size())

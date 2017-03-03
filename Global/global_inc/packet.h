@@ -41,10 +41,19 @@ struct CMP_BODY
 	char cmpdata[MAX_DATA_LEN];
 };
 
+struct CMP_BODY_UNLIMIT
+{
+	char cmpdata[];
+};
+
 struct CMP_PACKET
 {
 	CMP_HEADER cmpHeader;
-	CMP_BODY cmpBody;
+	union
+	{
+		CMP_BODY cmpBody;
+		CMP_BODY_UNLIMIT cmpBodyUnlimit;
+	};
 };
 
 /*
@@ -176,7 +185,7 @@ enquire_link_response, "enquire_link_response")( unbind_request, "unbind_request
 unbind_response, "unbind_response")( update_request, "update_request")(
 update_response, "update_response")(
 reboot_request, "reboot_request")( reboot_response, "reboot_response")(long_data_request, "long_data_request")(
-		long_data_response, "long_data_response")(
+long_data_response, "long_data_response")(
 config_request, "config_request")(
 config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
 		"power_port_response")(
@@ -193,9 +202,9 @@ amx_control_request, "amx_control_request")(amx_control_response, "amx_control_r
 		"amx_status_request")(amx_status_response, "amx_status_response")(fcm_id_register_request,
 		"fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(facebook_token_client_request,
 		"facebook_token_client_request")(facebook_token_client_response, "facebook_token_client_response")(
-		smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
+smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
 		"smart_building_qrcode_tokn_response")(smart_building_appversion_request, "smart_building_appversion_request")(
-		smart_building_appversion_response, "smart_building_appversion_response")(smart_building_getmeetingdata_request,
+smart_building_appversion_response, "smart_building_appversion_response")(smart_building_getmeetingdata_request,
 		"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
 		"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
 		"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
