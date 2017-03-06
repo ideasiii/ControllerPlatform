@@ -22,7 +22,7 @@ JSONObject::JSONObject(string strSource) :
 		cjsonObj(0), mnExtPointObj(0)
 {
 	cjsonObj = cJSON_Parse(strSource.c_str());
-	if (!cjsonObj)
+	if(!cjsonObj)
 	{
 		printf("[JSONObject] Invalid JSON Source: %s", strSource.c_str());
 	}
@@ -41,10 +41,10 @@ JSONObject::~JSONObject()
 
 void JSONObject::release()
 {
-	if (mnExtPointObj)
+	if(mnExtPointObj)
 		return;
 
-	if (0 != cjsonObj)
+	if(0 != cjsonObj)
 	{
 		cJSON_Delete(cjsonObj);
 		cjsonObj = 0;
@@ -53,7 +53,7 @@ void JSONObject::release()
 
 bool JSONObject::isValid()
 {
-	if (cjsonObj)
+	if(cjsonObj)
 		return true;
 	return false;
 }
@@ -66,17 +66,17 @@ bool JSONObject::getBoolean(string name)
 bool JSONObject::getBoolean(string name, bool defaultValue)
 {
 	int nValue = -1;
-	if (cjsonObj)
+	if(cjsonObj)
 	{
-		if (!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
+		if(!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
 		{
 			nValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
 		}
 	}
-	if (-1 == nValue)
+	if(-1 == nValue)
 		return defaultValue;
 
-	if (0 == nValue)
+	if(0 == nValue)
 		return false;
 	return true;
 }
@@ -91,9 +91,9 @@ string JSONObject::getString(string name, string defaultValue)
 {
 	string strValue = defaultValue;
 
-	if (cjsonObj)
+	if(cjsonObj)
 	{
-		if (!isNull(name) && (cJSON_String == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
+		if(!isNull(name) && (cJSON_String == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
 		{
 			strValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valuestring;
 		}
@@ -104,15 +104,15 @@ string JSONObject::getString(string name, string defaultValue)
 
 int JSONObject::getInt(string name)
 {
-	return getInt(name, 0);
+	return getInt(name, -1);
 }
 
 int JSONObject::getInt(string name, int defaultValue)
 {
 	int nValue = defaultValue;
-	if (cjsonObj)
+	if(cjsonObj)
 	{
-		if (!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
+		if(!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
 		{
 			nValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
 		}
@@ -122,7 +122,7 @@ int JSONObject::getInt(string name, int defaultValue)
 
 bool JSONObject::isNull(string name)
 {
-	if (cJSON_GetObjectItem(cjsonObj, name.c_str()))
+	if(cJSON_GetObjectItem(cjsonObj, name.c_str()))
 		return false;
 	return true;
 }
