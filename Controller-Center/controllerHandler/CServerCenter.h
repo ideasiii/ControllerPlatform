@@ -12,8 +12,6 @@
 #include "CSocketServer.h"
 #include "ICallback.h"
 
-using namespace std;
-
 class CCmpHandler;
 
 class CServerCenter: public CSocketServer
@@ -23,10 +21,9 @@ public:
 public:
 	static CServerCenter * getInstance();
 	virtual ~CServerCenter();
-	int startServer(string strIP, const int nPort, const int nMsqId);
+	int startServer(const char *szIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void setCallback(const int nId, CBFun cbfun);
-	void broadcastAMXStatus(string strStatus);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
 

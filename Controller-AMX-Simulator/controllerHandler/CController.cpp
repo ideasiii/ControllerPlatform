@@ -81,9 +81,9 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
+int CController::startServerDevice(const char *szIP, const int nPort, const int nMsqId)
 {
-	return serverDevice->startServer(strIP, nPort, nMsqId);
+	return serverDevice->startServer(szIP, nPort, nMsqId);
 }
 
 void CController::stopServer()

@@ -7,8 +7,6 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
-
 #include "CController.h"
 #include "CProcessHandler.h"
 #include "CMessageHandler.h"
@@ -55,16 +53,16 @@ void runService()
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
-	if (FALSE != config->loadConfig(*pstrConf))
+	if(FALSE != config->loadConfig(*pstrConf))
 	{
 		logAgent->setLogPath(config->getValue("LOG", "log"));
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
-		if (controller->initMessage(nMsgID))
+		if(controller->initMessage(nMsgID))
 		{
-			if (0 == config->getValue("SERVER CENTER", "enable").compare("yes"))
+			if(0 == config->getValue("SERVER CENTER", "enable").compare("yes"))
 			{
 				convertFromString(nTmp, config->getValue("SERVER CENTER", "port"));
-				if (!controller->startServerCenter(config->getValue("SERVER CENTER", "ip"), nTmp, nMsgID))
+				if(!controller->startServerCenter(config->getValue("SERVER CENTER", "ip").c_str(), nTmp, nMsgID))
 				{
 					nInit = FALSE;
 					_log("[Controller] Create Server Center Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
@@ -90,13 +88,13 @@ void runService()
 	delete pstrConf;
 	delete config;
 
-	if (TRUE == nInit)
+	if(TRUE == nInit)
 	{
 		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
+		controller->stopServer();
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
-		controller->stopServer();
 	}
 	delete controller;
 }
@@ -107,9 +105,9 @@ void options(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
+	while((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
 	{
-		switch (c)
+		switch(c)
 		{
 		case 'H':
 		case 'h':

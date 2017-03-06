@@ -41,60 +41,71 @@ struct CMP_BODY
 	char cmpdata[MAX_DATA_LEN];
 };
 
+struct CMP_BODY_UNLIMIT
+{
+	char cmpdata[];
+};
+
 struct CMP_PACKET
 {
 	CMP_HEADER cmpHeader;
-	CMP_BODY cmpBody;
+	union
+	{
+		CMP_BODY cmpBody;
+		CMP_BODY_UNLIMIT cmpBodyUnlimit;
+	};
 };
 
 /*
  * 	CMP Command set
  */
-#define generic_nack							0x80000000
-#define bind_request							0x00000001
-#define bind_response							0x80000001
-#define authentication_request				0x00000002
-#define authentication_response				0x80000002
-#define access_log_request					0x00000003
-#define access_log_response					0x80000003
-#define initial_request						0x00000004
-#define initial_response						0x80000004
-#define sign_up_request						0x00000005
-#define sign_up_response						0x80000005
-#define unbind_request							0x00000006
-#define unbind_response						0x80000006
-#define update_request							0x00000007
-#define update_response						0x80000007
-#define reboot_request							0x00000010
-#define reboot_response						0x80000010
-#define config_request							0x00000011
-#define config_response						0x80000011
-#define power_port_set_request				0x00000012
-#define power_port_set_response				0x80000012
-#define power_port_state_request			0x00000013
-#define power_port_state_response			0x80000013
-#define ser_api_signin_request				0x00000014
-#define ser_api_signin_response				0x80000014
-#define enquire_link_request					0x00000015
-#define enquire_link_response				0x80000015
-#define rdm_login_request						0x00000016
-#define rdm_login_response					0x80000016
-#define rdm_operate_request					0x00000017
-#define rdm_operate_response					0x80000017
-#define rdm_logout_request					0x00000018
-#define rdm_logout_response					0x80000018
-#define device_control_request				0x00000019
-#define device_control_response				0x80000019
-#define device_state_request					0x00000020
-#define device_state_response				0x80000020
-#define semantic_request						0x00000030
-#define semantic_response						0x80000030
-#define amx_control_request					0x00000040
-#define amx_control_response					0x80000040
-#define amx_status_request					0x00000041
-#define amx_status_response					0x80000041
-#define amx_broadcast_status_request		0x00000042
-#define amx_broadcast_status_response		0x80000042
+#define generic_nack									0x80000000
+#define bind_request									0x00000001
+#define bind_response									0x80000001
+#define authentication_request							0x00000002
+#define authentication_response							0x80000002
+#define access_log_request								0x00000003
+#define access_log_response								0x80000003
+#define initial_request									0x00000004
+#define initial_response								0x80000004
+#define sign_up_request									0x00000005
+#define sign_up_response								0x80000005
+#define unbind_request									0x00000006
+#define unbind_response									0x80000006
+#define update_request									0x00000007
+#define update_response									0x80000007
+#define long_data_request								0x00000008
+#define long_data_response								0x80000008
+#define reboot_request									0x00000010
+#define reboot_response									0x80000010
+#define config_request									0x00000011
+#define config_response									0x80000011
+#define power_port_set_request							0x00000012
+#define power_port_set_response							0x80000012
+#define power_port_state_request						0x00000013
+#define power_port_state_response						0x80000013
+#define ser_api_signin_request							0x00000014
+#define ser_api_signin_response							0x80000014
+#define enquire_link_request							0x00000015
+#define enquire_link_response							0x80000015
+#define rdm_login_request								0x00000016
+#define rdm_login_response								0x80000016
+#define rdm_operate_request								0x00000017
+#define rdm_operate_response							0x80000017
+#define rdm_logout_request								0x00000018
+#define rdm_logout_response								0x80000018
+#define device_control_request							0x00000019
+#define device_control_response							0x80000019
+#define device_state_request							0x00000020
+#define device_state_response							0x80000020
+#define semantic_request								0x00000030
+#define semantic_response								0x80000030
+#define amx_control_request								0x00000040
+#define amx_control_response							0x80000040
+#define amx_status_request								0x00000041
+#define amx_status_response								0x80000041
+#define amx_broadcast_status_request					0x00000042
+#define amx_broadcast_status_response					0x80000042
 #define fcm_id_register_request             			0x00000044
 #define fcm_id_register_response        				0x80000044
 #define facebook_token_client_request      	 			0x00000045
@@ -123,14 +134,14 @@ struct CMP_PACKET
 #define STATUS_RINVCMDID						0x00000003		//Invalid Command ID
 #define STATUS_RINVBNDSTS						0x00000004		//Incorrect BIND Status for given command
 #define STATUS_RALYBND							0x00000005		//Already in Bound State
-#define STATUS_RSYSBUSY						0x00000006      //System Busy
+#define STATUS_RSYSBUSY							0x00000006      //System Busy
 #define STATUS_RSYSERR							0x00000008		//System Error
 #define STATUS_RBINDFAIL						0x00000010		//Bind Failed
-#define STATUS_RINVBODY						0x00000040		//Invalid Packet Body Data
+#define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
 #define STATUS_RINVCTRLID						0x00000041		//Invalid Controller ID
-#define STATUS_RINVJSON						0x00000042		//Invalid JSON Data
+#define STATUS_RINVJSON							0x00000042		//Invalid JSON Data
 
-/*
+/*8
  * Service Type
  */
 #define TYPE_MOBILE_SERVICE					1
@@ -173,7 +184,8 @@ access_log_request, "access_log_request")( access_log_response, "access_log_resp
 enquire_link_response, "enquire_link_response")( unbind_request, "unbind_request")(
 unbind_response, "unbind_response")( update_request, "update_request")(
 update_response, "update_response")(
-reboot_request, "reboot_request")( reboot_response, "reboot_response")(
+reboot_request, "reboot_request")( reboot_response, "reboot_response")(long_data_request, "long_data_request")(
+long_data_response, "long_data_response")(
 config_request, "config_request")(
 config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
 		"power_port_response")(
@@ -187,22 +199,20 @@ rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_requ
 rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
 semantic_request, "semantic_request")(semantic_response, "semantic_response")(
 amx_control_request, "amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request,
-		"amx_status_request")(
-amx_status_response, "amx_status_response")(fcm_id_register_request,
-		"fcm_id_register_request")(fcm_id_register_response,
-		"fcm_id_register_response")(facebook_token_client_request,
-				"facebook_token_client_request")(facebook_token_client_response,
-				"facebook_token_client_response")(smart_building_qrcode_tokn_request,
-					"smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
-						"smart_building_qrcode_tokn_response")(smart_building_appversion_request,
-					"smart_building_appversion_request" )(smart_building_appversion_response,
-						"smart_building_appversion_response")(smart_building_getmeetingdata_request,
-						"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
-						"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
-						"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
-						"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
-						"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
-					"smart_building_wireless_power_charge_response");
+		"amx_status_request")(amx_status_response, "amx_status_response")(amx_broadcast_status_request,
+		"amx_broadcast_status_request")(amx_broadcast_status_response, "amx_broadcast_status_response")(
+		fcm_id_register_request, "fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(
+		facebook_token_client_request, "facebook_token_client_request")(facebook_token_client_response,
+		"facebook_token_client_response")(
+smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
+		"smart_building_qrcode_tokn_response")(smart_building_appversion_request, "smart_building_appversion_request")(
+smart_building_appversion_response, "smart_building_appversion_response")(smart_building_getmeetingdata_request,
+		"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
+		"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
+		"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
+		"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
+		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
+		"smart_building_wireless_power_charge_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
@@ -233,7 +243,8 @@ static int msnSequence = 0x00000000;
 __attribute__ ((unused)) inline static int getSequence()
 {
 	++msnSequence;
-	if (0x7FFFFFFF <= msnSequence)
+	if(0x7FFFFFFF <= msnSequence)
 		msnSequence = 0x00000001;
 	return msnSequence;
 }
+

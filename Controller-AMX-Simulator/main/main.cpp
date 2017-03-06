@@ -63,7 +63,7 @@ void runService()
 			if(0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
 			{
 				convertFromString(nTmp, config->getValue("SERVER DEVICE", "port"));
-				if(!controller->startServerDevice(config->getValue("SERVER DEVICE", "ip"), nTmp, nMsgID))
+				if(!controller->startServerDevice(config->getValue("SERVER DEVICE", "ip").c_str(), nTmp, nMsgID))
 				{
 					nInit = FALSE;
 					_log("[Controller] Create Server DEVICE Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);

@@ -16,7 +16,7 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerDevice(string strIP, const int nPort, const int nMsqId);
+	int startServerDevice(const char *szIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void setAMXBusyTimer(int nSec);
 

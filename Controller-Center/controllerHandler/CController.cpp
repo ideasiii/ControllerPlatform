@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <string>
 #include "event.h"
 #include "CController.h"
 #include "CServerCenter.h"
@@ -49,7 +50,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -58,7 +59,7 @@ CController* CController::getInstance()
 
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch (nCommand)
+	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_TCP_CENTER_RECEIVE:
 		serverCenter->onReceive(nId, pData);
@@ -75,14 +76,14 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	}
 }
 
-int CController::startServerCenter(string strIP, const int nPort, const int nMsqId)
+int CController::startServerCenter(const char* szIP, const int nPort, const int nMsqId)
 {
-	return serverCenter->startServer(strIP, nPort, nMsqId);
+	return serverCenter->startServer(szIP, nPort, nMsqId);
 }
 
 void CController::stopServer()
 {
-	if (serverCenter)
+	if(serverCenter)
 	{
 		serverCenter->stopServer();
 		delete serverCenter;

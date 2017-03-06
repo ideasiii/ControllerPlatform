@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <map>
 #include "event.h"
 #include "packet.h"
 #include "common.h"
@@ -16,6 +17,8 @@
 #include "ICallback.h"
 #include "CSqliteHandler.h"
 #include "IReceiver.h"
+
+using namespace std;
 
 static CServerCenter * serverCenter = 0;
 
@@ -54,20 +57,20 @@ CServerCenter::~CServerCenter()
 
 CServerCenter * CServerCenter::getInstance()
 {
-	if (0 == serverCenter)
+	if(0 == serverCenter)
 	{
 		serverCenter = new CServerCenter();
 	}
 	return serverCenter;
 }
 
-int CServerCenter::startServer(string strIP, const int nPort, const int nMsqId)
+int CServerCenter::startServer(const char *szIP, const int nPort, const int nMsqId)
 {
-	if (0 >= nPort || 0 >= nMsqId)
+	if(0 >= nPort || 0 >= nMsqId)
 		return FALSE;
 
 	/** Run socket server for CMP **/
-	if (0 < nMsqId)
+	if(0 < nMsqId)
 	{
 		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_CENTER_RECEIVE);
 		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_CENTER);
@@ -77,11 +80,7 @@ int CServerCenter::startServer(string strIP, const int nPort, const int nMsqId)
 	/** Set Receive , Packet is CMP , Message Queue Handle **/
 	setPacketConf(PK_CMP, PK_MSQ);
 
-	const char* cszAddr = NULL;
-	if (!strIP.empty())
-		cszAddr = strIP.c_str();
-
-	if (FAIL == start(AF_INET, cszAddr, nPort))
+	if(FAIL == start(AF_INET, szIP, nPort))
 	{
 		_log("[Server Center] Socket Create Fail");
 		return FALSE;
@@ -113,7 +112,7 @@ void CServerCenter::onReceive(const int nSocketFD, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[Server Center] Recv ", nSocketFD);
 
-	if (cmpParser->isAckPacket(cmpHeader.command_id))
+	if(cmpParser->isAckPacket(cmpHeader.command_id))
 	{
 		return;
 	}
@@ -121,7 +120,7 @@ void CServerCenter::onReceive(const int nSocketFD, const void *pData)
 	map<int, MemFn>::iterator iter;
 	iter = mapFunc.find(cmpHeader.command_id);
 
-	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
+	if(0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
 	{
 		sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocketFD, generic_nack | cmpHeader.command_id,
 		STATUS_RINVCMDID, cmpHeader.sequence_number, 0);
@@ -142,7 +141,7 @@ int CServerCenter::cmpBind(int nSocket, int nCommand, int nSequence, const void 
 
 int CServerCenter::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	if (mapClient.end() != mapClient.find(nSocket))
+	if(mapClient.end() != mapClient.find(nSocket))
 	{
 		mapClient.erase(nSocket);
 		_log("[Server Center] Socket Client FD:%d Unbinded", nSocket);
@@ -163,7 +162,7 @@ void CServerCenter::addClient(const int nSocketFD)
 
 void CServerCenter::deleteClient(const int nSocketFD)
 {
-	if (mapClient.end() != mapClient.find(nSocketFD))
+	if(mapClient.end() != mapClient.find(nSocketFD))
 	{
 		mapClient.erase(nSocketFD);
 		_log("[Server Center] Socket Client FD:%d Unbinded", nSocketFD);
@@ -177,7 +176,7 @@ int CServerCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const vo
 	int nType = ntohl(*((int*) pBody));
 	_log("[Server Center] Receice CMP Init: type=%d ", nType);
 
-	switch (nType)
+	switch(nType)
 	{
 	case TYPE_MOBILE_SERVICE:
 	case TYPE_POWER_CHARGE_SERVICE:
@@ -205,26 +204,26 @@ int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const voi
 	int nType = ntohl(*((int*) pBody));
 	pBody += 4;
 
-	if (!sqlite.connectDB(DB_PATH_IDEAS))
+	if(!sqlite.connectDB(DB_PATH_IDEAS))
 	{
 		_log("[CServerCenter] Error: Sqlite Connect Fail");
 		return sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR,
 				nSequence, 0);;
 	}
 
-	if (isValidStr((const char*) pBody, MAX_SIZE))
+	if(isValidStr((const char*) pBody, MAX_SIZE))
 	{
 		char temp[MAX_SIZE];
 		memset(temp, 0, sizeof(temp));
 		strcpy(temp, pBody);
-		if (0 < strlen(temp))
+		if(0 < strlen(temp))
 		{
 			JSONObject jsonData(temp);
-			if (jsonData.isValid())
+			if(jsonData.isValid())
 			{
 				SIGNUP_DATA signupData;
 				signupData.id = jsonData.getString("id");
-				if (!signupData.id.empty())
+				if(!signupData.id.empty())
 				{
 					signupData.app_id = jsonData.getString("app_id");
 					signupData.fb_account = jsonData.getString("fb_account");
@@ -245,7 +244,7 @@ int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const voi
 					JSONArray jsonArray;
 					sqlite.query(strSQL, jsonArray);
 
-					if (0 >= jsonArray.size())
+					if(0 >= jsonArray.size())
 					{
 						strSQL =
 								"INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
@@ -254,7 +253,7 @@ int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const voi
 										+ signupData.fb_name + "','" + signupData.fb_email + "','"
 										+ signupData.fb_account + "','" + signupData.g_account + "','"
 										+ signupData.t_account + "');";
-						if ( TRUE == sqlite.sqlExec(strSQL.c_str()))
+						if( TRUE == sqlite.sqlExec(strSQL.c_str()))
 						{
 							_log("[Server Center] Add User Login Data Success.");
 						}
