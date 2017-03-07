@@ -1,16 +1,14 @@
 #####################################
-# ControllerAmx make file
-# Created on: 2016-07-05
+# Controller Amx Simulator make file
+# Created on: 2017-03-06
 # Author: Jugo
-# Project: Smart Building
+# Project: AMX Simulator
 #####################################
 
 include env.mk
 include modules.mk
-include libs.mk
 
-
-TARGET    := controller-center
+TARGET    := controller-amx-simulator
 CC        := g++
 LD        := g++
 
@@ -18,7 +16,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE)
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
 CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
@@ -27,10 +25,9 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
-			-lm -lrt -ldl \
-			-lsqlite3
+			-lm -lrt -ldl
 					
-vpath %.cpp $(SRC_DIR)
+vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 
 define make-goal
 $1/%.o: %.cpp
@@ -83,6 +80,7 @@ clean:
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
+	@rm -rf $(DIR_APP_ROOT)Global
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs

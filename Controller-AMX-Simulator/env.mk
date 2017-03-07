@@ -4,7 +4,7 @@
 # Author: Jugo
 #####################################
 
-export VERSION=v0.0.0.2
+export VERSION=v0.0.0.1
 export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 #####################################

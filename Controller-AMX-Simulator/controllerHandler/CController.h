@@ -9,15 +9,16 @@
 
 #include "CObject.h"
 
-class CServerCenter;
+class CServerDevice;
 
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerCenter(const char* szIP, const int nPort, const int nMsqId);
+	int startServerDevice(const char *szIP, const int nPort, const int nMsqId);
 	void stopServer();
+	void setAMXBusyTimer(int nSec);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -26,5 +27,6 @@ private:
 	explicit CController();
 
 private:
-	CServerCenter *serverCenter;
+	CServerDevice *serverDevice;
+
 };

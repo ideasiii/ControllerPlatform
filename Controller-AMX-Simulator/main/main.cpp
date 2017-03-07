@@ -7,6 +7,8 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
+
 #include "CController.h"
 #include "CProcessHandler.h"
 #include "CMessageHandler.h"
@@ -15,7 +17,6 @@
 #include "CConfig.h"
 #include "utility.h"
 #include "common.h"
-#include "CSqliteHandler.h"
 
 using namespace std;
 
@@ -59,18 +60,24 @@ void runService()
 		convertFromString(nMsgID, config->getValue("MSQ", "id"));
 		if(controller->initMessage(nMsgID))
 		{
-			if(0 == config->getValue("SERVER CENTER", "enable").compare("yes"))
+			if(0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
 			{
-				convertFromString(nTmp, config->getValue("SERVER CENTER", "port"));
-				if(!controller->startServerCenter(config->getValue("SERVER CENTER", "ip").c_str(), nTmp, nMsgID))
+				convertFromString(nTmp, config->getValue("SERVER DEVICE", "port"));
+				if(!controller->startServerDevice(config->getValue("SERVER DEVICE", "ip").c_str(), nTmp, nMsgID))
 				{
 					nInit = FALSE;
-					_log("[Controller] Create Server Center Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+					_log("[Controller] Create Server DEVICE Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
 				}
 				else
 				{
-					_log("[Controller] Create Server Center Service Success. Port : %d , Message ID : %d", nTmp,
+					_log("[Controller] Create Server DEVICE Service Success. Port : %d , Message ID : %d", nTmp,
 							nMsgID);
+					string strTimer = config->getValue("TIMER", "amx_busy");
+					if(!strTimer.empty())
+					{
+						convertFromString(nTmp, strTimer);
+						controller->setAMXBusyTimer(nTmp);
+					}
 				}
 			}
 		}
@@ -90,7 +97,7 @@ void runService()
 
 	if(TRUE == nInit)
 	{
-		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... p(^-^q) =============>\n" << endl;
+		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->stopServer();
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
