@@ -116,9 +116,15 @@ void CServerDevice::sendCommand(int socketFD, int commandID, int seqNum, string 
 {
 	_log("[CServerDevice] Send Command back to Device socketFD:%d, command:%d, seqNum:%d, data:%s\n", socketFD,
 			commandID, seqNum, bodyData.c_str());
-
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
-
+	if (bodyData.length() > MAX_SIZE - 17)
+	{
+		sendPacket(dynamic_cast<CSocket*>(serverDevice), socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str(),
+				true);
+	}
+	else
+	{
+		sendPacket(dynamic_cast<CSocket*>(serverDevice), socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
+	}
 }
 int CServerDevice::cmpFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *pData)
 {

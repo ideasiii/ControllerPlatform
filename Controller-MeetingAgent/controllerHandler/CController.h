@@ -11,10 +11,13 @@
 #include <vector>
 #include <list>
 #include <map>
+
 #include "CObject.h"
 #include "common.h"
 #include "packet.h"
 #include "CMPData.h"
+
+
 using namespace std;
 
 class CCmpHandler;
@@ -36,6 +39,7 @@ public:
 	void stopServer();
 	void onMeetingCommand(const CMPData *);
 	void onDeviceCommand(const CMPData * );
+	void onMeetingCommand(int nSocketFD, int nDataLen, const void *pData);
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
@@ -52,5 +56,6 @@ private:
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
 	map<int, CMPData> deviceMapData;
+
 
 };

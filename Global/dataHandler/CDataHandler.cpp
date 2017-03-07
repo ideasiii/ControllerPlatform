@@ -45,11 +45,13 @@ int CDataHandler<T>::setData(const char *szName, const char *szValue)
 	int nRet = -1;
 
 	pthread_mutex_lock(mutex);
-	if (isValidStr(szName, MAX_SIZE) && isValidStr(szValue, MAX_SIZE))
+	if (isValidStr(szName, MAX_SIZE))
 	{
 		string strName = string(szName);
 		string strValue = string(szValue);
 		mapData[strName] = strValue;
+		printf("[CDataHandler] szValue: %s",szValue);
+		printf("[CDataHandler] strValue: %s",strValue.c_str());
 		nRet = (int) mapData.size();
 	}
 	pthread_mutex_unlock(mutex);
@@ -75,7 +77,8 @@ void CDataHandler<T>::clear()
 template<typename T>
 bool CDataHandler<T>::isValidKey(const char * szName)
 {
-	if (isValidStr(szName, MAX_SIZE))
+	//START joe update big data > 2048 is OK
+	if (isValidStr(szName, MAX_SIZE) || ((0 != szName) && 0 < ((int) strlen(szName))))
 	{
 		string strName = string(szName);
 		typename MAP_DATA::iterator it = mapData.find(strName);
@@ -84,6 +87,8 @@ bool CDataHandler<T>::isValidKey(const char * szName)
 			return true;
 		}
 	}
+	//END joe update big data > 2048 is OK
+
 	return false;
 }
 

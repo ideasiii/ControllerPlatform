@@ -130,9 +130,9 @@ int CCmpHandler::parseBody(int nCommand, const void *pData, CDataHandler<std::st
 	if (0 < (getLength(pData) - sizeof(CMP_HEADER)))
 	{
 		char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
-
 		if (isValidStr((const char*) pBody, MAX_SIZE))
 		{
+			//_log("isValidStr is true ");
 			char temp[MAX_SIZE];
 			memset(temp, 0, sizeof(temp));
 			strcpy(temp, pBody);

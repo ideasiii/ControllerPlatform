@@ -31,6 +31,7 @@ public:
 	int sendCommand(int commandID, int seqNum, string bodyData);
 	void setCallback(const int nId, CBFun cbfun);
 	void runEnquireLinkRequest();
+	int controllerCallBack(int nSocketFD, int nDataLen, const void *pData);
 private:
 
 	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);

@@ -55,16 +55,18 @@ void CServerMeeting::onReceive(const int nSocketFD, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[CServerMeeting] ### Recv ", nSocketFD);
 
-	/*if (cmpParser->isAckPacket(cmpHeader.command_id))
-	 {
-	 return;
-	 }*/
+	//response message get!
+	if (cmpParser->isAckPacket(cmpHeader.command_id))
+	{
+		(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number,
+				pPacket);
+		return;
+	}
 
 	map<int, MemFn>::iterator iter;
 	iter = mapFunc.find(cmpHeader.command_id);
 
-	if ((0x000000FF > cmpHeader.command_id && 0x00000000 <= cmpHeader.command_id)
-			|| (0x800000FF > cmpHeader.command_id && 0x80000000 <= cmpHeader.command_id) || mapFunc.end() != iter)
+	if ((0x000000FF > cmpHeader.command_id && 0x00000000 <= cmpHeader.command_id) || mapFunc.end() != iter)
 	{
 
 	}
@@ -78,6 +80,20 @@ void CServerMeeting::onReceive(const int nSocketFD, const void *pData)
 
 	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
 
+}
+
+int CServerMeeting::controllerCallBack(int nSocketFD, int nDataLen, const void *pData)
+{
+
+	_log("[CServerMeeting] start on Controller Call Back Func");
+
+	const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
+
+	(this->*this->mapFunc[ntohl(cmpPacket->cmpHeader.command_id)])(nSocketFD, ntohl(cmpPacket->cmpHeader.command_id),
+			ntohl(cmpPacket->cmpHeader.sequence_number), static_cast<void*>(const_cast<CMP_PACKET*>(cmpPacket)));
+	_log("[CServerMeeting] end on Controller Call Back Func");
+
+	return TRUE;
 }
 
 int CServerMeeting::cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData)
@@ -269,21 +285,40 @@ void CServerMeeting::deleteClient(const int nSocketFD)
 
 CMPData CServerMeeting::parseCMPData(int nSocket, int nCommand, int nSequence, const void *pData, bool isBodyExist)
 {
+
+	_log("[CServerMeeting] parseCMPData: (nCommand, nSequence) = (%d, %d)", nCommand, nSequence);
+
+	const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
+
+	if (ntohl(cmpPacket->cmpHeader.command_length) > MAX_SIZE - 1)
+	{
+
+		_log("[CServerMeeting::parseCMPData] cmpPacket body: %s", cmpPacket->cmpBodyUnlimit.cmpdata);
+		return CMPData(nSocket, nCommand, nSequence, string(cmpPacket->cmpBodyUnlimit.cmpdata));
+	}
+
 	CDataHandler<string> rData;
 
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
 
+	_log("[CServerMeeting] nRet: %d\n", nRet);
+
+	_log("[CServerMeeting] rData.isValidKey:%s\n", rData.isValidKey("data") ? "true" : "false");
+
 	if (0 < nRet && rData.isValidKey("data"))
 	{
+		_log("[CServerMeeting] parseCMP Data");
 		return CMPData(nSocket, nCommand, nSequence, rData["data"]);
 	}
 	else if (isBodyExist == false)
 	{
+		_log("[CServerMeeting] parseCMP Data NO Body");
 		return CMPData(nSocket, nCommand, nSequence, "");
 	}
 	else
 	{
-		return CMPData(-1, -1, -1, NULL);
+		_log("[CServerMeeting] parseCMP Data ERROR");
+		return CMPData(-1, -1, -1, "");
 	}
 }
 void CServerMeeting::setCallback(const int nId, CBFun cbfun)
@@ -294,9 +329,7 @@ void CServerMeeting::setCallback(const int nId, CBFun cbfun)
 int CServerMeeting::cmpEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_log("[CServerMeeting] Get Enquire Link Response!");
-
-
-
+	return 1;
 }
 
 void CServerMeeting::runEnquireLinkRequest()
@@ -307,7 +340,7 @@ void CServerMeeting::runEnquireLinkRequest()
 
 	while (1)
 	{
-		tdEnquireLink->threadSleep(60);
+		tdEnquireLink->threadSleep(600);
 
 		for (int i = 0; i < mapClient.size(); i++)
 		{

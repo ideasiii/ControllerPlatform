@@ -7,6 +7,7 @@
 
 #include <list>
 #include <ctime>
+#include <mutex>
 
 #include "CSocket.h"
 #include "CSocketServer.h"
@@ -24,6 +25,8 @@
 
 using namespace std;
 
+static mutex mtx;
+
 static CController * controller = 0;
 
 /**
@@ -40,13 +43,19 @@ int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
  */
 int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
-
-	const CMP_PACKET *cmpPacket = reinterpret_cast<const CMP_PACKET*>(pData);
-
-
-	_log("[CController] socketFD:%d, Data Length:%d\n", nSocketFD, nDataLen);
-	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
+	mtx.lock();
+	controller->onMeetingCommand(nSocketFD, nDataLen, pData);
+	mtx.unlock();
 	return 0;
+}
+
+void CController::onMeetingCommand(int nSocketFD, int nDataLen, const void *pData)
+{
+
+	//const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
+	//_log("[CController] cmpPacket body: %s",cmpPacket->cmpBodyUnlimit.cmpdata);
+
+	serverMeeting->controllerCallBack(nSocketFD, nDataLen, pData);
 }
 
 void IonMeetingCommand(void *param)
@@ -79,9 +88,7 @@ void CController::onDeviceCommand(const CMPData * sendBackData)
 
 		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,
 				sendBackData->bodyData);
-
 	}
-
 }
 
 void CController::onMeetingCommand(const CMPData * mCMPData)

@@ -10,6 +10,7 @@
 #include "IReceiver.h"
 #include "packet.h"
 #include "LogHandler.h"
+#include "CDataHandler.cpp"
 
 int CSocketClient::m_nInternalEventFilter = 6789;
 
@@ -288,7 +289,6 @@ int CSocketClient::runCMPHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 
-
 			if ( enquire_link_request == nCommand)
 			{
 				_log("[CSocketClient] get Enquire Link Request!");
@@ -296,15 +296,40 @@ int CSocketClient::runCMPHandler(int nClientFD)
 				continue;
 			}
 
-
-
-			if ((long_data_response & 0x000000FF) == (nCommand & 0x000000FF) || long_data_request == nCommand)
-			{
-				ClientReceive(nClientFD, nTotalLen, &cmpPacket);
-				continue;
-			}
-
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+
+			//START Joe add deal with Big Data
+			if (static_cast<int>(nTotalLen) > MAX_SIZE - 1)
+			{
+				cmpPacket.cmpBodyUnlimit.cmpdata = new char[nBodyLen + 1];
+
+				pBody = cmpPacket.cmpBodyUnlimit.cmpdata;
+				result = socketrecv(nClientFD, nBodyLen, &pBody, clientSockaddr);
+
+				if (result == nBodyLen)
+				{
+					ServerReceive(nClientFD, static_cast<int>(nTotalLen), &cmpPacket);
+					continue;
+				}
+				else
+				{
+					socketSend(nClientFD, "Invalid Packet\r\n", strlen("Invalid Packet\r\n"));
+					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
+					{
+						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
+					}
+					socketClose(nClientFD);
+					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+							result);
+					break;
+				}
+
+			}
+			else
+			{
+				pBody = &cmpPacket.cmpBody;
+			}
+			//END Joe add deal with Big Data
 
 			if (0 < nBodyLen)
 			{

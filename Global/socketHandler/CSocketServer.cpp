@@ -256,7 +256,7 @@ int CSocketServer::runCMPHandler(int nClientFD)
 
 	CMP_PACKET cmpPacket;
 	void* pHeader = &cmpPacket.cmpHeader;
-	void* pBody = &cmpPacket.cmpBody;
+	void* pBody;
 
 	CMP_HEADER cmpHeader;
 	//void *pHeaderResp = &cmpHeader;
@@ -278,7 +278,6 @@ int CSocketServer::runCMPHandler(int nClientFD)
 
 		memset(&cmpPacket, 0, sizeof(cmpPacket));
 		result = socketrecv(nClientFD, sizeof(CMP_HEADER), &pHeader, clientSockaddr);
-
 		if (sizeof(CMP_HEADER) == result)
 		{
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
@@ -292,36 +291,44 @@ int CSocketServer::runCMPHandler(int nClientFD)
 			cmpHeader.sequence_number = htonl(nSequence);
 			cmpHeader.command_length = htonl(sizeof(CMP_HEADER));
 
-//			int nresp = (long_data_response >> 2 | 0x00000000) << 2;
-//			int nTemp = nCommand;
-//			nTemp = (nTemp >> 2 | 0x00000000) << 2;
-			_log("[CSocketServer] deal the Socket from Client!");
 			if ( enquire_link_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
 				continue;
 			}
+			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
-			/*if (static_cast<int>(nTotalLen) > 20000)
+			if (static_cast<int>(nTotalLen) > MAX_SIZE -1 )
 			{
-				_log("[CSocketServer]Big data, Call Controller to deal it!");
-				ServerReceive(nClientFD, static_cast<int>(nTotalLen), &cmpPacket);
-				continue;
-			}*/
-			_log("[CSocketServer]now to check if long data request OR response");
-			if ((long_data_response & 0x000000FF) == (nCommand & 0x000000FF) || long_data_request == nCommand)
-			{
-				_log("[CSocketServer]long data request OR response");
-				ServerReceive(nClientFD, nTotalLen, &cmpPacket);
-				continue;
+				cmpPacket.cmpBodyUnlimit.cmpdata = new char[nBodyLen + 1];
+
+				pBody = cmpPacket.cmpBodyUnlimit.cmpdata;
+				result = socketrecv(nClientFD, nBodyLen, &pBody, clientSockaddr);
+
+
+				if (result == nBodyLen)
+				{
+					ServerReceive(nClientFD, static_cast<int>(nTotalLen), &cmpPacket);
+					continue;
+				}
+				else
+				{
+					socketSend(nClientFD, "Invalid Packet\r\n", strlen("Invalid Packet\r\n"));
+					if (externalEvent.isValid() && -1 != externalEvent.m_nEventDisconnect)
+					{
+						sendMessage(externalEvent.m_nEventFilter, externalEvent.m_nEventDisconnect, nClientFD, 0, 0);
+					}
+					socketClose(nClientFD);
+					_log("[Socket Server] socket close client: %d , packet length error: %d != %d", nClientFD, nBodyLen,
+							result);
+					break;
+				}
+
 			}
 			else
 			{
-				_log("long data response& 0x000000FF= %d   nCommand&0x000000FF= %d", (long_data_response & 0x000000FF),
-						(nCommand & 0x000000FF));
+				pBody = &cmpPacket.cmpBody;
 			}
-
-			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
 			if (0 < nBodyLen)
 			{

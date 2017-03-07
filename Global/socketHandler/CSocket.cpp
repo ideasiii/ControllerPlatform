@@ -284,6 +284,7 @@ int CSocket::socketSend(int nSockFD, const void* pBuf, int nBufLen)
 	switch (nSocketStyle)
 	{
 	case SOCK_STREAM: /*virtual circuit*/
+
 		nResult = send(nSockFD, pBuf, nBufLen, FLAGS);
 		break;
 	case SOCK_DGRAM: /*datagram, for UDP client send*/
@@ -329,7 +330,6 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 	{
 	case SOCK_STREAM: /*virtual circuit*/
 		nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
-		//		_log("[Socket] socket recv: %d", nResult);
 		break;
 	case SOCK_DGRAM: /*datagram*/
 		if (0 != pClientSockaddr)
@@ -369,7 +369,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 	{
 	case SOCK_STREAM: /*virtual circuit*/
 		nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
-		//		_log("[Socket] socket recv: %d", nResult);
+
 		break;
 	case SOCK_DGRAM: /*datagram*/
 		if (0 != pClientSockaddr)
@@ -402,7 +402,8 @@ bool CSocket::checkSocketFD(int nSocketFD)
 {
 	int nRet = 0;
 	bool bValid = false;
-	struct timeval timeout = { 0, 0 };
+	struct timeval timeout =
+	{ 0, 0 };
 	fd_set socketSet;
 
 	FD_ZERO(&socketSet);

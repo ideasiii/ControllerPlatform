@@ -43,7 +43,7 @@ struct CMP_BODY
 
 struct CMP_BODY_UNLIMIT
 {
-	char cmpdata[];
+	char *cmpdata;
 };
 
 struct CMP_PACKET
