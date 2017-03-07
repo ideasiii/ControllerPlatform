@@ -13,11 +13,22 @@
 #include "common.h"
 #include "memory.h"
 #include "LogHandler.h"
+#include "CTimer.h"
+
+CObject * object = 0;
+
+void _onTimer(int nId)
+{
+	if(object)
+	{
+		object->_OnTimer(nId);
+	}
+}
 
 CObject::CObject() :
 		messageHandler(new CMessageHandler)
 {
-	// TODO Auto-generated constructor stub
+
 }
 
 CObject::~CObject()
@@ -31,7 +42,7 @@ int CObject::initMessage(int nKey)
 	int nMsqid;
 
 	nMsqid = messageHandler->init(nKey);
-	if (0 >= nMsqid)
+	if(0 >= nMsqid)
 	{
 		//throwException("Create message queue fail");
 		_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
@@ -46,13 +57,13 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 	int nRecv;
 	MESSAGE_BUF *msgbuf;
 
-	if (-1 == messageHandler->getMsqid())
+	if(-1 == messageHandler->getMsqid())
 	{
 		_log("[Object] Invalid msqid, not init msq");
 		return -1;
 	}
 
-	if (0 >= nRecvEvent)
+	if(0 >= nRecvEvent)
 	{
 		_log("[Object] Invalid receive event id");
 		return -1;
@@ -63,21 +74,21 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 	pdata = msgbuf;
 	messageHandler->setRecvEvent(nRecvEvent);
 
-	if (szDescript)
+	if(szDescript)
 		_log("[Object] %s Message Service Start Run , Event ID:%d ", szDescript, nRecvEvent);
 	else
 		_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
 
-	while (1)
+	while(1)
 	{
 		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
 
 		nRecv = messageHandler->recvMessage(&pdata);
-		if (0 < nRecv)
+		if(0 < nRecv)
 		{
 			onReceiveMessage(msgbuf->mtype, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}
-		else if (-2 == nRecv)
+		else if(-2 == nRecv)
 		{
 			/**
 			 * get SIGINT
@@ -92,7 +103,7 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 
 	delete msgbuf;
 
-	if (szDescript)
+	if(szDescript)
 		_log("[Object] %s Message loop end", szDescript);
 	else
 		_log("[Object] Message loop end");
@@ -113,10 +124,26 @@ void CObject::throwException(const char * szMsg)
 {
 	std::string strMsg;
 
-	if (szMsg)
+	if(szMsg)
 	{
 		strMsg = std::string(szMsg);
 		throw CException(strMsg);
 	}
+}
+
+timer_t CObject::setTimer(int nId, int nSecStart, int nInterSec)
+{
+	object = this;
+	return _SetTimer(nId, nSecStart, nInterSec, _onTimer);
+}
+
+void CObject::killTimer(int nId)
+{
+	_KillTimer(nId);
+}
+
+void CObject::_OnTimer(int nId)
+{
+	onTimer(nId);
 }
 

@@ -15,17 +15,17 @@
 
 static CController * controller = 0;
 
-void onTimer(int nId)
-{
-	if (controller)
-	{
-		controller->OnTimer(nId);
-	}
-}
+//void onTimer(int nId)
+//{
+//	if(controller)
+//	{
+//		controller->OnTimer(nId);
+//	}
+//}
 
-void CController::OnTimer(int nId)
+void CController::onTimer(int nId)
 {
-	if (mnBusy)
+	if(mnBusy)
 	{
 		_log("[Controller] System Busy, Ignore Sync.");
 		return;
@@ -54,7 +54,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -68,7 +68,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	SetTimer(666, 3, TIMER_DU, onTimer);
+	SetTimer(666, 3, TIMER_DU);
 	return TRUE;
 }
 

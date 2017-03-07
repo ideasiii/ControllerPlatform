@@ -22,7 +22,6 @@ using namespace std;
 
 static CServerCenter * serverCenter = 0;
 
-#define DB_PATH_IDEAS				"/data/sqlite/ideas.db"
 #define RESP_INIT "{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}"
 
 typedef struct _SIGNUP_DATA
@@ -133,26 +132,21 @@ void CServerCenter::onReceive(const int nSocketFD, const void *pData)
 
 int CServerCenter::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
+	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	mapClient[nSocket] = nSocket;
 	_log("[Server Center] Socket Client FD:%d Binded", nSocket);
-	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 
 int CServerCenter::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
+	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	if(mapClient.end() != mapClient.find(nSocket))
 	{
 		mapClient.erase(nSocket);
 		_log("[Server Center] Socket Client FD:%d Unbinded", nSocket);
 	}
-	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
-}
-
-void CServerCenter::setCallback(const int nId, CBFun cbfun)
-{
-	mapCallback[nId] = cbfun;
 }
 
 void CServerCenter::addClient(const int nSocketFD)
@@ -172,50 +166,51 @@ void CServerCenter::deleteClient(const int nSocketFD)
 
 int CServerCenter::cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
-	int nType = ntohl(*((int*) pBody));
-	_log("[Server Center] Receice CMP Init: type=%d ", nType);
+	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence,
+	RESP_INIT);
+	/*
+	 char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+	 int nType = ntohl(*((int*) pBody));
+	 _log("[Server Center] Receice CMP Init: type=%d ", nType);
 
-	switch(nType)
-	{
-	case TYPE_MOBILE_SERVICE:
-	case TYPE_POWER_CHARGE_SERVICE:
-	case TYPE_SDK_SERVICE:
-	case TYPE_TRACKER_SERVICE:
-	case TYPE_TRACKER_APPLIENCE:
-	case TYPE_TRACKER_TOY:
-	case TYPE_TRACKER_IOT:
-		sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence,
-		RESP_INIT);
-		return 0;
+	 switch(nType)
+	 {
+	 case TYPE_MOBILE_SERVICE:
+	 case TYPE_POWER_CHARGE_SERVICE:
+	 case TYPE_SDK_SERVICE:
+	 case TYPE_TRACKER_SERVICE:
+	 case TYPE_TRACKER_APPLIENCE:
+	 case TYPE_TRACKER_TOY:
+	 case TYPE_TRACKER_IOT:
+	 sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence,
+	 RESP_INIT);
+	 return 0;
 
-	}
+	 }
 
-	_log("[Server Center] Initial Fail, Can't get initial data Socket FD:%d, Service Type: %d", nSocket, nType);
-	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR, nSequence, 0);
-
+	 _log("[Server Center] Initial Fail, Can't get initial data Socket FD:%d, Service Type: %d", nSocket, nType);
+	 sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR, nSequence, 0);
+	 */
 	return 0;
 }
 
 int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	CSqliteHandler sqlite;
+	string strSQL;
+
+	sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand,
+	STATUS_ROK, nSequence, 0);
+
 	char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
 	int nType = ntohl(*((int*) pBody));
 	pBody += 4;
-
-	if(!sqlite.connectDB(DB_PATH_IDEAS))
-	{
-		_log("[CServerCenter] Error: Sqlite Connect Fail");
-		return sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR,
-				nSequence, 0);;
-	}
 
 	if(isValidStr((const char*) pBody, MAX_SIZE))
 	{
 		char temp[MAX_SIZE];
 		memset(temp, 0, sizeof(temp));
 		strcpy(temp, pBody);
+
 		if(0 < strlen(temp))
 		{
 			JSONObject jsonData(temp);
@@ -236,50 +231,25 @@ int CServerCenter::cmpSignup(int nSocket, int nCommand, int nSequence, const voi
 					signupData.phone = jsonData.getString("phone");
 					signupData.t_account = jsonData.getString("t_account");
 
-					/** Check ID exist in user Table. **/
-					string strSQL = "SELECT id FROM user WHERE id = '" + signupData.id + "';";
-					//	list<string> listValue;
-					//	int nRow = sqlite->ideasSqlExec(strSQL.c_str(), listValue, 0);
+					strSQL =
+							"INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
+									+ signupData.id + "','" + signupData.app_id + "','" + signupData.mac + "','"
+									+ signupData.os + "','" + signupData.phone + "','" + signupData.fb_id + "','"
+									+ signupData.fb_name + "','" + signupData.fb_email + "','" + signupData.fb_account
+									+ "','" + signupData.g_account + "','" + signupData.t_account + "');";
 
-					JSONArray jsonArray;
-					sqlite.query(strSQL, jsonArray);
-
-					if(0 >= jsonArray.size())
-					{
-						strSQL =
-								"INSERT INTO user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
-										+ signupData.id + "','" + signupData.app_id + "','" + signupData.mac + "','"
-										+ signupData.os + "','" + signupData.phone + "','" + signupData.fb_id + "','"
-										+ signupData.fb_name + "','" + signupData.fb_email + "','"
-										+ signupData.fb_account + "','" + signupData.g_account + "','"
-										+ signupData.t_account + "');";
-						if( TRUE == sqlite.sqlExec(strSQL.c_str()))
-						{
-							_log("[Server Center] Add User Login Data Success.");
-						}
-						else
-							return sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand,
-							STATUS_RSYSERR, nSequence, 0);
-
-					}
 					_log(
 							"[Server Center] Signup Request:id=%s app_id=%s fb_account=%s fb_email=%s fb_id=%s fb_name=%s g_account=%s mac=%s os=%s phone=%s t_account=%s",
 							signupData.id.c_str(), signupData.app_id.c_str(), signupData.fb_account.c_str(),
 							signupData.fb_email.c_str(), signupData.fb_id.c_str(), signupData.fb_name.c_str(),
 							signupData.g_account.c_str(), signupData.mac.c_str(), signupData.os.c_str(),
 							signupData.phone.c_str(), signupData.t_account.c_str());
-					return sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand,
-					STATUS_ROK, nSequence, 0);
 				}
 
 			}
 			jsonData.release();
 		}
 	}
-
-	_log("[Server Center] Signup Fail, Can't get Signup data Socket FD:%d, Service Type: %d", nSocket, nType);
-	return sendPacket(dynamic_cast<CSocket*>(serverCenter), nSocket, generic_nack | nCommand, STATUS_RSYSERR, nSequence,
-			0);
-
+	return TRUE;
 }
 
