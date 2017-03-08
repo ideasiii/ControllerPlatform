@@ -14,7 +14,6 @@
 #include "JSONObject.h"
 #include "JSONArray.h"
 #include "CServerCenter.h"
-#include "ICallback.h"
 #include "CSqliteHandler.h"
 #include "IReceiver.h"
 

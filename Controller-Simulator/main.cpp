@@ -45,25 +45,29 @@ int main(int argc, char* argv[])
 ("bye", BYE)\
 ("help", HELP)\
 ("pressure", PRESSURE)\
-("cmp fcm",fcm_id_register_request)\
-("cmp fbtoken",facebook_token_client_request)\
-("cmp qrcode",smart_building_qrcode_tokn_request)\
-("cmp sbversion",smart_building_appversion_request)\
-("cmp sbdata",smart_building_getmeetingdata_request)\
-("cmp amxaccess",smart_building_amx_control_access_request)\
-("cmp wpc",smart_building_wireless_power_charge_request)\
 (
-			"cmp init", initial_request)\
-("cmp signup", sign_up_request)\
+			"cmp fcm", fcm_id_register_request)\
+("cmp fbtoken", facebook_token_client_request)\
+("cmp qrcode",
+			smart_building_qrcode_tokn_request)\
+("cmp sbversion", smart_building_appversion_request)\
+("cmp sbdata",
+			smart_building_getmeetingdata_request)\
+("cmp amxaccess", smart_building_amx_control_access_request)\
+(
+			"cmp wpc", smart_building_wireless_power_charge_request)\
+("cmp init", initial_request)\
+("cmp signup",
+			sign_up_request)\
 ("cmp enquire", enquire_link_request)\
-(
-			"cmp access", access_log_request)\
-("rdm login", rdm_login_request)\
+("cmp access", access_log_request)\
+("rdm login",
+			rdm_login_request)\
 ("rdm operate", rdm_operate_request)\
-(
-			"rdm logout", rdm_logout_request)\
+("rdm logout", rdm_logout_request)\
 ("io", IO_PRESSURE)\
-("cmp pwstate", power_port_state_request)\
+(
+			"cmp pwstate", power_port_state_request)\
 ("cmp pwset",
 	power_port_set_request)\
 ("cmp auth", authentication_request)\
@@ -73,12 +77,13 @@ int main(int argc, char* argv[])
 ("amx bind", AMX_BIND)\
 ("amx system on", AMX_SYSTEM_ON)\
 ("amx control", amx_control_request)\
-("amx status", amx_status_request)\
+(
+			"amx status", amx_status_request)\
 ("semantic", semantic_request)("amx status2", 1166);
 
 	printf("This process is a Controller testing process!.\n");
 
-	if (argc < 3)
+	if(argc < 3)
 	{
 		fprintf( stderr, "Usage:  %s <IP> <Remote Port>  ...\n", argv[0]);
 		exit(1);
@@ -89,7 +94,8 @@ int main(int argc, char* argv[])
 	printf("Connect IP:%s Port:%d.\n", strIP.c_str(), nPort);
 
 	CCmpTest *cmpTest = new CCmpTest();
-	cmpTest->connectController(strIP, nPort);
+	if(!cmpTest->connectController(strIP, nPort))
+		exit(0);
 
 	epfd = epoll_create(5);
 
@@ -99,10 +105,10 @@ int main(int argc, char* argv[])
 	epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
 	string strInput;
 
-	while (running)
+	while(running)
 	{
 		noEvents = epoll_wait(epfd, events, FD_SETSIZE, -1);
-		for (i = 0; i < noEvents; ++i)
+		for(i = 0; i < noEvents; ++i)
 		{
 			memset(buffer, 0, BUFSIZE);
 			fgets(buffer, 1024, stdin);
@@ -110,7 +116,7 @@ int main(int argc, char* argv[])
 
 			nCommand = mapCommand[strInput];
 
-			switch (nCommand)
+			switch(nCommand)
 			{
 			case BYE:
 				printf("Bye.\n");
@@ -118,7 +124,7 @@ int main(int argc, char* argv[])
 				break;
 			case HELP:
 				printf("Test CMP Use:\n");
-				for (map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+				for(map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
 				{
 					cout << (*i).first << endl;
 				}

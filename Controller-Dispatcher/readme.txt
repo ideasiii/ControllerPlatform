@@ -29,3 +29,9 @@ apt-get install mongodb-dev libmongo-client-dev
 ipcs -q
 #remove IPC
 ipcrm -q [msq_id]
+
+# 檢查Thread數目
+while true; do date; ps -T -a | grep controller-disp ; sleep 1; done;
+
+# Thread 壓測
+while true; do date; ./simulator 127.0.0.1 6607 & ; sleep 1; done;

@@ -41,6 +41,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_TCP_DISPATCHER_RECEIVER:
+		dispatcher->onReceiveMessage(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DISPATCHER:
 		dispatcher->setClient(nId, true);

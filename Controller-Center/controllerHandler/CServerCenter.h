@@ -9,7 +9,6 @@
 
 #include <map>
 #include "CSocketServer.h"
-#include "ICallback.h"
 
 class CCmpHandler;
 
