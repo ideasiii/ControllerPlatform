@@ -43,5 +43,6 @@ private:
 	int m_nInternalFilter;
 	int mnPacketType;
 	int mnPacketHandle;
+	unsigned long int mThreadId;
 };
 

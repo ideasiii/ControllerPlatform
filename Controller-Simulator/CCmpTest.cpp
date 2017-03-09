@@ -521,14 +521,16 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 
 	} // while
 
-	string console_cmd = "bye\n";
-	string tty = ttyname(STDIN_FILENO);
-	int fd = open(tty.c_str(), O_WRONLY);
-	write(fd, console_cmd.c_str(), console_cmd.size());
+//	string console_cmd = "bye\r";
+//	string tty = ttyname(STDIN_FILENO);
+//	int fd = open(tty.c_str(), O_WRONLY);
+//	write(fd, console_cmd.c_str(), console_cmd.size());
+//	close(fd);
+	printf("bye\n");
+	exit(0);
 
 	threadHandler->threadSleep(1);
 	threadHandler->threadExit();
-
 }
 
 void CCmpTest::runSocketReceive(int nSocketFD)

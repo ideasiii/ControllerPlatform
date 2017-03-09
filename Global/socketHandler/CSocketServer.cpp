@@ -549,6 +549,7 @@ void CSocketServer::closeClient(int nClientFD)
 	if(mapClientThread.end() != mapClientThread.find(nClientFD))
 	{
 		pthread_t pid = mapClientThread[nClientFD];
+		mapClientThread.erase(nClientFD);
 		threadHandler->threadCancel(pid);
 		sendMessage(m_nInternalFilter, EVENT_COMMAND_THREAD_EXIT, pid, 0, NULL);
 	}

@@ -14,7 +14,7 @@
 #include "CCmpHandler.h"
 #include <time.h>
 
-#define RESP_DISPATCH "{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 6607	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}"
+#define RESP_DISPATCH "{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}"
 
 static CDispatcher * dispatcher = 0;
 
