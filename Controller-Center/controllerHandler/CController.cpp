@@ -9,7 +9,6 @@
 #include "event.h"
 #include "CController.h"
 #include "CServerCenter.h"
-#include "ICallback.h"
 #include "LogHandler.h"
 #include "CSqliteHandler.h"
 #include "utility.h"

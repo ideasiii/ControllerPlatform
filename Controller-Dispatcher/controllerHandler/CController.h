@@ -9,12 +9,14 @@
 
 #include "CObject.h"
 
+class CDispatcher;
+
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int start();
+	int startDispatcher(const char *szIP, const int nPort, const int nMsqId);
 	int stop();
 
 protected:
@@ -23,8 +25,6 @@ protected:
 
 private:
 	explicit CController();
-
-private:
-	volatile int mnBusy;
+	CDispatcher *dispatcher;
 
 };

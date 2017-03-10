@@ -60,7 +60,7 @@ CCmpTest::~CCmpTest()
 	}
 }
 
-void CCmpTest::connectController(const std::string strIP, const int nPort)
+int CCmpTest::connectController(const std::string strIP, const int nPort)
 {
 	closeConnect();
 
@@ -68,7 +68,7 @@ void CCmpTest::connectController(const std::string strIP, const int nPort)
 	if((m_nSocketFD = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		_DBG("TCP Socket Create Fail!!\n");
-		return;
+		return FALSE;
 	}
 
 	hostAddr.sin_family = AF_INET;
@@ -77,12 +77,14 @@ void CCmpTest::connectController(const std::string strIP, const int nPort)
 	if(connect(m_nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
 	{
 		_DBG("TCP Socket Connect Fail!!\n");
-		return;
+		return FALSE;
 	}
 
 	_DBG("TCP Socket connect success");
 
 	threadHandler->createThread(threadSocketRecvHandler, this);
+
+	return TRUE;
 }
 
 void CCmpTest::closeConnect()
@@ -518,6 +520,14 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 		}
 
 	} // while
+
+//	string console_cmd = "bye\r";
+//	string tty = ttyname(STDIN_FILENO);
+//	int fd = open(tty.c_str(), O_WRONLY);
+//	write(fd, console_cmd.c_str(), console_cmd.size());
+//	close(fd);
+	printf("bye\n");
+	exit(0);
 
 	threadHandler->threadSleep(1);
 	threadHandler->threadExit();

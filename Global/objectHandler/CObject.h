@@ -8,18 +8,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <stdexcept>
-
-using std::runtime_error;
-
-class CException: public runtime_error
-{
-public:
-	CException(const std::string& _message) :
-			std::runtime_error(_message)
-	{
-	}
-};
 
 class CMessageHandler;
 
@@ -40,7 +28,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}
@@ -54,21 +42,33 @@ struct EVENT_EXTERNAL
 class CObject
 {
 public:
-	CObject();
+	explicit CObject();
 	virtual ~CObject();
-	int initMessage(int nKey);
-	int run(int nRecvEvent, const char * szDescript = 0);
 	void clearMessage();
 	void throwException(const char * szMsg);
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	void _OnTimer(int nId);
+	int initMessage(int nKey);
+	int run(int nRecvEvent, const char * szDescript = 0);
 
 protected:
+	// virtual function
 	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 	{
-		printf("onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x", nEvent, nCommand, nId, nDataLen,
-				*(unsigned int *) pData);
+		printf("[CObject] onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x\n", nEvent, nCommand,
+				nId, nDataLen, *(unsigned int *) pData);
 	}
 	;
+
+	virtual void onTimer(int nId)
+	{
+		printf("[CObject] onTimer Id:%d\n", nId);
+	}
+	;
+
+protected:
+	timer_t setTimer(int nId, int nSecStart, int nInterSec);
+	void killTimer(int nId);
 
 private:
 	CMessageHandler *messageHandler;
