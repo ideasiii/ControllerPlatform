@@ -10,6 +10,8 @@
 #include "CSocketServer.h"
 #include <string>
 #include <map>
+
+#include "iCommand.h"
 #include "ICallback.h"
 
 using namespace std;

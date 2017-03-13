@@ -40,6 +40,11 @@ public:
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	virtual void onTimer(int nId)
+	{
+		printf("[CSocketServer] onTimer Id:%d\n", nId);
+	}
+	;
 
 private:
 	int recvHandler();

@@ -11,8 +11,9 @@
 #include "packet.h"
 #include "LogHandler.h"
 #include "CDataHandler.cpp"
+#include "event.h"
 
-int CSocketClient::m_nInternalEventFilter = 6789;
+int CSocketClient::m_nInternalEventFilter = 8000;
 
 void *threadClientCMPHandler(void *argv)
 {
@@ -82,14 +83,14 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 		{
 			if(-1 == initMessage(externalEvent.m_nMsgId))
 			{
-				throwException("socket client create message id fail");
+				_log("[Socket Client] socket client create message id fail");
 			}
 		}
 		else
 		{
 			if(-1 == initMessage(m_nInternalFilter))
 			{
-				throwException("socket client create message id fail");
+				_log("[Socket Client] socket client create message id fail");
 			}
 		}
 

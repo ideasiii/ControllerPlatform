@@ -18,6 +18,7 @@
 #include "CDataHandler.cpp"
 #include "packet.h"
 #include "IReceiver.h"
+#include "event.h"
 
 int CSocketServer::m_nInternalEventFilter = 7000;
 
@@ -86,7 +87,7 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 
 	if(-1 == nMsgId)
 	{
-		throwException("socket server create message id fail");
+		_log("[CSocketServer] Init Message Queue Fail");
 		return -1;
 	}
 
@@ -493,6 +494,8 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 		_log("[Socket Server] Receive Thread Joined, Thread ID: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
+		break;
+	case EVENT_TIMER:
 		break;
 	default:
 		_log("[Socket Server] unknow message command");

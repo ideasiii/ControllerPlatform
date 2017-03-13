@@ -45,11 +45,12 @@ public:
 	explicit CObject();
 	virtual ~CObject();
 	void clearMessage();
-	void throwException(const char * szMsg);
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 	void _OnTimer(int nId);
 	int initMessage(int nKey);
 	int run(int nRecvEvent, const char * szDescript = 0);
+	timer_t setTimer(int nId, int nSecStart, int nInterSec, int nEvent = -1);
+	void killTimer(int nId);
 
 protected:
 	// virtual function
@@ -66,12 +67,9 @@ protected:
 	}
 	;
 
-protected:
-	timer_t setTimer(int nId, int nSecStart, int nInterSec);
-	void killTimer(int nId);
-
 private:
 	CMessageHandler *messageHandler;
+	int mnTimerEventId;
 
 };
 

@@ -20,8 +20,9 @@
 #include "CServerAMX.h"
 #include "CServerDevice.h"
 #include "AMXCommand.h"
+#include "iCommand.h"
 #include "JSONObject.h"
-#include "ICallback.h"
+#include "packet.h"
 
 using namespace std;
 
@@ -80,7 +81,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
  */
 int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
 {
-	if (NULL == socket)
+	if(NULL == socket)
 	{
 		_log("[Controller] Send Command Fail, Socket invalid");
 		return -1;
@@ -93,7 +94,7 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 	nCommandSend = nCommand;
 
-	if (isResp)
+	if(isResp)
 	{
 		nCommandSend = generic_nack | nCommand;
 	}
@@ -117,7 +118,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 	memset(&packet, 0, sizeof(CMP_PACKET));
 
 	controller->cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
-	if (0 != szData)
+	if(0 != szData)
 	{
 		memcpy(pIndex, szData, strlen(szData));
 		pIndex += strlen(szData);
@@ -133,7 +134,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] Send", nSocket);
 
 	string strLog;
-	if (0 >= nRet)
+	if(0 >= nRet)
 	{
 		_log("[Controller] CMP Send Fail socket: %d", nSocket);
 	}
@@ -155,7 +156,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -164,7 +165,7 @@ CController* CController::getInstance()
 
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch (nCommand)
+	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
 		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
@@ -205,14 +206,14 @@ int CController::startServerDevice(string strIP, const int nPort, const int nMsq
 
 void CController::stopServer()
 {
-	if (serverAMX)
+	if(serverAMX)
 	{
 		serverAMX->stopServer();
 		delete serverAMX;
 		serverAMX = 0;
 	}
 
-	if (serverDevice)
+	if(serverDevice)
 	{
 		serverDevice->stopServer();
 		delete serverDevice;

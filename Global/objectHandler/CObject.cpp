@@ -14,6 +14,7 @@
 #include "memory.h"
 #include "LogHandler.h"
 #include "CTimer.h"
+#include "event.h"
 
 CObject * object = 0;
 
@@ -26,7 +27,7 @@ void _onTimer(int nId)
 }
 
 CObject::CObject() :
-		messageHandler(new CMessageHandler)
+		messageHandler(new CMessageHandler), mnTimerEventId(-1)
 {
 
 }
@@ -120,19 +121,9 @@ void CObject::clearMessage()
 	messageHandler->close();
 }
 
-void CObject::throwException(const char * szMsg)
+timer_t CObject::setTimer(int nId, int nSecStart, int nInterSec, int nEvent)
 {
-	std::string strMsg;
-
-	if(szMsg)
-	{
-		strMsg = std::string(szMsg);
-		throw CException(strMsg);
-	}
-}
-
-timer_t CObject::setTimer(int nId, int nSecStart, int nInterSec)
-{
+	mnTimerEventId = nEvent;
 	object = this;
 	return _SetTimer(nId, nSecStart, nInterSec, _onTimer);
 }
@@ -144,6 +135,10 @@ void CObject::killTimer(int nId)
 
 void CObject::_OnTimer(int nId)
 {
+	if(-1 != mnTimerEventId)
+	{
+		messageHandler->sendMessage(mnTimerEventId, EVENT_TIMER, nId, 0, 0);
+	}
 	onTimer(nId);
 }
 
