@@ -24,7 +24,7 @@ CClientControllerMongoDB::CClientControllerMongoDB() :
 
 CClientControllerMongoDB::~CClientControllerMongoDB()
 {
-	stop();
+	//stop();
 }
 
 CClientControllerMongoDB * CClientControllerMongoDB::getInstance()

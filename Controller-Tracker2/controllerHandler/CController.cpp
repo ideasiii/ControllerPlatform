@@ -133,7 +133,7 @@ CController::CController() :
 				new CThreadHandler), tdExportLog(new CThreadHandler), clientMongo(
 				CClientControllerMongoDB::getInstance())
 {
-	//tdEnquireLink->createThread(threadEnquireLinkRequest, this);
+	tdEnquireLink->createThread(threadEnquireLinkRequest, this);
 }
 
 CController::~CController()
@@ -174,15 +174,21 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MONGODB:
 		_log("[Controller]****MongoDB disconnect!*****");
-		//delete clientMongo;
-		//clientMongo = 0;
+
+		if (clientMongo)
+		{
+			delete clientMongo;
+			clientMongo = 0;
+		}
+
 		break;
 
 	case EVENT_COMMAND_RECONNECT_CONTROLLER_MONGODB:
 
-		_log("[CController] Start to ReConnect Controller-MongoDB!\n");
+		_log("[CController]***Start to ReConnect Controller-MongoDB***\n");
 
-		//clientMongo->getInstance();
+		clientMongo = CClientControllerMongoDB::getInstance();
+
 		status = reStartClientMongoDB();
 		_log("[CController] ReConnect Controller-MongoDB, status: %d\n", status);
 		break;
@@ -252,8 +258,12 @@ void CController::runEnquireLinkRequest()
 {
 	while (1)
 	{
-		tdEnquireLink->threadSleep(5);
+		tdEnquireLink->threadSleep(10);
 		_log("[CController] Enquire Link Start\n");
+		if (!clientMongo)
+		{
+			clientMongo = CClientControllerMongoDB::getInstance();
+		}
 		if (clientMongo->isValidSocketFD())
 		{
 			int nRet = cmpEnquireLinkRequest(clientMongo->getSocketfd());
@@ -267,7 +277,8 @@ void CController::runEnquireLinkRequest()
 				//Enquire Link Failed
 				_log("[CController] Send Enquire Link Failed result = %d\n", nRet);
 				_log("[CController] Send to Message Queue Start \n");
-				int status = controller->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_RECONNECT_CONTROLLER_MONGODB, 0, 0, NULL);
+				int status = controller->sendMessage(EVENT_FILTER_CONTROLLER,
+				EVENT_COMMAND_RECONNECT_CONTROLLER_MONGODB, 0, 0, NULL);
 				_log("[CController] Send to Message Queue End Status %d\n", status);
 			}
 		}
@@ -275,9 +286,11 @@ void CController::runEnquireLinkRequest()
 		{
 			_log("[CController] ERROR to find Controller-MongoDB Socket ID!\n");
 
-			controller->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_RECONNECT_CONTROLLER_MONGODB, 0, 0, NULL);
+			controller->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_RECONNECT_CONTROLLER_MONGODB, 0, 0,
+			NULL);
 
 		}
+
 	}
 
 }

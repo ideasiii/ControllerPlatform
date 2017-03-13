@@ -34,8 +34,8 @@ CObject::CObject() :
 
 CObject::~CObject()
 {
-	clearMessage();
-	delete messageHandler;
+	//clearMessage();
+	//delete messageHandler;
 }
 
 int CObject::initMessage(int nKey)
