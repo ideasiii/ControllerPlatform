@@ -4,8 +4,8 @@
 #include "common.h"
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
+#include "iCommand.h"
 #include "JSONObject.h"
-#include "ICallback.h"
 #include "packet.h"
 
 static CServerDevice * serverDevice = 0;

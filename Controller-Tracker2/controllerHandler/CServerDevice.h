@@ -5,6 +5,7 @@
 #include <map>
 
 #include "CSocketServer.h"
+#include "iCommand.h"
 #include "ICallback.h"
 
 using namespace std;

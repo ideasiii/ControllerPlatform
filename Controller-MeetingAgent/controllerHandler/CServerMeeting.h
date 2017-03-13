@@ -10,10 +10,10 @@
 #include "CSocketServer.h"
 #include <string>
 #include <map>
-#include "ICallback.h"
 #include "CMPData.h"
 
 #include "CThreadHandler.h"
+#include "iCommand.h"
 class CCmpHandler;
 
 using namespace std;

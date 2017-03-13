@@ -5,8 +5,8 @@
 #include <map>
 
 #include "CSocketServer.h"
-#include "ICallback.h"
 #include "CMPData.h"
+#include "iCommand.h"
 
 using namespace std;
 

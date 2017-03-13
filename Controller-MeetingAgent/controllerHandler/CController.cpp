@@ -20,8 +20,8 @@
 #include "CThreadHandler.h"
 #include "CServerDevice.h"
 #include "CServerMeeting.h"
+#include "iCommand.h"
 #include "JSONObject.h"
-#include "ICallback.h"
 
 using namespace std;
 
