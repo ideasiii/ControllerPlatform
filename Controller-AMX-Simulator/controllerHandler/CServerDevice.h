@@ -28,8 +28,10 @@ public:
 	void broadcastAMXStatus(std::string strStatus);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
-	void onTimer(int nId);
 	void setAmxBusyTimeout(int nSec);
+
+protected:
+	void onTimer(int nId);
 
 private:
 	CServerDevice();

@@ -72,4 +72,3 @@ private:
 	int mnTimerEventId;
 
 };
-

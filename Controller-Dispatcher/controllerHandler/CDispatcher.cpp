@@ -14,6 +14,7 @@
 #include "CCmpHandler.h"
 #include <time.h>
 
+#define TIMER_CHECK_DISPATCH_CLIENT_ALIVE 777
 #define RESP_DISPATCH "{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}"
 
 static CDispatcher * dispatcher = 0;
@@ -70,12 +71,14 @@ int CDispatcher::startServer(const char *szIP, const int nPort, const int nMsqId
 	/** Set Receive , Packet is CMP , Message Queue Handle **/
 	setPacketConf(PK_CMP, PK_MSQ);
 
-	_TRY
-		if(FAIL == start(AF_INET, szIP, nPort))
-		{
-			_log("[CDispatcher] Socket Create Fail");
-			return FALSE;
-		}_CATCH
+	if(FAIL == start(AF_INET, szIP, nPort))
+	{
+		_log("[CDispatcher] Socket Create Fail");
+		return FALSE;
+	}
+
+	setTimer(TIMER_CHECK_DISPATCH_CLIENT_ALIVE, 5, 10);
+
 	return TRUE;
 }
 
@@ -145,6 +148,7 @@ void CDispatcher::checkClient()
 {
 	for(map<unsigned long int, long>::iterator it = listClient.begin(); it != listClient.end(); ++it)
 	{
+		_DBG("[]");
 		if(10 <= (((double) (clock() - (*it).second)) / 100))
 		{
 			closeClient((*it).first);
@@ -157,5 +161,10 @@ int CDispatcher::cmpInitial(int nSocket, int nCommand, int nSequence, const void
 {
 	return sendPacket(dynamic_cast<CSocket*>(dispatcher), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence,
 	RESP_DISPATCH);
+}
+
+void CDispatcher::onTimer(int nId)
+{
+	checkClient();
 }
 

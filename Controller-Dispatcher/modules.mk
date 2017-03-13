@@ -10,7 +10,6 @@ controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/timerHandler \
 ../Global/cmpHandler
 			 
 #export EXT_MODULES=extInclude

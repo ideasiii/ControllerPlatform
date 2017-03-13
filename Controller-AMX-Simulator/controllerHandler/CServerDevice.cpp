@@ -23,11 +23,6 @@ using namespace std;
 
 static CServerDevice * serverDevice = 0;
 
-void OnTimer(int param)
-{
-	serverDevice->onTimer(param);
-}
-
 CServerDevice::CServerDevice() :
 		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mAmxBusyTimeout(5)
 {
@@ -175,7 +170,7 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 					_log("[Server Device] AMX Controller Busy set to True");
 					nStatus = STATUS_ROK;
 					//	(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-					SetTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0, OnTimer);
+					setTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0);
 				}
 			}
 			else

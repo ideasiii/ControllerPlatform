@@ -23,6 +23,9 @@ public:
 	void setClient(unsigned long int nId, bool bAdd);
 	void checkClient();
 
+protected:
+	void onTimer(int nId);
+
 private:
 	explicit CDispatcher();
 	std::map<unsigned long int, long> listClient;
