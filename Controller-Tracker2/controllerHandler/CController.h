@@ -16,10 +16,6 @@
 #include "common.h"
 #include "packet.h"
 
-
-
-using namespace std;
-
 class CCmpHandler;
 class CThreadHandler;
 class CJsonHandler;
@@ -27,16 +23,15 @@ class CServerDevice;
 class CSocket;
 class CClientControllerMongoDB;
 
-
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerDevice(string strIP, const int nPort, const int nMsqId);
+	int startServerDevice(std::string strIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void onMongoDBCommand(void * param);
-	int startClientMongoDB(string strIP, const int nPort, const int nMsqId);
+	int startClientMongoDB(std::string strIP, const int nPort, const int nMsqId);
 	void runEnquireLinkRequest();
 
 protected:
@@ -44,13 +39,12 @@ protected:
 
 private:
 	explicit CController();
-	string clientMongoDBIP = "";
-	int clientMongoDBPort = -1;
-	int  clientMongoDBMsqId = -1;
+	std::string clientMongoDBIP;
+	int clientMongoDBPort;
+	int clientMongoDBMsqId;
 	int reStartClientMongoDB();
 	int sendCommand(int commandID, int seqNum);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-
 
 public:
 	CCmpHandler *cmpParser;
@@ -58,10 +52,7 @@ public:
 private:
 	CServerDevice *serverDevice;
 	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
-
 	CClientControllerMongoDB *clientMongo;
-
 
 };

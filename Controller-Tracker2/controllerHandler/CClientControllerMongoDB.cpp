@@ -10,9 +10,6 @@
 
 static CClientControllerMongoDB * clientMongo = 0;
 
-
-
-
 CClientControllerMongoDB::CClientControllerMongoDB() :
 		CSocketClient(), cmpParser(CCmpHandler::getInstance()), tdEnquireLink(new CThreadHandler)
 {
@@ -29,7 +26,7 @@ CClientControllerMongoDB::~CClientControllerMongoDB()
 
 CClientControllerMongoDB * CClientControllerMongoDB::getInstance()
 {
-	if (0 == clientMongo)
+	if(0 == clientMongo)
 	{
 		clientMongo = new CClientControllerMongoDB();
 	}
@@ -39,11 +36,11 @@ CClientControllerMongoDB * CClientControllerMongoDB::getInstance()
 int CClientControllerMongoDB::startClient(string strIP, const int nPort, const int nMsqId)
 {
 	_DBG("[CClientControllerMongoDB] startClient");
-	if (0 >= nPort || 0 >= nMsqId)
+	if(0 >= nPort || 0 >= nMsqId)
 		return FALSE;
 
 	/** Run socket server for CMP **/
-	if (0 < nMsqId)
+	if(0 < nMsqId)
 	{
 		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_MONGODB_RECEIVE);
 		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MONGODB);
@@ -53,13 +50,16 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 	setPacketConf(PK_CMP, PK_MSQ);
 
 	const char* cszAddr = NULL;
-	if (!strIP.empty())
+	if(!strIP.empty())
 	{
 		cszAddr = strIP.c_str();
 	}
 
-	start(AF_INET, cszAddr, nPort);
-	if (!this->isValidSocketFD())
+	_TRY
+		start(AF_INET, cszAddr, nPort);
+	_CATCH
+
+	if(!this->isValidSocketFD())
 	{
 		_log("[CClientControllerMongoDB] Socket Create Fail");
 		return FALSE;
@@ -68,8 +68,6 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 	{
 		_log("[CClientControllerMongoDB] Connect Controller-MongoDB Success!!");
 	}
-
-
 
 	return TRUE;
 }
@@ -107,7 +105,7 @@ void CClientControllerMongoDB::onReceive(const int nSocketFD, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[CClientControllerMongoDB] Recv ", nSocketFD);
 
-	if (cmpParser->isAckPacket(cmpHeader.command_id))
+	if(cmpParser->isAckPacket(cmpHeader.command_id))
 	{
 		(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number,
 				pPacket);
@@ -128,7 +126,7 @@ int CClientControllerMongoDB::cmpAccessLogRequest(string strType, string strLog)
 	int nBody_len = 0;
 	int nTotal_len = 0;
 
-	if (!clientMongo->isValidSocketFD())
+	if(!clientMongo->isValidSocketFD())
 	{
 		return nRet;
 	}
@@ -175,6 +173,4 @@ int CClientControllerMongoDB::cmpEnquireLinkResponse(int nSocket, int nCommand, 
 	_log("[CServerMeeting] Get Enquire Link Response!");
 	return 1;
 }
-
-
 

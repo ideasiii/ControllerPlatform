@@ -21,6 +21,7 @@
 #include "CClientControllerMongoDB.h"
 #include "iCommand.h"
 #include "JSONObject.h"
+#include "LogHandler.h"
 
 using namespace std;
 
@@ -67,7 +68,7 @@ void CController::onMongoDBCommand(void *param)
  */
 int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
 {
-	if (NULL == socket)
+	if(NULL == socket)
 	{
 		_log("[Controller] Send Command Fail, Socket invalid");
 		return -1;
@@ -80,7 +81,7 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 	nCommandSend = nCommand;
 
-	if (isResp)
+	if(isResp)
 	{
 		nCommandSend = generic_nack | nCommand;
 	}
@@ -104,7 +105,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 	memset(&packet, 0, sizeof(CMP_PACKET));
 
 	controller->cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
-	if (0 != szData)
+	if(0 != szData)
 	{
 		memcpy(pIndex, szData, strlen(szData));
 		pIndex += strlen(szData);
@@ -120,7 +121,7 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] Send", nSocket);
 
 	string strLog;
-	if (0 >= nRet)
+	if(0 >= nRet)
 	{
 		_log("[Controller] CMP Send Fail socket: %d", nSocket);
 	}
@@ -129,11 +130,11 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 }
 
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverDevice(CServerDevice::getInstance()), tdEnquireLink(
-				new CThreadHandler), tdExportLog(new CThreadHandler), clientMongo(
+		CObject(), cmpParser(CCmpHandler::getInstance()), serverDevice(CServerDevice::getInstance()), clientMongoDBPort(
+				-1), clientMongoDBMsqId(-1), tdEnquireLink(new CThreadHandler), clientMongo(
 				CClientControllerMongoDB::getInstance())
 {
-	tdEnquireLink->createThread(threadEnquireLinkRequest, this);
+	//tdEnquireLink->createThread(threadEnquireLinkRequest, this);
 }
 
 CController::~CController()
@@ -143,7 +144,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -153,7 +154,7 @@ CController* CController::getInstance()
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	int status = 0;
-	switch (nCommand)
+	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
 		_log("[CController] get Device Socket Data from Message Queue");
@@ -175,7 +176,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MONGODB:
 		_log("[Controller]****MongoDB disconnect!*****");
 
-		if (clientMongo)
+		if(clientMongo)
 		{
 			delete clientMongo;
 			clientMongo = 0;
@@ -207,7 +208,7 @@ int CController::startServerDevice(string strIP, const int nPort, const int nMsq
 
 int CController::reStartClientMongoDB()
 {
-	if (clientMongoDBIP.size() == 0 || clientMongoDBPort == -1 || clientMongoDBMsqId == -1)
+	if(clientMongoDBIP.empty() || clientMongoDBPort == -1 || clientMongoDBMsqId == -1)
 	{
 		return -1;
 	}
@@ -219,15 +220,16 @@ int CController::reStartClientMongoDB()
 
 int CController::startClientMongoDB(string strIP, const int nPort, const int nMsqId)
 {
-	if (isInitMongoDB == false)
+	if(isInitMongoDB == false)
 	{
 		clientMongoDBIP = strIP;
 		clientMongoDBPort = nPort;
 		clientMongoDBMsqId = nMsqId;
 		isInitMongoDB = true;
+		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
 	}
 	_log("[Controller] start to connect IP: %s, port: %d \n", strIP.c_str(), nPort);
-	if (clientMongo->startClient(strIP, nPort, nMsqId) == TRUE)
+	if(clientMongo->startClient(strIP, nPort, nMsqId) == TRUE)
 	{
 		return 1;
 	}
@@ -240,13 +242,13 @@ int CController::startClientMongoDB(string strIP, const int nPort, const int nMs
 void CController::stopServer()
 {
 
-	if (clientMongo)
+	if(clientMongo)
 	{
 		clientMongo->stopClient();
 		delete clientMongo;
 		clientMongo = 0;
 	}
-	if (serverDevice)
+	if(serverDevice)
 	{
 		serverDevice->stopServer();
 		delete serverDevice;
@@ -256,19 +258,19 @@ void CController::stopServer()
 
 void CController::runEnquireLinkRequest()
 {
-	while (1)
+	while(1)
 	{
 		tdEnquireLink->threadSleep(10);
 		_log("[CController] Enquire Link Start\n");
-		if (!clientMongo)
+		if(!clientMongo)
 		{
 			clientMongo = CClientControllerMongoDB::getInstance();
 		}
-		if (clientMongo->isValidSocketFD())
+		if(clientMongo->isValidSocketFD())
 		{
 			int nRet = cmpEnquireLinkRequest(clientMongo->getSocketfd());
 
-			if (nRet > 0)
+			if(nRet > 0)
 			{
 				//Enquire Link Success
 			}
@@ -298,7 +300,7 @@ void CController::runEnquireLinkRequest()
 int CController::sendCommand(int commandID, int seqNum)
 {
 	int nRet = 0;
-	if (clientMongo->isValidSocketFD())
+	if(clientMongo->isValidSocketFD())
 	{
 		nRet = sendPacket(dynamic_cast<CSocket*>(clientMongo), clientMongo->getSocketfd(), commandID, STATUS_ROK,
 				seqNum, 0);

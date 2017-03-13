@@ -1,14 +1,14 @@
 #####################################
-# Controller Dispatcher make file
-# Created on: 2017-03-07
+# Controller Signin make file
+# Created on: 2017-03-13
 # Author: Jugo
-# Project: Server Dispatcher
+# Project: Server Signin
 #####################################
 
 include env.mk
 include modules.mk
 
-TARGET    := controller-dispatcher
+TARGET    := controller-signin
 CC        := g++
 LD        := g++
 
