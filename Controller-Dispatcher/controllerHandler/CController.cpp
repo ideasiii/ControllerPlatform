@@ -49,14 +49,8 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DISPATCHER:
 		dispatcher->setClient(nId, false);
 		break;
-//	case EVENT_COMMAND_TIMER:
-//		switch(nId)
-//		{
-//		case TIMER_CHECK_DISPATCH_CLIENT_ALIVE:
-//			dispatcher->checkClient();
-//			break;
-//		}
-//		break;
+	case EVENT_COMMAND_TIMER:
+		break;
 	}
 }
 

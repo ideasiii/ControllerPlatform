@@ -20,7 +20,7 @@
 #include "IReceiver.h"
 #include "event.h"
 
-int CSocketServer::m_nInternalEventFilter = 7000;
+int CSocketServer::m_nInternalEventFilter = EVENT_FILTER_SOCKET_SERVER;
 
 /** Thread Function Run **/
 void *threadServerCMPHandler(void *argv)
@@ -57,7 +57,7 @@ void *threadServerDataHandler(void *argv)
 
 CSocketServer::CSocketServer() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0), mnPacketType(PK_CMP), mnPacketHandle(
-				PK_MSQ), munRunThreadId(-1)
+				PK_MSQ), munRunThreadId(0)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -91,11 +91,11 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 		return -1;
 	}
 
-	if(-1 != munRunThreadId)
+	if(0 != munRunThreadId)
 	{
 		threadHandler->threadCancel(munRunThreadId);
 		threadHandler->threadJoin(munRunThreadId);
-		munRunThreadId = -1;
+		munRunThreadId = 0;
 	}
 
 	threadHandler->createThread(threadServerMessageReceive, this);
@@ -503,7 +503,7 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 		break;
-	case EVENT_TIMER:
+	case EVENT_COMMAND_TIMER:
 		break;
 	default:
 		_log("[Socket Server] unknow message command");

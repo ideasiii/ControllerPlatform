@@ -137,7 +137,7 @@ void CObject::_OnTimer(int nId)
 {
 	if(-1 != mnTimerEventId)
 	{
-		messageHandler->sendMessage(mnTimerEventId, EVENT_TIMER, nId, 0, 0);
+		messageHandler->sendMessage(mnTimerEventId, EVENT_COMMAND_TIMER, nId, 0, 0);
 	}
 	onTimer(nId);
 }

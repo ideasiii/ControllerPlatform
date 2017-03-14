@@ -13,7 +13,7 @@
 #include "CDataHandler.cpp"
 #include "event.h"
 
-int CSocketClient::m_nInternalEventFilter = 8000;
+int CSocketClient::m_nInternalEventFilter = EVENT_FILTER_SOCKET_CLIENT;
 
 void *threadClientCMPHandler(void *argv)
 {
@@ -42,7 +42,7 @@ void *threadClientDataHandler(void *argv)
 
 CSocketClient::CSocketClient() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), mnPacketType(PK_CMP), mnPacketHandle(PK_MSQ), mThreadId(
-				0), munRunThreadId(-1)
+				0), munRunThreadId(0)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -94,11 +94,11 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 			}
 		}
 
-		if(-1 != munRunThreadId)
+		if(0 != munRunThreadId)
 		{
 			threadHandler->threadCancel(munRunThreadId);
 			threadHandler->threadJoin(munRunThreadId);
-			munRunThreadId = -1;
+			munRunThreadId = 0;
 		}
 		threadHandler->createThread(threadClientMessageReceive, this);
 		switch(mnPacketType)
@@ -184,6 +184,8 @@ void CSocketClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_RECEIVE:
 		_log("[Socket Client] Receive CMP , SocketFD:%d", (int) nId);
+		break;
+	case EVENT_COMMAND_TIMER:
 		break;
 	default:
 		_log("[Socket Server] unknow message command");
