@@ -49,5 +49,6 @@ private:
 	int mnPacketType;
 	int mnPacketHandle;
 	unsigned long int mThreadId;
+	unsigned long int munRunThreadId;
 };
 

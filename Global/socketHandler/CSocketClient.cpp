@@ -42,7 +42,7 @@ void *threadClientDataHandler(void *argv)
 
 CSocketClient::CSocketClient() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), mnPacketType(PK_CMP), mnPacketHandle(PK_MSQ), mThreadId(
-				0)
+				0), munRunThreadId(-1)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -94,6 +94,12 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 			}
 		}
 
+		if(-1 != munRunThreadId)
+		{
+			threadHandler->threadCancel(munRunThreadId);
+			threadHandler->threadJoin(munRunThreadId);
+			munRunThreadId = -1;
+		}
 		threadHandler->createThread(threadClientMessageReceive, this);
 		switch(mnPacketType)
 		{
@@ -162,6 +168,7 @@ void CSocketClient::setClientDisconnectCommand(int nCommand)
 
 void CSocketClient::runMessageReceive()
 {
+	munRunThreadId = threadHandler->getThreadID();
 	run(m_nInternalFilter, "SocketClient");
 	threadHandler->threadExit();
 	threadHandler->threadJoin(threadHandler->getThreadID());

@@ -57,7 +57,7 @@ void *threadServerDataHandler(void *argv)
 
 CSocketServer::CSocketServer() :
 		CSocket(), m_nClientFD(-1), threadHandler(new CThreadHandler), udpClientData(0), mnPacketType(PK_CMP), mnPacketHandle(
-				PK_MSQ)
+				PK_MSQ), munRunThreadId(-1)
 {
 	m_nInternalFilter = ++m_nInternalEventFilter;
 	externalEvent.init();
@@ -89,6 +89,13 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 	{
 		_log("[CSocketServer] Init Message Queue Fail");
 		return -1;
+	}
+
+	if(-1 != munRunThreadId)
+	{
+		threadHandler->threadCancel(munRunThreadId);
+		threadHandler->threadJoin(munRunThreadId);
+		munRunThreadId = -1;
 	}
 
 	threadHandler->createThread(threadServerMessageReceive, this);
@@ -451,6 +458,7 @@ void CSocketServer::runSocketAccept()
 
 void CSocketServer::runMessageReceive()
 {
+	munRunThreadId = threadHandler->getThreadID();
 	run(m_nInternalFilter, "SocketServer");
 	threadHandler->threadExit();
 	threadHandler->threadJoin(threadHandler->getThreadID());

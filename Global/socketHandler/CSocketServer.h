@@ -63,6 +63,6 @@ private:
 	int mnPacketType;
 	int mnPacketHandle;
 	std::map<unsigned long int, unsigned long int> mapClientThread;
-
+	unsigned long int munRunThreadId;
 };
 
