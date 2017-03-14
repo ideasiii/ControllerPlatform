@@ -17,9 +17,9 @@ int CSocketClient::m_nInternalEventFilter = 8000;
 
 void *threadClientCMPHandler(void *argv)
 {
-	int nFD;
 	CSocketClient* ss = reinterpret_cast<CSocketClient*>(argv);
-	nFD = ss->getSocketfd();
+	int nFD = ss->m_nClientFD;
+	ss->threadUnLock();
 	ss->runCMPHandler(nFD);
 	return NULL;
 }
