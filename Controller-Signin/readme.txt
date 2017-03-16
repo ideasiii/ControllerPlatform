@@ -13,7 +13,7 @@ ldd xxx
 # 在程式執行中觀察 /proc/PID/maps, 這個檔案記錄 process 用到的各區段記憶體為何, 可從對應到的檔案看出有載入的 shared library
 
 #  monitor memory usage
-while true; do date; ps aux | grep controller-dispatcher ; sleep 1; done;
+while true; do date; ps aux | grep controller-signin ; sleep 1; done;
 
 # List Socket Connect
 lsof | grep controlCenter
@@ -34,4 +34,4 @@ ipcrm -q [msq_id]
 while true; do date; ps -T -a | grep controller-disp ; sleep 1; done;
 
 # Thread 壓測
-while true; do date; ./simulator 127.0.0.1 6607 & ; sleep 1; done;
+while true; do date; ./simulator 127.0.0.1 2306 & ; sleep 1; done;

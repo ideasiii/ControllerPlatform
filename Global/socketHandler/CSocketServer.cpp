@@ -65,6 +65,7 @@ CSocketServer::CSocketServer() :
 
 CSocketServer::~CSocketServer()
 {
+	stop();
 	delete threadHandler;
 	if(udpClientData)
 	{
@@ -149,6 +150,15 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 void CSocketServer::stop()
 {
 	socketClose();
+
+	// 清除所有Client端連線後產生的receive執行緒
+	map<unsigned long int, unsigned long int>::iterator it;
+	for(it = mapClientThread.begin(); mapClientThread.end() != it; ++it)
+	{
+		pthread_t pid = (*it).second;
+		threadHandler->threadCancel(pid);
+		threadHandler->threadJoin(pid);
+	}
 }
 
 void CSocketServer::dataHandler(int nFD)
@@ -497,13 +507,14 @@ void CSocketServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int
 		}
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
-		_log("[Socket Server] Receive Thread Joining, Thread ID: %lu", nId);
 		threadHandler->threadJoin(nId);
-		_log("[Socket Server] Receive Thread Joined, Thread ID: %lu", nId);
+		_log("[CSocketServer] Receive Thread Joined, Thread ID: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
+		_log("[CSocketServer] Receive Package , Socket FD: %lu", nId);
 		break;
 	case EVENT_COMMAND_TIMER:
+		_log("[CSocketServer] On Timer , ID: %lu", nId);
 		break;
 	default:
 		_log("[Socket Server] unknow message command");

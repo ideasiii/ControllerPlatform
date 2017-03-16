@@ -15,6 +15,7 @@
 #include "LogHandler.h"
 #include "CTimer.h"
 #include "event.h"
+#include "CThread.h"
 
 CObject * object = 0;
 
@@ -140,5 +141,30 @@ void CObject::_OnTimer(int nId)
 		messageHandler->sendMessage(mnTimerEventId, EVENT_COMMAND_TIMER, nId, 0, 0);
 	}
 	onTimer(nId);
+}
+
+unsigned long int CObject::createThread(void* (*entry)(void*), void* arg)
+{
+	return _CreateThread(entry, arg);
+}
+
+void CObject::threadJoin(unsigned long int thdid)
+{
+	_ThreadJoin(thdid);
+}
+
+void CObject::threadExit()
+{
+	_ThreadExit();
+}
+
+int CObject::threadCancel(unsigned long int thread)
+{
+	return _ThreadCancel(thread);
+}
+
+unsigned long int CObject::getThreadID()
+{
+	return _GetThreadID();
 }
 

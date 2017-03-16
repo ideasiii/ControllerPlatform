@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <sys/types.h>
 
 class CMessageHandler;
 
@@ -51,6 +52,11 @@ public:
 	int run(int nRecvEvent, const char * szDescript = 0);
 	timer_t setTimer(int nId, int nSecStart, int nInterSec, int nEvent = -1);
 	void killTimer(int nId);
+	unsigned long int createThread(void* (*entry)(void*), void* arg);
+	void threadJoin(unsigned long int thdid);
+	void threadExit();
+	int threadCancel(unsigned long int thread);
+	unsigned long int getThreadID();
 
 protected:
 	// virtual function

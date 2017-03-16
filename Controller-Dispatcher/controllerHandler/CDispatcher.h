@@ -33,5 +33,4 @@ private:
 	typedef int (CDispatcher::*MemFn)(int, int, int, const void *);
 	std::map<int, MemFn> mapFunc;
 	int cmpInitial(int nSocket, int nCommand, int nSequence, const void *pData);
-	long getTick();
 };

@@ -9,14 +9,15 @@
 
 #include "CObject.h"
 
-class CDispatcher;
+class CSignin;
+class CCmpSignin;
 
 class CController: public CObject
 {
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startDispatcher(const char *szIP, const int nPort, const int nMsqId);
+	int startSignin(const char *szIP, const int nPort, const int nMsqId);
 	int stop();
 
 protected:
@@ -25,6 +26,7 @@ protected:
 
 private:
 	explicit CController();
-	CDispatcher *dispatcher;
+	CSignin *signin;
+	CCmpSignin *cmpSignin;
 
 };

@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <iostream>
 
 #include "CController.h"
 #include "CProcessHandler.h"
@@ -46,7 +45,6 @@ void runService()
 {
 	int nInit = TRUE;
 	int nTmp = -1;
-	int nMsgID = -1;
 	extern char *__progname;
 
 	LogHandler *logAgent = LogHandler::getInstance();
@@ -57,11 +55,10 @@ void runService()
 	if(FALSE != config->loadConfig(*pstrConf))
 	{
 		logAgent->setLogPath(config->getValue("LOG", "log"));
-		convertFromString(nMsgID, config->getValue("MSQ", "id"));
-		if(controller->initMessage(nMsgID))
+		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_SIGNIN))
 		{
-			convertFromString(nTmp, config->getValue("SERVER DISPATCHER", "port"));
-			if(!controller->startDispatcher(0, nTmp, nMsgID))
+			convertFromString(nTmp, config->getValue("SERVER SIGNIN", "port"));
+			if(!controller->startSignin(0, nTmp, EVENT_MSQ_KEY_CONTROLLER_SIGNIN))
 			{
 				nInit = FALSE;
 				_log("[Controller] Start Dispatcher Service Fail");
@@ -86,7 +83,7 @@ void runService()
 		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->stop();
-		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
+		CMessageHandler::closeMsg(CMessageHandler::registerMsq(EVENT_MSQ_KEY_CONTROLLER_SIGNIN));
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 	}
 	delete controller;

@@ -52,7 +52,7 @@ checkdirs:
 clean:
 	@rm -rf *.o
 	@rm -rf $(DIR_APP_ROOT)bin
-	
+		
 mk_debug:
 	@echo "\n"
 	@echo 'Program Name    : '$(TARGET)
