@@ -17,6 +17,7 @@ controllerHandler \
 ../Global/dataHandler	\
 ../Global/jsonHandler \
 ../Global/logHandler \
+../Global/mysqlHandler \
 ../Global/processHandler
 			 
 #export EXT_MODULES=extInclude

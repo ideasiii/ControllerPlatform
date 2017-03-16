@@ -20,12 +20,12 @@ int main()
 	CMysqlHandler *pmysql = new CMysqlHandler();
 	string strSQL;
 
-	pmysql->connect("124.9.6.64", "tracker", "mobile_tracker", "tracker123!");
-	strSQL =
-			"insert into tracker_user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,create_date) values('0123456789','414515787','AABBCCDD','Android','','','','','','','','2017-02-14 11:49:00')";
-	pmysql->sqlExec(strSQL);
+	pmysql->connect("175.98.119.121", "tracker", "ideas", "tracker123!");
+	//strSQL =
+	//		"insert into tracker_user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,create_date) values('0123456789','414515787','AABBCCDD','Android','','','','','','','','2017-02-14 11:49:00')";
+	//pmysql->sqlExec(strSQL);
 
-	strSQL = "select * from tracker_user";
+	strSQL = "select * from app";
 	list<map<string, string> > listRest;
 	pmysql->query(strSQL, listRest);
 
