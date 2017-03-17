@@ -368,8 +368,6 @@ int CSocketServer::runCMPHandler(int nClientFD)
 			if(access_log_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
-
-				closeClient(nClientFD);
 			}
 		}
 		else if(0 >= result)
