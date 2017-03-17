@@ -368,6 +368,8 @@ int CSocketServer::runCMPHandler(int nClientFD)
 			if(access_log_request == nCommand)
 			{
 				socketSend(nClientFD, &cmpHeader, sizeof(CMP_HEADER));
+
+				closeClient(nClientFD);
 			}
 		}
 		else if(0 >= result)
@@ -421,6 +423,7 @@ int CSocketServer::runCMPHandler(int nClientFD)
 			else
 			{
 				sendMessage(m_nInternalFilter, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nFD, nTotalLen, &cmpPacket);
+
 			}
 			break;
 		case PK_ASYNC:
