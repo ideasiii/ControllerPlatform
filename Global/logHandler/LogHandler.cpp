@@ -82,7 +82,7 @@ void _log(const char* format, ...)
 	}
 	else
 	{
-		//writeLog(strLog.length(), strLog.c_str());
+		writeLog(strLog.length(), strLog.c_str());
 	}
 
 	printf("%s\n", strLog.c_str());
