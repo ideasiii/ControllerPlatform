@@ -62,6 +62,10 @@ CServerCenter * CServerCenter::getInstance()
 	return serverCenter;
 }
 
+#define EVENT_COMMAND_SOCKET_TCP_CENTER_RECEIVE  444444
+#define EVENT_COMMAND_SOCKET_CLIENT_CONNECT_CENTER 444445
+#define EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_CENTER 44446
+
 int CServerCenter::startServer(const char *szIP, const int nPort, const int nMsqId)
 {
 	if(0 >= nPort || 0 >= nMsqId)
