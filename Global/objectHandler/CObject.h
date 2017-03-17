@@ -57,6 +57,7 @@ public:
 	void threadExit();
 	int threadCancel(unsigned long int thread);
 	unsigned long int getThreadID();
+	void closeMsq();
 
 protected:
 	// virtual function
