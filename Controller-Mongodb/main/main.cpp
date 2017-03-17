@@ -17,8 +17,10 @@
 #include "event.h"
 #include "Controller.h"
 #include "LogHandler.h"
-#include "Config.h"
+#include "CConfig.h"
 #include "utility.h"
+
+#define MSG_ID							27027
 
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
@@ -53,12 +55,12 @@ int Watching()
 	do
 	{
 		child_pid = fork();
-		if (child_pid == -1)
+		if(child_pid == -1)
 		{
 			exit( EXIT_FAILURE);
 		}
 
-		if (child_pid == 0)
+		if(child_pid == 0)
 		{
 			/**
 			 * Child process
@@ -80,30 +82,30 @@ int Watching()
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
 
-		if (w == -1)
+		if(w == -1)
 		{
 			perror("waitpid");
 			exit( EXIT_FAILURE);
 		}
-		if (WIFEXITED(status))
+		if(WIFEXITED(status))
 		{
 			_DBG("[Process] child exited, status=%d\n", WEXITSTATUS(status));
 		}
-		else if (WIFSIGNALED(status))
+		else if(WIFSIGNALED(status))
 		{
 			_DBG("[Process] child killed by signal %d\n", WTERMSIG(status));
 		}
-		else if (WIFSTOPPED(status))
+		else if(WIFSTOPPED(status))
 		{
 			_DBG("[Process] child stopped by signal %d\n", WSTOPSIG(status));
 		}
-		else if (WIFCONTINUED(status))
+		else if(WIFCONTINUED(status))
 		{
 			_DBG("[Process] continued\n");
 		}
 		sleep(3);
 	}
-	while ( SIGTERM != WTERMSIG(status) && !flag);
+	while( SIGTERM != WTERMSIG(status) && !flag);
 
 	syslog( LOG_INFO, "controller child process has been terminated");
 	closelog();
@@ -125,7 +127,7 @@ void CSigHander(int signo)
  */
 void PSigHander(int signo)
 {
-	if ( SIGHUP == signo)
+	if( SIGHUP == signo)
 		return;
 	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
@@ -144,7 +146,7 @@ std::string getConfName(std::string strParam)
 	size_t found = strArgv.find_last_of("/\\");
 	strProcessName = strArgv.substr(++found);
 	strConf = strProcessName + ".conf";
-	_DBG("Config file is:%s", strConf.c_str())
+	_DBG("Config file is:%s", strConf.c_str());
 
 	return strConf;
 }
@@ -152,7 +154,7 @@ std::string getConfName(std::string strParam)
 int getPort(std::string strPort)
 {
 	int nPort = -1;
-	if (!strPort.empty())
+	if(!strPort.empty())
 	{
 		convertFromString(nPort, strPort);
 	}
@@ -172,10 +174,10 @@ void runService(int argc, char* argv[])
 
 	/** get config file  name **/
 	strConf = getConfName(argv[0]);
-	if (!strConf.empty())
+	if(!strConf.empty())
 	{
-		Config *config = new Config();
-		if ( FALSE != config->loadConfig(strConf))
+		CConfig *config = new CConfig();
+		if( FALSE != config->loadConfig(strConf))
 		{
 			strLogPath = config->getValue("LOG", "log");
 			nServerPort = getPort(config->getValue("SERVER", "port"));
@@ -194,11 +196,11 @@ void runService(int argc, char* argv[])
 	/** Run Mongodb Controller **/
 	Controller *controller = Controller::getInstance();
 
-	if (-1 != controller->initMessage( MSG_ID) && controller->startServer(nServerPort))
+	if(-1 != controller->initMessage( MSG_ID) && controller->startServer(nServerPort))
 	{
-		_DBG("<============= Mongodb Controller Service Start Run =============>")
+		_DBG("<============= Mongodb Controller Service Start Run =============>");
 		controller->run( EVENT_FILTER_CONTROLLER);
-		_DBG("<============= Mongodb Controller Service Stop Run =============>")
+		_DBG("<============= Mongodb Controller Service Stop Run =============>");
 		controller->stopServer();
 	}
 	delete logAgent;
@@ -212,14 +214,14 @@ void options(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
+	while((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
 	{
-		switch (c)
+		switch(c)
 		{
-			case 'H':
-			case 'h':
-				printf("this is help\n");
-				break;
+		case 'H':
+		case 'h':
+			printf("this is help\n");
+			break;
 		}
 	}
 }
