@@ -108,7 +108,7 @@ bool DynamicField::updateCacheDeviceID()
 	else
 	{
 
-		string strSQL = "select * from app";
+		string strSQL = "select app_id from app";
 		list<map<string, string> > listRest;
 		if (ideasDBHandler->query(strSQL, listRest) == FALSE)
 		{
@@ -135,19 +135,18 @@ bool DynamicField::updateCacheDeviceID()
 
 				//For debug START
 				/*
-				int nCount = 0;
-				for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
-				{
-					map<string, string> mapItem = *i;
-					for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
-					{
-						_log("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
-					}
-				}
-				_log("=============================%d================================\n", nCount);
-				*/
+				 int nCount = 0;
+				 for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
+				 {
+				 map<string, string> mapItem = *i;
+				 for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+				 {
+				 _log("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+				 }
+				 }
+				 _log("=============================%d================================\n", nCount);
+				 */
 				//For debug END
-
 			}
 			else
 			{
@@ -161,21 +160,19 @@ bool DynamicField::updateCacheDeviceID()
 	return true;
 }
 
-
 void DynamicField::printAllCaches()
 {
 	_log("[DynamicField] ***********************print cacheDeviceID *******\n");
-	for(size_t i =0 ;i<this->cacheDeviceID->size();i++)
+	for (size_t i = 0; i < this->cacheDeviceID->size(); i++)
 	{
-		_log("[DynamicField] ***********************id: %s\n",cacheDeviceID->at(i).c_str());
+		_log("[DynamicField] ***********************id: %s\n", cacheDeviceID->at(i).c_str());
 	}
 	_log("[DynamicField] ***********************print CacheDeviceFieldData *******\n");
-	for(size_t i =0 ;i<this->cacheDeviceFieldData->size();i++)
+	for (size_t i = 0; i < this->cacheDeviceFieldData->size(); i++)
 	{
-		_log("[DynamicField] ***********************id: %s field: %s",cacheDeviceFieldData->at(i).getDeviceID().c_str(),cacheDeviceFieldData->at(i).getFieldName().c_str());
+		_log("[DynamicField] ***********************id: %s field: %s",
+				cacheDeviceFieldData->at(i).getDeviceID().c_str(), cacheDeviceFieldData->at(i).getFieldName().c_str());
 	}
-
-
 
 }
 

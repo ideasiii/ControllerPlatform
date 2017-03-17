@@ -59,7 +59,7 @@ Controller::~Controller()
 
 Controller* Controller::getInstance()
 {
-	if(0 == controller)
+	if (0 == controller)
 	{
 		controller = new Controller();
 	}
@@ -70,7 +70,7 @@ int Controller::init(std::string strConf)
 {
 	/** Load config file **/
 	CConfig *config = new CConfig();
-	if( FALSE == config->loadConfig(strConf))
+	if ( FALSE == config->loadConfig(strConf))
 	{
 		_DBG("Load Config File Fail:%s", strConf.c_str());
 		delete config;
@@ -81,7 +81,7 @@ int Controller::init(std::string strConf)
 	string strPort = config->getValue("SERVER", "port");
 	delete config;
 
-	if(!strPort.empty())
+	if (!strPort.empty())
 	{
 		int nPort = -1;
 		convertFromString(nPort, strPort);
@@ -93,7 +93,7 @@ int Controller::init(std::string strConf)
 
 void Controller::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch(nCommand)
+	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 		onClientCMP(nId, nDataLen, pData);
@@ -108,13 +108,13 @@ int Controller::startServer(const int nPort)
 {
 	/** Run socket server for CMP **/
 	cmpServer->setPackageReceiver( MSG_ID, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE);
-	if(0 >= nPort)
+	if (0 >= nPort)
 	{
 		_log("Mongodb Controller Start Fail, Invalid Port:%d", nPort);
 		return FALSE;
 	}
 	/** Start TCP/IP socket listen **/
-	if( FAIL == cmpServer->start( AF_INET, NULL, nPort))
+	if ( FAIL == cmpServer->start( AF_INET, NULL, nPort))
 	{
 		_log("Mongodb Controller Socket Server Create Fail");
 		return FALSE;
@@ -126,7 +126,7 @@ int Controller::startServer(const int nPort)
 
 void Controller::stopServer()
 {
-	if(cmpServer)
+	if (cmpServer)
 	{
 		cmpServer->stop();
 		delete cmpServer;
@@ -144,7 +144,7 @@ int Controller::sendCommandtoClient(int nSocket, int nCommand, int nStatus, int 
 	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 	nCommandSend = nCommand;
 
-	if(isResp)
+	if (isResp)
 	{
 		nCommandSend = generic_nack | nCommand;
 	}
@@ -166,19 +166,16 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 {
 	CDataHandler<std::string> rData;
 	int nRet = cmpParser->parseBody(nCommand, pData, rData);
-	if(0 < nRet && rData.isValidKey("type") && rData.isValidKey("data"))
+	if (0 < nRet && rData.isValidKey("data"))
 	{
-		int nType = -1;
-		convertFromString(nType, rData["type"]);
-		string strOID = insertLog(nType, rData["data"]);
-		if(!strOID.empty())
+		string strOID = insertLog(TYPE_MOBILE_SERVICE, rData["data"]);
+		if (!strOID.empty())
 		{
-			_log("[Mongodb Controller] Insert DB Success, OID=%s: type=%s data=%s", strOID.c_str(),
-					rData["type"].c_str(), rData["data"].c_str());
+			_log("[Mongodb Controller] Insert DB Success, OID=%s: data=%s", strOID.c_str(), rData["data"].c_str());
 		}
 		else
 		{
-			_log("[Mongodb Controller] Insert DB Fail, type=%s data=%s", rData["type"].c_str(), rData["data"].c_str());
+			_log("[Mongodb Controller] Insert DB Fail,  data=%s", rData["data"].c_str());
 		}
 	}
 	else
@@ -192,7 +189,7 @@ int Controller::cmpAccessLog(int nSocket, int nCommand, int nSequence, const voi
 std::string Controller::insertLog(const int nType, std::string strData)
 {
 	string strOID;
-	switch(nType)
+	switch (nType)
 	{
 	case TYPE_MOBILE_SERVICE:
 		strOID = mongodb->insert("access", "mobile", strData);
@@ -248,7 +245,7 @@ void Controller::onClientCMP(int nClientFD, int nDataLen, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[Mongodb Controller]", nClientFD);
 
-	if(access_log_request == cmpHeader.command_id)
+	if (access_log_request == cmpHeader.command_id)
 	{
 		cmpAccessLog(nClientFD, cmpHeader.command_id, cmpHeader.sequence_number, pPacket);
 		return;

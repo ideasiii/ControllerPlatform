@@ -38,6 +38,8 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 		_log("[CMysqlHandler] MySQL Init Success");
 
 	mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, "60");
+	mysql_options(mpMySQL, MYSQL_SET_CHARSET_NAME, "utf8");
+	mysql_options(mpMySQL, MYSQL_INIT_COMMAND, "SET NAMES utf8");
 
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
@@ -87,6 +89,7 @@ int CMysqlHandler::getLastErrorNo()
 
 int CMysqlHandler::sqlExec(string strSQL)
 {
+
 	if ( NULL == mpMySQL)
 	{
 		setError("MySQL Connector Invalid");
@@ -134,11 +137,11 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		map<string, string> dataItem;
 		string strItem;
 		string strField;
-		// mysql_field_count()返回connection查詢的列數
-		for (unsigned int i = 0; i < mysql_field_count(mpMySQL); ++i)
+
+		while ((row = mysql_fetch_row(result)) != 0)
 		{
 			// 獲取下一行
-			row = mysql_fetch_row(result);
+			//row = mysql_fetch_row(result);
 			if (row <= 0)
 			{
 				break;

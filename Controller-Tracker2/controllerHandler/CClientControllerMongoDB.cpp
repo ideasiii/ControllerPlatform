@@ -82,7 +82,7 @@ int CClientControllerMongoDB::sendCommand(void * param)
 	if (dynamicField->isValidJSONFormat((*strParam)["data"]) == true)
 	{
 		dynamicField->insertDynamicData((*strParam)["data"]);
-		dynamicField->printAllCaches();
+		//dynamicField->printAllCaches();
 		nRet = cmpAccessLogRequest((*strParam)["type"], (*strParam)["data"]);
 	}
 	else
@@ -150,13 +150,13 @@ int CClientControllerMongoDB::cmpAccessLogRequest(string strType, string strLog)
 	memset(&packet, 0, sizeof(CMP_PACKET));
 	int accessLogSequence = getSequence();
 	cmpParser->formatHeader( access_log_request, STATUS_ROK, accessLogSequence, &pHeader);
-
+/*
 	int nType = -1;
 	convertFromString(nType, strType);
 	int net_type = htonl(nType);
 	memcpy(pIndex, (const char*) &net_type, 4);
 	pIndex += 4;
-	nBody_len += 4;
+	nBody_len += 4;*/
 
 	memcpy(pIndex, strLog.c_str(), strLog.length());
 	pIndex += strLog.length();
