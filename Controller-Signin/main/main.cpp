@@ -28,6 +28,8 @@ int main(int argc, char* argv[])
 	extern char *__progname;
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
+	CMessageHandler::closeMsg(CMessageHandler::registerMsq(EVENT_MSQ_KEY_CONTROLLER_SIGNIN));
+
 	// Run Process
 	CProcessHandler::runProcess(runService);
 
