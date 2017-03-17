@@ -61,7 +61,7 @@ inline void writeLog(int nSize, const char *pLog)
 
 void _log(const char* format, ...)
 {
-	/*va_list vl;
+	va_list vl;
 	va_start(vl, format);
 	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');
 	va_end(vl);
@@ -82,10 +82,10 @@ void _log(const char* format, ...)
 	}
 	else
 	{
-		writeLog(strLog.length(), strLog.c_str());
+		//writeLog(strLog.length(), strLog.c_str());
 	}
 
-	printf("%s\n", strLog.c_str());*/
+	printf("%s\n", strLog.c_str());
 
 }
 
