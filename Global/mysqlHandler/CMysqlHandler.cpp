@@ -147,7 +147,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 			dataItem.clear();
 			for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
 			{
-				//		printf("[CMysqlHandler] Query Result: %s : %s\n", fields[j].name, row[j]);
+				//printf("[CMysqlHandler] Query Result: %s : %s\n", fields[j].name, row[j]);
 				if (0 != row[j])
 				{
 					strField = fields[j].name;

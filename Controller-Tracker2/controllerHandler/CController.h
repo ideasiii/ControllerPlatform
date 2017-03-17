@@ -33,26 +33,23 @@ public:
 	void onMongoDBCommand(void * param);
 	int startClientMongoDB(std::string strIP, const int nPort, const int nMsqId);
 	void runEnquireLinkRequest();
+	CCmpHandler *cmpParser;
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 private:
 	explicit CController();
-	std::string clientMongoDBIP;
-	int clientMongoDBPort;
-	int clientMongoDBMsqId;
+
 	int reStartClientMongoDB();
 	int sendCommand(int commandID, int seqNum);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-
-public:
-	CCmpHandler *cmpParser;
-
-private:
 	CServerDevice *serverDevice;
 	CThreadHandler *tdEnquireLink;
-	std::vector<int> vEnquireLink;
+	//std::vector<int> vEnquireLink;
 	CClientControllerMongoDB *clientMongo;
 
+	std::string clientMongoDBIP;
+	int clientMongoDBPort;
+	int clientMongoDBMsqId;
 };

@@ -7,11 +7,12 @@
 #include "CDataHandler.cpp"
 #include "JSONObject.h"
 #include "packet.h"
+#include "DynamicField.h"
 
 static CClientControllerMongoDB * clientMongo = 0;
 
 CClientControllerMongoDB::CClientControllerMongoDB() :
-		CSocketClient(), cmpParser(CCmpHandler::getInstance()), tdEnquireLink(new CThreadHandler)
+		CSocketClient(), cmpParser(CCmpHandler::getInstance()), dynamicField(new DynamicField)
 {
 
 	mapFunc[access_log_response] = &CClientControllerMongoDB::cmpAccessLogResponse;
@@ -26,7 +27,7 @@ CClientControllerMongoDB::~CClientControllerMongoDB()
 
 CClientControllerMongoDB * CClientControllerMongoDB::getInstance()
 {
-	if(0 == clientMongo)
+	if (0 == clientMongo)
 	{
 		clientMongo = new CClientControllerMongoDB();
 	}
@@ -36,11 +37,11 @@ CClientControllerMongoDB * CClientControllerMongoDB::getInstance()
 int CClientControllerMongoDB::startClient(string strIP, const int nPort, const int nMsqId)
 {
 	_DBG("[CClientControllerMongoDB] startClient");
-	if(0 >= nPort || 0 >= nMsqId)
+	if (0 >= nPort || 0 >= nMsqId)
 		return FALSE;
 
 	/** Run socket server for CMP **/
-	if(0 < nMsqId)
+	if (0 < nMsqId)
 	{
 		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_MONGODB_RECEIVE);
 		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MONGODB);
@@ -50,7 +51,7 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 	setPacketConf(PK_CMP, PK_MSQ);
 
 	const char* cszAddr = NULL;
-	if(!strIP.empty())
+	if (!strIP.empty())
 	{
 		cszAddr = strIP.c_str();
 	}
@@ -59,7 +60,7 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 		start(AF_INET, cszAddr, nPort);
 	_CATCH
 
-	if(!this->isValidSocketFD())
+	if (!this->isValidSocketFD())
 	{
 		_log("[CClientControllerMongoDB] Socket Create Fail");
 		return FALSE;
@@ -69,14 +70,25 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 		_log("[CClientControllerMongoDB] Connect Controller-MongoDB Success!!");
 	}
 
+	dynamicField->setMySQLInfo("175.98.119.121", "tracker", "ideas123!", "ideas", "field");
+
 	return TRUE;
 }
 
 int CClientControllerMongoDB::sendCommand(void * param)
 {
 	CDataHandler<string> *strParam = reinterpret_cast<CDataHandler<string>*>(param);
-
-	int nRet = cmpAccessLogRequest((*strParam)["type"], (*strParam)["data"]);
+	int nRet;
+	if (dynamicField->isValidJSONFormat((*strParam)["data"]) == true)
+	{
+		dynamicField->insertDynamicData((*strParam)["data"]);
+		dynamicField->printAllCaches();
+		nRet = cmpAccessLogRequest((*strParam)["type"], (*strParam)["data"]);
+	}
+	else
+	{
+		_log("[CClientControllerMongoDB] is Not Valid JSON Format: %s", ((*strParam)["data"]).c_str());
+	}
 
 	return nRet;
 
@@ -105,7 +117,7 @@ void CClientControllerMongoDB::onReceive(const int nSocketFD, const void *pData)
 	printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 			"[CClientControllerMongoDB] Recv ", nSocketFD);
 
-	if(cmpParser->isAckPacket(cmpHeader.command_id))
+	if (cmpParser->isAckPacket(cmpHeader.command_id))
 	{
 		(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number,
 				pPacket);
@@ -126,7 +138,7 @@ int CClientControllerMongoDB::cmpAccessLogRequest(string strType, string strLog)
 	int nBody_len = 0;
 	int nTotal_len = 0;
 
-	if(!clientMongo->isValidSocketFD())
+	if (!clientMongo->isValidSocketFD())
 	{
 		return nRet;
 	}
