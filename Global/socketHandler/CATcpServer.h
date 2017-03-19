@@ -19,6 +19,7 @@ public:
 	int start(const char* cszAddr, short nPort);
 	void stop();
 	void closeClient(int nClientFD);
+	void setIdleTimeout(int nSeconds);
 
 	/**
 	 * Below function is called by thread
@@ -46,5 +47,4 @@ private:
 	unsigned long munRunThreadId; // Message queue run thread ID.
 	std::map<unsigned long int, unsigned long int> mapClientThread; // Socket client receive map <client socket FD , thread ID>
 	unsigned long int getClientSocketFD(unsigned long int unThreadId);
-
 };

@@ -13,6 +13,10 @@
 
 using namespace std;
 
+#define IDLE_TIMER			469107
+#define MAX_CLIENT			666
+int IDLE_TIMEOUT = 10; // secons
+
 void *threadTcpAccept(void *argv)
 {
 	CATcpServer* ss = reinterpret_cast<CATcpServer*>(argv);
@@ -72,6 +76,7 @@ int CATcpServer::start(const char* cszAddr, short nPort)
 			}
 			createThread(threadCATcpServerMessageReceive, this, "CATcpServer Message Receive");
 			createThread(threadTcpAccept, this, "CATcpServer Socket Accept Thread");
+			setTimer(IDLE_TIMER, 3, 1, mnMsqKey);
 			_log("[CATcpServer] Create Server Success Socket FD: %lu", nSocketFD);
 		}
 		else
@@ -93,8 +98,11 @@ void CATcpServer::stop()
 	map<unsigned long int, unsigned long int>::iterator it;
 	for (it = mapClientThread.begin(); mapClientThread.end() != it; ++it)
 	{
-
+		socketClose(it->first);
+		threadCancel(it->second);
+		threadJoin(it->second);
 	}
+	mapClientThread.clear();
 
 	/**
 	 * Close Message queue run thread
@@ -128,6 +136,14 @@ void CATcpServer::runSocketAccept()
 	while (1)
 	{
 		nChildSocketFD = socketAccept();
+
+		if (MAX_CLIENT < (mapClientThread.size() + 1))
+		{
+			_log("[CATcpServer] Max Client Connect: %d", mapClientThread.size());
+			socketClose(nChildSocketFD);
+			sleep(5);
+			continue;
+		}
 
 		if (-1 != nChildSocketFD)
 		{
@@ -208,6 +224,11 @@ unsigned long int CATcpServer::getClientSocketFD(unsigned long int unThreadId)
 	return 0;
 }
 
+void CATcpServer::setIdleTimeout(int nSeconds)
+{
+	IDLE_TIMEOUT = nSeconds;
+}
+
 /**========================================================================================================
  *  IPC Message queue callback function.
  *  Receive MSQ message from sendMessage.
@@ -240,8 +261,13 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		onReceive(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_TIMER:
-		_log("[CATcpServer] On Timer , ID: %lu", nId);
-		onTimer(nId);
+		switch (nId)
+		{
+		case IDLE_TIMER:
+			break;
+		default:
+			onTimer(nId); // overload function
+		}
 		break;
 	default:
 		_log("[CATcpServer] Unknow message command");

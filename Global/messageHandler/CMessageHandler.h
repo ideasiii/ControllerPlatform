@@ -14,7 +14,7 @@
  */
 struct MESSAGE_BUF
 {
-		long mtype;                   // message filter
+		long mtype;                   // message filter, run use
 		int nCommand;
 		unsigned long int nId;
 		int nDataLen;
