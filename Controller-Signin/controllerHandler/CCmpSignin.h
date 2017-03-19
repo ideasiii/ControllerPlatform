@@ -14,4 +14,7 @@ class CCmpSignin: public CCmpServer
 public:
 	CCmpSignin();
 	virtual ~CCmpSignin();
+
+protected:
+	int onSignin(int nSocket, int nCommand, int nSequence, const void *pData);
 };

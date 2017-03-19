@@ -18,3 +18,9 @@ CCmpSignin::~CCmpSignin()
 	// TODO Auto-generated destructor stub
 }
 
+int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
+{
+	_log("[CCmpSignin] ");
+	return 0;
+}
+

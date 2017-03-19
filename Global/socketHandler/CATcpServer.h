@@ -15,6 +15,12 @@
 
 class CATcpServer: public CSocket, public CObject
 {
+	typedef struct _SOCKET_CLIENT
+	{
+		unsigned long int ulReceiveThreadID;
+		long int ulAliveTime;
+	} SOCKET_CLIENT;
+
 public:
 	int start(const char* cszAddr, short nPort);
 	void stop();
@@ -43,8 +49,13 @@ protected:
 	virtual void onReceive(unsigned long int nId, int nDataLen, const void* pData) = 0;
 
 private:
+	void checkIdle();
+
+private:
 	int mnMsqKey; // Message queue key and filter ID.
 	unsigned long munRunThreadId; // Message queue run thread ID.
-	std::map<unsigned long int, unsigned long int> mapClientThread; // Socket client receive map <client socket FD , thread ID>
+//	std::map<unsigned long int, unsigned long int> mapClientThread; // Socket client receive map <client socket FD , thread ID>
+//	std::map<unsigned long int, long int> mapClientAlive; // Socket client alive map <client socket FD , idle second>
 	unsigned long int getClientSocketFD(unsigned long int unThreadId);
+	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 };

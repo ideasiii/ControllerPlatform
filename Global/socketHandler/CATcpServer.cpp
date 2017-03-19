@@ -10,6 +10,7 @@
 #include <time.h>
 #include "LogHandler.h"
 #include "event.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -95,14 +96,14 @@ void CATcpServer::stop()
 	/**
 	 * Close all Client Socket
 	 */
-	map<unsigned long int, unsigned long int>::iterator it;
-	for (it = mapClientThread.begin(); mapClientThread.end() != it; ++it)
+	map<unsigned long int, SOCKET_CLIENT>::iterator it;
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
 		socketClose(it->first);
-		threadCancel(it->second);
-		threadJoin(it->second);
+		threadCancel(it->second.ulReceiveThreadID);
+		threadJoin(it->second.ulReceiveThreadID);
 	}
-	mapClientThread.clear();
+	mapClient.clear();
 
 	/**
 	 * Close Message queue run thread
@@ -120,12 +121,12 @@ void CATcpServer::stop()
 void CATcpServer::closeClient(int nClientFD)
 {
 	socketClose(nClientFD);
-	if (mapClientThread.end() != mapClientThread.find(nClientFD))
+	if (mapClient.end() != mapClient.find(nClientFD))
 	{
-		threadCancel(mapClientThread[nClientFD]);
-		threadJoin(nClientFD);
+		threadCancel(mapClient[nClientFD].ulReceiveThreadID);
+		threadJoin(mapClient[nClientFD].ulReceiveThreadID);
 	}
-	mapClientThread.erase(nClientFD);
+	mapClient.erase(nClientFD);
 }
 
 void CATcpServer::runSocketAccept()
@@ -137,9 +138,9 @@ void CATcpServer::runSocketAccept()
 	{
 		nChildSocketFD = socketAccept();
 
-		if (MAX_CLIENT < (mapClientThread.size() + 1))
+		if (MAX_CLIENT < (mapClient.size() + 1))
 		{
-			_log("[CATcpServer] Max Client Connect: %d", mapClientThread.size());
+			_log("[CATcpServer] Max Client Connect: %d", mapClient.size());
 			socketClose(nChildSocketFD);
 			sleep(5);
 			continue;
@@ -205,7 +206,7 @@ void CATcpServer::runTcpReceive()
 		}
 		sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, result, pBuf);
 	}
-	mapClientThread.erase(nSocketFD);
+	mapClient.erase(nSocketFD);
 	delete clientSockaddr;
 	sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, NULL);
 	threadExit();
@@ -213,10 +214,11 @@ void CATcpServer::runTcpReceive()
 
 unsigned long int CATcpServer::getClientSocketFD(unsigned long int unThreadId)
 {
-	for (map<unsigned long int, unsigned long int>::const_iterator it = mapClientThread.begin();
-			it != mapClientThread.end(); ++it)
+	map<unsigned long int, SOCKET_CLIENT>::iterator it;
+
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
-		if (it->second == unThreadId)
+		if (it->second.ulReceiveThreadID == unThreadId)
 		{
 			return it->first;
 		}
@@ -229,6 +231,21 @@ void CATcpServer::setIdleTimeout(int nSeconds)
 	IDLE_TIMEOUT = nSeconds;
 }
 
+void CATcpServer::checkIdle()
+{
+	map<unsigned long int, SOCKET_CLIENT>::iterator it;
+	double diff;
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
+	{
+		diff = difftime(nowSecond(), it->second.ulAliveTime);
+		if (IDLE_TIMEOUT < (int) diff)
+		{
+			_log("[CATcpServer] Socket Client: %d idle: %d seconds", it->first, (int) diff);
+			closeClient(it->first);
+		}
+	}
+}
+
 /**========================================================================================================
  *  IPC Message queue callback function.
  *  Receive MSQ message from sendMessage.
@@ -238,18 +255,19 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
-		mapClientThread[nId] = createThread(threadTcpReceive, this);
-		if (0 >= mapClientThread[nId])
+		mapClient[nId].ulReceiveThreadID = createThread(threadTcpReceive, this);
+		if (0 >= mapClient[nId].ulReceiveThreadID)
 		{
-			mapClientThread.erase(nId);
+			mapClient.erase(nId);
 			socketClose(nId);
 		}
 		break;
 	case EVENT_COMMAND_SOCKET_CONNECT:
 		_log("[CATcpServer] Socket Client Connect FD: %lu", nId);
+		mapClient[nId].ulAliveTime = nowSecond();
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT:
-		mapClientThread.erase(nId);
+		mapClient.erase(nId);
 		_log("[CATcpServer] Socket Client Disconnect FD: %lu", nId);
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
@@ -258,12 +276,14 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 		_log("[CATcpServer] Receive Package , Socket FD: %lu", nId);
+		mapClient[nId].ulAliveTime = nowSecond();
 		onReceive(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_TIMER:
 		switch (nId)
 		{
 		case IDLE_TIMER:
+			checkIdle();
 			break;
 		default:
 			onTimer(nId); // overload function
