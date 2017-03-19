@@ -52,7 +52,7 @@ pthread_t _CreateThread(void* (*entry)(void*), void* arg)
 	 * thread policy: SCHED_FIFO, SCHED_RR 和 SCHED_OTHER
 	 */
 	pthread_attr_getschedpolicy(&attr, &policy);
-	if(SCHED_FIFO != policy)
+	if (SCHED_FIFO != policy)
 	{
 		policy = SCHED_FIFO;
 		pthread_attr_setschedpolicy(&attr, policy);
@@ -69,7 +69,7 @@ pthread_t _CreateThread(void* (*entry)(void*), void* arg)
 
 	pthread_attr_destroy(&attr);
 
-	if(0 != rc)
+	if (0 != rc)
 	{
 		_log("[_CreateThread] Create Fail");
 		return 0;
@@ -80,7 +80,7 @@ pthread_t _CreateThread(void* (*entry)(void*), void* arg)
 
 void _ThreadJoin(pthread_t thdid)
 {
-	if(0 != pthread_join(thdid, 0))
+	if (0 != pthread_join(thdid, 0))
 	{
 		_log("[_ThreadJoin] Thread Join Fail");
 	}
@@ -95,14 +95,14 @@ int _ThreadCancel(pthread_t thread)
 {
 	int kill_rc = pthread_kill(thread, 0);
 
-	if(kill_rc == ESRCH)
+	if (kill_rc == ESRCH)
 	{
 		/**
 		 * the specified thread did not exists or already quit
 		 */
 		_log("[CThread] The specified thread did not exists or already quit");
 	}
-	else if(kill_rc == EINVAL)
+	else if (kill_rc == EINVAL)
 	{
 		_log("[CThread] Signal is invalid for pthread_kill");
 	}

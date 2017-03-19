@@ -29,7 +29,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}
@@ -52,7 +52,7 @@ public:
 	int run(int nRecvEvent, const char * szDescript = 0);
 	timer_t setTimer(int nId, int nSecStart, int nInterSec, int nEvent = -1);
 	void killTimer(int nId);
-	unsigned long int createThread(void* (*entry)(void*), void* arg);
+	unsigned long int createThread(void* (*entry)(void*), void* arg, const char *szDesc = 0);
 	void threadJoin(unsigned long int thdid);
 	void threadExit();
 	int threadCancel(unsigned long int thread);
