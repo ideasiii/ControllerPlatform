@@ -91,6 +91,7 @@ __attribute__ ((unused)) static int sendPacket(CSocket *socket, const int nSocke
 CCmpServer::CCmpServer()
 {
 	mapFunc[sign_up_request] = &CCmpServer::onSignin;
+	mapFunc[access_log_request] = &CCmpServer::onAccesslog;
 }
 
 CCmpServer::~CCmpServer()

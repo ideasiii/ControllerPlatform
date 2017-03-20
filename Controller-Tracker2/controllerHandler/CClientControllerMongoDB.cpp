@@ -75,19 +75,22 @@ int CClientControllerMongoDB::startClient(string strIP, const int nPort, const i
 	return TRUE;
 }
 
-int CClientControllerMongoDB::sendCommand(void * param)
+int CClientControllerMongoDB::sendCommand(const void * param)
 {
-	CDataHandler<string> *strParam = reinterpret_cast<CDataHandler<string>*>(param);
+
+	const char* data = static_cast<const char*>(param);
+
 	int nRet;
-	if (dynamicField->isValidJSONFormat((*strParam)["data"]) == true)
+
+	if (dynamicField->isValidJSONFormat(string(const_cast<char *>(data))) == true)
 	{
-		dynamicField->insertDynamicData((*strParam)["data"]);
+		dynamicField->insertDynamicData(string(const_cast<char *>(data)));
 		//dynamicField->printAllCaches();
-		nRet = cmpAccessLogRequest((*strParam)["type"], (*strParam)["data"]);
+		nRet = cmpAccessLogRequest("", string(const_cast<char *>(data)));
 	}
 	else
 	{
-		_log("[CClientControllerMongoDB] is Not Valid JSON Format: %s", ((*strParam)["data"]).c_str());
+		_log("[CClientControllerMongoDB] is Not Valid JSON Format: %s", *data);
 	}
 
 	return nRet;
@@ -150,13 +153,13 @@ int CClientControllerMongoDB::cmpAccessLogRequest(string strType, string strLog)
 	memset(&packet, 0, sizeof(CMP_PACKET));
 	int accessLogSequence = getSequence();
 	cmpParser->formatHeader( access_log_request, STATUS_ROK, accessLogSequence, &pHeader);
-/*
-	int nType = -1;
-	convertFromString(nType, strType);
-	int net_type = htonl(nType);
-	memcpy(pIndex, (const char*) &net_type, 4);
-	pIndex += 4;
-	nBody_len += 4;*/
+	/*
+	 int nType = -1;
+	 convertFromString(nType, strType);
+	 int net_type = htonl(nType);
+	 memcpy(pIndex, (const char*) &net_type, 4);
+	 pIndex += 4;
+	 nBody_len += 4;*/
 
 	memcpy(pIndex, strLog.c_str(), strLog.length());
 	pIndex += strLog.length();

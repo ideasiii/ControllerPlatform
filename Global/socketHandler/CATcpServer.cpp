@@ -125,8 +125,10 @@ void CATcpServer::closeClient(int nClientFD)
 	{
 		threadCancel(mapClient[nClientFD].ulReceiveThreadID);
 		threadJoin(mapClient[nClientFD].ulReceiveThreadID);
+		//joe modify
+		mapClient.erase(nClientFD);
 	}
-	mapClient.erase(nClientFD);
+
 }
 
 void CATcpServer::runSocketAccept()
@@ -206,7 +208,10 @@ void CATcpServer::runTcpReceive()
 		}
 		sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, result, pBuf);
 	}
-	mapClient.erase(nSocketFD);
+	if (mapClient.find(nSocketFD) != mapClient.end())
+	{
+		mapClient.erase(nSocketFD);
+	}
 	delete clientSockaddr;
 	sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, NULL);
 	threadExit();
@@ -267,7 +272,10 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		mapClient[nId].ulAliveTime = nowSecond();
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT:
-		mapClient.erase(nId);
+		if (mapClient.find(nId) != mapClient.end())
+		{
+			mapClient.erase(nId);
+		}
 		_log("[CATcpServer] Socket Client Disconnect FD: %lu", nId);
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:

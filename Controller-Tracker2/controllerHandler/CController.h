@@ -19,7 +19,7 @@
 class CCmpHandler;
 class CThreadHandler;
 class CJsonHandler;
-class CServerDevice;
+class CServerAccessLog;
 class CSocket;
 class CClientControllerMongoDB;
 
@@ -28,9 +28,9 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerDevice(std::string strIP, const int nPort, const int nMsqId);
-	void stopServer();
-	void onMongoDBCommand(void * param);
+	int startServerAccesslog(std::string strIP, const int nPort);
+	void stopServerAccesslog();
+	void onMongoDBCommand(const void * param);
 	int startClientMongoDB(std::string strIP, const int nPort, const int nMsqId);
 	void runEnquireLinkRequest();
 	CCmpHandler *cmpParser;
@@ -44,7 +44,8 @@ private:
 	int reStartClientMongoDB();
 	int sendCommand(int commandID, int seqNum);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-	CServerDevice *serverDevice;
+	CServerAccessLog * cmpAccesslog;
+
 	CThreadHandler *tdEnquireLink;
 	//std::vector<int> vEnquireLink;
 	CClientControllerMongoDB *clientMongo;

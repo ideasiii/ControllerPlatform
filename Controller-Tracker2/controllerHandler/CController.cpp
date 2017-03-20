@@ -17,14 +17,15 @@
 #include "CController.h"
 #include "CDataHandler.cpp"
 #include "CThreadHandler.h"
-#include "CServerDevice.h"
 #include "CClientControllerMongoDB.h"
+#include "CServerAccessLog.h"
 #include "iCommand.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
 
 using namespace std;
 
+#define EVENT_COMMAND_SEND_TO_CONTROLLER_MONGODB 5545
 
 static bool isInitMongoDB = false;
 
@@ -52,11 +53,10 @@ void *threadEnquireLinkRequest(void *argv);
 
 void IonMongoDBCommand(void *param)
 {
-
-	controller->onMongoDBCommand(param);
+	controller->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SEND_TO_CONTROLLER_MONGODB, 0,strlen((char *) param), param);
 }
 
-void CController::onMongoDBCommand(void *param)
+void CController::onMongoDBCommand(const void *param)
 {
 	_log("[CController] call clientMongo deal with it!");
 	clientMongo->sendCommand(param);
@@ -129,9 +129,9 @@ int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int 
 }
 
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverDevice(CServerDevice::getInstance()), tdEnquireLink(
-				new CThreadHandler), clientMongo(CClientControllerMongoDB::getInstance()),clientMongoDBPort(
-				-1), clientMongoDBMsqId(-1)
+		CObject(), cmpParser(CCmpHandler::getInstance()), cmpAccesslog(new CServerAccessLog), tdEnquireLink(
+				new CThreadHandler), clientMongo(CClientControllerMongoDB::getInstance()), clientMongoDBPort(-1), clientMongoDBMsqId(
+				-1)
 
 {
 
@@ -139,6 +139,17 @@ CController::CController() :
 
 CController::~CController()
 {
+	if (clientMongo)
+	{
+		clientMongo->stopClient();
+		delete clientMongo;
+		clientMongo = 0;
+	}
+	if (cmpAccesslog)
+	{
+		delete cmpAccesslog;
+		cmpAccesslog = 0;
+	}
 	delete cmpParser;
 }
 
@@ -156,19 +167,6 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	int status = 0;
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		_log("[CController] get Device Socket Data from Message Queue");
-		serverDevice->onReceive(nId, pData);
-		break;
-
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
-		break;
-
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
-		serverDevice->deleteClient(nId);
-		break;
-
 	case EVENT_COMMAND_SOCKET_TCP_MONGODB_RECEIVE:
 		clientMongo->onReceive(nId, pData);
 		break;
@@ -187,16 +185,34 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 		_log("[CController] ReConnect Controller-MongoDB, status: %d\n", status);
 		break;
+	case EVENT_COMMAND_SEND_TO_CONTROLLER_MONGODB:
+		controller->onMongoDBCommand(pData);
+		break;
 	default:
 		_log("[Controller] Unknown Message Command: %d", nCommand);
 		break;
 	}
 }
 
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
+int CController::startServerAccesslog(string strIP, const int nPort)
 {
-	serverDevice->setCallback(CB_CONTROLLER_MONGODB_COMMAND, IonMongoDBCommand);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
+	cmpAccesslog->setCallback(CB_CONTROLLER_MONGODB_COMMAND, IonMongoDBCommand);
+	_log("AccessLog IP: %s port: %d", strIP.c_str(), nPort);
+	if (!strIP.empty())
+	{
+		if (cmpAccesslog->start(strIP.c_str(), nPort))
+		{
+			return TRUE;
+		}
+	}
+	else
+	{
+		if (cmpAccesslog->start(0, nPort))
+		{
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 int CController::reStartClientMongoDB()
@@ -233,21 +249,11 @@ int CController::startClientMongoDB(string strIP, const int nPort, const int nMs
 	}
 }
 
-void CController::stopServer()
+void CController::stopServerAccesslog()
 {
 
-	if (clientMongo)
-	{
-		clientMongo->stopClient();
-		delete clientMongo;
-		clientMongo = 0;
-	}
-	if (serverDevice)
-	{
-		serverDevice->stopServer();
-		delete serverDevice;
-		serverDevice = 0;
-	}
+	cmpAccesslog->stop();
+
 }
 
 void CController::runEnquireLinkRequest()

@@ -21,7 +21,7 @@ public:
 	virtual ~CClientControllerMongoDB();
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
-	int sendCommand(void * param);
+	int sendCommand(const void * param);
 	int sendCommand(int commandID, int seqNum);
 
 private:
