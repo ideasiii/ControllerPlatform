@@ -93,17 +93,7 @@ int CATcpServer::start(const char* cszAddr, short nPort)
 
 void CATcpServer::stop()
 {
-	/**
-	 * Close all Client Socket
-	 */
-	map<unsigned long int, SOCKET_CLIENT>::iterator it;
-	for(it = mapClient.begin(); mapClient.end() != it; ++it)
-	{
-		socketClose(it->first);
-		threadCancel(it->second.ulReceiveThreadID);
-		threadJoin(it->second.ulReceiveThreadID);
-	}
-	mapClient.clear();
+	socketClose();
 
 	/**
 	 * Close Message queue run thread
@@ -116,6 +106,18 @@ void CATcpServer::stop()
 		CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
 		_log("[CATcpServer] Message Queue Receive Thread Stop.");
 	}
+
+	/**
+	 * Close all Client Socket
+	 */
+	map<unsigned long int, SOCKET_CLIENT>::iterator it;
+	for(it = mapClient.begin(); mapClient.end() != it; ++it)
+	{
+		socketClose(it->first);
+		threadCancel(it->second.ulReceiveThreadID);
+		threadJoin(it->second.ulReceiveThreadID);
+	}
+	mapClient.clear();
 }
 
 void CATcpServer::closeClient(int nClientFD)

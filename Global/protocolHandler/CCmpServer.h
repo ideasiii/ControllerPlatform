@@ -21,8 +21,16 @@ protected:
 	void onReceive(unsigned long int nId, int nDataLen, const void* pData);
 
 protected:
-	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *pData){};
-	virtual int onAccesslog(int nSocket, int nCommand, int nSequence, const void *pData){};
+	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
+	{
+		return 0;
+	}
+	;
+	virtual int onAccesslog(int nSocket, int nCommand, int nSequence, const void *pData)
+	{
+		return 0;
+	}
+	;
 
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);

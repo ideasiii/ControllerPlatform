@@ -97,9 +97,14 @@ int _ThreadCancel(pthread_t thread)
 	int kill_rc;
 	if(0 >= thread)
 		return 0;
-	_TRY
-		kill_rc = pthread_kill(thread, 0);
-	_CATCH
+
+	return pthread_cancel(thread);
+
+	/**
+	 *  pthread_kill, signal 0 is to check thread
+	 */
+	kill_rc = pthread_kill(thread, 0);
+
 	if(kill_rc == ESRCH)
 	{
 		/**

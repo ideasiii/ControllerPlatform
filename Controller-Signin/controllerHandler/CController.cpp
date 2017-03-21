@@ -16,7 +16,7 @@
 static CController * controller = 0;
 
 CController::CController() :
-		CObject(), signin(CSignin::getInstance()), cmpSignin(new CCmpSignin)
+		CObject(), signin(CSignin::getInstance()), cmpSignin(new CCmpSignin())
 {
 
 }
