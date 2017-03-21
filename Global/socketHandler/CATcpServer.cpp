@@ -120,13 +120,15 @@ void CATcpServer::stop()
 
 void CATcpServer::closeClient(int nClientFD)
 {
+	mutexLock();
 	socketClose(nClientFD);
 	if(mapClient.end() != mapClient.find(nClientFD))
 	{
 		threadCancel(mapClient[nClientFD].ulReceiveThreadID);
 		threadJoin(mapClient[nClientFD].ulReceiveThreadID);
-		eraseClient(nClientFD);
+		mapClient.erase(nClientFD);
 	}
+	mutexUnlock();
 }
 
 void CATcpServer::runSocketAccept()

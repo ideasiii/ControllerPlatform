@@ -93,6 +93,9 @@ void _ThreadExit()
 
 int _ThreadCancel(pthread_t thread)
 {
+	if(0 >= thread)
+		return 0;
+
 	int kill_rc = pthread_kill(thread, 0);
 
 	if(kill_rc == ESRCH)
