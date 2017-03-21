@@ -50,12 +50,12 @@ protected:
 
 private:
 	void checkIdle();
+	void eraseClient(unsigned long int ulSocketFD);
+	void updateClientAlive(unsigned long int ulSocketFD);
 
 private:
 	int mnMsqKey; // Message queue key and filter ID.
 	unsigned long munRunThreadId; // Message queue run thread ID.
-//	std::map<unsigned long int, unsigned long int> mapClientThread; // Socket client receive map <client socket FD , thread ID>
-//	std::map<unsigned long int, long int> mapClientAlive; // Socket client alive map <client socket FD , idle second>
 	unsigned long int getClientSocketFD(unsigned long int unThreadId);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 };

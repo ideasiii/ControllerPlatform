@@ -19,9 +19,10 @@
 
 CObject * object = 0;
 
+
 void _onTimer(int nId)
 {
-	if (object)
+	if(object)
 	{
 		object->_OnTimer(nId);
 	}
@@ -30,12 +31,12 @@ void _onTimer(int nId)
 CObject::CObject() :
 		messageHandler(new CMessageHandler), mnTimerEventId(-1)
 {
-
+	pthread_mutex_init(&mutex, 0);
 }
 
 CObject::~CObject()
 {
-
+	pthread_mutex_destroy(&mutex);
 }
 
 void CObject::closeMsq()
@@ -49,7 +50,7 @@ int CObject::initMessage(int nKey)
 	int nMsqid;
 
 	nMsqid = messageHandler->init(nKey);
-	if (0 >= nMsqid)
+	if(0 >= nMsqid)
 	{
 		//throwException("Create message queue fail");
 		_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
@@ -64,13 +65,13 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 	int nRecv;
 	MESSAGE_BUF *msgbuf;
 
-	if (-1 == messageHandler->getMsqid())
+	if(-1 == messageHandler->getMsqid())
 	{
 		_log("[Object] Invalid msqid, not init msq");
 		return -1;
 	}
 
-	if (0 >= nRecvEvent)
+	if(0 >= nRecvEvent)
 	{
 		_log("[Object] Invalid receive event id");
 		return -1;
@@ -81,21 +82,21 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 	pdata = msgbuf;
 	messageHandler->setRecvEvent(nRecvEvent);
 
-	if (szDescript)
+	if(szDescript)
 		_log("[Object] %s Message Service Start Run , Event ID:%d ", szDescript, nRecvEvent);
 	else
 		_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
 
-	while (1)
+	while(1)
 	{
 		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
 
 		nRecv = messageHandler->recvMessage(&pdata);
-		if (0 < nRecv)
+		if(0 < nRecv)
 		{
 			onReceiveMessage(msgbuf->mtype, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}
-		else if (-2 == nRecv)
+		else if(-2 == nRecv)
 		{
 			/**
 			 * get SIGINT
@@ -110,7 +111,7 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 
 	delete msgbuf;
 
-	if (szDescript)
+	if(szDescript)
 		_log("[Object] %s Message loop end", szDescript);
 	else
 		_log("[Object] Message loop end");
@@ -141,7 +142,7 @@ void CObject::killTimer(int nId)
 
 void CObject::_OnTimer(int nId)
 {
-	if (-1 != mnTimerEventId)
+	if(-1 != mnTimerEventId)
 	{
 		messageHandler->sendMessage(mnTimerEventId, EVENT_COMMAND_TIMER, nId, 0, 0);
 	}
@@ -150,7 +151,7 @@ void CObject::_OnTimer(int nId)
 
 unsigned long int CObject::createThread(void* (*entry)(void*), void* arg, const char *szDesc)
 {
-	if (szDesc)
+	if(szDesc)
 		_log("[CObject] createThread %s", szDesc);
 	return _CreateThread(entry, arg);
 }
@@ -173,5 +174,15 @@ int CObject::threadCancel(unsigned long int thread)
 unsigned long int CObject::getThreadID()
 {
 	return _GetThreadID();
+}
+
+void CObject::mutexLock()
+{
+	pthread_mutex_lock(&mutex);
+}
+
+void CObject::mutexUnlock()
+{
+	pthread_mutex_unlock(&mutex);
 }
 

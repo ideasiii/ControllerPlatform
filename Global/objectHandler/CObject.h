@@ -29,7 +29,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}
@@ -56,6 +56,8 @@ public:
 	void threadJoin(unsigned long int thdid);
 	void threadExit();
 	int threadCancel(unsigned long int thread);
+	void mutexLock();
+	void mutexUnlock();
 	unsigned long int getThreadID();
 	void closeMsq();
 
@@ -77,5 +79,5 @@ protected:
 private:
 	CMessageHandler *messageHandler;
 	int mnTimerEventId;
-
+	pthread_mutex_t mutex;
 };
