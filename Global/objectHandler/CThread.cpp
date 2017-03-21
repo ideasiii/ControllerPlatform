@@ -85,6 +85,7 @@ void _ThreadJoin(pthread_t thdid)
 	{
 		_log("[_ThreadJoin] Thread Join Fail");
 	}
+	_log("[_ThreadJoin] Thread Join Success");
 }
 
 void _ThreadExit()
@@ -97,8 +98,6 @@ int _ThreadCancel(pthread_t thread)
 	int kill_rc;
 	if(0 >= thread)
 		return 0;
-
-	return pthread_cancel(thread);
 
 	/**
 	 *  pthread_kill, signal 0 is to check thread
