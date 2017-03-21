@@ -16,6 +16,7 @@
 #include <errno.h>
 #include "CThread.h"
 #include "LogHandler.h"
+#include "common.h"
 
 pthread_t _CreateThread(void* (*entry)(void*), void* arg)
 {
@@ -93,11 +94,12 @@ void _ThreadExit()
 
 int _ThreadCancel(pthread_t thread)
 {
+	int kill_rc;
 	if(0 >= thread)
 		return 0;
-
-	int kill_rc = pthread_kill(thread, 0);
-
+	_TRY
+		kill_rc = pthread_kill(thread, 0);
+	_CATCH
 	if(kill_rc == ESRCH)
 	{
 		/**

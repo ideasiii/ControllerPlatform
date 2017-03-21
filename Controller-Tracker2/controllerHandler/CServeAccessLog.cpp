@@ -17,10 +17,7 @@ CServerAccessLog::~CServerAccessLog()
 {
 }
 
-int CServerAccessLog::onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
-{
-	return 0;
-}
+
 
 int CServerAccessLog::onAccesslog(int nSocket, int nCommand, int nSequence, const void *pData)
 {

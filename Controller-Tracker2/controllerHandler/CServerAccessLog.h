@@ -18,7 +18,7 @@ public:
 	CServerAccessLog();
 	virtual ~CServerAccessLog();
 	int onAccesslog(int nSocket, int nCommand, int nSequence, const void *pData);
-	int onSignin(int nSocket, int nCommand, int nSequence, const void *pData);
+
 void setCallback(const int nId, CBFun cbfun);
 
 protected:
