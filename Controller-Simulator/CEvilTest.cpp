@@ -35,7 +35,7 @@ CEvilTest::~CEvilTest()
 
 void CEvilTest::start(int nCount)
 {
-	for (int i = 0; i < nCount; ++i)
+	for(int i = 0; i < nCount; ++i)
 	{
 		thread->createThread(threadEvilClient, this);
 	}
@@ -49,13 +49,13 @@ void CEvilTest::run()
 	int nSocketFD;
 	int nSeq = ++snCount;
 
-	if (0x7FFFFFFF <= snCount)
+	if(0x7FFFFFFF <= snCount)
 		snCount = 0;
 
 	printf("Connect: %s : %d %d\n", mszIP, mnPort, nSeq);
 
 	struct sockaddr_in hostAddr;
-	if ((nSocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+	if((nSocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		printf("TCP Socket Create Fail!!\n");
 		thread->threadExit();
@@ -65,7 +65,7 @@ void CEvilTest::run()
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr(mszIP);
 	hostAddr.sin_port = htons(mnPort);
-	if (connect(nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
+	if(connect(nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
 	{
 		printf("TCP Socket Connect Fail!!\n");
 		thread->threadExit();
@@ -79,6 +79,8 @@ void CEvilTest::run()
 	pbuf = buf;
 	int nBody_len = 0;
 	CMP_PACKET packet;
+	CMP_HEADER* pHeader = &packet.cmpHeader;
+	void* pBody = &packet.cmpBody;
 	char * pIndex;
 
 	packet.cmpHeader.command_id = htonl(sign_up_request);
@@ -108,9 +110,8 @@ void CEvilTest::run()
 
 	int nRet = send(nSocketFD, pbuf, nTotal_len, 0);
 
-	if (nRet == nTotal_len)
+	if(nRet == nTotal_len)
 	{
-		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
 
 		printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
@@ -119,6 +120,31 @@ void CEvilTest::run()
 	else
 	{
 		printf("send package fail ###################################\n");
+	}
+
+	memset(&packet, 0, sizeof(CMP_PACKET));
+	memset(pHeader, 0, sizeof(CMP_HEADER));
+	nRet = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL);
+
+	if(sizeof(CMP_HEADER) == nRet)
+	{
+		int nCommand = ntohl(packet.cmpHeader.command_id);
+		int nStatus = ntohl(packet.cmpHeader.command_status);
+		int nSequence = ntohl(packet.cmpHeader.sequence_number);
+		int nTotalLen = ntohl(packet.cmpHeader.command_length);
+		printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
+		int nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+
+		if(0 < nBodyLen)
+		{
+			nRet = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
+			if(nRet == nBodyLen)
+			{
+
+				printf("[Socket Client] socket receive CMP Body: %s\n", static_cast<char*>(pBody));
+			}
+
+		}
 	}
 
 	close(nSocketFD);

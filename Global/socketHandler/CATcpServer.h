@@ -57,5 +57,6 @@ private:
 	int mnMsqKey; // Message queue key and filter ID.
 	unsigned long munRunThreadId; // Message queue run thread ID.
 	unsigned long int getClientSocketFD(unsigned long int unThreadId);
+	unsigned long int getClientThreadID(unsigned long int unSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 };
