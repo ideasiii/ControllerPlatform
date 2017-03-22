@@ -230,7 +230,7 @@ unsigned long int CATcpServer::getClientThreadID(unsigned long int unSocketFD)
 {
 	if(mapClient.find(unSocketFD) != mapClient.end())
 	{
-		return mapClient[unSocketFD];
+		return mapClient[unSocketFD].ulReceiveThreadID;
 	}
 	return 0;
 }
