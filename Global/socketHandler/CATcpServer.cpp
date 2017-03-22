@@ -45,18 +45,18 @@ int CATcpServer::start(const char* cszAddr, short nPort)
 	int nSocketFD;
 
 	mnMsqKey = clock();
-	if(-1 == mnMsqKey)
+	if (-1 == mnMsqKey)
 		mnMsqKey = 20150727;
 
 	nMsgId = initMessage(mnMsqKey);
 
-	if(-1 == nMsgId)
+	if (-1 == nMsgId)
 	{
 		_log("[CATcpServer] Init Message Queue Fail");
 		return -1;
 	}
 
-	if(-1 == setInetSocket(cszAddr, nPort))
+	if (-1 == setInetSocket(cszAddr, nPort))
 	{
 		_log("[CATcpServer] Set INET socket address & port fail");
 		return -1;
@@ -64,12 +64,12 @@ int CATcpServer::start(const char* cszAddr, short nPort)
 
 	nSocketFD = createSocket(AF_INET, SOCK_STREAM);
 
-	if(-1 != nSocketFD)
+	if (-1 != nSocketFD)
 	{
 
-		if(-1 != socketBind())
+		if (-1 != socketBind())
 		{
-			if(-1 == socketListen(BACKLOG))
+			if (-1 == socketListen(BACKLOG))
 			{
 				perror("socket listen");
 				socketClose();
@@ -98,7 +98,7 @@ void CATcpServer::stop()
 	/**
 	 * Close Message queue run thread
 	 */
-	if(0 < munRunThreadId)
+	if (0 < munRunThreadId)
 	{
 		threadCancel(munRunThreadId);
 		threadJoin(munRunThreadId);
@@ -111,7 +111,7 @@ void CATcpServer::stop()
 	 * Close all Client Socket
 	 */
 	map<unsigned long int, SOCKET_CLIENT>::iterator it;
-	for(it = mapClient.begin(); mapClient.end() != it; ++it)
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
 		socketClose(it->first);
 		threadCancel(it->second.ulReceiveThreadID);
@@ -122,15 +122,13 @@ void CATcpServer::stop()
 
 void CATcpServer::closeClient(int nClientFD)
 {
-	mutexLock();
 	socketClose(nClientFD);
-	if(mapClient.end() != mapClient.find(nClientFD))
+	if (mapClient.end() != mapClient.find(nClientFD))
 	{
 		threadCancel(mapClient[nClientFD].ulReceiveThreadID);
 		threadJoin(mapClient[nClientFD].ulReceiveThreadID);
 		mapClient.erase(nClientFD);
 	}
-	mutexUnlock();
 }
 
 void CATcpServer::runSocketAccept()
@@ -138,11 +136,11 @@ void CATcpServer::runSocketAccept()
 	int nChildSocketFD = -1;
 
 	_log("[CATcpServer] Thread runSocketAccept Start");
-	while(1)
+	while (1)
 	{
 		nChildSocketFD = socketAccept();
 
-		if(MAX_CLIENT < (mapClient.size() + 1))
+		if (MAX_CLIENT < (mapClient.size() + 1))
 		{
 			_log("[CATcpServer] Max Client Connect: %d", mapClient.size());
 			socketClose(nChildSocketFD);
@@ -150,7 +148,7 @@ void CATcpServer::runSocketAccept()
 			continue;
 		}
 
-		if(-1 != nChildSocketFD)
+		if (-1 != nChildSocketFD)
 		{
 			_log("[CATcpServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
 			sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
@@ -184,7 +182,7 @@ void CATcpServer::runTcpReceive()
 	void* pvBuf = pBuf;
 
 	nSocketFD = getClientSocketFD(getThreadID());
-	if(0 >= nSocketFD)
+	if (0 >= nSocketFD)
 	{
 		_log("[CATcpServer] runTcpReceive Fail, Invalid Socket FD");
 		sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
@@ -197,12 +195,12 @@ void CATcpServer::runTcpReceive()
 
 	sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_CONNECT, nSocketFD, 0, 0);
 
-	while(1)
+	while (1)
 	{
 		memset(pBuf, 0, sizeof(pBuf));
 		result = socketrecv(nSocketFD, &pvBuf, clientSockaddr);
 
-		if(0 >= result)
+		if (0 >= result)
 		{
 			sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
 			socketClose(nSocketFD);
@@ -222,9 +220,9 @@ unsigned long int CATcpServer::getClientSocketFD(unsigned long int unThreadId)
 {
 	map<unsigned long int, SOCKET_CLIENT>::iterator it;
 
-	for(it = mapClient.begin(); mapClient.end() != it; ++it)
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
-		if(it->second.ulReceiveThreadID == unThreadId)
+		if (it->second.ulReceiveThreadID == unThreadId)
 		{
 			return it->first;
 		}
@@ -241,10 +239,10 @@ void CATcpServer::checkIdle()
 {
 	map<unsigned long int, SOCKET_CLIENT>::iterator it;
 	double diff;
-	for(it = mapClient.begin(); mapClient.end() != it; ++it)
+	for (it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
 		diff = difftime(nowSecond(), it->second.ulAliveTime);
-		if(IDLE_TIMEOUT < (int) diff)
+		if (IDLE_TIMEOUT < (int) diff)
 		{
 			_log("[CATcpServer] Socket Client: %d idle: %d seconds", it->first, (int) diff);
 			closeClient(it->first);
@@ -255,7 +253,7 @@ void CATcpServer::checkIdle()
 void CATcpServer::eraseClient(unsigned long int ulSocketFD)
 {
 	mutexLock();
-	if(mapClient.find(ulSocketFD) != mapClient.end())
+	if (mapClient.find(ulSocketFD) != mapClient.end())
 	{
 		mapClient.erase(ulSocketFD);
 	}
@@ -265,7 +263,7 @@ void CATcpServer::eraseClient(unsigned long int ulSocketFD)
 void CATcpServer::updateClientAlive(unsigned long int ulSocketFD)
 {
 	mutexLock();
-	if(mapClient.find(ulSocketFD) != mapClient.end())
+	if (mapClient.find(ulSocketFD) != mapClient.end())
 	{
 		mapClient[ulSocketFD].ulAliveTime = nowSecond();
 	}
@@ -277,11 +275,11 @@ void CATcpServer::updateClientAlive(unsigned long int ulSocketFD)
  */
 void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch(nCommand)
+	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
 		mapClient[nId].ulReceiveThreadID = createThread(threadTcpReceive, this);
-		if(0 >= mapClient[nId].ulReceiveThreadID)
+		if (0 >= mapClient[nId].ulReceiveThreadID)
 		{
 			eraseClient(nId);
 			socketClose(nId);
@@ -297,6 +295,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
 		threadJoin(nId);
+		eraseClient(getClientSocketFD(nId));
 		_log("[CATcpServer] Receive Thread Joined, Thread ID: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
@@ -305,7 +304,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		onReceive(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_TIMER:
-		switch(nId)
+		switch (nId)
 		{
 		case IDLE_TIMER:
 			checkIdle();
