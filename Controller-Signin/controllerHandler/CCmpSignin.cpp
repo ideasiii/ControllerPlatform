@@ -21,6 +21,7 @@ CCmpSignin::~CCmpSignin()
 int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_log("[CCmpSignin] ");
+
 	return 0;
 }
 
