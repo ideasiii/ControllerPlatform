@@ -5,26 +5,39 @@
  *      Author: Jugo
  */
 
+#include <map>
 #include "common.h"
 #include "LogHandler.h"
 #include "CController.h"
-#include "CSignin.h"
-#include "CConfig.h"
-#include "event.h"
 #include "CCmpSignin.h"
+#include "event.h"
+#include "callback.h"
+#include "CMysqlHandler.h"
+#include "JSONObject.h"
+
+using namespace std;
+
+#define COMMAND_ON_SIGNIN		9000
 
 static CController * controller = 0;
 
+/** Callback Function send SQL to message queue then run it **/
+void _onSignin(void* param)
+{
+	string strParam = reinterpret_cast<const char*>(param);
+	controller->sendMessage(EVENT_FILTER_CONTROLLER, COMMAND_ON_SIGNIN, 0, strParam.length(), strParam.c_str());
+}
+
 CController::CController() :
-		CObject(), signin(CSignin::getInstance()), cmpSignin(new CCmpSignin())
+		CObject(), cmpSignin(new CCmpSignin()), mysql(new CMysqlHandler)
 {
 
 }
 
 CController::~CController()
 {
+	delete mysql;
 	delete cmpSignin;
-	delete signin;
 }
 
 CController* CController::getInstance()
@@ -40,28 +53,23 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch(nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_SIGNIN_RECEIVER:
-		signin->onReceiveMessage(nId, nDataLen, pData);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DISPATCHER:
-		signin->setClient(nId, true);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DISPATCHER:
-		signin->setClient(nId, false);
+	case COMMAND_ON_SIGNIN:
+		onSignin((char *) const_cast<void*>(pData));
 		break;
 	}
 }
 
 void CController::onTimer(int nId)
 {
-	_DBG("[CController] onTimer Id: %d", nId);
-	//this->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_TIMER, TIMER_CHECK_DISPATCH_CLIENT_ALIVE, 0, 0);
+
 }
 
 int CController::startSignin(const char *szIP, const int nPort, const int nMsqId)
 {
 	if(cmpSignin->start(szIP, nPort))
 	{
+		cmpSignin->setCallback(CB_RUN_MYSQL_SQL, _onSignin);
+		cmpSignin->idleTimeout(false, 30);
 		return TRUE;
 	}
 	return FALSE;
@@ -70,6 +78,63 @@ int CController::startSignin(const char *szIP, const int nPort, const int nMsqId
 int CController::stop()
 {
 	cmpSignin->stop();
-	signin->stopServer();
 	return FALSE;
+}
+
+void CController::setMysql(const char *szHost, const char *szPort, const char *szDB, const char *szUser,
+		const char *szPassword)
+{
+	extern map<string, string> mapMysqlSetting;
+	mapMysqlSetting["host"] = szHost;
+	mapMysqlSetting["port"] = szPort;
+	mapMysqlSetting["database"] = szDB;
+	mapMysqlSetting["user"] = szUser;
+	mapMysqlSetting["password"] = szPassword;
+}
+
+void CController::runMysqlExec(std::string strSQL)
+{
+	_log("[CController] Run Mysql SQL: %s", strSQL.c_str());
+	extern map<string, string> mapMysqlSetting;
+
+	int nRet = mysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
+			mapMysqlSetting["password"]);
+
+	if(FALSE == nRet)
+	{
+		_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
+		return;
+	}
+
+	if(FALSE == mysql->sqlExec(strSQL))
+	{
+		if(1062 != mysql->getLastErrorNo())
+			_log("[CController] Mysql sqlExec Error: %s", mysql->getLastError().c_str());
+	}
+
+	mysql->close();
+}
+
+void CController::onSignin(const char *szData)
+{
+	if(0 == szData)
+		return;
+
+	JSONObject jsonData(szData);
+	if(jsonData.isValid())
+	{
+		if(!jsonData.getString("id").empty())
+		{
+			string strSQL =
+					"INSERT INTO tracker_user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account) VALUES('"
+							+ jsonData.getString("id") + "','" + jsonData.getString("app_id") + "','"
+							+ jsonData.getString("mac") + "','" + jsonData.getString("os") + "','"
+							+ jsonData.getString("phone") + "','" + jsonData.getString("fb_id") + "','"
+							+ jsonData.getString("fb_name") + "','" + jsonData.getString("fb_email") + "','"
+							+ jsonData.getString("fb_account") + "','" + jsonData.getString("g_account") + "','"
+							+ jsonData.getString("t_account") + "');";
+			runMysqlExec(strSQL);
+		}
+	}
+	jsonData.release();
 }

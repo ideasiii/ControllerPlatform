@@ -25,7 +25,6 @@ public:
 	int start(const char* cszAddr, short nPort);
 	void stop();
 	void closeClient(int nClientFD);
-	void setIdleTimeout(int nSeconds);
 
 	/**
 	 * Below function is called by thread
@@ -40,13 +39,15 @@ public:
 	 */
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	void setIdleTimeout(int nSeconds);
+	void runIdleTimeout(bool bRun);
 
 	/**
 	 * Overload function
 	 */
 protected:
 	virtual void onTimer(int nId) = 0;
-	virtual void onReceive(unsigned long int nId, int nDataLen, const void* pData) = 0;
+	virtual void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData) = 0;
 
 private:
 	void checkIdle();
@@ -60,3 +61,4 @@ private:
 	unsigned long int getClientThreadID(unsigned long int unSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 };
+

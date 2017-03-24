@@ -62,19 +62,9 @@ public:
 	void closeMsq();
 
 protected:
-	// virtual function
-	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
-	{
-		printf("[CObject] onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x\n", nEvent, nCommand,
-				nId, nDataLen, *(unsigned int *) pData);
-	}
-	;
-
-	virtual void onTimer(int nId)
-	{
-		printf("[CObject] onTimer Id:%d\n", nId);
-	}
-	;
+	// virtual function, child must overload
+	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) = 0;
+	virtual void onTimer(int nId) = 0;
 
 private:
 	CMessageHandler *messageHandler;

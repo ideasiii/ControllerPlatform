@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
 	printf("This process is a Controller testing process!.\n");
 
-	if (argc < 3)
+	if(argc < 3)
 	{
 		fprintf( stderr, "Usage:  %s <IP> <Remote Port>  ...\n", argv[0]);
 		exit(1);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	printf("Connect IP:%s Port:%d.\n", strIP.c_str(), nPort);
 
 	CCmpTest *cmpTest = new CCmpTest();
-	if (!cmpTest->connectController(strIP, nPort))
+	if(!cmpTest->connectController(strIP, nPort))
 		exit(0);
 
 	CEvilTest *evil = new CEvilTest(strIP.c_str(), nPort);
@@ -110,10 +110,10 @@ int main(int argc, char* argv[])
 	epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
 	string strInput;
 
-	while (running)
+	while(running)
 	{
 		noEvents = epoll_wait(epfd, events, FD_SETSIZE, -1);
-		for (i = 0; i < noEvents; ++i)
+		for(i = 0; i < noEvents; ++i)
 		{
 			memset(buffer, 0, BUFSIZE);
 			fgets(buffer, 1024, stdin);
@@ -121,10 +121,10 @@ int main(int argc, char* argv[])
 
 			nCommand = mapCommand[strInput];
 
-			switch (nCommand)
+			switch(nCommand)
 			{
 			case EVIL:
-				evil->start(10000);
+				evil->start(500);
 				break;
 			case BYE:
 				printf("Bye.\n");
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 				break;
 			case HELP:
 				printf("Test CMP Use:\n");
-				for (map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+				for(map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
 				{
 					cout << (*i).first << endl;
 				}

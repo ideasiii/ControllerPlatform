@@ -45,9 +45,12 @@ static int snCount = 0;
 
 void CEvilTest::run()
 {
-
+	char bufId[12];
+	string strId;
 	int nSocketFD;
 	int nSeq = ++snCount;
+	sprintf(bufId, "%d", nSeq);
+	strId = bufId;
 
 	if(0x7FFFFFFF <= snCount)
 		snCount = 0;
@@ -91,7 +94,8 @@ void CEvilTest::run()
 	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
 
 	string strSignup =
-			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
+			"{\"id\": \"" + strId
+					+ "\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 
 	int net_type = htonl(TYPE_MOBILE_SERVICE);
 	memcpy(pIndex, (const char*) &net_type, 4);

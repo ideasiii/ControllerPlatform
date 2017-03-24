@@ -15,18 +15,21 @@ class CCmpServer: public CATcpServer
 public:
 	CCmpServer();
 	virtual ~CCmpServer();
+	int request(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
+	int response(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
+	void idleTimeout(bool bRun, int nIdleTime);
 
 protected:
 	void onTimer(int nId);
-	void onReceive(unsigned long int nId, int nDataLen, const void* pData);
+	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
 
 protected:
-	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
+	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *szData)
 	{
 		return 0;
 	}
 	;
-	virtual int onAccesslog(int nSocket, int nCommand, int nSequence, const void *pData)
+	virtual int onAccesslog(int nSocket, int nCommand, int nSequence, const void *szData)
 	{
 		return 0;
 	}

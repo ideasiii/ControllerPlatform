@@ -77,7 +77,6 @@ int CATcpServer::start(const char* cszAddr, short nPort)
 			}
 			createThread(threadCATcpServerMessageReceive, this, "CATcpServer Message Receive");
 			createThread(threadTcpAccept, this, "CATcpServer Socket Accept Thread");
-			setTimer(IDLE_TIMER, 3, 1, mnMsqKey);
 			_log("[CATcpServer] Create Server Success Socket FD: %lu", nSocketFD);
 		}
 		else
@@ -199,8 +198,6 @@ void CATcpServer::runTcpReceive()
 
 		if(0 >= result)
 		{
-//			sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
-//			socketClose(nSocketFD);
 			break;
 		}
 		sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, result, pBuf);
@@ -208,7 +205,6 @@ void CATcpServer::runTcpReceive()
 
 	delete clientSockaddr;
 	sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
-	//sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, NULL);
 	threadExit();
 }
 
@@ -238,6 +234,14 @@ unsigned long int CATcpServer::getClientThreadID(unsigned long int unSocketFD)
 void CATcpServer::setIdleTimeout(int nSeconds)
 {
 	IDLE_TIMEOUT = nSeconds;
+}
+
+void CATcpServer::runIdleTimeout(bool bRun)
+{
+	if(bRun && (0 < IDLE_TIMEOUT))
+		setTimer(IDLE_TIMER, 3, 1, mnMsqKey);
+	else
+		killTimer(IDLE_TIMER);
 }
 
 void CATcpServer::checkIdle()

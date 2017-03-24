@@ -65,6 +65,10 @@ void runService()
 				nInit = FALSE;
 				_log("[Controller] Start Dispatcher Service Fail");
 			}
+
+			controller->setMysql(config->getValue("MYSQL", "host").c_str(), config->getValue("MYSQL", "port").c_str(),
+					config->getValue("MYSQL", "database").c_str(), config->getValue("MYSQL", "user").c_str(),
+					config->getValue("MYSQL", "password").c_str());
 		}
 		else
 		{

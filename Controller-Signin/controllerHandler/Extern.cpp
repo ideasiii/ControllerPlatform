@@ -9,4 +9,5 @@
 #include <string>
 using namespace std;
 
+map<string, string> mapPsqlSetting;
 map<string, string> mapMysqlSetting;

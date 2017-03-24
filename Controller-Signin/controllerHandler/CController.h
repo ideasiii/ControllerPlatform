@@ -8,9 +8,10 @@
 #pragma once
 
 #include "CObject.h"
+#include <string>
 
-class CSignin;
 class CCmpSignin;
+class CMysqlHandler;
 
 class CController: public CObject
 {
@@ -19,6 +20,9 @@ public:
 	static CController* getInstance();
 	int startSignin(const char *szIP, const int nPort, const int nMsqId);
 	int stop();
+	void setMysql(const char *szHost, const char *szPort, const char *szDB, const char *szUser, const char *szPassword);
+	void runMysqlExec(std::string strSQL);
+	void onSignin(const char *szData);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -26,7 +30,7 @@ protected:
 
 private:
 	explicit CController();
-	CSignin *signin;
 	CCmpSignin *cmpSignin;
+	CMysqlHandler *mysql;
 
 };

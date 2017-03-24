@@ -175,6 +175,9 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 
 int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 {
+	static int snId = 0;
+	char bufId[12];
+	string strId;
 	int nNum = 0;
 	int net_type = 0;
 	int nBody_len = 0;
@@ -182,6 +185,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	CMP_PACKET packet;
 	char * pIndex;
 
+	sprintf(bufId, "%d", ++snId);
+	strId = bufId;
 	packet.cmpHeader.command_id = htonl(nCommand);
 	packet.cmpHeader.command_status = htonl( STATUS_ROK);
 	packet.cmpHeader.sequence_number = htonl(nSequence);
@@ -193,7 +198,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strAccessLog =
 			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"AAAA1472030569161FFFF\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strSignup =
-			"{\"id\": \"1234567890\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
+			"{\"id\": \"" + strId
+					+ "\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 	string strAppId = "123456789";
 	string strMAC = "000c29d0013c";
 	string strBind = "{\"id\":\"000c29d0013c\"}";

@@ -29,7 +29,7 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 {
 	close();
 	mpMySQL = mysql_init(NULL);
-	if (NULL == mpMySQL)
+	if(NULL == mpMySQL)
 	{
 		setError("MySQL Init Fail");
 		return FALSE;
@@ -43,9 +43,11 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
+	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
+			strPassword.c_str(), strDB.c_str());
 	mpMySQL = mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL,
 			0);
-	if ( NULL == mpMySQL)
+	if( NULL == mpMySQL)
 	{
 		setError("MySQL Connect Fail");
 		return FALSE;
@@ -57,7 +59,7 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 
 void CMysqlHandler::close()
 {
-	if (NULL != mpMySQL)
+	if(NULL != mpMySQL)
 	{
 		mysql_close(mpMySQL);
 		mpMySQL = NULL;
@@ -70,7 +72,7 @@ void CMysqlHandler::close()
  */
 void CMysqlHandler::setError(string strMsg)
 {
-	if (NULL != mpMySQL)
+	if(NULL != mpMySQL)
 	{
 		mstrLastError = mysql_error(mpMySQL);
 		mnLastErrorNo = mysql_errno(mpMySQL);
@@ -90,14 +92,14 @@ int CMysqlHandler::getLastErrorNo()
 int CMysqlHandler::sqlExec(string strSQL)
 {
 
-	if ( NULL == mpMySQL)
+	if( NULL == mpMySQL)
 	{
 		setError("MySQL Connector Invalid");
 		return FALSE;
 	}
 
 	//如果查询成功，返回0。如果出现错误，返回非0值。
-	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
+	if(mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
 		setError("Query Error");
 		return FALSE;
@@ -108,7 +110,7 @@ int CMysqlHandler::sqlExec(string strSQL)
 
 int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 {
-	if ( NULL == mpMySQL)
+	if( NULL == mpMySQL)
 	{
 		setError("MySQL Connector Invalid");
 		return FALSE;
@@ -116,7 +118,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 
 	// mysql_query()執行成功返回0，失敗返回非0值。
 	_log("[CMysqlHandler] mysql_query: %s", strSQL.c_str());
-	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
+	if(mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
 		setError("Query Error");
 		return FALSE;
@@ -124,7 +126,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 	else
 	{
 		MYSQL_RES *result = mysql_use_result(mpMySQL); // 獲取結果集
-		if (NULL == result)
+		if(NULL == result)
 		{
 			setError("MySQL Result Fail");
 			return FALSE;
@@ -138,20 +140,20 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		string strItem;
 		string strField;
 
-		while ((row = mysql_fetch_row(result)) != 0)
+		while((row = mysql_fetch_row(result)) != 0)
 		{
 			// 獲取下一行
 			//row = mysql_fetch_row(result);
-			if (row <= 0)
+			if(row <= 0)
 			{
 				break;
 			}
 			// mysql_num_fields()返回結果集中的字段數
 			dataItem.clear();
-			for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
+			for(unsigned int j = 0; j < mysql_num_fields(result); ++j)
 			{
 				//printf("[CMysqlHandler] Query Result: %s : %s\n", fields[j].name, row[j]);
-				if (0 != row[j])
+				if(0 != row[j])
 				{
 					strField = fields[j].name;
 					strItem = row[j];
@@ -170,7 +172,7 @@ int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sF
 {
 	string strSQL;
 
-	if ( NULL == mpMySQL)
+	if( NULL == mpMySQL)
 	{
 		setError("MySQL Connector Invalid");
 		return FALSE;
@@ -178,7 +180,7 @@ int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sF
 
 	// mysql_query()執行成功返回0，失敗返回非0值。
 	strSQL = "SELECT * FROM " + strTableName + " LIMIT 1";
-	if (mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
+	if(mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
 		setError("Query Error");
 		return FALSE;
@@ -186,7 +188,7 @@ int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sF
 	else
 	{
 		MYSQL_RES *result = mysql_use_result(mpMySQL); // 獲取結果集
-		if (NULL == result)
+		if(NULL == result)
 		{
 			setError("MySQL Result Fail");
 			return FALSE;
@@ -195,7 +197,7 @@ int CMysqlHandler::getFields(std::string strTableName, std::set<std::string> &sF
 		MYSQL_FIELD *fields = mysql_fetch_fields(result); // 獲取欄位
 		MYSQL_ROW row;
 
-		for (unsigned int j = 0; j < mysql_num_fields(result); ++j)
+		for(unsigned int j = 0; j < mysql_num_fields(result); ++j)
 		{
 			sFields.insert(fields[j].name);
 		}

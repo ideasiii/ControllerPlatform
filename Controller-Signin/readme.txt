@@ -31,7 +31,10 @@ ipcs -q
 ipcrm -q [msq_id]
 
 # 檢查Thread數目
-while true; do date; ps -T -a | grep controller-disp ; sleep 1; done;
+while true; do date; ps -T -a | grep controller-sign ; ipcs -q ; sleep 3; done;
 
 # Thread 壓測
 while true; do date; ./simulator 127.0.0.1 2306 & ; sleep 1; done;
+
+# check thread & message queue
+ps -T -a | grep controller-sign; ipcs -q
