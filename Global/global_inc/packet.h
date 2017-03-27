@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <list>
+#include <string>
 #include "LogHandler.h"
 
 using namespace std;
@@ -244,7 +245,7 @@ static int msnSequence = 0x00000000;
 __attribute__ ((unused)) inline static int getSequence()
 {
 	++msnSequence;
-	if(0x7FFFFFFF <= msnSequence)
+	if (0x7FFFFFFF <= msnSequence)
 		msnSequence = 0x00000001;
 	return msnSequence;
 }

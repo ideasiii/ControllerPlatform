@@ -13,7 +13,7 @@
 
 using namespace std;
 
-static string RESP_DISPATCH =
+static const char* RESP_DISPATCH =
 		"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}";
 
 static CDispatcher * dispatcher = 0;
@@ -39,7 +39,8 @@ CDispatcher::~CDispatcher()
 
 int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
 {
-	return response(nSocket, nCommand, STATUS_ROK, nSequence, RESP_DISPATCH.c_str());
+	_log("[CDispatcher] onInitial Socket[%d]", nSocket);
+	return response(nSocket, nCommand, STATUS_ROK, nSequence, RESP_DISPATCH);
 }
 
 int ClientReceive(int nSocketFD, int nDataLen, const void *pData)

@@ -6,6 +6,7 @@
  */
 
 #include <netinet/in.h>
+#include <string>
 #include "CCmpServer.h"
 #include "LogHandler.h"
 #include "packet.h"
@@ -45,13 +46,13 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-				"[CCmpServer] CMP Response ", nSocketFD);
+				"[CCmpServer] Response ", nSocketFD);
 		return;
 	}
 	else
 	{
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-				"[CCmpServer] CMP Request ", nSocketFD);
+				"[CCmpServer] Request ", nSocketFD);
 	}
 
 	map<int, MemFn>::iterator iter;
@@ -84,7 +85,7 @@ int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, c
 
 	if (szData)
 	{
-		packet.cmpBodyUnlimit.cmpdata = new char(strlen(szData) + 1);
+		packet.cmpBodyUnlimit.cmpdata = new char [strlen(szData) + 1];
 		pIndex = packet.cmpBodyUnlimit.cmpdata;
 		memcpy(pIndex, szData, strlen(szData));
 		pIndex += strlen(szData);
@@ -92,7 +93,7 @@ int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, c
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
-		delete packet.cmpBodyUnlimit.cmpdata;
+		//delete packet.cmpBodyUnlimit.cmpdata;
 	}
 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
@@ -125,15 +126,12 @@ int CCmpServer::response(int nSocket, int nCommand, int nStatus, int nSequence, 
 
 	if (szData)
 	{
-		packet.cmpBodyUnlimit.cmpdata = new char(strlen(szData) + 1);
-		pIndex = packet.cmpBodyUnlimit.cmpdata;
-		memcpy(pIndex, szData, strlen(szData));
+		packet.cmpBodyUnlimit.cmpdata = new char [strlen(szData) + 1];
 		pIndex += strlen(szData);
 		nBody_len += strlen(szData);
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
-		delete packet.cmpBodyUnlimit.cmpdata;
 	}
 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
