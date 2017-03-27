@@ -69,7 +69,7 @@ int CController::startSignin(const char *szIP, const int nPort, const int nMsqId
 	if(cmpSignin->start(szIP, nPort))
 	{
 		cmpSignin->setCallback(CB_RUN_MYSQL_SQL, _onSignin);
-		cmpSignin->idleTimeout(false, 30);
+		cmpSignin->idleTimeout(true, 30);
 		return TRUE;
 	}
 	return FALSE;

@@ -24,6 +24,11 @@ protected:
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
 
 protected:
+	virtual int onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
+	{
+		return 0;
+	}
+	;
 	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *szData)
 	{
 		return 0;

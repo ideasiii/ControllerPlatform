@@ -21,7 +21,6 @@ public:
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-	void onTimer(int nId);
 
 private:
 	explicit CController();

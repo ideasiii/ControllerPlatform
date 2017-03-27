@@ -14,8 +14,6 @@
 
 static CController * controller = 0;
 
-//#define TIMER_CHECK_DISPATCH_CLIENT_ALIVE 777
-
 CController::CController() :
 		CObject(), dispatcher(CDispatcher::getInstance())
 {
@@ -29,7 +27,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if(0 == controller)
+	if (0 == controller)
 	{
 		controller = new CController();
 	}
@@ -38,33 +36,14 @@ CController* CController::getInstance()
 
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch(nCommand)
-	{
-	case EVENT_COMMAND_SOCKET_TCP_DISPATCHER_RECEIVER:
-		dispatcher->onReceiveMessage(nId, nDataLen, pData);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DISPATCHER:
-		dispatcher->setClient(nId, true);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DISPATCHER:
-		dispatcher->setClient(nId, false);
-		break;
-	case EVENT_COMMAND_TIMER:
-		break;
-	}
-}
 
-void CController::onTimer(int nId)
-{
-	_DBG("[CController] onTimer Id: %d", nId);
-	//this->sendMessage(EVENT_FILTER_CONTROLLER, EVENT_COMMAND_TIMER, TIMER_CHECK_DISPATCH_CLIENT_ALIVE, 0, 0);
 }
 
 int CController::startDispatcher(const char *szIP, const int nPort, const int nMsqId)
 {
-	if(dispatcher->startServer(szIP, nPort, nMsqId))
+	if (dispatcher->start(szIP, nPort))
 	{
-		//setTimer(TIMER_CHECK_DISPATCH_CLIENT_ALIVE, 5, 10);
+		dispatcher->idleTimeout(true, 30);
 		return TRUE;
 	}
 	return FALSE;
@@ -72,7 +51,6 @@ int CController::startDispatcher(const char *szIP, const int nPort, const int nM
 
 int CController::stop()
 {
-	dispatcher->stopServer();
-//	killTimer (TIMER_CHECK_DISPATCH_CLIENT_ALIVE);
+	dispatcher->stop();
 	return FALSE;
 }

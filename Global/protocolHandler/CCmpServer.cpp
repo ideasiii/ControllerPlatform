@@ -14,6 +14,7 @@ using namespace std;
 
 CCmpServer::CCmpServer()
 {
+	mapFunc[initial_request] = &CCmpServer::onInitial;
 	mapFunc[sign_up_request] = &CCmpServer::onSignin;
 	mapFunc[access_log_request] = &CCmpServer::onAccesslog;
 }
@@ -41,7 +42,7 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	cmpHeader.command_status = ntohl(pHeader->command_status);
 	cmpHeader.sequence_number = ntohl(pHeader->sequence_number);
 
-	if( generic_nack == (generic_nack & cmpHeader.command_id))
+	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 				"[CCmpServer] CMP Response ", nSocketFD);
@@ -56,7 +57,7 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	map<int, MemFn>::iterator iter;
 	iter = mapFunc.find(cmpHeader.command_id);
 
-	if(0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
+	if (0x000000FF < cmpHeader.command_id || 0x00000000 >= cmpHeader.command_id || mapFunc.end() == iter)
 	{
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, 0);
 		return;
@@ -81,7 +82,7 @@ int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, c
 	packet.cmpHeader.command_status = htonl(nStatus);
 	packet.cmpHeader.sequence_number = htonl(nSequence);
 
-	if(szData)
+	if (szData)
 	{
 		packet.cmpBodyUnlimit.cmpdata = new char(strlen(szData) + 1);
 		pIndex = packet.cmpBodyUnlimit.cmpdata;
@@ -100,7 +101,7 @@ int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, c
 
 	printPacket(nCommand, nStatus, nSequence, nResult, "[CCmpServer] request", nSocket);
 
-	if(0 >= nResult)
+	if (0 >= nResult)
 	{
 		_log("[CCmpServer] CMP request Fail socket: %d", nSocket);
 	}
@@ -122,7 +123,7 @@ int CCmpServer::response(int nSocket, int nCommand, int nStatus, int nSequence, 
 	packet.cmpHeader.command_status = htonl(nStatus);
 	packet.cmpHeader.sequence_number = htonl(nSequence);
 
-	if(szData)
+	if (szData)
 	{
 		packet.cmpBodyUnlimit.cmpdata = new char(strlen(szData) + 1);
 		pIndex = packet.cmpBodyUnlimit.cmpdata;
@@ -140,7 +141,7 @@ int CCmpServer::response(int nSocket, int nCommand, int nStatus, int nSequence, 
 	nResult = socketSend(nSocket, &packet, nTotal_len);
 	printPacket(nCommand | generic_nack, nStatus, nSequence, nResult, "[CCmpServer] response", nSocket);
 
-	if(0 >= nResult)
+	if (0 >= nResult)
 	{
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
 	}
