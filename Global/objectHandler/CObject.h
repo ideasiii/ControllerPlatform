@@ -64,7 +64,10 @@ public:
 protected:
 	// virtual function, child must overload
 	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) = 0;
-	virtual void onTimer(int nId) = 0;
+	virtual void onTimer(int nId)
+	{
+	}
+	;
 
 private:
 	CMessageHandler *messageHandler;
