@@ -15,7 +15,7 @@ public:
 	CEvilTest(const char *szIP, int nPort);
 	virtual ~CEvilTest();
 	void start(int nCount);
-	void run();
+	void run(int nCommand);
 
 private:
 	char mszIP[16];

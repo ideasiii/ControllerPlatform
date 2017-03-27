@@ -17,7 +17,7 @@
 void *threadEvilClient(void *argv)
 {
 	CEvilTest* ss = reinterpret_cast<CEvilTest*>(argv);
-	ss->run();
+	ss->run(initial_request);
 	return 0;
 }
 
@@ -35,7 +35,7 @@ CEvilTest::~CEvilTest()
 
 void CEvilTest::start(int nCount)
 {
-	for(int i = 0; i < nCount; ++i)
+	for (int i = 0; i < nCount; ++i)
 	{
 		thread->createThread(threadEvilClient, this);
 	}
@@ -43,7 +43,7 @@ void CEvilTest::start(int nCount)
 
 static int snCount = 0;
 
-void CEvilTest::run()
+void CEvilTest::run(int nCommand)
 {
 	char bufId[12];
 	string strId;
@@ -52,13 +52,13 @@ void CEvilTest::run()
 	sprintf(bufId, "%d", nSeq);
 	strId = bufId;
 
-	if(0x7FFFFFFF <= snCount)
+	if (0x7FFFFFFF <= snCount)
 		snCount = 0;
 
 	printf("Connect: %s : %d %d\n", mszIP, mnPort, nSeq);
 
 	struct sockaddr_in hostAddr;
-	if((nSocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+	if ((nSocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		printf("TCP Socket Create Fail!!\n");
 		thread->threadExit();
@@ -68,7 +68,7 @@ void CEvilTest::run()
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr(mszIP);
 	hostAddr.sin_port = htons(mnPort);
-	if(connect(nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
+	if (connect(nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
 	{
 		printf("TCP Socket Connect Fail!!\n");
 		thread->threadExit();
@@ -86,7 +86,7 @@ void CEvilTest::run()
 	void* pBody = &packet.cmpBody;
 	char * pIndex;
 
-	packet.cmpHeader.command_id = htonl(sign_up_request);
+	packet.cmpHeader.command_id = htonl(nCommand);
 	packet.cmpHeader.command_status = htonl(STATUS_ROK);
 	packet.cmpHeader.sequence_number = htonl(nSeq);
 
@@ -97,16 +97,34 @@ void CEvilTest::run()
 			"{\"id\": \"" + strId
 					+ "\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 
-	int net_type = htonl(TYPE_MOBILE_SERVICE);
-	memcpy(pIndex, (const char*) &net_type, 4);
-	pIndex += 4;
-	nBody_len += 4;
-	memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
-	pIndex += strSignup.length();
-	nBody_len += strSignup.length();
-	memcpy(pIndex, "\0", 1);
-	++pIndex;
-	++nBody_len;
+	string strInit =
+			"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}";
+
+	switch (nCommand)
+	{
+	case initial_request:
+		memcpy(pIndex, strInit.c_str(), strInit.length()); //	sign up data
+		pIndex += strInit.length();
+		nBody_len += strInit.length();
+		memcpy(pIndex, "\0", 1);
+		++pIndex;
+		++nBody_len;
+		break;
+	case sign_up_request:
+	{
+		int net_type = htonl(TYPE_MOBILE_SERVICE);
+		memcpy(pIndex, (const char*) &net_type, 4);
+		pIndex += 4;
+		nBody_len += 4;
+		memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
+		pIndex += strSignup.length();
+		nBody_len += strSignup.length();
+		memcpy(pIndex, "\0", 1);
+		++pIndex;
+		++nBody_len;
+	}
+		break;
+	}
 
 	int nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
@@ -114,7 +132,7 @@ void CEvilTest::run()
 
 	int nRet = send(nSocketFD, pbuf, nTotal_len, 0);
 
-	if(nRet == nTotal_len)
+	if (nRet == nTotal_len)
 	{
 		pHeader = (CMP_HEADER *) pbuf;
 
@@ -130,7 +148,7 @@ void CEvilTest::run()
 	memset(pHeader, 0, sizeof(CMP_HEADER));
 	nRet = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL);
 
-	if(sizeof(CMP_HEADER) == nRet)
+	if (sizeof(CMP_HEADER) == nRet)
 	{
 		int nCommand = ntohl(packet.cmpHeader.command_id);
 		int nStatus = ntohl(packet.cmpHeader.command_status);
@@ -139,10 +157,10 @@ void CEvilTest::run()
 		printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
 		int nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
-		if(0 < nBodyLen)
+		if (0 < nBodyLen)
 		{
 			nRet = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
-			if(nRet == nBodyLen)
+			if (nRet == nBodyLen)
 			{
 
 				printf("[Socket Client] socket receive CMP Body: %s\n", static_cast<char*>(pBody));
