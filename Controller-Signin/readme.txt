@@ -37,4 +37,4 @@ while true; do date; ps -T -a | grep controller-sign ; ipcs -q ; sleep 3; done;
 while true; do date; ./simulator 127.0.0.1 2306 & ; sleep 1; done;
 
 # check thread & message queue
-ps -T -a | grep controller-sign; ipcs -q
+while true; do date; echo '------ Thread Count --------';ps -T -a | grep controller-sign -c; ipcs -q; ps aux | grep controller-signin | grep -v 'grep'; sleep 1; done;
