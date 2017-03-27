@@ -303,6 +303,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		if(ulThreadID)
 			threadJoin(ulThreadID);
 		eraseClient(nId);
+		socketClose(nId);
 		_log("[CATcpServer] Socket Client Disconnect FD: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_COLSE: // Server close Client
@@ -313,6 +314,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 			threadJoin(ulThreadID);
 		}
 		eraseClient(nId);
+		socketClose(nId);
 		break;
 	case EVENT_COMMAND_THREAD_EXIT:
 		threadJoin(nId);
