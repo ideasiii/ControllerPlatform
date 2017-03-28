@@ -89,40 +89,9 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	CMP_HEADER *pHeader;
 	char *pIndex;
 
-<<<<<<< HEAD
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	packet.cmpHeader.command_id = htonl(nCommand);
-	packet.cmpHeader.command_status = htonl(nStatus);
-	packet.cmpHeader.sequence_number = htonl(nSequence);
-
 	if(szData)
 	{
-		packet.cmpBodyUnlimit.cmpdata = new char[strlen(szData) + 1];
-		pIndex = packet.cmpBodyUnlimit.cmpdata;
-		memcpy(pIndex, szData, strlen(szData));
-		pIndex += strlen(szData);
-		nBody_len += strlen(szData);
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		//delete packet.cmpBodyUnlimit.cmpdata;
-	}
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-	nResult = socketSend(nSocket, &packet, nTotal_len);
-
-	printPacket(nCommand, nStatus, nSequence, nResult, "[CCmpServer] request", nSocket);
-
-	if(0 >= nResult)
-	{
-		_log("[CCmpServer] CMP request Fail socket: %d", nSocket);
-=======
-	if (szData)
-	{
 		nDataLen = strlen(szData) + 1;
->>>>>>> c39beb7d798bfccc3ddb01425b4ce4db807c8a42
 	}
 
 	char buffer[sizeof(CMP_HEADER) + nDataLen];
@@ -135,25 +104,15 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	pHeader->command_status = htonl(nStatus);
 	pHeader->sequence_number = htonl(nSequence);
 
-<<<<<<< HEAD
-	if(szData)
-	{
-//		packet.cmpBodyUnlimit.cmpdata = new char[strlen(szData) + 1];
-//		memset(packet.cmpBodyUnlimit.cmpdata, 0, strlen(szData));
-		pIndex = packet.cmpBody.cmpdata;
-		memcpy(packet.cmpBody.cmpdata, szData, strlen(szData));
-=======
-	if (nDataLen)
+	if(nDataLen)
 	{
 		pIndex += sizeof(CMP_HEADER);
 		memcpy(pIndex, szData, strlen(szData));
->>>>>>> c39beb7d798bfccc3ddb01425b4ce4db807c8a42
 		pIndex += strlen(szData);
 		nBody_len += strlen(szData);
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
-		_log("[xxxxxxxx] %s", packet.cmpBody.cmpdata);
 	}
 
 	pHeader->command_length = htonl(sizeof(buffer));
@@ -164,8 +123,7 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	{
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
 	}
-//	if(szData)
-//		delete packet.cmpBodyUnlimit.cmpdata;
+
 	return nResult;
 }
 void CCmpServer::idleTimeout(bool bRun, int nIdleTime)
@@ -188,13 +146,13 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader);
-	if (sizeof(CMP_HEADER) == result)
+	if(sizeof(CMP_HEADER) == result)
 	{
 		nTotalLen = ntohl(cmpHeader.command_length);
 		nCommand = ntohl(cmpHeader.command_id);
 		nSequence = ntohl(cmpHeader.sequence_number);
 
-		if ( enquire_link_request == nCommand)
+		if( enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
@@ -202,23 +160,23 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 		char buffer[nBodyLen];
 
-		if (0 < nBodyLen)
+		if(0 < nBodyLen)
 		{
 			pBody = buffer;
 			memset(buffer, 0, sizeof(buffer));
 			result = socketrecv(nSocketFD, nBodyLen, &pBody);
-			if (result != nBodyLen)
+			if(result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
 				return 0;
 			}
 		}
 
-		if (DATA_LEN < nBodyLen) // big data
+		if(DATA_LEN < nBodyLen) // big data
 		{
 			map<int, MemFn>::iterator iter;
 			iter = mapFunc.find(nCommand);
-			if (mapFunc.end() == iter)
+			if(mapFunc.end() == iter)
 			{
 				result = response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
 			}
@@ -232,7 +190,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 			memset(pBuf, 0, sizeof(pBuf));
 			memcpy(pvBuf, pHeader, sizeof(CMP_HEADER));
-			if (nBodyLen)
+			if(nBodyLen)
 			{
 				pvBuf += sizeof(CMP_HEADER);
 				memcpy(pvBuf, pBody, nBodyLen);
@@ -248,4 +206,3 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 	return result;
 }
-
