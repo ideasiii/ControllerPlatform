@@ -25,6 +25,8 @@ public:
 	int start(const char* cszAddr, short nPort);
 	void stop();
 	void closeClient(int nClientFD);
+	int getEventId();
+	void updateClientAlive(unsigned long int ulSocketFD);
 
 	/**
 	 * Below function is called by thread
@@ -48,11 +50,11 @@ protected:
 protected:
 	virtual void onTimer(int nId) = 0;
 	virtual void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData) = 0;
+	virtual int onTcpReceive(unsigned long int nSocketFD);
 
 private:
 	void checkIdle();
 	void eraseClient(unsigned long int ulSocketFD);
-	void updateClientAlive(unsigned long int ulSocketFD);
 
 private:
 	int mnMsqKey; // Message queue key and filter ID.

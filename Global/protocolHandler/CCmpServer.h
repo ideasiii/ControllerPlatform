@@ -22,6 +22,7 @@ public:
 protected:
 	void onTimer(int nId);
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
+	int onTcpReceive(unsigned long int nSocketFD);
 
 protected:
 	virtual int onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
@@ -43,5 +44,6 @@ protected:
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);
 	std::map<int, MemFn> mapFunc;
+	int sendPacket(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
 
 };
