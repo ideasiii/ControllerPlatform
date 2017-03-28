@@ -163,7 +163,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		if(0 < nBodyLen)
 		{
 			pBody = buffer;
-			memset(buffer, 0, sizeof(buffer));
+			//memset(buffer, 0, sizeof(buffer));
 			result = socketrecv(nSocketFD, nBodyLen, &pBody);
 			if(result != nBodyLen)
 			{
@@ -172,7 +172,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 			}
 		}
 
-		if(DATA_LEN < nBodyLen) // big data
+		if(DATA_LEN < nBodyLen) // large data
 		{
 			map<int, MemFn>::iterator iter;
 			iter = mapFunc.find(nCommand);
