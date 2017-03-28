@@ -23,7 +23,9 @@ int CServerAccessLog::onAccesslog(int nSocket, int nCommand, int nSequence, cons
 {
 
 	_DBG("[CServerAccessLog]cmpAccessLogRequest");
-	sendPacket(dynamic_cast<CSocket*>(this), nSocket, nCommand | generic_nack, STATUS_ROK, nSequence, 0);
+	//sendPacket(dynamic_cast<CSocket*>(this), nSocket, nCommand | generic_nack, STATUS_ROK, nSequence, 0);
+	response( nSocket,  nCommand,  STATUS_ROK,  nSequence, 0);
+
 
 	CDataHandler<string> rData;
 
