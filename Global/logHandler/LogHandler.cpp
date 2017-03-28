@@ -39,7 +39,7 @@ inline void writeLog(int nSize, const char *pLog)
 
 		mstrLogDate = mbstr;
 		string strPath = format("%s.%s", mstrLogPath.c_str(), mbstr);
-		pstream = fopen(strPath.c_str(), "a");
+		pstream = fopen(strPath.c_str(), "a+");
 		if(pstream)
 			printf("[LogHandler] Open Log File Success, Path: %s\n", strPath.c_str());
 	}
@@ -52,7 +52,6 @@ inline void writeLog(int nSize, const char *pLog)
 
 	flockfile(pstream);
 	fwrite(pLog, 1, nSize, pstream);
-//	fwrite("\n", 1, 1, pstream);
 	fflush(pstream);
 	funlockfile(pstream);
 }
