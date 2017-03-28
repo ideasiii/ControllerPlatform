@@ -17,7 +17,7 @@ BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
-CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -53,7 +53,7 @@ init: package-u checkdirs bin/$(TARGET)
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
-	strip -s $@
+	#strip -s $@
 	@echo "\n"
 
 lib:
