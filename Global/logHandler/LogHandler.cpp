@@ -16,10 +16,6 @@
 
 using namespace std;
 
-static LogHandler* mInstance = 0;
-/* Log list*/
-__attribute__ ((unused)) static list<string> extListLog;
-
 static FILE *pstream = 0;
 static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
@@ -32,19 +28,25 @@ inline void writeLog(int nSize, const char *pLog)
 	memset(mbstr, 0, 16);
 	std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-	if(0 != mstrLogDate.compare(mbstr))
+	if (0 != mstrLogDate.compare(mbstr))
 	{
-		if(0 != pstream)
+		if (0 != pstream)
 			fclose(pstream);
 
 		mstrLogDate = mbstr;
 		string strPath = format("%s.%s", mstrLogPath.c_str(), mbstr);
 		pstream = fopen(strPath.c_str(), "a+");
-		if(pstream)
+		if (pstream)
+		{
+			if (0 != setvbuf(pstream, NULL, _IONBF, 0))
+			{
+				printf("[LogHandler] setvbuf fail \n");
+			}
 			printf("[LogHandler] Open Log File Success, Path: %s\n", strPath.c_str());
+		}
 	}
 
-	if(0 == pstream)
+	if (0 == pstream)
 	{
 		printf("[LogHandler] Error, pstream invalid\n");
 		return;
@@ -52,7 +54,6 @@ inline void writeLog(int nSize, const char *pLog)
 
 	flockfile(pstream);
 	fwrite(pLog, 1, nSize, pstream);
-	fflush(pstream);
 	funlockfile(pstream);
 }
 
@@ -73,7 +74,7 @@ void _log(const char* format, ...)
 
 	strLog = currentDateTime() + " : " + strLog + "\n";
 
-	if(mstrLogPath.empty())
+	if (mstrLogPath.empty())
 	{
 		printf("[LogHandler] Log Path not Setting\n");
 	}
@@ -88,7 +89,7 @@ void _log(const char* format, ...)
 
 void _setLogPath(const char *ppath)
 {
-	if(0 == ppath)
+	if (0 == ppath)
 	{
 		mstrLogPath = "./run.log";
 		return;
@@ -101,7 +102,7 @@ void _setLogPath(const char *ppath)
 
 void _close()
 {
-	if(0 != pstream)
+	if (0 != pstream)
 	{
 		fclose(pstream);
 		pstream = 0;
@@ -109,6 +110,10 @@ void _close()
 }
 
 //=============================Deprecated================================================//
+
+static LogHandler* mInstance = 0;
+/* Log list*/
+__attribute__ ((unused)) static list<string> extListLog;
 
 void *threadExportLog(void *argv)
 {
@@ -133,7 +138,7 @@ LogHandler::~LogHandler()
 
 LogHandler* LogHandler::getInstance()
 {
-	if(0 == mInstance)
+	if (0 == mInstance)
 	{
 		mInstance = new LogHandler();
 	}
@@ -142,7 +147,7 @@ LogHandler* LogHandler::getInstance()
 
 void LogHandler::setLogPath(std::string strPath)
 {
-	if(!strPath.empty() && 0 < strPath.length())
+	if (!strPath.empty() && 0 < strPath.length())
 	{
 		mstrLogPath = strPath;
 		mkdirp(mstrLogPath);
@@ -160,21 +165,21 @@ void LogHandler::run()
 
 	string strLogDate = "2015-07-27";
 
-	while(1)
+	while (1)
 	{
 		tdExportLog->threadSleep(1);
 		nCount = extListLog.size();
 
-		if(0 >= nCount)
+		if (0 >= nCount)
 			continue;
 
 		t = std::time( NULL);
 		memset(mbstr, 0, 16);
 		std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-		if(0 != strLogDate.compare(mbstr))
+		if (0 != strLogDate.compare(mbstr))
 		{
-			if(0 != pstream)
+			if (0 != pstream)
 				fclose(pstream);
 
 			strLogDate = mbstr;
@@ -183,12 +188,12 @@ void LogHandler::run()
 			pstream = fopen(szPath, "a");
 		}
 
-		for(unsigned long i = 0; i < nCount; ++i)
+		for (unsigned long i = 0; i < nCount; ++i)
 		{
 			strLog = *(extListLog.begin());
 			extListLog.pop_front();
 
-			if( NULL != pstream)
+			if ( NULL != pstream)
 			{
 				fprintf(pstream, "%s\n", strLog.c_str());
 				fflush(pstream);

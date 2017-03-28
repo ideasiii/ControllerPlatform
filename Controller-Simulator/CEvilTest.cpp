@@ -92,27 +92,20 @@ void CEvilTest::run(int nCommand)
 
 	pIndex = packet.cmpBody.cmpdata;
 	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
+	int net_type = htonl(TYPE_MOBILE_SERVICE);
 
 	string strSignup =
 			"{\"id\": \"" + strId
 					+ "\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
 
-	string strInit =
-			"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}";
-
 	switch (nCommand)
 	{
 	case initial_request:
-		memcpy(pIndex, strInit.c_str(), strInit.length()); //	sign up data
-		pIndex += strInit.length();
-		nBody_len += strInit.length();
-		memcpy(pIndex, "\0", 1);
-		++pIndex;
-		++nBody_len;
+		memcpy(pIndex, (const char*) &net_type, 4);
+		pIndex += 4;
+		nBody_len += 4;
 		break;
 	case sign_up_request:
-	{
-		int net_type = htonl(TYPE_MOBILE_SERVICE);
 		memcpy(pIndex, (const char*) &net_type, 4);
 		pIndex += 4;
 		nBody_len += 4;
@@ -122,7 +115,6 @@ void CEvilTest::run(int nCommand)
 		memcpy(pIndex, "\0", 1);
 		++pIndex;
 		++nBody_len;
-	}
 		break;
 	}
 
@@ -141,7 +133,7 @@ void CEvilTest::run(int nCommand)
 	}
 	else
 	{
-		printf("send package fail ###################################\n");
+		printf("send package fail\n");
 	}
 
 	memset(&packet, 0, sizeof(CMP_PACKET));
@@ -162,7 +154,6 @@ void CEvilTest::run(int nCommand)
 			nRet = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
 			if (nRet == nBodyLen)
 			{
-
 				printf("[Socket Client] socket receive CMP Body: %s\n", static_cast<char*>(pBody));
 			}
 

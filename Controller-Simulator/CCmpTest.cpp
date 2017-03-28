@@ -53,7 +53,7 @@ CCmpTest::CCmpTest() :
 
 CCmpTest::~CCmpTest()
 {
-	if(-1 != m_nSocketFD)
+	if (-1 != m_nSocketFD)
 	{
 		close(m_nSocketFD);
 		m_nSocketFD = -1;
@@ -65,7 +65,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 	closeConnect();
 
 	struct sockaddr_in hostAddr;
-	if((m_nSocketFD = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+	if ((m_nSocketFD = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		_DBG("TCP Socket Create Fail!!\n");
 		return FALSE;
@@ -74,7 +74,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr(strIP.c_str());
 	hostAddr.sin_port = htons(nPort);
-	if(connect(m_nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
+	if (connect(m_nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
 	{
 		_DBG("TCP Socket Connect Fail!!\n");
 		return FALSE;
@@ -89,7 +89,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 
 void CCmpTest::closeConnect()
 {
-	if(-1 != m_nSocketFD)
+	if (-1 != m_nSocketFD)
 	{
 		close(m_nSocketFD);
 		m_nSocketFD = -1;
@@ -105,7 +105,7 @@ int CCmpTest::sendRequest(const int nCommandId)
 {
 	int nRet = -1;
 
-	if(-1 == m_nSocketFD)
+	if (-1 == m_nSocketFD)
 	{
 		_DBG("TCP Socket invalid");
 		return nRet;
@@ -117,7 +117,7 @@ int CCmpTest::sendRequest(const int nCommandId)
 
 	int nPacketLen = formatPacket(nCommandId, &pbuf, getSequence());
 	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
-	if(nPacketLen == nRet)
+	if (nPacketLen == nRet)
 	{
 		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
@@ -137,7 +137,7 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 {
 	int nRet = -1;
 
-	if(-1 == m_nSocketFD)
+	if (-1 == m_nSocketFD)
 	{
 		_DBG("TCP Socket invalid");
 		return nRet;
@@ -146,10 +146,10 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 	string strCommand;
 	int nPacketLen = 0;
 	char buf[MAX_DATA_LEN];
-	void *pbuf;
+	char *pbuf;
 	pbuf = buf;
 
-	switch(nCommandId)
+	switch (nCommandId)
 	{
 	case AMX_BIND:
 		strCommand = "bind";
@@ -223,7 +223,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	string strSBWirelessPowerCharge =
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
 
-	switch(nCommand)
+	switch (nCommand)
 	{
 	case bind_request:
 		memcpy(pIndex, strBind.c_str(), strBind.size());
@@ -413,10 +413,10 @@ void CCmpTest::cmpPressure()
 	nPacketLen = formatPacket( access_log_request, &pbuf, getSequence());
 	pHeader = (CMP_HEADER *) pbuf;
 
-	while(1)
+	while (1)
 	{
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
-		if(nPacketLen == nRet)
+		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
 					ntohl(pHeader->command_length), "", m_nSocketFD);
@@ -437,10 +437,10 @@ void CCmpTest::ioPressure()
 	nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence());
 	pHeader = (CMP_HEADER *) pbuf;
 
-	while(1)
+	while (1)
 	{
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
-		if(nPacketLen == nRet)
+		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
 					ntohl(pHeader->command_length), "", m_nSocketFD);
@@ -470,19 +470,19 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 	void *pHeaderResp = &cmpHeader;
 	int nCommandResp;
 
-	while(1)
+	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(CMP_PACKET));
 		result = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL);
 
-		if(sizeof(CMP_HEADER) == result)
+		if (sizeof(CMP_HEADER) == result)
 		{
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
 			nStatus = ntohl(cmpPacket.cmpHeader.command_status);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
-			if( enquire_link_request == nCommand)
+			if ( enquire_link_request == nCommand)
 			{
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
@@ -494,15 +494,15 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 				continue;
 			}
 
-			if(enquire_link_response == nCommand)
+			if (enquire_link_request == (0x000000FF | nCommand))
 				continue;
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 
-			if(0 < nBodyLen)
+			if (0 < nBodyLen)
 			{
 				result = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
-				if(result != nBodyLen)
+				if (result != nBodyLen)
 				{
 					close(nSocketFD);
 					printf("[Socket Client] socket client close : %d , packet length error: %d != %d\n", nSocketFD,
@@ -519,7 +519,7 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 			break;
 		}
 
-		if(0 >= result)
+		if (0 >= result)
 		{
 			close(nSocketFD);
 			break;
@@ -548,12 +548,12 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 	char pBuf[BUF_SIZE];
 	string strPacket;
 
-	while(1)
+	while (1)
 	{
 		memset(pBuf, 0, sizeof(pBuf));
 		result = recv(nSocketFD, pBuf, BUF_SIZE, MSG_NOSIGNAL);
 
-		if(0 >= result)
+		if (0 >= result)
 		{
 			close(nSocketFD);
 			break;
@@ -561,12 +561,12 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 
 		strPacket = pBuf;
 		printf("[Socket Client] socket receive : %s\n", strPacket.c_str());
-		if(0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
+		if (0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
 		{
 			memset(pBuf, 0, sizeof(pBuf));
 			int nSize = 0;
 			string strCommand = trim(strPacket);
-			if(AMX_STATUS_CURRENT.find(strCommand) != AMX_STATUS_CURRENT.end())
+			if (AMX_STATUS_CURRENT.find(strCommand) != AMX_STATUS_CURRENT.end())
 			{
 				string strCurrent = AMX_STATUS_CURRENT[strCommand] + "\n";
 
@@ -602,7 +602,7 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 			 }
 			 */
 			result = send(nSocketFD, pBuf, nSize, MSG_NOSIGNAL);
-			if(0 >= result)
+			if (0 >= result)
 			{
 				close(nSocketFD);
 				break;
