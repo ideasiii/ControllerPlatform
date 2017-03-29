@@ -52,9 +52,9 @@ inline void writeLog(int nSize, const char *pLog)
 		return;
 	}
 
-	flockfile(pstream);
+	//flockfile(pstream);
 	fwrite(pLog, 1, nSize, pstream);
-	funlockfile(pstream);
+	//funlockfile(pstream);
 }
 
 void _log(const char* format, ...)

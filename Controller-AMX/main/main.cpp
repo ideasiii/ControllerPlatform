@@ -57,21 +57,18 @@ void runService()
 	if (FALSE != config->loadConfig(*pstrConf))
 	{
 		logAgent->setLogPath(config->getValue("LOG", "log"));
-		convertFromString(nMsgID, config->getValue("MSQ", "id"));
-		if (controller->initMessage(nMsgID))
+
+		if (controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_AMX))
 		{
-			if (0 == config->getValue("SERVER AMX", "enable").compare("yes"))
+			convertFromString(nTmp, config->getValue("SERVER AMX", "port"));
+			if (!controller->startServerAMX(config->getValue("SERVER AMX", "ip"), nTmp, nMsgID))
 			{
-				convertFromString(nTmp, config->getValue("SERVER AMX", "port"));
-				if (!controller->startServerAMX(config->getValue("SERVER AMX", "ip"), nTmp, nMsgID))
-				{
-					nInit = FALSE;
-					_log("[Controller] Create Server AMX Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
-				else
-				{
-					_log("[Controller] Create Server AMX Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
-				}
+				nInit = FALSE;
+				_log("[Controller] Create Server AMX Service Fail. Port : %d , Message ID : %d", nTmp, nMsgID);
+			}
+			else
+			{
+				_log("[Controller] Create Server AMX Service Success. Port : %d , Message ID : %d", nTmp, nMsgID);
 			}
 
 			if (0 == config->getValue("SERVER DEVICE", "enable").compare("yes"))
