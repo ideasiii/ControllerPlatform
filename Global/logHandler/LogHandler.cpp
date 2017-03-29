@@ -13,6 +13,7 @@
 #include "CThreadHandler.h"
 #include "common.h"
 #include "utility.h"
+#include <sys/types.h>
 
 using namespace std;
 
@@ -20,6 +21,8 @@ static FILE *pstream = 0;
 static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
 static char mbstr[16];
+static pthread_mutex_t mutexLogger;
+static bool mbMutexInit = false;
 
 inline void writeLog(int nSize, const char *pLog)
 {
@@ -46,15 +49,8 @@ inline void writeLog(int nSize, const char *pLog)
 		}
 	}
 
-	if (0 == pstream)
-	{
-		printf("[LogHandler] Error, pstream invalid\n");
-		return;
-	}
-
-	//flockfile(pstream);
-	fwrite(pLog, 1, nSize, pstream);
-	//funlockfile(pstream);
+	if (pstream)
+		fwrite(pLog, 1, nSize, pstream);
 }
 
 void _log(const char* format, ...)
@@ -74,13 +70,15 @@ void _log(const char* format, ...)
 
 	strLog = currentDateTime() + " : " + strLog + "\n";
 
-	if (mstrLogPath.empty())
+	if (!mstrLogPath.empty())
 	{
-		printf("[LogHandler] Log Path not Setting\n");
-	}
-	else
-	{
+		if (mbMutexInit)
+			pthread_mutex_lock(&mutexLogger);
+
 		writeLog(strLog.length(), strLog.c_str());
+
+		if (mbMutexInit)
+			pthread_mutex_unlock(&mutexLogger);
 	}
 
 	printf("%s", strLog.c_str());
@@ -92,20 +90,32 @@ void _setLogPath(const char *ppath)
 	if (0 == ppath)
 	{
 		mstrLogPath = "./run.log";
-		return;
+	}
+	else
+	{
+		mstrLogPath = ppath;
+		mkdirp(mstrLogPath);
 	}
 
-	mstrLogPath = ppath;
-	mkdirp(mstrLogPath);
-	_log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
+	if (mbMutexInit)
+		pthread_mutex_destroy(&mutexLogger);
+
+	if (0 == pthread_mutex_init(&mutexLogger, 0))
+	{
+		mbMutexInit = true;
+	}
 }
 
 void _close()
 {
+	if (mbMutexInit)
+		pthread_mutex_destroy(&mutexLogger);
+
 	if (0 != pstream)
 	{
 		fclose(pstream);
 		pstream = 0;
+		printf("[LogHandler] Log File Closed\n");
 	}
 }
 
