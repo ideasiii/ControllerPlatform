@@ -37,3 +37,8 @@ while true; do date; ps -T -a | grep controller-disp ; sleep 1; done;
 while true; do date; ./simulator 127.0.0.1 6607 & ; sleep 1; done;
 
 while true; do date; echo '------ Thread Count --------';ps -T -a | grep controller-disp -c; ipcs -q; ps aux | grep controller-disp | grep -v 'grep'; sleep 1; done;
+
+
+# Check all controller
+while true; do date; echo '------ Thread Count --------';ps -T -a | grep controller -c; ipcs -q; ps aux | grep controller | grep Sl | grep -v 'grep'; sleep 1; done;
+while true; do date; echo '------ Check Segfault --------'; grep 'segfault' /var/log/syslog; sleep 1; done;
