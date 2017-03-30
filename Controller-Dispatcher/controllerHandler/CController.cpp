@@ -27,7 +27,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -41,9 +41,9 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::startDispatcher(const char *szIP, const int nPort, const int nMsqId)
 {
-	if (dispatcher->start(szIP, nPort))
+	if(dispatcher->start(szIP, nPort))
 	{
-		dispatcher->idleTimeout(true, 30);
+		dispatcher->idleTimeout(true, 10);
 		return TRUE;
 	}
 	return FALSE;

@@ -119,6 +119,13 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	nResult = socketSend(nSocket, buffer, sizeof(buffer));
 	printPacket(nCommand, nStatus, nSequence, nResult, "[CCmpServer] sendPacket", nSocket);
 
+	if(nDataLen)
+	{
+		pIndex = buffer;
+		pIndex += sizeof(CMP_HEADER);
+		_log("[CCmpServer] sendPacket Body: %s", pIndex);
+	}
+
 	if(0 >= nResult)
 	{
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);

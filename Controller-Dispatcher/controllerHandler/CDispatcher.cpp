@@ -20,7 +20,7 @@ static CDispatcher * dispatcher = 0;
 
 CDispatcher* CDispatcher::getInstance()
 {
-	if (0 == dispatcher)
+	if(0 == dispatcher)
 	{
 		dispatcher = new CDispatcher();
 	}
@@ -39,7 +39,6 @@ CDispatcher::~CDispatcher()
 
 int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
 {
-	_log("[CDispatcher] onInitial Socket[%d]", nSocket);
 	return response(nSocket, nCommand, STATUS_ROK, nSequence, RESP_DISPATCH);
 }
 
