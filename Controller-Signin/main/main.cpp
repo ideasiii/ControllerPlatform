@@ -55,7 +55,7 @@ void runService()
 	_log("Get Config File : %s", pstrConf->c_str());
 	if(FALSE != config->loadConfig(*pstrConf))
 	{
-		_setLogPath(config->getValue("LOG", "log"));
+		_setLogPath(config->getValue("LOG", "log").c_str());
 		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_SIGNIN))
 		{
 			convertFromString(nTmp, config->getValue("SERVER SIGNIN", "port"));

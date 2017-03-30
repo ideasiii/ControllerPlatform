@@ -189,7 +189,7 @@ void runService(int argc, char* argv[])
 		delete config;
 	}
 
-	_setLogPath(strLogPath);
+	_setLogPath(strLogPath.c_str());
 
 	/** Run Mongodb Controller **/
 	Controller *controller = Controller::getInstance();
