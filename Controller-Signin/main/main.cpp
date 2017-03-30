@@ -86,13 +86,14 @@ void runService()
 
 	if(TRUE == nInit)
 	{
-		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
+		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->stop();
-		CMessageHandler::closeMsg(CMessageHandler::registerMsq(EVENT_MSQ_KEY_CONTROLLER_SIGNIN));
-		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
+		CMessageHandler::release();
 	}
+	_close(); // close log file
 	delete controller;
+	_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
 }
 /**
  * process options

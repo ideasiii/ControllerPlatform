@@ -34,7 +34,7 @@ void CSigHander(int signo)
  */
 void PSigHander(int signo)
 {
-	if ( SIGHUP == signo)
+	if( SIGHUP == signo)
 		return;
 	_log("[Signal] Parent Received signal %d", signo);
 	flag = 1;
@@ -54,7 +54,7 @@ CProcessHandler::~CProcessHandler()
 
 int CProcessHandler::runProcess(void (*entry)(void))
 {
-	if (0 == entry)
+	if(0 == entry)
 		return -1;
 
 	pid_t w;
@@ -62,13 +62,14 @@ int CProcessHandler::runProcess(void (*entry)(void))
 
 	do
 	{
+		_close();
 		child_pid = fork();
-		if (-1 == child_pid)
+		if(-1 == child_pid)
 		{
 			exit(EXIT_FAILURE);
 		}
 
-		if (child_pid == 0)
+		if(child_pid == 0)
 		{
 			/**
 			 * Child process
@@ -91,24 +92,24 @@ int CProcessHandler::runProcess(void (*entry)(void))
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
 
-		if (w == -1)
+		if(w == -1)
 		{
 			perror("waitpid");
 			exit(EXIT_FAILURE);
 		}
-		if (WIFEXITED(status))
+		if(WIFEXITED(status))
 		{
 			_log("[Process] child exited, status=%d\n", WEXITSTATUS(status));
 		}
-		else if (WIFSIGNALED(status))
+		else if(WIFSIGNALED(status))
 		{
 			_log("[Process] child killed by signal %d\n", WTERMSIG(status));
 		}
-		else if (WIFSTOPPED(status))
+		else if(WIFSTOPPED(status))
 		{
 			_log("[Process] child stopped by signal %d\n", WSTOPSIG(status));
 		}
-		else if (WIFCONTINUED(status))
+		else if(WIFCONTINUED(status))
 		{
 			_log("[Process] continued\n");
 		}
@@ -118,7 +119,7 @@ int CProcessHandler::runProcess(void (*entry)(void))
 		}
 		sleep(3);
 	}
-	while (SIGTERM != WTERMSIG(status) && !flag);
+	while(SIGTERM != WTERMSIG(status) && !flag);
 
 	return 1;
 }
