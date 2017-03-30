@@ -154,7 +154,7 @@ void CATcpServer::runSocketAccept()
 			_log("socket server accept fail");
 			sleep(3);
 		}
-		sleep(1);
+		usleep(500000);
 	}
 
 	_log("[CATcpServer] Thread runSocketAccept End");

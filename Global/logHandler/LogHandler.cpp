@@ -21,8 +21,8 @@ static FILE *pstream = 0;
 static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
 static char mbstr[16];
-static pthread_mutex_t mutexLogger;
-static bool mbMutexInit = false;
+//static pthread_mutex_t mutexLogger;
+//static bool mbMutexInit = false;
 
 inline void writeLog(int nSize, const char *pLog)
 {
@@ -72,13 +72,13 @@ void _log(const char* format, ...)
 
 	if (!mstrLogPath.empty())
 	{
-		if (mbMutexInit)
-			pthread_mutex_lock(&mutexLogger);
+//		if (mbMutexInit)
+//			pthread_mutex_lock(&mutexLogger);
 
 		writeLog(strLog.length(), strLog.c_str());
 
-		if (mbMutexInit)
-			pthread_mutex_unlock(&mutexLogger);
+//		if (mbMutexInit)
+//			pthread_mutex_unlock(&mutexLogger);
 	}
 
 	printf("%s", strLog.c_str());
@@ -97,19 +97,19 @@ void _setLogPath(const char *ppath)
 		mkdirp(mstrLogPath);
 	}
 
-	if (mbMutexInit)
-		pthread_mutex_destroy(&mutexLogger);
-
-	if (0 == pthread_mutex_init(&mutexLogger, 0))
-	{
-		mbMutexInit = true;
-	}
+//	if (mbMutexInit)
+//		pthread_mutex_destroy(&mutexLogger);
+//
+//	if (0 == pthread_mutex_init(&mutexLogger, 0))
+//	{
+//		mbMutexInit = true;
+//	}
 }
 
 void _close()
 {
-	if (mbMutexInit)
-		pthread_mutex_destroy(&mutexLogger);
+//	if (mbMutexInit)
+//		pthread_mutex_destroy(&mutexLogger);
 
 	if (0 != pstream)
 	{
