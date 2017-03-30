@@ -32,7 +32,7 @@ inline void writeLog(int nSize, const char *pLog)
 	memset(mbstr, 0, 16);
 	std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-	if(0 != mstrLogDate.compare(mbstr))
+	if(0 < strlen(mbstr) && 0 != mstrLogDate.compare(mbstr))
 	{
 		if(0 != pstream)
 			fclose(pstream);
