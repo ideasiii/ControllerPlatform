@@ -48,18 +48,17 @@ void runService()
 	int nTmp = -1;
 	extern char *__progname;
 
-	LogHandler *logAgent = LogHandler::getInstance();
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
-	if (FALSE != config->loadConfig(*pstrConf))
+	if(FALSE != config->loadConfig(*pstrConf))
 	{
-		logAgent->setLogPath(config->getValue("LOG", "log"));
-		if (controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
+		_setLogPath(config->getValue("LOG", "log"));
+		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
 		{
 			convertFromString(nTmp, config->getValue("SERVER DISPATCHER", "port"));
-			if (!controller->startDispatcher(0, nTmp, EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
+			if(!controller->startDispatcher(0, nTmp, EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
 			{
 				nInit = FALSE;
 				_log("[Controller] Start Dispatcher Service Fail");
@@ -79,7 +78,7 @@ void runService()
 	delete pstrConf;
 	delete config;
 
-	if (TRUE == nInit)
+	if(TRUE == nInit)
 	{
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
@@ -97,9 +96,9 @@ void options(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
+	while((c = getopt(argc, argv, "M:P:F:m:p:f:H:h")) != -1)
 	{
-		switch (c)
+		switch(c)
 		{
 		case 'H':
 		case 'h':

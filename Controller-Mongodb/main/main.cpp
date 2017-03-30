@@ -68,7 +68,7 @@ int Watching()
 			signal( SIGINT, CSigHander);
 			signal( SIGTERM, CSigHander);
 			signal( SIGPIPE, SIG_IGN);
-			syslog( LOG_INFO, "controller child process has been invoked");
+			syslog(LOG_INFO, "controller child process has been invoked");
 			return 0;
 		}
 
@@ -107,7 +107,7 @@ int Watching()
 	}
 	while( SIGTERM != WTERMSIG(status) && !flag);
 
-	syslog( LOG_INFO, "controller child process has been terminated");
+	syslog(LOG_INFO, "controller child process has been terminated");
 	closelog();
 	exit( EXIT_SUCCESS);
 	return 1;
@@ -177,7 +177,7 @@ void runService(int argc, char* argv[])
 	if(!strConf.empty())
 	{
 		CConfig *config = new CConfig();
-		if( FALSE != config->loadConfig(strConf))
+		if(FALSE != config->loadConfig(strConf))
 		{
 			strLogPath = config->getValue("LOG", "log");
 			nServerPort = getPort(config->getValue("SERVER", "port"));
@@ -189,22 +189,21 @@ void runService(int argc, char* argv[])
 		delete config;
 	}
 
-	/** Run Log Agent **/
-	LogHandler *logAgent = LogHandler::getInstance();
-	logAgent->setLogPath(strLogPath);
+	_setLogPath(strLogPath);
 
 	/** Run Mongodb Controller **/
 	Controller *controller = Controller::getInstance();
 
 	if(-1 != controller->initMessage( MSG_ID) && controller->startServer(nServerPort))
 	{
-		_DBG("<============= Mongodb Controller Service Start Run =============>");
-		controller->run( EVENT_FILTER_CONTROLLER);
-		_DBG("<============= Mongodb Controller Service Stop Run =============>");
+		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		controller->run(EVENT_FILTER_CONTROLLER);
 		controller->stopServer();
+		CMessageHandler::release();
 	}
-	delete logAgent;
-	_DBG("[Process] child process exit");
+	_close(); // close log file
+	delete controller;
+	_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
 }
 
 /**

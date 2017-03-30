@@ -49,14 +49,13 @@ void runService()
 	int nTmp = -1;
 	extern char *__progname;
 
-	LogHandler *logAgent = LogHandler::getInstance();
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	_log("Get Config File : %s", pstrConf->c_str());
 	if(FALSE != config->loadConfig(*pstrConf))
 	{
-		logAgent->setLogPath(config->getValue("LOG", "log"));
+		_setLogPath(config->getValue("LOG", "log"));
 		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_SIGNIN))
 		{
 			convertFromString(nTmp, config->getValue("SERVER SIGNIN", "port"));
