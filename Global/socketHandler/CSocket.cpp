@@ -103,13 +103,6 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	}
 	else
 	{
-		int yes = 1;
-
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
-		{
-			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
-			perror("setsockopt SO_REUSEADDR");
-		}
 
 		/* Check the status for the keepalive option */
 		/*
@@ -119,12 +112,19 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 		 perror("setsockopt SO_KEEPALIVE");
 		 }
 		 */
-		/*
-		 linger m_sLinger;
-		 m_sLinger.l_onoff = 1; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
-		 m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
-		 setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
-		 */
+
+		linger m_sLinger;
+		m_sLinger.l_onoff = 1; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
+		m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
+		setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
+
+		int yes = 1;
+
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
+		{
+			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
+			perror("setsockopt SO_REUSEADDR");
+		}
 	}
 
 	return m_nSocketFD;
