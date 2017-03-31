@@ -104,22 +104,22 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	else
 	{
 
-		/* Check the status for the keepalive option */
-
-		int keepalive = 1;
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
-		{
-			perror("setsockopt SO_KEEPALIVE");
-		}
-
 		linger m_sLinger;
-		m_sLinger.l_onoff = 1; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
+		m_sLinger.l_onoff = 0; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
 		m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
 		setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
 
+		/* Check the status for the keepalive option */
+
 		int yes = 1;
 
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)))
+		{
+			_log("[Socket] Set Socket SO_KEEPALIVE Option Fail");
+			perror("setsockopt SO_KEEPALIVE");
+		}
+
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)))
 		{
 			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
 			perror("setsockopt SO_REUSEADDR");
@@ -552,7 +552,7 @@ void CSocket::socketClose(int nSocketFD)
 //	FD_ZERO(&fs);
 //	FD_CLR(nSocketFD, &fs);
 //	ftruncate(nSocketFD, 0);
-	shutdown(nSocketFD, SHUT_RDWR);
+//	shutdown(nSocketFD, SHUT_RDWR);
 	close(nSocketFD);
 	_log("[Socket] socket close FD: %d", nSocketFD);
 }
