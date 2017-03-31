@@ -40,12 +40,12 @@ int CSocket::getSocketType() const
 
 int CSocket::createSocket(int nSocketType, int nStyle)
 {
-	switch (nSocketType)
+	switch(nSocketType)
 	{
 	case AF_UNIX:
 		memset(&unAddr, 0, sizeof(sockaddr_un));
 		unAddr.sun_family = AF_UNIX;
-		if ( NULL == szPath || strlen(szPath) <= 0)
+		if( NULL == szPath || strlen(szPath) <= 0)
 		{
 			setLastError(ERROR_NOT_SET_DOMAIN_PATH);
 			return -1;
@@ -55,13 +55,13 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	case AF_INET:
 		memset(&inAddr, 0, sizeof(sockaddr_in));
 		inAddr.sin_family = AF_INET;
-		if (0 >= strlen(szIP))
+		if(0 >= strlen(szIP))
 		{
 			inAddr.sin_addr.s_addr = INADDR_ANY;
 		}
 		else
 		{
-			if (inet_aton(szIP, &inAddr.sin_addr) == 0)
+			if(inet_aton(szIP, &inAddr.sin_addr) == 0)
 			{
 				perror("inet_aton");
 				return -1;
@@ -82,7 +82,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	setSocketType(nSocketType);
 	setSocketStyle(nStyle);
 
-	switch (nStyle)
+	switch(nStyle)
 	{
 	case SOCK_STREAM:
 		m_nSocketFD = socket(nSocketType, SOCK_STREAM, 0);
@@ -95,7 +95,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 		break;
 	}
 
-	if (-1 == m_nSocketFD)
+	if(-1 == m_nSocketFD)
 	{
 		_log("[Socket] create Socket Fail , socket FD = -1");
 		setLastError(ERROR_SOCKET_CREATE_FAIL);
@@ -104,7 +104,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	{
 		int yes = 1;
 
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
+		if(-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
 		{
 			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
 			perror("setsockopt SO_REUSEADDR");
@@ -112,7 +112,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 
 		/* Check the status for the keepalive option */
 		int keepalive = 1;
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
+		if(-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
 		{
 			perror("setsockopt SO_KEEPALIVE");
 		}
@@ -133,7 +133,7 @@ int CSocket::getSocketfd() const
 
 void CSocket::setDomainSocketPath(const char * cszPath)
 {
-	if ( NULL != cszPath && (0 < strlen(cszPath)))
+	if( NULL != cszPath && (0 < strlen(cszPath)))
 	{
 		memset(szPath, 0, sizeof(szPath));
 		strcpy(szPath, cszPath);
@@ -146,9 +146,9 @@ int CSocket::setInetSocket(const char * szAddr, short nPort)
 	memset(szIP, 0, sizeof(szIP));
 	m_nPort = -1;
 
-	if ( NULL == szAddr) // use INADDR_ANY
+	if( NULL == szAddr) // use INADDR_ANY
 	{
-		if (0 <= nPort)
+		if(0 <= nPort)
 		{
 			m_nPort = nPort;
 			return 0;
@@ -157,7 +157,7 @@ int CSocket::setInetSocket(const char * szAddr, short nPort)
 			return -1;
 	}
 
-	if ((NULL != szAddr) && (0 < strlen(szAddr)) && (sizeof(szIP) >= strlen(szAddr)) && (0 <= nPort))
+	if((NULL != szAddr) && (0 < strlen(szAddr)) && (sizeof(szIP) >= strlen(szAddr)) && (0 <= nPort))
 	{
 		strcpy(szIP, szAddr);
 		m_nPort = nPort;
@@ -180,7 +180,7 @@ int CSocket::connectServer()
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
 
-	if (!isValidSocketFD())
+	if(!isValidSocketFD())
 	{
 		setLastError(ERROR_INVALID_SOCKET_FD);
 		return -1;
@@ -188,7 +188,7 @@ int CSocket::connectServer()
 
 	nSocketType = getSocketType();
 
-	switch (nSocketType)
+	switch(nSocketType)
 	{
 	case AF_UNIX:
 		sLen = sizeof(unAddr);
@@ -196,7 +196,7 @@ int CSocket::connectServer()
 		break;
 	case AF_INET:
 		server = gethostbyname((const char *) szIP);
-		if (0 >= server)
+		if(0 >= server)
 		{
 			_log("[Socket] ERROR, no such host");
 			return -1;
@@ -215,7 +215,7 @@ int CSocket::connectServer()
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 	{
 		setLastError(ERROR_CONNECT_FAIL);
 	}
@@ -229,7 +229,7 @@ void CSocket::setLastError(int nErrNo)
 
 	m_nLastError = nErrNo;
 
-	switch (nErrNo)
+	switch(nErrNo)
 	{
 	case ERROR_OK:
 		return;
@@ -284,7 +284,7 @@ int CSocket::socketSend(int nSockFD, const void* pBuf, int nBufLen)
 
 	nSocketStyle = getSocketStyle();
 
-	switch (nSocketStyle)
+	switch(nSocketStyle)
 	{
 	case SOCK_STREAM: /*virtual circuit*/
 
@@ -300,7 +300,7 @@ int CSocket::socketSend(int nSockFD, const void* pBuf, int nBufLen)
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 	{
 		setLastError(ERROR_SEND_FAIL);
 	}
@@ -329,18 +329,18 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 
 	int nSocketStyle = getSocketStyle();
 
-	switch (nSocketStyle)
+	switch(nSocketStyle)
 	{
 	case SOCK_STREAM: /*virtual circuit*/
 		nResult = recv(nSockFD, *pBuf, BUF_SIZE, FLAGS);
 		break;
 	case SOCK_DGRAM: /*datagram*/
-		if (0 != pClientSockaddr)
+		if(0 != pClientSockaddr)
 		{
 			memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
 			slen = sizeof(struct sockaddr_in);
 			nResult = recvfrom(nSockFD, *pBuf, BUF_SIZE, FLAGS, (sockaddr *) pClientSockaddr, &slen);
-			if (0 < nResult)
+			if(0 < nResult)
 			{
 				//				_log("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
 				//						ntohs(pClientSockaddr->sin_port), (char*) *pBuf);
@@ -353,7 +353,7 @@ int CSocket::socketrecv(int nSockFD, void** pBuf, struct sockaddr_in *pClientSoc
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 	{
 		setLastError(ERROR_RECEIVE_FAIL);
 	}
@@ -368,19 +368,19 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 
 	int nSocketStyle = getSocketStyle();
 
-	switch (nSocketStyle)
+	switch(nSocketStyle)
 	{
 	case SOCK_STREAM: /*virtual circuit*/
 		nResult = recv(nSockFD, *pBuf, nSize, FLAGS);
 
 		break;
 	case SOCK_DGRAM: /*datagram*/
-		if (0 != pClientSockaddr)
+		if(0 != pClientSockaddr)
 		{
 			memset(pClientSockaddr, 0, sizeof(struct sockaddr_in));
 			slen = sizeof(struct sockaddr_in);
 			nResult = recvfrom(nSockFD, *pBuf, nSize, FLAGS, (sockaddr *) pClientSockaddr, &slen);
-			if (0 < nResult)
+			if(0 < nResult)
 			{
 				//				_DBG("[Socket] UDP Received packet from %s:%d Data: %s", inet_ntoa(pClientSockaddr->sin_addr),
 				//						ntohs(pClientSockaddr->sin_port), (char* )*pBuf);
@@ -393,7 +393,7 @@ int CSocket::socketrecv(int nSockFD, int nSize, void** pBuf, struct sockaddr_in 
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 	{
 		setLastError(ERROR_RECEIVE_FAIL);
 	}
@@ -412,7 +412,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 	FD_SET(nSocketFD, &socketSet);
 
 	nRet = select(0, &socketSet, NULL, NULL, &timeout);
-	if (0 < nRet)
+	if(0 < nRet)
 	{
 		bValid = FD_ISSET(nSocketFD, &socketSet);
 	}
@@ -422,7 +422,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 
 int CSocket::isValidSocketFD()
 {
-	if (-1 == m_nSocketFD)
+	if(-1 == m_nSocketFD)
 		return 0;
 	else
 		return 1;
@@ -434,7 +434,7 @@ int CSocket::socketBind()
 	int nResult = ERROR_OK;
 	int nSocketType;
 
-	if (!isValidSocketFD())
+	if(!isValidSocketFD())
 	{
 		setLastError(ERROR_INVALID_SOCKET_FD);
 		return -1;
@@ -442,7 +442,7 @@ int CSocket::socketBind()
 
 	nSocketType = getSocketType();
 
-	switch (nSocketType)
+	switch(nSocketType)
 	{
 	case AF_UNIX:
 		sLen = sizeof(unAddr);
@@ -459,7 +459,7 @@ int CSocket::socketBind()
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 		setLastError(ERROR_BIND_FAIL);
 
 	return nResult;
@@ -469,14 +469,14 @@ int CSocket::socketListen(int nCount)
 {
 	int nResult = ERROR_OK;
 
-	if (!isValidSocketFD())
+	if(!isValidSocketFD())
 	{
 		setLastError(ERROR_INVALID_SOCKET_FD);
 		return -1;
 	}
 
 	nResult = listen(getSocketfd(), nCount); // return 0 on success
-	if (-1 == nResult)
+	if(-1 == nResult)
 		setLastError(ERROR_LISTEN_FAIL);
 
 	return nResult;
@@ -490,7 +490,7 @@ int CSocket::socketAccept()
 	struct sockaddr_un unClientAddr;
 	struct sockaddr_in inClientAddr;
 
-	if (!isValidSocketFD())
+	if(!isValidSocketFD())
 	{
 		setLastError(ERROR_INVALID_SOCKET_FD);
 		return -1;
@@ -501,7 +501,7 @@ int CSocket::socketAccept()
 	bzero((char *) &unClientAddr, sizeof(unClientAddr));
 	bzero((char *) &inClientAddr, sizeof(inClientAddr));
 
-	switch (nSocketType)
+	switch(nSocketType)
 	{
 	case AF_UNIX:
 		sLen = sizeof(unClientAddr);
@@ -518,7 +518,7 @@ int CSocket::socketAccept()
 		break;
 	}
 
-	if (-1 == nResult)
+	if(-1 == nResult)
 	{
 		perror("socket accept fail");
 		setLastError(ERROR_ACCEPT_FAIL);
@@ -529,11 +529,11 @@ int CSocket::socketAccept()
 
 void CSocket::socketClose()
 {
-	if (isValidSocketFD())
+	if(isValidSocketFD())
 	{
-		shutdown(m_nSocketFD, SHUT_RDWR);
+		//shutdown(m_nSocketFD, SHUT_RDWR);
 		close(getSocketfd());
-		if ( AF_UNIX == getSocketType())
+		if( AF_UNIX == getSocketType())
 		{
 			memset(szPath, 0, sizeof(szPath));
 		}
@@ -546,7 +546,7 @@ void CSocket::socketClose()
 
 void CSocket::socketClose(int nSocketFD)
 {
-	shutdown(nSocketFD, SHUT_RDWR);
+	//shutdown(nSocketFD, SHUT_RDWR);
 	close(nSocketFD);
 	_log("[Socket] socket close FD: %d", nSocketFD);
 }
@@ -568,10 +568,10 @@ char *CSocket::getMac(const char *iface)
 	int fd = socket( PF_INET, SOCK_DGRAM, IPPROTO_IP);
 
 	strcpy(s.ifr_name, iface);
-	if (fd >= 0 && ret && 0 == ioctl(fd, SIOCGIFHWADDR, &s))
+	if(fd >= 0 && ret && 0 == ioctl(fd, SIOCGIFHWADDR, &s))
 	{
 		int i;
-		for (i = 0; i < 6; ++i)
+		for(i = 0; i < 6; ++i)
 			snprintf(ret + i * 2, 13 - i * 2, "%02x", (unsigned char) s.ifr_addr.sa_data[i]);
 	}
 	else
@@ -587,7 +587,7 @@ int CSocket::getIfAddress()
 	int family, s, n;
 	char host[NI_MAXHOST];
 
-	if (getifaddrs(&ifaddr) == -1)
+	if(getifaddrs(&ifaddr) == -1)
 	{
 		perror("getifaddrs");
 		return 0;
@@ -596,9 +596,9 @@ int CSocket::getIfAddress()
 	/* Walk through linked list, maintaining head pointer so we
 	 can free list later */
 
-	for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, ++n)
+	for(ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, ++n)
 	{
-		if (ifa->ifa_addr == NULL)
+		if(ifa->ifa_addr == NULL)
 			continue;
 
 		family = ifa->ifa_addr->sa_family;
@@ -606,7 +606,7 @@ int CSocket::getIfAddress()
 		/* Display interface name and family (including symbolic
 		 form of the latter for the common families) */
 
-		if (0 != strcmp(ifa->ifa_name, "lo"))
+		if(0 != strcmp(ifa->ifa_name, "lo"))
 		{
 			printf("%-8s %s (%d)\n", ifa->ifa_name,
 					(family == AF_PACKET) ? "AF_PACKET" : (family == AF_INET) ? "AF_INET" :
@@ -615,12 +615,12 @@ int CSocket::getIfAddress()
 
 		/* For an AF_INET* interface address, display the address */
 
-		if (family == AF_INET || family == AF_INET6)
+		if(family == AF_INET || family == AF_INET6)
 		{
 			s = getnameinfo(ifa->ifa_addr,
 					(family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6), host, NI_MAXHOST,
 					NULL, 0, NI_NUMERICHOST);
-			if (s != 0)
+			if(s != 0)
 			{
 				printf("getnameinfo() failed: %s\n", gai_strerror(s));
 				return 0;
