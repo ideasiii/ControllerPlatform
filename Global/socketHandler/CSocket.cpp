@@ -105,13 +105,12 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	{
 
 		/* Check the status for the keepalive option */
-		/*
-		 int keepalive = 1;
-		 if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
-		 {
-		 perror("setsockopt SO_KEEPALIVE");
-		 }
-		 */
+
+		int keepalive = 1;
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
+		{
+			perror("setsockopt SO_KEEPALIVE");
+		}
 
 		linger m_sLinger;
 		m_sLinger.l_onoff = 1; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
@@ -420,7 +419,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 	{
 		bValid = FD_ISSET(nSocketFD, &socketSet);
 	}
-//	_DBG("[Socket] select socket FD :%d", bValid);
+
 	return bValid;
 }
 
@@ -549,11 +548,11 @@ void CSocket::socketClose()
 
 void CSocket::socketClose(int nSocketFD)
 {
-	//shutdown(nSocketFD, SHUT_RDWR);
-	fd_set fs;
-	FD_ZERO(&fs);
-	FD_CLR(nSocketFD, &fs);
-	ftruncate(nSocketFD, 0);
+//	fd_set fs;
+//	FD_ZERO(&fs);
+//	FD_CLR(nSocketFD, &fs);
+//	ftruncate(nSocketFD, 0);
+	shutdown(nSocketFD, SHUT_RDWR);
 	close(nSocketFD);
 	_log("[Socket] socket close FD: %d", nSocketFD);
 }
