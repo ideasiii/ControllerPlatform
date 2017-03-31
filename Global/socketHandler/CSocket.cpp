@@ -5,6 +5,7 @@
  *      Author: root
  */
 
+#include <sys/select.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <linux/if.h>
@@ -547,6 +548,9 @@ void CSocket::socketClose()
 void CSocket::socketClose(int nSocketFD)
 {
 	//shutdown(nSocketFD, SHUT_RDWR);
+	fd_set fs;
+	FD_ZERO(&fs);
+	FD_CLR(nSocketFD, &fs);
 	ftruncate(nSocketFD, 0);
 	close(nSocketFD);
 	_log("[Socket] socket close FD: %d", nSocketFD);
