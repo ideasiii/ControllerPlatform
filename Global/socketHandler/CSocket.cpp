@@ -103,12 +103,12 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	}
 	else
 	{
-
-		linger m_sLinger;
-		m_sLinger.l_onoff = 0; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
-		m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
-		setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
-
+		/*
+		 linger m_sLinger;
+		 m_sLinger.l_onoff = 0; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
+		 m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
+		 setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
+		 */
 		/* Check the status for the keepalive option */
 
 		int yes = 1;
