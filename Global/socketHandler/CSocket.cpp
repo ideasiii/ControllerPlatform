@@ -112,6 +112,7 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 		/* Check the status for the keepalive option */
 
 		int yes = 1;
+		int no = 0;
 
 		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)))
 		{
@@ -124,6 +125,10 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
 			perror("setsockopt SO_REUSEADDR");
 		}
+
+		// 不經歷由系統緩衝區到socket緩衝區的拷貝
+		setsockopt(m_nSocketFD, SOL_SOCKET, SO_SNDBUF, &no, sizeof(int));
+		setsockopt(m_nSocketFD, SOL_SOCKET, SO_RCVBUF, &no, sizeof(int));
 	}
 
 	return m_nSocketFD;
@@ -320,8 +325,8 @@ int CSocket::socketSend(struct sockaddr_in &rSocketAddr, const void* pBuf, int n
 
 	nSend = sendto(getSocketfd(), pBuf, (unsigned long int) nBufLen, FLAGS, (struct sockaddr *) &rSocketAddr,
 			(unsigned int) sizeof(rSocketAddr));
-	//_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
-	//		inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
+//_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
+//		inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
 	return nSend;
 }
 
