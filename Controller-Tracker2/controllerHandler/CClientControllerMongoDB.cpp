@@ -90,7 +90,7 @@ int CClientControllerMongoDB::sendCommand(const void * param)
 	}
 	else
 	{
-		_log("[CClientControllerMongoDB] is Not Valid JSON Format: %s", *data);
+		_log("[CClientControllerMongoDB] is Not Valid JSON Format: %s", data);
 	}
 
 	return nRet;

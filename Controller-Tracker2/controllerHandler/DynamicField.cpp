@@ -73,6 +73,7 @@ bool DynamicField::isValidJSONFormat(string data)
 	{
 		_log("[DynamicField] is Valid JSON Format %s", data.c_str());
 		isValid = true;
+
 	}
 	else
 	{
@@ -82,6 +83,7 @@ bool DynamicField::isValidJSONFormat(string data)
 
 	jobjRoot->release();
 	delete jobjRoot;
+
 	jobjRoot = 0;
 
 	return isValid;
