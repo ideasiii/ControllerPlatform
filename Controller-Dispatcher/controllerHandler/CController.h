@@ -16,7 +16,7 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startDispatcher(const char *szIP, const int nPort, const int nMsqId);
+	int startDispatcher(const char *szIP, const int nPort);
 	int stop();
 
 protected:

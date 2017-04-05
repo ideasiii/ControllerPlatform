@@ -34,8 +34,6 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 		setError("MySQL Init Fail");
 		return FALSE;
 	}
-	else
-		_log("[CMysqlHandler] MySQL Init Success");
 
 	mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, "60");
 	mysql_options(mpMySQL, MYSQL_SET_CHARSET_NAME, "utf8");
@@ -43,8 +41,8 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
-	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
-			strPassword.c_str(), strDB.c_str());
+//	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
+//			strPassword.c_str(), strDB.c_str());
 	mpMySQL = mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL,
 			0);
 	if( NULL == mpMySQL)

@@ -39,7 +39,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 }
 
-int CController::startDispatcher(const char *szIP, const int nPort, const int nMsqId)
+int CController::startDispatcher(const char *szIP, const int nPort)
 {
 	if(dispatcher->start(szIP, nPort))
 	{

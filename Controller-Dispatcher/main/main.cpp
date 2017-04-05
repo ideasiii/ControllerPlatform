@@ -58,7 +58,7 @@ void runService()
 		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
 		{
 			convertFromString(nTmp, config->getValue("SERVER DISPATCHER", "port"));
-			if(!controller->startDispatcher(0, nTmp, EVENT_MSQ_KEY_CONTROLLER_DISPATCHER))
+			if(!controller->startDispatcher(0, nTmp))
 			{
 				nInit = FALSE;
 				_log("[Controller] Start Dispatcher Service Fail");

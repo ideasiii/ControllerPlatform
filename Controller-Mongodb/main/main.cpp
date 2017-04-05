@@ -5,46 +5,91 @@
  *      Author: Jugo
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <iostream>
+
+#include "CProcessHandler.h"
 #include "CMessageHandler.h"
-#include "common.h"
 #include "event.h"
-#include "Controller.h"
 #include "LogHandler.h"
 #include "CConfig.h"
 #include "utility.h"
+#include "common.h"
+#include "CController.h"
 
-#define MSG_ID							27027
+using namespace std;
 
-volatile int flag = 0;
-pid_t child_pid = -1; //Global
-
-int Watching();
-void CSigHander(int signo);
-void PSigHander(int signo);
-void runService(int argc, char* argv[]);
+string getConfName(string strProcessName);
 void options(int argc, char **argv);
+static void runService();
 
 int main(int argc, char* argv[])
 {
+	extern char *__progname;
+	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
-	Watching();
-	// child process run service
+	// Run Process
+	CProcessHandler::runProcess(runService);
 
-	runService(argc, argv);
-
+	closelog();
 	return EXIT_SUCCESS;
 }
 
-/**
- * Parent watch child status
- */
+string getConfName(std::string strProcessName)
+{
+	size_t found = strProcessName.find_last_of("/\\");
+	return (strProcessName.substr(++found) + ".conf");
+}
+
+void runService()
+{
+	int nInit = TRUE;
+	int nTmp = -1;
+	extern char *__progname;
+
+	CController *controller = CController::getInstance();
+	CConfig *config = new CConfig();
+	string *pstrConf = new string(getConfName(__progname));
+	_log("Get Config File : %s", pstrConf->c_str());
+	if(FALSE != config->loadConfig(*pstrConf))
+	{
+		_setLogPath(config->getValue("LOG", "log").c_str());
+		if(controller->initMessage(EVENT_MSQ_KEY_CONTROLLER_MONGODB))
+		{
+			convertFromString(nTmp, config->getValue("SERVER TRACKER", "port"));
+			if(!controller->startTrackerServer(0, nTmp))
+			{
+				nInit = FALSE;
+				_log("[Controller] Start Tracker Service Fail");
+			}
+		}
+		else
+		{
+			nInit = FALSE;
+			_log("[Controller] Create Message Queue Fail");
+		}
+	}
+	else
+	{
+		nInit = FALSE;
+		_log("[Controller] Load Configuration File Fail");
+	}
+	delete pstrConf;
+	delete config;
+
+	if(TRUE == nInit)
+	{
+		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
+		controller->stop();
+		CMessageHandler::release();
+	}
+	_close(); // close log file
+	delete controller;
+	_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
+}
+
 int Watching()
 {
 	pid_t w;
@@ -65,9 +110,9 @@ int Watching()
 			/**
 			 * Child process
 			 */
-			signal( SIGINT, CSigHander);
-			signal( SIGTERM, CSigHander);
-			signal( SIGPIPE, SIG_IGN);
+			signal(SIGINT, CSigHander);
+			signal(SIGTERM, CSigHander);
+			signal(SIGPIPE, SIG_IGN);
 			syslog(LOG_INFO, "controller child process has been invoked");
 			return 0;
 		}
@@ -75,10 +120,10 @@ int Watching()
 		/**
 		 * Parent process
 		 */
-		signal( SIGINT, PSigHander);
-		signal( SIGTERM, PSigHander);
-		signal( SIGHUP, PSigHander);
-		signal( SIGPIPE, SIG_IGN);
+		signal(SIGINT, PSigHander);
+		signal(SIGTERM, PSigHander);
+		signal(SIGHUP, PSigHander);
+		signal(SIGPIPE, SIG_IGN);
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
 
@@ -105,7 +150,7 @@ int Watching()
 		}
 		sleep(3);
 	}
-	while( SIGTERM != WTERMSIG(status) && !flag);
+	while(SIGTERM != WTERMSIG(status) && !flag);
 
 	syslog(LOG_INFO, "controller child process has been terminated");
 	closelog();
@@ -127,7 +172,7 @@ void CSigHander(int signo)
  */
 void PSigHander(int signo)
 {
-	if( SIGHUP == signo)
+	if(SIGHUP == signo)
 		return;
 	_DBG("[Signal] Parent Received signal %d", signo);
 	flag = 1;
@@ -194,7 +239,7 @@ void runService(int argc, char* argv[])
 	/** Run Mongodb Controller **/
 	Controller *controller = Controller::getInstance();
 
-	if(-1 != controller->initMessage( MSG_ID) && controller->startServer(nServerPort))
+	if(-1 != controller->initMessage(MSG_ID) && controller->startServer(nServerPort))
 	{
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->run(EVENT_FILTER_CONTROLLER);
