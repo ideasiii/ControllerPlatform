@@ -215,12 +215,12 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 			if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
 			{
 				strResponseBodyData =
-						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE \":{\" RESULT \":true,\" RESULT_MESSAGE \": \"Door Open\"}}";
+						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
 			}
 			else
 			{
 				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE \":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
+						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
 			}
 		}
 		else if (strRequestBodyData.find(
@@ -231,18 +231,18 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 			if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
 			{
 				strResponseBodyData =
-						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE \":{\" RESULT \":true,\" RESULT_MESSAGE \": \"Door Open\"}}";
+						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
 			}
 			else
 			{
 				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE \":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
+						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
 			}
 		}
 		else
 		{
 			strResponseBodyData =
-					"{\"QRCODE_TYPE\":\"0\",\"MESSAGE \":{\"RESULT_MESSAGE\":\"Unknown this QR-Code Type\"}}";
+					"{\"QRCODE_TYPE\":\"0\",\"MESSAGE\":{\"RESULT_MESSAGE\":\"Unknown this QR-Code Type\"}}";
 		}
 
 		sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);
@@ -255,7 +255,7 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	_DBG("[CClientMeetingAgent]cmpAPPVersion");
 
 	string bodyData =
-			"{\"VERSION\": \"1.0\",\"APP_DOWNLOAD_URL\":  \"http://XXX/ideas/sdk/download/libs/android/XXX.apk\"}";
+			"{\"VERSION\": \"1.0\",\"APP_DOWNLOAD_URL\": \"http://XXX/ideas/sdk/download/libs/android/XXX.apk\"}";
 
 	sendCommand(generic_nack | nCommand, nSequence, bodyData);
 
@@ -282,7 +282,7 @@ int CClientMeetingAgent::cmpGetMeetingData(int nSocket, int nCommand, int nSeque
 		else if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
 		{
 			strResponseBodyData =
-					"{\"USER_ID\":\"ffffffff-ffff-0000-0000-ffffffffffff\",\"USER_NAME\":\"王二二\",\"USER_EMAIL\":\"qqdsdw@iii.org.tw\",,\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2017-06-30 09:30:00\",\"END_TIME\":\"2017-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2017-08-30 09:30:00\",\"END_TIME\":\"2017-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
+					"{\"USER_ID\":\"ffffffff-ffff-0000-0000-ffffffffffff\",\"USER_NAME\":\"王二二\",\"USER_EMAIL\":\"qqdsdw@iii.org.tw\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2017-06-30 09:30:00\",\"END_TIME\":\"2017-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2017-08-30 09:30:00\",\"END_TIME\":\"2017-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
 
 		}
 		else
@@ -313,13 +313,13 @@ int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSeq
 		{
 			//OK can control AMX
 			strResponseBodyData =
-					"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\" RESULT\": true,\"ROOM_IP\": \"54.199.198.94\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
+					"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"54.199.198.94\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
 
 		}
 		else
 		{
 			//NO can not control AMX
-			strResponseBodyData = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\",\" RESULT\": false}";
+			strResponseBodyData = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\",\"RESULT\": false}";
 		}
 
 		sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);

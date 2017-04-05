@@ -210,7 +210,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"QRCODE_TOKEN\": \"m+eJYbDinOt7XGXfVdBw5EZhQDDgmpnF8HXQr3Nkj6LBMSF+aGmoW//g54AXQcmrKl+gzOm4pz71tCLKOmR55g==\",\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\"}";
 	string strSBAPPVersion = "";
 	string strSBGetMeetingData = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\"}";
-	string strSBAmxControlAccess = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\",\"ROOM_ID\":\"ITES_101\"}";
+	string strSBAmxControlAccess = "{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"ROOM_ID\":\"ITES_101\"}";
 
 	string strSBWirelessPowerCharge =
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
