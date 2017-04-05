@@ -103,7 +103,7 @@ void CController::syncTrackerUser()
 	int nRet;
 
 	// Get Destination Mysql Record last date
-	strLastDate = getMysqlLastDate();
+	strLastDate = getMysqlLastDate("tracker_user");
 	if(strLastDate.empty())
 		return;
 
@@ -177,16 +177,27 @@ void CController::syncTrackerUser()
 void CController::syncTrackerData()
 {
 	extern map<string, string> mapMysqlDestination;
+	list<map<string, string> > listRest;
+	string strLastDate;
+	string strSQL;
+	string strError;
+	int nRet;
+
+	// Get Destination Mysql Record last date
+	strLastDate = getMysqlLastDate("tracker_poya_android");
+	if(strLastDate.empty())
+		return;
 }
 
-string CController::getMysqlLastDate()
+string CController::getMysqlLastDate(const char *szTable)
 {
 	extern map<string, string> mapMysqlDestination;
 	string strRet;
+	string strTable;
 	int nRet;
-
 	list<map<string, string> > listRest;
 
+	strTable = szTable;
 	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
 			mapMysqlDestination["password"]);
 	if(FALSE == nRet)
@@ -195,7 +206,7 @@ string CController::getMysqlLastDate()
 	}
 	else
 	{
-		if(TRUE == mysql->query("select max(create_date) as maxdate from tracker_user", listRest))
+		if(TRUE == mysql->query("select max(create_date) as maxdate from " + strTable, listRest))
 		{
 			strRet = "2015-07-27 00:00:00";
 			string strField;

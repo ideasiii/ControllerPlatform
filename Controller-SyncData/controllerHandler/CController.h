@@ -26,7 +26,7 @@ public:
 			const char *szPassword);
 	void syncTrackerUser();
 	void syncTrackerData();
-	std::string getMysqlLastDate();
+	std::string getMysqlLastDate(const char *szTable);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
