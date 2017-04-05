@@ -195,8 +195,10 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
 
 	string strControllerId = "123456789";
-	string strAccessLog =
-			"{\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"AAAA1472030569161FFFF\",\"DATE\":\"2016-03-16 14:16:59\"}";
+	//string strAccessLog =
+		//	"\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"AAAA1472030569161FFFF\",\"DATE\":\"2016-03-16 14:16:59\"}";
+	string strAccessLog = "YPE\":\"2000\",\"ID\":\"dcd916573cc91456802938790gyvmac@gmail.com\",\"PAGE\":\"Application\",\"DATE\":\"2017-04-05  12:22:06\",\"LOCATION\":\"22.7896215,120.2836315\",\"SOURCE_FROM\":\"Soohoobook Inc.\"}";
+
 	string strSignup =
 			"{\"id\": \"" + strId
 					+ "\",\"app_id\": \"987654321\",\"mac\": \"abcdefg\",\"os\": \"android\",\"phone\": \"0900000000\",\"fb_id\": \"fb1234\",\"fb_name\": \"louis\",\"fb_email\": \"louisju@iii.org.tw\",\"fb_account\": \"louisju@iii.org.tw\"}";
