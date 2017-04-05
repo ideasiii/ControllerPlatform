@@ -33,6 +33,11 @@ public:
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	virtual void onTimer(int nId)
+	{
+		printf("[CSocketClient] onTimer Id:%d\n", nId);
+	}
+	;
 
 private:
 	void dataHandler(int nFD);
@@ -43,5 +48,7 @@ private:
 	int m_nInternalFilter;
 	int mnPacketType;
 	int mnPacketHandle;
+	unsigned long int mThreadId;
+	unsigned long int munRunThreadId;
 };
 

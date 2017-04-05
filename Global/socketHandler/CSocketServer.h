@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <map>
 #include "CSocket.h"
 #include "CObject.h"
 
@@ -35,9 +36,15 @@ public:
 	void threadLock();
 	void threadUnLock();
 	void setPacketConf(int nType, int nHandle);
+	void closeClient(int nClientFD);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	virtual void onTimer(int nId)
+	{
+		printf("[CSocketServer] onTimer Id:%d\n", nId);
+	}
+	;
 
 private:
 	int recvHandler();
@@ -55,6 +62,7 @@ private:
 	CDataHandler<struct sockaddr_in> *udpClientData;
 	int mnPacketType;
 	int mnPacketHandle;
-
+	std::map<unsigned long int, unsigned long int> mapClientThread;
+	unsigned long int munRunThreadId;
 };
 

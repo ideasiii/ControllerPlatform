@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <list>
+#include <string>
 #include "LogHandler.h"
 
 using namespace std;
@@ -135,6 +136,7 @@ struct CMP_PACKET
 #define STATUS_RINVBNDSTS						0x00000004		//Incorrect BIND Status for given command
 #define STATUS_RALYBND							0x00000005		//Already in Bound State
 #define STATUS_RSYSBUSY							0x00000006      //System Busy
+#define STATUS_RINVCMP							0x00000007		//Invalid CMP
 #define STATUS_RSYSERR							0x00000008		//System Error
 #define STATUS_RBINDFAIL						0x00000010		//Bind Failed
 #define STATUS_RINVBODY							0x00000040		//Invalid Packet Body Data
@@ -201,8 +203,8 @@ semantic_request, "semantic_request")(semantic_response, "semantic_response")(
 amx_control_request, "amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request,
 		"amx_status_request")(amx_status_response, "amx_status_response")(amx_broadcast_status_request,
 		"amx_broadcast_status_request")(amx_broadcast_status_response, "amx_broadcast_status_response")(
-		fcm_id_register_request, "fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(
-		facebook_token_client_request, "facebook_token_client_request")(facebook_token_client_response,
+fcm_id_register_request, "fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(
+facebook_token_client_request, "facebook_token_client_request")(facebook_token_client_response,
 		"facebook_token_client_response")(
 smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
 		"smart_building_qrcode_tokn_response")(smart_building_appversion_request, "smart_building_appversion_request")(
@@ -243,7 +245,7 @@ static int msnSequence = 0x00000000;
 __attribute__ ((unused)) inline static int getSequence()
 {
 	++msnSequence;
-	if(0x7FFFFFFF <= msnSequence)
+	if (0x7FFFFFFF <= msnSequence)
 		msnSequence = 0x00000001;
 	return msnSequence;
 }

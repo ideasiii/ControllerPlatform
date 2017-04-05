@@ -13,50 +13,45 @@
 #include "CThreadHandler.h"
 #include "common.h"
 #include "utility.h"
+#include <sys/types.h>
 
 using namespace std;
-
-static LogHandler* mInstance = 0;
-/* Log list*/
-__attribute__ ((unused)) static list<string> extListLog;
 
 static FILE *pstream = 0;
 static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
-static char mbstr[16];
 
+//static pthread_mutex_t mutexLogger;
+//static bool mbMutexInit = false;
 
 inline void writeLog(int nSize, const char *pLog)
 {
+	char mbstr[16];
 	std::time_t t;
 	t = std::time( NULL);
 	memset(mbstr, 0, 16);
 	std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-	if (0 != mstrLogDate.compare(mbstr))
+	if(0 < strlen(mbstr) && 0 != mstrLogDate.compare(mbstr))
 	{
-		if (0 != pstream)
+		if(0 != pstream)
 			fclose(pstream);
 
 		mstrLogDate = mbstr;
 		string strPath = format("%s.%s", mstrLogPath.c_str(), mbstr);
-		pstream = fopen(strPath.c_str(), "a");
-		if (pstream)
+		pstream = fopen(strPath.c_str(), "a+");
+		if(pstream)
+		{
+			if(0 != setvbuf(pstream, NULL, _IONBF, 0))
+			{
+				printf("[LogHandler] setvbuf fail \n");
+			}
 			printf("[LogHandler] Open Log File Success, Path: %s\n", strPath.c_str());
+		}
 	}
 
-	if (0 == pstream)
-	{
-		printf("[LogHandler] Error, pstream invalid\n");
-		return;
-	}
-
-	flockfile(pstream);
-	fwrite(pLog, 1, nSize, pstream);
-	fwrite("\n", 1, 1, pstream);
-	//fprintf(pstream, "%s\n", pLog);
-	fflush(pstream);
-	funlockfile(pstream);
+	if(pstream)
+		fwrite(pLog, 1, nSize, pstream);
 }
 
 void _log(const char* format, ...)
@@ -74,44 +69,62 @@ void _log(const char* format, ...)
 
 	string strLog = string(buffer, size);
 
-	strLog = currentDateTime() + " : " + strLog;
+	strLog = currentDateTime() + " : " + strLog + "\n";
 
-	if (mstrLogPath.empty())
+	if(!mstrLogPath.empty())
 	{
-		printf("[LogHandler] Log Path not Setting\n");
-	}
-	else
-	{
+//		if (mbMutexInit)
+//			pthread_mutex_lock(&mutexLogger);
+
 		writeLog(strLog.length(), strLog.c_str());
+
+//		if (mbMutexInit)
+//			pthread_mutex_unlock(&mutexLogger);
 	}
 
-	printf("%s\n", strLog.c_str());
+	printf("%s", strLog.c_str());
 
 }
 
 void _setLogPath(const char *ppath)
 {
-	if (0 == ppath)
+	if(0 == ppath)
 	{
 		mstrLogPath = "./run.log";
-		return;
+	}
+	else
+	{
+		mstrLogPath = ppath;
+		mkdirp(mstrLogPath);
 	}
 
-	mstrLogPath = ppath;
-	mkdirp(mstrLogPath);
-	_log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
+//	if (mbMutexInit)
+//		pthread_mutex_destroy(&mutexLogger);
+//
+//	if (0 == pthread_mutex_init(&mutexLogger, 0))
+//	{
+//		mbMutexInit = true;
+//	}
 }
 
 void _close()
 {
-	if (0 != pstream)
+//	if (mbMutexInit)
+//		pthread_mutex_destroy(&mutexLogger);
+
+	if(0 != pstream)
 	{
 		fclose(pstream);
 		pstream = 0;
+		printf("[LogHandler] Log File Closed\n");
 	}
 }
 
 //=============================Deprecated================================================//
+
+static LogHandler* mInstance = 0;
+/* Log list*/
+__attribute__ ((unused)) static list<string> extListLog;
 
 void *threadExportLog(void *argv)
 {
@@ -136,7 +149,7 @@ LogHandler::~LogHandler()
 
 LogHandler* LogHandler::getInstance()
 {
-	if (0 == mInstance)
+	if(0 == mInstance)
 	{
 		mInstance = new LogHandler();
 	}
@@ -145,7 +158,7 @@ LogHandler* LogHandler::getInstance()
 
 void LogHandler::setLogPath(std::string strPath)
 {
-	if (!strPath.empty() && 0 < strPath.length())
+	if(!strPath.empty() && 0 < strPath.length())
 	{
 		mstrLogPath = strPath;
 		mkdirp(mstrLogPath);
@@ -157,27 +170,27 @@ void LogHandler::run()
 {
 	string strLog;
 	unsigned long nCount = 0;
-
+	char mbstr[16];
 	char szPath[255];
 	std::time_t t;
 
 	string strLogDate = "2015-07-27";
 
-	while (1)
+	while(1)
 	{
 		tdExportLog->threadSleep(1);
 		nCount = extListLog.size();
 
-		if (0 >= nCount)
+		if(0 >= nCount)
 			continue;
 
 		t = std::time( NULL);
 		memset(mbstr, 0, 16);
 		std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-		if (0 != strLogDate.compare(mbstr))
+		if(0 != strLogDate.compare(mbstr))
 		{
-			if (0 != pstream)
+			if(0 != pstream)
 				fclose(pstream);
 
 			strLogDate = mbstr;
@@ -186,12 +199,12 @@ void LogHandler::run()
 			pstream = fopen(szPath, "a");
 		}
 
-		for (unsigned long i = 0; i < nCount; ++i)
+		for(unsigned long i = 0; i < nCount; ++i)
 		{
 			strLog = *(extListLog.begin());
 			extListLog.pop_front();
 
-			if ( NULL != pstream)
+			if( NULL != pstream)
 			{
 				fprintf(pstream, "%s\n", strLog.c_str());
 				fflush(pstream);

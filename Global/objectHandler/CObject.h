@@ -8,18 +8,7 @@
 #pragma once
 
 #include <stdio.h>
-#include <stdexcept>
-
-using std::runtime_error;
-
-class CException: public runtime_error
-{
-public:
-	CException(const std::string& _message) :
-			std::runtime_error(_message)
-	{
-	}
-};
+#include <sys/types.h>
 
 class CMessageHandler;
 
@@ -40,7 +29,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}
@@ -54,24 +43,34 @@ struct EVENT_EXTERNAL
 class CObject
 {
 public:
-	CObject();
+	explicit CObject();
 	virtual ~CObject();
+	void clearMessage();
+	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	void _OnTimer(int nId);
 	int initMessage(int nKey);
 	int run(int nRecvEvent, const char * szDescript = 0);
-	void clearMessage();
-	void throwException(const char * szMsg);
-	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	timer_t setTimer(int nId, int nSecStart, int nInterSec, int nEvent = -1);
+	void killTimer(int nId);
+	unsigned long int createThread(void* (*entry)(void*), void* arg, const char *szDesc = 0);
+	void threadJoin(unsigned long int thdid);
+	void threadExit();
+	int threadCancel(unsigned long int thread);
+	void mutexLock();
+	void mutexUnlock();
+	unsigned long int getThreadID();
+	void closeMsq();
 
 protected:
-	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+	// virtual function, child must overload
+	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) = 0;
+	virtual void onTimer(int nId)
 	{
-		printf("onReceiveMessage: event=%d command=%d id=%lu data_length=%d, data=%x", nEvent, nCommand, nId, nDataLen,
-				*(unsigned int *) pData);
 	}
 	;
 
 private:
 	CMessageHandler *messageHandler;
-
+	int mnTimerEventId;
+	pthread_mutex_t mutex;
 };
-

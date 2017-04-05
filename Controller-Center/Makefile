@@ -1,5 +1,5 @@
 #####################################
-# ControllerAmx make file
+# Controller Center make file
 # Created on: 2016-07-05
 # Author: Jugo
 # Project: Smart Building
@@ -114,3 +114,6 @@ package-u:
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))
+
+
+

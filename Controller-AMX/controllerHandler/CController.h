@@ -12,10 +12,6 @@
 #include <list>
 #include <map>
 #include "CObject.h"
-#include "common.h"
-#include "packet.h"
-
-using namespace std;
 
 class CCmpHandler;
 class CThreadHandler;
@@ -29,11 +25,11 @@ class CController: public CObject
 public:
 	virtual ~CController();
 	static CController* getInstance();
-	int startServerAMX(string strIP, const int nPort, const int nMsqId);
-	int startServerDevice(string strIP, const int nPort, const int nMsqId);
+	int startServerAMX(std::string strIP, const int nPort, const int nMsqId);
+	int startServerDevice(std::string strIP, const int nPort, const int nMsqId);
 	void stopServer();
-	void onAMXCommand(string strCommand);
-	void onAMXResponseStatus(string strStatus);
+	void onAMXCommand(std::string strCommand);
+	void onAMXResponseStatus(std::string strStatus);
 	void setAMXBusyTimer(int nSec);
 
 protected:

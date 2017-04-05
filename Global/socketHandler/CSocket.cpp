@@ -5,6 +5,7 @@
  *      Author: root
  */
 
+#include <sys/select.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <linux/if.h>
@@ -12,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <linux/if_link.h>
 #include <ifaddrs.h>
+#include <netinet/tcp.h>
 #include "CSocket.h"
 #include "LogHandler.h"
 
@@ -102,22 +104,38 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 	}
 	else
 	{
-		int yes = 1;
+		/*
+		 linger m_sLinger;
+		 m_sLinger.l_onoff = 0; // (在closesocket()調用,但是還有數據沒發送完畢的時候容許逗留)
+		 m_sLinger.l_linger = 0; // (容許逗留的時間爲0秒)
+		 setsockopt(m_nSocketFD, SOL_SOCKET, SO_LINGER, (const char*) &m_sLinger, sizeof(linger));
+		 */
+		/* Check the status for the keepalive option */
 
-		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) && SOCK_STREAM == nStyle)
+		int yes = 1;
+		int no = 0;
+
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)))
+		{
+			_log("[Socket] Set Socket SO_KEEPALIVE Option Fail");
+			perror("setsockopt SO_KEEPALIVE");
+		}
+
+		if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)))
 		{
 			_log("[Socket] Set Socket SO_REUSEADDR Option Fail");
 			perror("setsockopt SO_REUSEADDR");
 		}
 
-		/* Check the status for the keepalive option */
-		/*	int keepalive = 1;
-		 if (-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive)))
-		 {
-		 perror("setsockopt SO_KEEPALIVE");
-		 }
-		 */
+		// 不經歷由系統緩衝區到socket緩衝區的拷貝
+		setsockopt(m_nSocketFD, SOL_SOCKET, SO_SNDBUF, &no, sizeof(int));
+		setsockopt(m_nSocketFD, SOL_SOCKET, SO_RCVBUF, &no, sizeof(int));
 
+		if (-1 == setsockopt(m_nSocketFD, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(int)))
+		{
+			_log("[Socket] Set Socket TCP_NODELAY Option Fail");
+			perror("setsockopt TCP_NODELAY");
+		}
 	}
 
 	return m_nSocketFD;
@@ -193,7 +211,7 @@ int CSocket::connectServer()
 		break;
 	case AF_INET:
 		server = gethostbyname((const char *) szIP);
-		if (server == NULL)
+		if (0 >= server)
 		{
 			_log("[Socket] ERROR, no such host");
 			return -1;
@@ -314,8 +332,8 @@ int CSocket::socketSend(struct sockaddr_in &rSocketAddr, const void* pBuf, int n
 
 	nSend = sendto(getSocketfd(), pBuf, (unsigned long int) nBufLen, FLAGS, (struct sockaddr *) &rSocketAddr,
 			(unsigned int) sizeof(rSocketAddr));
-	//_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
-	//		inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
+//_DBG("[Socket] UDP server send %s,%d bytes to client:%s:%d", (char* )const_cast<void*>(pBuf), nSend,
+//		inet_ntoa(rSocketAddr.sin_addr), ntohs(rSocketAddr.sin_port));
 	return nSend;
 }
 
@@ -402,8 +420,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 {
 	int nRet = 0;
 	bool bValid = false;
-	struct timeval timeout =
-	{ 0, 0 };
+	struct timeval timeout = { 0, 0 };
 	fd_set socketSet;
 
 	FD_ZERO(&socketSet);
@@ -414,7 +431,7 @@ bool CSocket::checkSocketFD(int nSocketFD)
 	{
 		bValid = FD_ISSET(nSocketFD, &socketSet);
 	}
-//	_DBG("[Socket] select socket FD :%d", bValid);
+
 	return bValid;
 }
 
@@ -529,7 +546,7 @@ void CSocket::socketClose()
 {
 	if (isValidSocketFD())
 	{
-		close(getSocketfd());
+		socketClose(getSocketfd());
 		if ( AF_UNIX == getSocketType())
 		{
 			memset(szPath, 0, sizeof(szPath));
@@ -543,8 +560,13 @@ void CSocket::socketClose()
 
 void CSocket::socketClose(int nSocketFD)
 {
+//	fd_set fs;
+//	FD_ZERO(&fs);
+//	FD_CLR(nSocketFD, &fs);
+//	ftruncate(nSocketFD, 0);
+//	shutdown(nSocketFD, SHUT_RDWR);
 	close(nSocketFD);
-	_log("[Socket] socket close FDt: %d", nSocketFD);
+	_log("[Socket] socket close FD: %d", nSocketFD);
 }
 
 void CSocket::setSocketStyle(int nStyle)

@@ -9,7 +9,6 @@
 #include "event.h"
 #include "CController.h"
 #include "CServerCenter.h"
-#include "ICallback.h"
 #include "LogHandler.h"
 #include "CSqliteHandler.h"
 #include "utility.h"
@@ -56,6 +55,10 @@ CController* CController::getInstance()
 	}
 	return controller;
 }
+
+#define EVENT_COMMAND_SOCKET_TCP_CENTER_RECEIVE  444444
+#define EVENT_COMMAND_SOCKET_CLIENT_CONNECT_CENTER 444445
+#define EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_CENTER 44446
 
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {

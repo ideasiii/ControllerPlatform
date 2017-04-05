@@ -13,21 +13,15 @@
 #include "CDataHandler.cpp"
 #include "JSONObject.h"
 #include "AMXCommand.h"
-#include "ICallback.h"
-#include "CTimer.h"
+#include "iCommand.h"
 #include "packet.h"
 
 #define TIMER_ID_AMX_BUSY	666
 
 static CServerDevice * serverDevice = 0;
 
-void OnTimer(int param)
-{
-	serverDevice->onTimer(param);
-}
-
 CServerDevice::CServerDevice() :
-		CSocketServer(), cmpParser(CCmpHandler::getInstance()), mnBusy(FALSE), mAmxBusyTimeout(5)
+		mnBusy(FALSE), mAmxBusyTimeout(5)
 {
 	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
 	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
@@ -48,40 +42,6 @@ CServerDevice * CServerDevice::getInstance()
 		serverDevice = new CServerDevice();
 	}
 	return serverDevice;
-}
-
-int CServerDevice::startServer(string strIP, const int nPort, const int nMsqId)
-{
-	if (0 >= nPort || 0 >= nMsqId)
-		return FALSE;
-
-	/** Run socket server for CMP **/
-	if (0 < nMsqId)
-	{
-		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE);
-		setClientConnectCommand(EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE);
-		setClientDisconnectCommand(EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE);
-	}
-
-	/** Set Receive , Packet is CMP , Message Queue Handle **/
-	setPacketConf(PK_CMP, PK_MSQ);
-
-	const char* cszAddr = NULL;
-	if (!strIP.empty())
-		cszAddr = strIP.c_str();
-
-	if (FAIL == start(AF_INET, cszAddr, nPort))
-	{
-		_log("[Server Device] Socket Create Fail");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-void CServerDevice::stopServer()
-{
-	stop();
 }
 
 void CServerDevice::onReceive(const int nSocketFD, const void *pData)
@@ -169,7 +129,8 @@ int CServerDevice::cmpAmxControl(int nSocket, int nCommand, int nSequence, const
 					_log("[Server Device] AMX Controller Busy set to True");
 					nStatus = STATUS_ROK;
 					(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
-					SetTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0, OnTimer);
+
+					setTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0);
 				}
 			}
 			else
@@ -275,12 +236,12 @@ void CServerDevice::deleteClient(const int nSocketFD)
  }
  *
  */
-void CServerDevice::broadcastAMXStatus(string strStatus)
+void CServerDevice::broadcastAMXStatus(const char *szStatus)
 {
-	int nId = AMX_STATUS_RESP[strStatus];
+	int nId = AMX_STATUS_RESP[szStatus];
 	if (10000 > nId)
 	{
-		_log("[Server Device] Invalid status: %s , code:%d", strStatus.c_str(), nId);
+		_log("[Server Device] Invalid status: %s , code:%d", szStatus, nId);
 		return;
 	}
 

@@ -134,3 +134,10 @@ __attribute__ ((unused)) static std::string format(const char* fmt, ...)
 
 	return std::string(buffer, size);
 }
+
+__attribute__ ((unused)) static long int nowSecond()
+{
+	time_t tnow;
+	time(&tnow);
+	return tnow;
+}

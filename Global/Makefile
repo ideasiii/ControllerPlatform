@@ -120,6 +120,7 @@ package-u:
 	apt-get -y install libmongo-client-dev mongodb-clients
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
+	apt-get -y install scons
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 

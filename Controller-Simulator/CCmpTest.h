@@ -25,7 +25,7 @@ public:
 	void ioPressure();
 	int sendRequest(const int nCommandId);
 	int sendRequestAMX(const int nCommandId);
-	void connectController(const std::string strIP, const int nPort);
+	int connectController(const std::string strIP, const int nPort);
 	void closeConnect();
 	int getSocketfd() const;
 	void runCMPSocketReceive(int nSocketFD);

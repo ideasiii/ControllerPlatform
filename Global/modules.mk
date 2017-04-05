@@ -14,7 +14,6 @@ psqlHandler \
 socketHandler	\
 sqliteHandler	\
 threadHandler	\
-timerHandler \
 mongoDBHandler \
 psqlHandler \
 mysqlHandler
