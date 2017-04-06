@@ -9,7 +9,7 @@
 
 #include "CObject.h"
 #include <string>
-
+#include <set>
 class CMysqlHandler;
 class CMongoDBHandler;
 
@@ -24,13 +24,19 @@ public:
 			const char *szPassword);
 	void setMysqlDestination(const char *szHost, const char *szPort, const char *szDB, const char *szUser,
 			const char *szPassword);
-	void syncTrackerUser();
-	void syncTrackerData();
-	std::string getMysqlLastDate(const char *szTable);
+	void setMongoDB(const char *szHost, const char *szPort);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 	void onTimer(int nId);
+
+private:
+	void syncTrackerUser();
+	void syncTrackerData();
+	std::string getMysqlLastDate(const char *szTable);
+	int syncColume(std::string strTable, std::string strAppId);
+	int getDestFields(std::string strTableName, std::set<std::string> &sFields);
+	int syncData(std::string strTable, std::string strAppId);
 
 private:
 	explicit CController();

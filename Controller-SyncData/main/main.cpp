@@ -70,6 +70,9 @@ void runService()
 					config->getValue("MYSQL DESTINATION", "user").c_str(),
 					config->getValue("MYSQL DESTINATION", "password").c_str());
 
+			controller->setMongoDB(config->getValue("MONGODB", "host").c_str(),
+					config->getValue("MONGODB", "port").c_str());
+
 			if(!controller->start())
 			{
 				nInit = FALSE;

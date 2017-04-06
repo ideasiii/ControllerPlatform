@@ -11,3 +11,4 @@ using namespace std;
 
 map<string, string> mapMysqlSource;
 map<string, string> mapMysqlDestination;
+map<string, string> mapMongodb;

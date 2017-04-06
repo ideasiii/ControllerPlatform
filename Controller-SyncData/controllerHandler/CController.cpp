@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <set>
 #include <map>
 #include "common.h"
 #include "LogHandler.h"
@@ -12,6 +13,7 @@
 #include "CMysqlHandler.h"
 #include "CMongoDBHandler.h"
 #include "JSONObject.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -90,6 +92,13 @@ void CController::setMysqlDestination(const char *szHost, const char *szPort, co
 	mapMysqlDestination["database"] = szDB;
 	mapMysqlDestination["user"] = szUser;
 	mapMysqlDestination["password"] = szPassword;
+}
+
+void CController::setMongoDB(const char *szHost, const char *szPort)
+{
+	extern map<string, string> mapMongodb;
+	mapMongodb["host"] = szHost;
+	mapMongodb["port"] = szPort;
 }
 
 void CController::syncTrackerUser()
@@ -187,6 +196,104 @@ void CController::syncTrackerData()
 	strLastDate = getMysqlLastDate("tracker_poya_android");
 	if(strLastDate.empty())
 		return;
+
+	if(syncColume("tracker_poya_android", "1472188038304"))
+	{
+		syncData("tracker_poya_android", "1472188038304");
+	}
+
+	if(syncColume("tracker_poya_ios", "1472188091474"))
+	{
+		syncData("tracker_poya_ios", "1472188091474");
+	}
+
+}
+
+int CController::getDestFields(std::string strTableName, std::set<std::string> &sFields)
+{
+	extern map<string, string> mapMysqlDestination;
+	int nRet;
+
+	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
+			mapMysqlDestination["password"]);
+	if(TRUE == nRet)
+	{
+		mysql->getFields(strTableName, sFields);
+		mysql->close();
+		nRet = TRUE;
+	}
+
+	return nRet;
+}
+
+int CController::syncColume(std::string strTable, std::string strAppId)
+{
+	set<string> sFields;
+	int nRet;
+	extern map<string, string> mapMysqlSource;
+	extern map<string, string> mapMysqlDestination;
+	list<map<string, string> > listRest;
+	string strSQL;
+
+	if(!getDestFields(strTable, sFields))
+	{
+		_log("[CController] syncColume fail");
+		return FALSE;
+	}
+
+	nRet = mysql->connect(mapMysqlSource["host"], "field", mapMysqlSource["user"], mapMysqlSource["password"]);
+	if(FALSE == nRet)
+	{
+		_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
+		return FALSE;
+	}
+
+	nRet = mysql->query("SELECT field FROM device_field WHERE id = '" + strAppId + "'", listRest);
+	mysql->close();
+
+	if(TRUE == nRet)
+	{
+		string strValue;
+		for(list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i)
+		{
+			for(map<string, string>::iterator j = i->begin(); j != i->end(); ++j)
+			{
+				strValue = j->second;
+				std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+				if(sFields.find(trim(strValue)) == sFields.end())
+				{
+					strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), trim(strValue).c_str());
+					nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"],
+							mapMysqlDestination["user"], mapMysqlDestination["password"]);
+					if(FALSE == nRet)
+					{
+						_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
+						return FALSE;
+					}
+					if(FALSE == mysql->sqlExec(strSQL))
+					{
+						if(1062 != mysql->getLastErrorNo())
+							_log("[CController] Mysql sqlExec Error: %s", mysql->getLastError().c_str());
+					}
+					mysql->close();
+				}
+			}
+		}
+	}
+
+	return TRUE;
+}
+
+int CController::syncData(string strTable, string strAppId)
+{
+	list<string> listJSON;
+	extern map<string, string> mapMongodb;
+	mongo->connectDB(mapMongodb["host"], mapMongodb["port"]);
+	BSONObj query = BSON(
+			"create_date" << BSON("$gte" << getMysqlLastDate(strTable) ) << "ID" << BSON("$regex" << strAppId));
+	mongo->query("access", "mobile", query, listJSON);
+	mongo->close();
+	return TRUE;
 }
 
 string CController::getMysqlLastDate(const char *szTable)
@@ -222,8 +329,12 @@ string CController::getMysqlLastDate(const char *szTable)
 				}
 			}
 		}
+		else
+		{
+			_log("[CController] getMysqlLastDate Mysql Error: %s", mysql->getLastError().c_str());
+		}
+		mysql->close();
 	}
-	mysql->close();
 
 	return strRet;
 }

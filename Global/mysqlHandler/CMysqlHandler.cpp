@@ -138,25 +138,29 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		string strItem;
 		string strField;
 
-		while((row = mysql_fetch_row(result)) != 0)
+		while((row = mysql_fetch_row(result)) > 0)
 		{
 			// 獲取下一行
 			//row = mysql_fetch_row(result);
-			if(row <= 0)
-			{
-				break;
-			}
+//			if(row <= 0)
+//			{
+//				break;
+//			}
 			// mysql_num_fields()返回結果集中的字段數
 			dataItem.clear();
 			for(unsigned int j = 0; j < mysql_num_fields(result); ++j)
 			{
 				//printf("[CMysqlHandler] Query Result: %s : %s\n", fields[j].name, row[j]);
+				strField = fields[j].name;
 				if(0 != row[j])
 				{
-					strField = fields[j].name;
 					strItem = row[j];
-					dataItem[strField] = strItem;
 				}
+				else
+				{
+					strItem = "";
+				}
+				dataItem[strField] = strItem;
 			}
 			listRest.push_back(dataItem);
 		}
