@@ -56,7 +56,7 @@ int CController::startTrackerServer(const char *szIP, const int nPort)
 
 int CController::startMongoClient()
 {
-	return mongodb->connectDB("127.0.0.1", "27017");
+	return mongodb->connectDB("175.98.119.121", "27017");
 }
 
 int CController::stop()
