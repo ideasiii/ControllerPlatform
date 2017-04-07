@@ -10,3 +10,4 @@
 using namespace std;
 
 map<string, string> mapMysqlSetting;
+map<string, string> mapPsqlSetting;

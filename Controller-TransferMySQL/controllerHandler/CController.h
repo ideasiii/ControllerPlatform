@@ -19,12 +19,12 @@ public:
 	static CController* getInstance();
 	int start();
 	int stop();
-	void OnTimer(int nId);
 	void setPsql(const char *szHost, const char *szPort, const char *szDB, const char *szUser, const char *szPassword);
 	void setMysql(const char *szHost, const char *szPort, const char *szDB, const char *szUser, const char *szPassword);
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	void onTimer(int nId);
 
 private:
 	explicit CController();
@@ -35,5 +35,4 @@ private:
 	CTransferTracker *transTracker;
 
 };
-
 

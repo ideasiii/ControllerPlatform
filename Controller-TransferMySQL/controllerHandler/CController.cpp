@@ -7,7 +7,6 @@
 
 #include "common.h"
 #include "CController.h"
-#include "CTimer.h"
 #include "CTransferTracker.h"
 #include "CTransferUser.h"
 #include "LogHandler.h"
@@ -19,17 +18,9 @@ using namespace std;
 
 static CController * controller = 0;
 
-void onTimer(int nId)
+void CController::onTimer(int nId)
 {
-	if (controller)
-	{
-		controller->OnTimer(nId);
-	}
-}
-
-void CController::OnTimer(int nId)
-{
-	if (mnBusy)
+	if(mnBusy)
 	{
 		_log("[Controller] System Busy, Ignore Sync.");
 		return;
@@ -57,7 +48,7 @@ CController::~CController()
 
 CController* CController::getInstance()
 {
-	if (0 == controller)
+	if(0 == controller)
 	{
 		controller = new CController();
 	}
@@ -80,7 +71,7 @@ int CController::start()
 	transTracker->syncDataAll();
 #else
 	_log("[Controller] Run SYNCALL_TIMER");
-	SetTimer(666, 3, TIMER_DU, onTimer);
+	setTimer(666, 3, TIMER_DU, onTimer);
 #endif
 #endif
 
@@ -89,7 +80,7 @@ int CController::start()
 
 int CController::stop()
 {
-	KillTimer(666);
+	killTimer(666);
 	return FALSE;
 }
 

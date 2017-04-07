@@ -52,7 +52,7 @@ void runService()
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
-	_log("Get Config File : %s", pstrConf->c_str());
+	printf("Get Config File : %s", pstrConf->c_str());
 	if(FALSE != config->loadConfig(*pstrConf))
 	{
 		_setLogPath(config->getValue("LOG", "log").c_str());

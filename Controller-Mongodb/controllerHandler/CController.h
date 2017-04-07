@@ -12,8 +12,8 @@
 #include <list>
 #include "CObject.h"
 
-class CMongoDBHandler;
 class CTrackerServer;
+class CMongoDBHandler;
 
 class CController: public CObject
 {
@@ -22,6 +22,7 @@ public:
 	virtual ~CController();
 	static CController* getInstance();
 	int startTrackerServer(const char *szIP, const int nPort);
+	int startMongoClient();
 	int stop();
 
 	int startServer(const int nPort);
@@ -33,9 +34,9 @@ protected:
 
 private:
 	explicit CController();
-
 	std::string insertLog(const int nType, std::string strData);
 
 private:
 	CTrackerServer *trackerServer;
+	CMongoDBHandler *mongodb;
 };
