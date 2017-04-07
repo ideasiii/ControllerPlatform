@@ -36,6 +36,7 @@ private:
 	std::string getMysqlLastDate(const char *szTable);
 	int syncColume(std::string strTable, std::string strAppId);
 	int getDestFields(std::string strTableName, std::set<std::string> &sFields);
+	int getFields(std::string strAppId, std::set<std::string> &sFields);
 	int syncData(std::string strTable, std::string strAppId);
 
 private:

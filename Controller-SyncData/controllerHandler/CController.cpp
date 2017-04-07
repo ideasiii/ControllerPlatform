@@ -14,8 +14,12 @@
 #include "CMongoDBHandler.h"
 #include "JSONObject.h"
 #include "utility.h"
+#include <string.h>
+#include <stddef.h>
+#include "Indicator.h"
 
 using namespace std;
+using namespace mongo;
 
 static CController * controller = 0;
 
@@ -49,7 +53,7 @@ void CController::onTimer(int nId)
 {
 	if(mnBusy)
 	{
-		_log("[Controller] System Busy, Ignore Sync.");
+		//_log("[Controller] System Busy, Ignore Sync.");
 		return;
 	}
 
@@ -226,20 +230,12 @@ int CController::getDestFields(std::string strTableName, std::set<std::string> &
 	return nRet;
 }
 
-int CController::syncColume(std::string strTable, std::string strAppId)
+int CController::getFields(std::string strAppId, std::set<std::string> &sFields)
 {
-	set<string> sFields;
+	string strError;
 	int nRet;
 	extern map<string, string> mapMysqlSource;
-	extern map<string, string> mapMysqlDestination;
 	list<map<string, string> > listRest;
-	string strSQL;
-
-	if(!getDestFields(strTable, sFields))
-	{
-		_log("[CController] syncColume fail");
-		return FALSE;
-	}
 
 	nRet = mysql->connect(mapMysqlSource["host"], "field", mapMysqlSource["user"], mapMysqlSource["password"]);
 	if(FALSE == nRet)
@@ -249,35 +245,69 @@ int CController::syncColume(std::string strTable, std::string strAppId)
 	}
 
 	nRet = mysql->query("SELECT field FROM device_field WHERE id = '" + strAppId + "'", listRest);
+	strError = mysql->getLastError();
 	mysql->close();
 
 	if(TRUE == nRet)
 	{
-		string strValue;
 		for(list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i)
 		{
 			for(map<string, string>::iterator j = i->begin(); j != i->end(); ++j)
 			{
-				strValue = j->second;
-				std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-				if(sFields.find(trim(strValue)) == sFields.end())
-				{
-					strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), trim(strValue).c_str());
-					nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"],
-							mapMysqlDestination["user"], mapMysqlDestination["password"]);
-					if(FALSE == nRet)
-					{
-						_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
-						return FALSE;
-					}
-					if(FALSE == mysql->sqlExec(strSQL))
-					{
-						if(1062 != mysql->getLastErrorNo())
-							_log("[CController] Mysql sqlExec Error: %s", mysql->getLastError().c_str());
-					}
-					mysql->close();
-				}
+				sFields.insert(j->second);
 			}
+		}
+	}
+	else
+	{
+		_log("[CController] getFields Mysql Error: %s", strError.c_str());
+	}
+
+	return nRet;
+}
+
+int CController::syncColume(std::string strTable, std::string strAppId)
+{
+	set<string> sFields;
+	set<string> sFieldsAppId;
+	int nRet;
+	extern map<string, string> mapMysqlSource;
+	extern map<string, string> mapMysqlDestination;
+	list<map<string, string> > listRest;
+	string strSQL, strValue;
+
+	if(!getDestFields(strTable, sFields))
+	{
+		_log("[CController] syncColume getDestFields fail");
+		return FALSE;
+	}
+
+	if(!getFields(strAppId, sFieldsAppId))
+	{
+		_log("[CController] syncColume getFields fail");
+		return FALSE;
+	}
+
+	for(set<string>::iterator it = sFieldsAppId.begin(); sFieldsAppId.end() != it; ++it)
+	{
+		strValue = (*it);
+		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+		if(sFields.find(trim(strValue)) == sFields.end())
+		{
+			strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), trim(strValue).c_str());
+			nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"],
+					mapMysqlDestination["user"], mapMysqlDestination["password"]);
+			if(FALSE == nRet)
+			{
+				_log("[CController] syncColume Mysql Error: %s", mysql->getLastError().c_str());
+				return FALSE;
+			}
+			if(FALSE == mysql->sqlExec(strSQL))
+			{
+				if(1062 != mysql->getLastErrorNo())
+					_log("[CController] syncColume Mysql sqlExec Error: %s", mysql->getLastError().c_str());
+			}
+			mysql->close();
 		}
 	}
 
@@ -286,13 +316,121 @@ int CController::syncColume(std::string strTable, std::string strAppId)
 
 int CController::syncData(string strTable, string strAppId)
 {
+	int nRet, nCount;
+	string strSQL, strValue, strSQL_INSERT, strLa, strLo, strLocation;
+	set<string> sFields;
 	list<string> listJSON;
 	extern map<string, string> mapMongodb;
+	extern map<string, string> mapMysqlDestination;
+	const char delimiters[] = ",";
+	char *running;
+	char *token;
+
+	if(!getFields(strAppId, sFields))
+	{
+		_log("[CController] getDestFields fail");
+		return FALSE;
+	}
+
 	mongo->connectDB(mapMongodb["host"], mapMongodb["port"]);
 	BSONObj query = BSON(
-			"create_date" << BSON("$gte" << getMysqlLastDate(strTable) ) << "ID" << BSON("$regex" << strAppId));
+			"create_date" << BSON("$gte" << getMysqlLastDate(strTable.c_str()) ) << "ID" << BSON("$regex" << strAppId));
 	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
+
+	if(0 >= listJSON.size())
+		return TRUE;
+
+	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
+			mapMysqlDestination["password"]);
+
+	if(FALSE == nRet)
+	{
+		_log("[CController] syncData Mysql Error: %s", mysql->getLastError().c_str());
+		return FALSE;
+	}
+
+	strSQL = "INSERT INTO " + strTable + " (_id,create_date,latitude,longitude,";
+
+	for(set<string>::iterator it = sFields.begin(); sFields.end() != it; ++it)
+	{
+		strValue = (*it);
+		std::transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+		strSQL += strValue;
+		if(sFields.end() != ++it)
+		{
+			strSQL += ",";
+		}
+		--it;
+	}
+
+	strSQL += ")VALUES( '";
+
+	nCount = 0;
+	for(list<string>::iterator itJson = listJSON.begin(); listJSON.end() != itJson; ++itJson, ++nCount)
+	{
+		JSONObject jsonItem(*itJson);
+		JSONObject oid(jsonItem.getJsonObject("_id"));
+		strSQL_INSERT = strSQL + oid.getString("$oid") + "','" + jsonItem.getString("create_date") + "','";
+		strLocation = jsonItem.getString("location");
+		if(!strLocation.empty() && 0 < strLocation.length())
+		{
+			running = strdupa(strLocation.c_str());
+			if(0 != running)
+			{
+				token = strsep(&running, delimiters);
+				if(0 != token)
+					strLa = token;
+				else
+					strLa = "";
+
+				token = strsep(&running, delimiters);
+				if(0 != token)
+					strLo = token;
+				else
+					strLo = "";
+
+				strSQL_INSERT = strSQL_INSERT + strLa + "','" + strLo + "','";
+			}
+			else
+				strSQL_INSERT += "','','";
+		}
+		else
+		{
+			strSQL_INSERT += "','','";
+		}
+
+		for(set<string>::iterator itfield = sFields.begin(); sFields.end() != itfield; ++itfield)
+		{
+			strSQL_INSERT += jsonItem.getString(*itfield, "");
+
+			if(sFields.end() != ++itfield)
+			{
+				strSQL_INSERT += "','";
+			}
+			else
+			{
+				strSQL_INSERT += "');";
+			}
+			--itfield;
+		}
+
+		jsonItem.release();
+
+		//_DBG("%s", strSQL_INSERT.c_str());
+
+		if(FALSE == mysql->sqlExec(strSQL_INSERT))
+		{
+			if(1062 != mysql->getLastErrorNo())
+				_log("[CController] syncData Mysql sqlExec Error: %s", mysql->getLastError().c_str());
+		}
+		else
+		{
+			_load(nCount);
+		}
+
+	}
+	mysql->close();
 	return TRUE;
 }
 

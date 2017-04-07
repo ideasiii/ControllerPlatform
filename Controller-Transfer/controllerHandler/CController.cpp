@@ -68,12 +68,12 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::start()
 {
-	SetTimer(666, 3, TIMER_DU);
+	setTimer(666, 3, TIMER_DU);
 	return TRUE;
 }
 
 int CController::stop()
 {
-	KillTimer(666);
+	killTimer(666);
 	return FALSE;
 }

@@ -10,6 +10,7 @@ controllerHandler \
 ../Global/logHandler \
 ../Global/processHandler \
 ../Global/mysqlHandler \
-../Global/mongoDBHandler
+../Global/mongoDBHandler \
+../Global/indicatorHandler
 			 
 export EXT_MODULES=extInclude
