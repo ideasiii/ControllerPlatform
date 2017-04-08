@@ -17,5 +17,6 @@ public:
 
 protected:
 	void onInitial();
+	void onFinish();
 
 };

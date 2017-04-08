@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include "LogHandler.h"
 
 class CMessageHandler;
 
@@ -29,7 +30,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}

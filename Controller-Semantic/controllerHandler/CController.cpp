@@ -22,3 +22,8 @@ void CController::onInitial()
 	printf("oninit\n");
 }
 
+void CController::onFinish()
+{
+	printf("finish\n");
+}
+

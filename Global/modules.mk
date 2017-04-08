@@ -1,4 +1,5 @@
-export MODULES=main \
+export MODULES=application \
+controllerHandler \
 cmpHandler	\
 configHandler	\
 dataHandler	\
