@@ -79,11 +79,11 @@ int CSocketServer::start(int nSocketType, const char* cszAddr, short nPort, int 
 
 	if(-1 != externalEvent.m_nMsgId)
 	{
-		nMsgId = initMessage(externalEvent.m_nMsgId);
+		nMsgId = initMessage(externalEvent.m_nMsgId, "CSocketServer");
 	}
 	else
 	{
-		nMsgId = initMessage(m_nInternalFilter);
+		nMsgId = initMessage(m_nInternalFilter, "CSocketServer");
 	}
 
 	if(-1 == nMsgId)

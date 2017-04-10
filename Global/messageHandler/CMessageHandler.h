@@ -7,8 +7,6 @@
 
 #pragma once
 
-
-
 #define DATA_LEN     4096
 
 /*
@@ -16,7 +14,7 @@
  */
 struct MESSAGE_BUF
 {
-	long mtype;                   // message filter, run use
+	long lFilter; // Message Filter, Who call CObject::run(long lFilter, const char * szDescript) will callback onReceiveMessage
 	int nCommand;
 	unsigned long int nId;
 	int nDataLen;
@@ -30,7 +28,7 @@ public:
 	virtual ~CMessageHandler();
 	void close();
 	int init(const long lkey);
-	int sendMessage(int nType, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 	int recvMessage(void **pbuf);
 	void setRecvEvent(int nEvent);
 	int getRecvEvent() const;

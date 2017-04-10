@@ -19,7 +19,6 @@
 
 CObject * object = 0;
 
-
 void _onTimer(int nId)
 {
 	if(object)
@@ -45,22 +44,30 @@ void CObject::closeMsq()
 	delete messageHandler;
 }
 
-int CObject::initMessage(int nKey)
+int CObject::initMessage(int nKey, const char * szDescript)
 {
 	int nMsqid;
 
+	if(0 >= nKey)
+		nKey = 20150727;
 	nMsqid = messageHandler->init(nKey);
 	if(0 >= nMsqid)
 	{
-		//throwException("Create message queue fail");
-		_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
-		return FALSE;
+
+		szDescript ?
+				_log("[Object] %s Create Message Queue Id: %d , Key: %d Fail m>_<m***", szDescript, nMsqid, nKey) :
+				_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
+		return -1;
 	}
-	_log("[Object] Create Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
-	return TRUE;
+
+	szDescript ?
+			_log("[Object] %s Create Message Queue Id: %d , Key: %d Success ^^Y", szDescript, nMsqid, nKey) :
+			_log("[Object] Create Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
+
+	return nMsqid;
 }
 
-int CObject::run(int nRecvEvent, const char * szDescript)
+int CObject::run(int lFilter, const char * szDescript)
 {
 	int nRecv;
 	MESSAGE_BUF *msgbuf;
@@ -71,7 +78,7 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 		return -1;
 	}
 
-	if(0 >= nRecvEvent)
+	if(0 >= lFilter)
 	{
 		_log("[Object] Invalid receive event id");
 		return -1;
@@ -80,12 +87,11 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 	msgbuf = new MESSAGE_BUF;
 	void * pdata;
 	pdata = msgbuf;
-	messageHandler->setRecvEvent(nRecvEvent);
+	messageHandler->setRecvEvent(lFilter);
 
-	if(szDescript)
-		_log("[Object] %s Message Service Start Run , Event ID:%d ", szDescript, nRecvEvent);
-	else
-		_log("[Object] Message Service Start Run , Event ID:%d", nRecvEvent);
+	szDescript ?
+			_log("[Object] %s Message Service Start Run , Event Filter ID:%d ", szDescript, lFilter) :
+			_log("[Object] Message Service Start Run , Event Filter ID:%d", lFilter);
 
 	while(1)
 	{
@@ -94,7 +100,7 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 		nRecv = messageHandler->recvMessage(&pdata);
 		if(0 < nRecv)
 		{
-			onReceiveMessage(msgbuf->mtype, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
+			onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}
 		else if(-2 == nRecv)
 		{
@@ -111,10 +117,8 @@ int CObject::run(int nRecvEvent, const char * szDescript)
 
 	delete msgbuf;
 
-	if(szDescript)
-		_log("[Object] %s Message loop end", szDescript);
-	else
-		_log("[Object] Message loop end");
+	szDescript ? _log("[Object] %s Message loop end", szDescript) : _log("[Object] Message loop end");
+
 	return 0;
 }
 

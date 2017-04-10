@@ -33,10 +33,10 @@ CMessageHandler::~CMessageHandler()
 
 void CMessageHandler::close()
 {
-	if ((listMsqId.end() == listMsqId.find(msqid)) || 0 >= msqid)
+	if((listMsqId.end() == listMsqId.find(msqid)) || 0 >= msqid)
 		return;
 
-	if (msgctl(msqid, IPC_RMID, NULL) == -1)
+	if(msgctl(msqid, IPC_RMID, NULL) == -1)
 	{
 		perror("msgctl");
 	}
@@ -53,7 +53,7 @@ int CMessageHandler::init(const long lkey)
 	int nMsqid;
 	int msgflg = IPC_CREAT | 0666;
 
-	if (0 >= lkey)
+	if(0 >= lkey)
 	{
 		nMsqid = -1;
 	}
@@ -61,7 +61,7 @@ int CMessageHandler::init(const long lkey)
 	{
 		nMsqid = msgget(lkey, msgflg);
 
-		if (0 >= nMsqid)
+		if(0 >= nMsqid)
 		{
 			_log("[CMessageHandler] message queue init fail, msqid=%d error=%s errorno=%d", nMsqid, strerror(errno),
 			errno);
@@ -74,7 +74,7 @@ int CMessageHandler::init(const long lkey)
 			struct msqid_ds ds;
 
 			memset(&ds, 0, sizeof(struct msqid_ds));
-			if (msgctl(nMsqid, IPC_STAT, &ds))
+			if(msgctl(nMsqid, IPC_STAT, &ds))
 			{
 				_log("[CMessageHandler] message queue control fail, msqid=%d error=%s errorno=%d", nMsqid,
 						strerror(errno),
@@ -84,7 +84,7 @@ int CMessageHandler::init(const long lkey)
 			{
 				//	_DBG("[Message] Queue size = %lu", ds.msg_qbytes);
 				ds.msg_qbytes = 1024 * 1024 * 8;
-				if (msgctl(nMsqid, IPC_SET, &ds))
+				if(msgctl(nMsqid, IPC_SET, &ds))
 				{
 					_log("[CMessageHandler] message queue control fail, msqid=%d error=%s errorno=%d", nMsqid,
 							strerror(errno),
@@ -101,25 +101,25 @@ int CMessageHandler::init(const long lkey)
 
 }
 
-int CMessageHandler::sendMessage(int nType, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	int nRet;
 	MESSAGE_BUF *pBuf;
 
 	pBuf = new MESSAGE_BUF;
 
-	pBuf->mtype = nType;
+	pBuf->lFilter = lFilter;
 	pBuf->nCommand = nCommand;
 	pBuf->nId = nId;
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));
-	if ( NULL != pData && 0 < nDataLen)
+	if( NULL != pData && 0 < nDataLen)
 	{
 		memcpy(pBuf->cData, pData, nDataLen);
 		pBuf->nDataLen = nDataLen;
 	}
 
-	if (-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
+	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
 	{
 		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
 		errno);
@@ -139,10 +139,10 @@ int CMessageHandler::recvMessage(void **pbuf)
 {
 	ssize_t recvSize = 0;
 
-	if ( NULL == *pbuf)
+	if( NULL == *pbuf)
 		return -1;
 
-	if (-1 == getRecvEvent())
+	if(-1 == getRecvEvent())
 	{
 		_log("[CMessageHandler] message queue receive fail, msqid=%d invalid event", getMsqid());
 		return -1;
@@ -150,9 +150,9 @@ int CMessageHandler::recvMessage(void **pbuf)
 
 	recvSize = msgrcv(getMsqid(), *pbuf, getBufLength(), getRecvEvent(), 0);
 
-	if (0 > recvSize)
+	if(0 > recvSize)
 	{
-		if ( errno == EINTR)
+		if( errno == EINTR)
 		{
 			_log("[CMessageHandler] message queue receive fail get EINTR, msqid=%d error=%s errorno=%d", getMsqid(),
 					strerror(errno),
@@ -197,7 +197,7 @@ int CMessageHandler::registerMsq(const long lkey)
 	int nMsqid;
 	int msgflg = IPC_CREAT | 0666;
 
-	if (0 >= lkey)
+	if(0 >= lkey)
 	{
 		nMsqid = -1;
 	}
@@ -205,7 +205,7 @@ int CMessageHandler::registerMsq(const long lkey)
 	{
 		nMsqid = msgget(lkey, msgflg);
 
-		if (0 >= nMsqid && 17 != errno)
+		if(0 >= nMsqid && 17 != errno)
 		{
 			_log("[CMessageHandler] message queue init fail, msqid=%d error=%s errorno=%d", nMsqid, strerror(errno),
 			errno);
@@ -217,27 +217,26 @@ int CMessageHandler::registerMsq(const long lkey)
 
 void CMessageHandler::closeMsg(const int nMsqId)
 {
-	if ((listMsqId.end() == listMsqId.find(nMsqId)) || 0 >= nMsqId)
-		return;
-
-	if (-1 != msgctl(nMsqId, IPC_RMID, NULL))
-		_log("[CMessageHandler] Message Queue Close, id: %d", nMsqId);
-	else
+	if(-1 != msgctl(nMsqId, IPC_RMID, NULL))
 	{
-		listMsqId.erase(nMsqId);
-	}
+		if((listMsqId.end() != listMsqId.find(nMsqId)))
+		{
+			listMsqId.erase(nMsqId);
+		}
+		_log("[CMessageHandler] Message Queue Close, id: %d", nMsqId);
 
+	}
 }
 
 void CMessageHandler::release()
 {
-	if (listMsqId.empty())
+	if(listMsqId.empty())
 		return;
 
 	set<int>::iterator it;
-	for (it = listMsqId.begin(); listMsqId.end() != it; ++it)
+	for(it = listMsqId.begin(); listMsqId.end() != it; ++it)
 	{
-		if (-1 != msgctl(*it, IPC_RMID, NULL))
+		if(-1 != msgctl(*it, IPC_RMID, NULL))
 			_log("[CMessageHandler] Message Queue Close, id: %d", *it);
 	}
 

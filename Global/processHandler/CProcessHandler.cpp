@@ -13,10 +13,12 @@
 #include <string.h>
 #include <event.h>
 
+#include "CMessageHandler.h"
 #include "CProcessHandler.h"
 #include "common.h"
 #include "LogHandler.h"
 
+int mnMsqKey;
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
 
@@ -53,6 +55,13 @@ CProcessHandler::~CProcessHandler()
 }
 
 int CProcessHandler::runProcess(void (*entry)(void))
+{
+	return process(entry);
+}
+
+//========================== Extern Mode ==============================================//
+
+int process(void (*entry)(void))
 {
 	if(0 == entry)
 		return -1;
@@ -117,7 +126,7 @@ int CProcessHandler::runProcess(void (*entry)(void))
 		{
 			_log("[Process] receive signal: %d\n", status);
 		}
-		sleep(3);
+		sleep(2);
 	}
 	while(SIGTERM != WTERMSIG(status) && !flag);
 

@@ -30,7 +30,7 @@ struct EVENT_EXTERNAL
 	}
 	bool isValid()
 	{
-		if (-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
+		if(-1 != m_nMsgId && -1 != m_nEventFilter && -1 != m_nEventRecvCommand)
 		{
 			return true;
 		}
@@ -49,8 +49,8 @@ public:
 	void clearMessage();
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 	void _OnTimer(int nId);
-	int initMessage(int nKey);
-	int run(int nRecvEvent, const char * szDescript = 0);
+	int initMessage(int nKey, const char * szDescript = 0);
+	int run(int lFilter, const char * szDescript = 0);
 	timer_t setTimer(int nId, int nSecStart, int nInterSec, int nEvent = -1);
 	void killTimer(int nId);
 	unsigned long int createThread(void* (*entry)(void*), void* arg, const char *szDesc = 0);
@@ -64,7 +64,8 @@ public:
 
 protected:
 	// virtual function, child must overload
-	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) = 0;
+	virtual void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
+			const void* pData) = 0;
 	virtual void onTimer(int nId)
 	{
 	}

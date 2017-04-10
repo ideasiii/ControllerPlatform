@@ -81,14 +81,14 @@ int CSocketClient::start(int nSocketType, const char* cszAddr, short nPort, int 
 
 		if(-1 != externalEvent.m_nMsgId)
 		{
-			if(-1 == initMessage(externalEvent.m_nMsgId))
+			if(-1 == initMessage(externalEvent.m_nMsgId, "CSocketClient"))
 			{
 				_log("[Socket Client] socket client create message id fail");
 			}
 		}
 		else
 		{
-			if(-1 == initMessage(m_nInternalFilter))
+			if(-1 == initMessage(m_nInternalFilter, "CSocketClient"))
 			{
 				_log("[Socket Client] socket client create message id fail");
 			}

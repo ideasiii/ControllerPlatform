@@ -10,7 +10,6 @@ export MODULES=controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/cmpHandler \
 ../Global/mysqlHandler \
 ../Global/protocolHandler
 			 

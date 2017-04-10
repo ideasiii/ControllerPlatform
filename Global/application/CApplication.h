@@ -16,6 +16,8 @@ public:
 	explicit CApplication();
 	virtual ~CApplication();
 	void callback(int nMsg);
+	void setConfPath(const char * szPath);
+	std::string getConfPath();
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
@@ -27,4 +29,5 @@ protected:
 private:
 	typedef void (CApplication::*MemFn)(void);
 	std::map<int, MemFn> mapFunc;
+	std::string mstrConfPath;
 };

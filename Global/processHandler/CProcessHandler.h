@@ -7,8 +7,6 @@
 
 #pragma once
 
-class CObject;
-
 class CProcessHandler
 {
 public:
@@ -19,3 +17,6 @@ public:
 private:
 
 };
+
+extern int process(void (*entry)(void));
+

@@ -9,6 +9,8 @@
 
 #include "CApplication.h"
 
+class CCmpWord;
+
 class CController: public CApplication
 {
 public:
@@ -19,4 +21,9 @@ protected:
 	void onInitial();
 	void onFinish();
 
+private:
+	int startCmpWordServer();
+
+private:
+	CCmpWord *cmpword;
 };

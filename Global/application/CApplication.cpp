@@ -14,6 +14,7 @@
 #include "common.h"
 #include "CConfig.h"
 #include "Message.h"
+#include "event.h"
 
 using namespace std;
 using namespace apmsg;
@@ -43,7 +44,7 @@ CApplication::~CApplication()
 void CApplication::callback(int nMsg)
 {
 	map<int, MemFn>::iterator iter;
-	if (mapFunc.end() != (iter = mapFunc.find(nMsg)))
+	if(mapFunc.end() != (iter = mapFunc.find(nMsg)))
 	{
 		(this->*this->mapFunc[nMsg])();
 	}
@@ -54,6 +55,15 @@ void CApplication::onReceiveMessage(int nEvent, int nCommand, unsigned long int 
 
 }
 
+void CApplication::setConfPath(const char * szPath)
+{
+	mstrConfPath = szPath;
+}
+string CApplication::getConfPath()
+{
+	return mstrConfPath;
+}
+
 inline string getConfName(std::string strProcessName)
 {
 	size_t found = strProcessName.find_last_of("/\\");
@@ -61,33 +71,40 @@ inline string getConfName(std::string strProcessName)
 }
 inline void initLogPath()
 {
+	string strPath;
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
-	if (config->loadConfig(*pstrConf))
-		_setLogPath(config->getValue("LOG", "log").c_str());
+	if(config->loadConfig(*pstrConf))
+	{
+		strPath = config->getValue("LOG", "log");
+		if(!strPath.empty())
+		{
+			_setLogPath(strPath.c_str());
+		}
+		else
+		{
+			_setLogPath("./controller.log");
+		}
+	}
 	delete pstrConf;
 	delete config;
 }
 
-int mnMsqKey;
 void runService()
 {
 	int nInit = FALSE;
 	int nTmp = -1;
+	string strConfPath;
 
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
-
 	CController *controller = new CController();
-	mnMsqKey = clock();
-	if (-1 == mnMsqKey)
-		mnMsqKey = 20150727;
-
-	if (controller->initMessage(mnMsqKey))
+	if(0 < controller->initMessage(clock(), "Controller"))
 	{
 		initLogPath();
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		controller->setConfPath(getConfName(__progname).c_str());
 		controller->callback(MSG_ON_INITIAL);
-		controller->run(mnMsqKey, "Controller");
+		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
 		controller->callback(MSG_ON_FINISH);
 		CMessageHandler::release();
 	}
@@ -99,5 +116,5 @@ void runService()
 
 int main(int argc, char* argv[])
 {
-	return !CProcessHandler::runProcess(runService);
+	return process(runService);
 }
