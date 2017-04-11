@@ -54,14 +54,14 @@ CProcessHandler::~CProcessHandler()
 
 }
 
-int CProcessHandler::runProcess(void (*entry)(void))
+int CProcessHandler::runProcess(void (*entry)(int), int nMsqKey)
 {
-	return process(entry);
+	return process(entry, nMsqKey);
 }
 
 //========================== Extern Mode ==============================================//
 
-int process(void (*entry)(void))
+int process(void (*entry)(int), int nMsqKey)
 {
 	if(0 == entry)
 		return -1;
@@ -71,6 +71,9 @@ int process(void (*entry)(void))
 
 	do
 	{
+		if(-1 != nMsqKey)
+			CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsqKey));
+
 		_close();
 		child_pid = fork();
 		if(-1 == child_pid)
@@ -87,7 +90,7 @@ int process(void (*entry)(void))
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
 
-			(*entry)();
+			(*entry)(nMsqKey);
 			return 0;
 		}
 
@@ -106,27 +109,28 @@ int process(void (*entry)(void))
 			perror("waitpid");
 			exit(EXIT_FAILURE);
 		}
+
 		if(WIFEXITED(status))
 		{
-			_log("[Process] child exited, status=%d\n", WEXITSTATUS(status));
+			_log("[ Parent Process] child exited, status=%d\n", WEXITSTATUS(status));
 		}
 		else if(WIFSIGNALED(status))
 		{
-			_log("[Process] child killed by signal %d\n", WTERMSIG(status));
+			_log("[Parent Process] child killed by signal %d\n", WTERMSIG(status));
 		}
 		else if(WIFSTOPPED(status))
 		{
-			_log("[Process] child stopped by signal %d\n", WSTOPSIG(status));
+			_log("[Parent Process] child stopped by signal %d\n", WSTOPSIG(status));
 		}
 		else if(WIFCONTINUED(status))
 		{
-			_log("[Process] continued\n");
+			_log("[Parent Process] continued\n");
 		}
 		else
 		{
-			_log("[Process] receive signal: %d\n", status);
+			_log("[Parent Process] receive signal: %d\n", status);
 		}
-		sleep(2);
+		sleep(3);
 	}
 	while(SIGTERM != WTERMSIG(status) && !flag);
 

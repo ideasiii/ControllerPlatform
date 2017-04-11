@@ -12,11 +12,11 @@ class CProcessHandler
 public:
 	explicit CProcessHandler();
 	virtual ~CProcessHandler();
-	static int runProcess(void (*entry)(void));
+	static int runProcess(void (*entry)(int), int nMsqKey = -1);
 
 private:
 
 };
 
-extern int process(void (*entry)(void));
+extern int process(void (*entry)(int), int nMsqKey);
 

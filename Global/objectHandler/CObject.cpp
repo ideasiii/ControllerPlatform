@@ -55,14 +55,14 @@ int CObject::initMessage(int nKey, const char * szDescript)
 	{
 
 		szDescript ?
-				_log("[Object] %s Create Message Queue Id: %d , Key: %d Fail m>_<m***", szDescript, nMsqid, nKey) :
-				_log("[Object] Create Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
+				_log("[Object] %s Register Message Queue Id: %d , Key: %d Fail m>_<m***", szDescript, nMsqid, nKey) :
+				_log("[Object] Register Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
 		return -1;
 	}
 
 	szDescript ?
-			_log("[Object] %s Create Message Queue Id: %d , Key: %d Success ^^Y", szDescript, nMsqid, nKey) :
-			_log("[Object] Create Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
+			_log("[Object] %s Register Message Queue Id: %d , Key: %d Success ^^Y", szDescript, nMsqid, nKey) :
+			_log("[Object] Register Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
 
 	return nMsqid;
 }
@@ -90,8 +90,8 @@ int CObject::run(int lFilter, const char * szDescript)
 	messageHandler->setRecvEvent(lFilter);
 
 	szDescript ?
-			_log("[Object] %s Message Service Start Run , Event Filter ID:%d ", szDescript, lFilter) :
-			_log("[Object] Message Service Start Run , Event Filter ID:%d", lFilter);
+			_log("[Object] %s Message Receiver Start Run , Event Filter ID:%d ", szDescript, lFilter) :
+			_log("[Object] Message Receiver Start Run , Event Filter ID:%d", lFilter);
 
 	while(1)
 	{
@@ -117,7 +117,7 @@ int CObject::run(int lFilter, const char * szDescript)
 
 	delete msgbuf;
 
-	szDescript ? _log("[Object] %s Message loop end", szDescript) : _log("[Object] Message loop end");
+	szDescript ? _log("[Object] %s Message Receiver loop end", szDescript) : _log("[Object] Message Receiver loop end");
 
 	return 0;
 }

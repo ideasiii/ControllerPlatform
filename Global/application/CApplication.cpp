@@ -30,7 +30,8 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-CApplication::CApplication()
+CApplication::CApplication() :
+		mnMsqKey(-1)
 {
 	mapFunc[MSG_ON_INITIAL] = &CApplication::onInitial;
 	mapFunc[MSG_ON_FINISH] = &CApplication::onFinish;
@@ -90,18 +91,18 @@ inline void initLogPath()
 	delete config;
 }
 
-void runService()
+void runService(int nMsqKey)
 {
 	int nInit = FALSE;
 	int nTmp = -1;
 	string strConfPath;
-
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 	CController *controller = new CController();
-	if(0 < controller->initMessage(clock(), "Controller"))
+	if(0 < controller->initMessage(nMsqKey, "Controller"))
 	{
 		initLogPath();
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		controller->mnMsqKey = nMsqKey;
 		controller->setConfPath(getConfName(__progname).c_str());
 		controller->callback(MSG_ON_INITIAL);
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
@@ -116,5 +117,5 @@ void runService()
 
 int main(int argc, char* argv[])
 {
-	return process(runService);
+	return process(runService, clock());
 }

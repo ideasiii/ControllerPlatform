@@ -22,7 +22,7 @@ class CATcpServer: public CSocket, public CObject
 	} SOCKET_CLIENT;
 
 public:
-	int start(const char* cszAddr, short nPort);
+	int start(const char* cszAddr, short nPort, int nMsqKey = -1);
 	void stop();
 	void closeClient(int nClientFD);
 	int getEventId();

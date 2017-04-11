@@ -18,6 +18,7 @@ public:
 	void callback(int nMsg);
 	void setConfPath(const char * szPath);
 	std::string getConfPath();
+	int mnMsqKey;
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);

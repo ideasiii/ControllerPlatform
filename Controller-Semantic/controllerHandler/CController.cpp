@@ -69,7 +69,7 @@ int CController::startCmpWordServer()
 			}
 			convertFromString(nPort, strPort);
 			cmpword = new CCmpWord();
-			cmpword->start(0, nPort);
+			cmpword->start(0, nPort, this->mnMsqKey);
 			nResult = TRUE;
 		}
 	}

@@ -39,12 +39,16 @@ void *threadTcpReceive(void *argv)
 	return 0;
 }
 
-int CATcpServer::start(const char* cszAddr, short nPort)
+int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 {
 	int nMsgId = -1;
 	int nSocketFD;
 
-	mnMsqKey = clock();
+	if(-1 != nMsqKey)
+		mnMsqKey = nMsqKey;
+	else
+		mnMsqKey = clock();
+
 	if(-1 == mnMsqKey)
 		mnMsqKey = 20150727;
 
