@@ -9,12 +9,9 @@
 
 CCmpWord::CCmpWord()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 CCmpWord::~CCmpWord()
 {
-	// TODO Auto-generated destructor stub
 }
 

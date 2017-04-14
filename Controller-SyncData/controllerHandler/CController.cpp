@@ -23,6 +23,8 @@ using namespace mongo;
 
 static CController * controller = 0;
 
+#define APP_ID_READY		1489783587343 // 首席測速APP
+
 CController::CController() :
 		CObject(), mysql(new CMysqlHandler), mongo(CMongoDBHandler::getInstance()), mnBusy(FALSE)
 {
@@ -211,6 +213,11 @@ void CController::syncTrackerData()
 		syncData("tracker_poya_ios", "1472188091474");
 	}
 
+	if(syncColume("tracker_speed_limit", "1489783587343"))
+	{
+		syncData("tracker_speed_limit", "1489783587343");
+	}
+
 }
 
 int CController::getDestFields(std::string strTableName, std::set<std::string> &sFields)
@@ -334,7 +341,7 @@ int CController::syncData(string strTable, string strAppId)
 
 	mongo->connectDB(mapMongodb["host"], mapMongodb["port"]);
 	BSONObj query = BSON(
-			"create_date" << BSON("$gte" << getMysqlLastDate(strTable.c_str()) ) << "ID" << BSON("$regex" << strAppId));
+			"create_date" << BSON("$gte" << getMysqlLastDate(strTable.c_str())) << "ID" << BSON("$regex" << strAppId));
 	mongo->query("access", "mobile", query, listJSON);
 	mongo->close();
 

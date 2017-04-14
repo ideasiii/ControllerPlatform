@@ -21,17 +21,14 @@ using namespace std;
 
 string getConfName(string strProcessName);
 void options(int argc, char **argv);
-static void runService();
+void runService(int);
 
 int main(int argc, char* argv[])
 {
 	extern char *__progname;
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
-
-	CMessageHandler::closeMsg(CMessageHandler::registerMsq(EVENT_MSQ_KEY_CONTROLLER_SIGNIN));
-
 	// Run Process
-	CProcessHandler::runProcess(runService);
+	process(runService, EVENT_MSQ_KEY_CONTROLLER_SYNCDATA);
 
 	closelog();
 	return EXIT_SUCCESS;
@@ -43,11 +40,13 @@ string getConfName(std::string strProcessName)
 	return (strProcessName.substr(++found) + ".conf");
 }
 
-void runService()
+void runService(int nMsqKey)
 {
 	int nInit = TRUE;
 	int nTmp = -1;
 	extern char *__progname;
+
+	CMessageHandler::closeMsg(CMessageHandler::registerMsq(EVENT_MSQ_KEY_CONTROLLER_SYNCDATA));
 
 	CController *controller = CController::getInstance();
 	CConfig *config = new CConfig();

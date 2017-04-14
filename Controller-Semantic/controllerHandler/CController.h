@@ -18,7 +18,14 @@ public:
 	virtual ~CController();
 
 protected:
+	/**
+	 *  Main Process run will callback onInitial
+	 */
 	void onInitial();
+
+	/*
+	 *  Main Process terminator will callback onFinish
+	 */
 	void onFinish();
 
 private:
