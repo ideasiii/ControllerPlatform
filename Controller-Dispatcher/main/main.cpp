@@ -22,7 +22,7 @@ using namespace std;
 
 string getConfName(string strProcessName);
 void options(int argc, char **argv);
-static void runService();
+static void runService(int nMsqKey);
 
 int main(int argc, char* argv[])
 {
@@ -42,7 +42,7 @@ string getConfName(std::string strProcessName)
 	return (strProcessName.substr(++found) + ".conf");
 }
 
-void runService()
+void runService(int nMsqKey)
 {
 	int nInit = TRUE;
 	int nTmp = -1;

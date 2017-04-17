@@ -23,9 +23,9 @@ public:
 private:
 	LogHandler();
 	CThreadHandler *tdExportLog;
-	//std::string mstrLogPath;
 };
 
 extern void _log(const char* format, ...);
 extern void _setLogPath(const char *ppath);
 extern void _close();
+extern void _error(const char* format, ...);
