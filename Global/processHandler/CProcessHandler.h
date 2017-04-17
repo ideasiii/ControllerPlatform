@@ -13,6 +13,7 @@ public:
 	explicit CProcessHandler();
 	virtual ~CProcessHandler();
 	static int runProcess(void (*entry)(int), int nMsqKey = -1);
+	static int runProcess(void (*entry)());
 
 private:
 
