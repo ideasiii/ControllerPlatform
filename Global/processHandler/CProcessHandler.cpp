@@ -112,24 +112,25 @@ int process(void (*entry)(int), int nMsqKey)
 
 		if(WIFEXITED(status))
 		{
-			_log("[ Parent Process] child exited, status=%d\n", WEXITSTATUS(status));
+			_log("[ Parent Process] child exited, status=%d", WEXITSTATUS(status));
 		}
 		else if(WIFSIGNALED(status))
 		{
-			_log("[Parent Process] child killed by signal %d\n", WTERMSIG(status));
+			_log("[Parent Process] child killed by signal %d", WTERMSIG(status));
 		}
 		else if(WIFSTOPPED(status))
 		{
-			_log("[Parent Process] child stopped by signal %d\n", WSTOPSIG(status));
+			_log("[Parent Process] child stopped by signal %d", WSTOPSIG(status));
 		}
 		else if(WIFCONTINUED(status))
 		{
-			_log("[Parent Process] continued\n");
+			_log("[Parent Process] continued");
 		}
 		else
 		{
-			_log("[Parent Process] receive signal: %d\n", status);
+			_log("[Parent Process] receive signal: %d", status);
 		}
+		_error("[process] Child process terminated signal: %d", status);
 		sleep(3);
 	}
 	while(SIGTERM != WTERMSIG(status) && !flag);

@@ -5,7 +5,7 @@
 *.obj
 */.deps
 .cproject
-ControlCenter/.cproject
+*.log
 
 # Compiled Dynamic libraries
 *.dylib

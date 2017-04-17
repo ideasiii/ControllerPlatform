@@ -73,13 +73,7 @@ void _log(const char* format, ...)
 
 	if(!mstrLogPath.empty())
 	{
-//		if (mbMutexInit)
-//			pthread_mutex_lock(&mutexLogger);
-
 		writeLog(strLog.length(), strLog.c_str());
-
-//		if (mbMutexInit)
-//			pthread_mutex_unlock(&mutexLogger);
 	}
 
 	printf("%s", strLog.c_str());
@@ -97,26 +91,40 @@ void _setLogPath(const char *ppath)
 		mstrLogPath = ppath;
 		mkdirp(mstrLogPath);
 	}
-
-//	if (mbMutexInit)
-//		pthread_mutex_destroy(&mutexLogger);
-//
-//	if (0 == pthread_mutex_init(&mutexLogger, 0))
-//	{
-//		mbMutexInit = true;
-//	}
 }
 
 void _close()
 {
-//	if (mbMutexInit)
-//		pthread_mutex_destroy(&mutexLogger);
-
 	if(0 != pstream)
 	{
 		fclose(pstream);
 		pstream = 0;
 		printf("[LogHandler] Log File Closed\n");
+	}
+}
+
+void _error(const char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');
+	va_end(vl);
+
+	char buffer[size];
+
+	va_start(vl, format);
+	size = vsnprintf(buffer, size, format, vl);
+	va_end(vl);
+
+	string strLog = string(buffer, size);
+
+	strLog = currentDateTime() + " : " + strLog + "\n";
+
+	FILE *perr = fopen("error.log", "a+");
+	if(perr)
+	{
+		fwrite(strLog.c_str(), 1, strLog.length(), perr);
+		fclose(perr);
 	}
 }
 

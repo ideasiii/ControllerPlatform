@@ -15,6 +15,8 @@
 
 using namespace std;
 
+#define MAX_SOCKET_READ			87380
+
 CCmpServer::CCmpServer()
 {
 	mapFunc[initial_request] = &CCmpServer::onInitial;
@@ -158,6 +160,13 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 	if(sizeof(CMP_HEADER) == result)
 	{
 		nTotalLen = ntohl(cmpHeader.command_length);
+
+		if(0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
+		{
+			_log("[CCmpServer] onTcpReceive receive invaild packet");
+			return 0;
+		}
+
 		nCommand = ntohl(cmpHeader.command_id);
 		nSequence = ntohl(cmpHeader.sequence_number);
 
@@ -167,6 +176,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		}
 
 		nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+
 		char buffer[nBodyLen];
 
 		if(0 < nBodyLen)
