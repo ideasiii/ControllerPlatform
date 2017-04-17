@@ -22,7 +22,7 @@ using namespace std;
 
 string getConfName(string strProcessName);
 void options(int argc, char **argv);
-static void runService();
+static void runService(int nMessageQueueId);
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
 	// Run Process
-	CProcessHandler::runProcess(runService);
+	process(runService,EVENT_MSQ_KEY_CONTROLLER_TRACKER);
 
 	closelog();
 	return EXIT_SUCCESS;
@@ -42,11 +42,11 @@ string getConfName(std::string strProcessName)
 	return (strProcessName.substr(++found) + ".conf");
 }
 
-void runService()
+void runService(int nMessageQueueId)
 {
 	int nInit = TRUE;
 	int nTmp = -1;
-	int nMsgID = EVENT_MSQ_KEY_CONTROLLER_TRACKER;
+	int nMsgID = nMessageQueueId;
 	extern char *__progname;
 
 	CController *controller = CController::getInstance();
