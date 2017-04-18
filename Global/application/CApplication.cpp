@@ -98,11 +98,13 @@ void runService(int nMsqKey)
 	string strConfPath;
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 	CController *controller = new CController();
-	if(0 < controller->initMessage(nMsqKey, "Controller"))
+	if(0 >= controller->mnMsqKey)
+		controller->mnMsqKey = nMsqKey;
+	if(0 < controller->initMessage(controller->mnMsqKey, "Controller"))
 	{
 		initLogPath();
+		_log("[runService] Controller Message Queue Key: %d", controller->mnMsqKey);
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
-		controller->mnMsqKey = nMsqKey;
 		controller->setConfPath(getConfName(__progname).c_str());
 		controller->callback(MSG_ON_INITIAL);
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");

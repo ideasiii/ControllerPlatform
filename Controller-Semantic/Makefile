@@ -27,7 +27,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lm -lrt -ldl \
 			-lmysqlclient
 					
-vpath %.cpp $(SRC_DIR)
+vpath %.cpp $(SRC_DIR) ../Global
 
 define make-goal
 $1/%.o: %.cpp

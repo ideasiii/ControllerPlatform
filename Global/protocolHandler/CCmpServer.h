@@ -24,6 +24,9 @@ protected:
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
 	int onTcpReceive(unsigned long int nSocketFD);
 
+	/**
+	 * Controller Message Protocol (CMP) Request Callback.
+	 */
 protected:
 	virtual int onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
 	{

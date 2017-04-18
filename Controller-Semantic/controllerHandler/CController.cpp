@@ -10,13 +10,14 @@
 #include "common.h"
 #include "CConfig.h"
 #include "utility.h"
+#include "event.h"
 
 using namespace std;
 
 CController::CController() :
 		cmpword(0)
 {
-
+	this->mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
 }
 
 CController::~CController()
@@ -27,7 +28,6 @@ CController::~CController()
 void CController::onInitial()
 {
 	startCmpWordServer();
-
 }
 
 void CController::onFinish()

@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
 	// Run Process
-	CProcessHandler::runProcess(runService);
+	process(runService, EVENT_MSQ_KEY_CONTROLLER_DISPATCHER);
 
 	closelog();
 	return EXIT_SUCCESS;

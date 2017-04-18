@@ -18,6 +18,8 @@ using namespace std;
 #define MAX_CLIENT			666
 int IDLE_TIMEOUT = 10; // secons
 
+int mnExtMsqKey;
+
 void *threadTcpAccept(void *argv)
 {
 	CATcpServer* ss = reinterpret_cast<CATcpServer*>(argv);
@@ -43,9 +45,13 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 {
 	int nMsgId = -1;
 	int nSocketFD;
+	mnExtMsqKey = FALSE;
 
 	if(-1 != nMsqKey)
+	{
 		mnMsqKey = nMsqKey;
+		mnExtMsqKey = TRUE;
+	}
 	else
 		mnMsqKey = clock();
 
@@ -106,8 +112,11 @@ void CATcpServer::stop()
 		threadCancel(munRunThreadId);
 		threadJoin(munRunThreadId);
 		munRunThreadId = 0;
-		CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
-		_log("[CATcpServer] Message Queue Receive Thread Stop.");
+
+		if(!mnExtMsqKey)
+		{
+			CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
+		}
 	}
 
 	/**
@@ -127,7 +136,7 @@ void CATcpServer::closeClient(int nClientFD)
 {
 	if(mapClient.end() != mapClient.find(nClientFD))
 	{
-		sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_CLIENT_COLSE, nClientFD, 0, 0);
+		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_CLIENT_COLSE, nClientFD, 0, 0);
 	}
 }
 
@@ -151,7 +160,7 @@ void CATcpServer::runSocketAccept()
 		if(-1 != nChildSocketFD)
 		{
 			_log("[CATcpServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
-			sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
+			sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
 		}
 		else
 		{
@@ -161,14 +170,14 @@ void CATcpServer::runSocketAccept()
 	}
 
 	_log("[CATcpServer] Thread runSocketAccept End");
-	sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
+	sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
 	threadExit();
 }
 
 void CATcpServer::runMessageReceive()
 {
 	munRunThreadId = getThreadID();
-	run(mnMsqKey, "CATcpServer");
+	run(EVENT_FILTER_SOCKET_SERVER, "CATcpServer");
 	threadExit();
 	threadJoin(getThreadID());
 	_log("[CATcpServer] runMessageReceive Stop, Thread join");
@@ -188,12 +197,12 @@ void CATcpServer::runTcpReceive()
 	if(0 >= nSocketFD)
 	{
 		_log("[CATcpServer] runTcpReceive Fail, Invalid Socket FD");
-		sendMessage(mnMsqKey, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
+		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
 		threadExit();
 		return;
 	}
 
-	sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_CONNECT, nSocketFD, 0, 0);
+	sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_CONNECT, nSocketFD, 0, 0);
 
 	while(1)
 	{
@@ -203,7 +212,7 @@ void CATcpServer::runTcpReceive()
 			break;
 	}
 
-	sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
+	sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
 	threadExit();
 }
 
@@ -218,7 +227,7 @@ int CATcpServer::onTcpReceive(unsigned long int nSocketFD)
 
 	if(0 < result)
 	{
-		sendMessage(mnMsqKey, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, result, pBuf);
+		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, result, pBuf);
 	}
 	return result;
 }
