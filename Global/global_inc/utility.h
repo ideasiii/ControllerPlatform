@@ -41,7 +41,7 @@ __attribute__ ((unused)) static int spliteData(char *pData, const char * delim, 
 	char * pch;
 
 	pch = strtok(pData, delim);
-	while (pch != NULL)
+	while(pch != NULL)
 	{
 		vData.push_back(string(pch));
 		pch = strtok( NULL, delim);
@@ -61,13 +61,13 @@ __attribute__ ((unused)) static bool mkdirp(string strPath)
 	char* p = const_cast<char*>(strDir.c_str());
 
 	// Do mkdir for each slash until end of string or error
-	while (*p != '\0')
+	while(*p != '\0')
 	{
 		// Skip first character
 		++p;
 
 		// Find first slash or end
-		while (*p != '\0' && *p != '/')
+		while(*p != '\0' && *p != '/')
 			++p;
 
 		// Remember value from p
@@ -77,7 +77,7 @@ __attribute__ ((unused)) static bool mkdirp(string strPath)
 		*p = '\0';
 
 		// Create folder from path to '\0' inserted at p
-		if (mkdir(strDir.c_str(), mode) == -1 && errno != EEXIST)
+		if(mkdir(strDir.c_str(), mode) == -1 && errno != EEXIST)
 		{
 			*p = v;
 			return false;
@@ -112,7 +112,7 @@ __attribute__ ((unused)) static string trim(string strSource)
 
 __attribute__ ((unused)) static bool isValidStr(const char *szStr, int nMaxSize)
 {
-	if ((0 != szStr) && 0 < ((int) strlen(szStr)) && nMaxSize > ((int) strlen(szStr)))
+	if((0 != szStr) && 0 < ((int) strlen(szStr)) && nMaxSize > ((int) strlen(szStr)))
 		return true;
 	else
 		return false;

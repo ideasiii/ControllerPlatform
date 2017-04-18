@@ -17,7 +17,8 @@ public:
 	virtual ~CController();
 
 protected:
-	void onInitial();
-	void onFinish();
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
 
 };

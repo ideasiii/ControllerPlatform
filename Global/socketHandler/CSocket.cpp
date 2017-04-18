@@ -127,10 +127,6 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 			perror("setsockopt SO_REUSEADDR");
 		}
 
-		// 不經歷由系統緩衝區到socket緩衝區的拷貝
-		setsockopt(m_nSocketFD, SOL_SOCKET, SO_SNDBUF, &no, sizeof(int));
-		setsockopt(m_nSocketFD, SOL_SOCKET, SO_RCVBUF, &no, sizeof(int));
-
 		if(-1 == setsockopt(m_nSocketFD, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(int)))
 		{
 			_log("[Socket] Set Socket TCP_NODELAY Option Fail");

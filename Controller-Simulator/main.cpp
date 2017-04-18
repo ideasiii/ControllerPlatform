@@ -20,12 +20,12 @@
 #include "utility.h"
 #include "CEvilTest.h"
 
-#define BUFSIZE 			1024
+#define BUFSIZE 		1024
 #define BYE				555
-#define PRESSURE			444
-#define HELP				777
+#define PRESSURE		444
+#define HELP			777
 #define IO_PRESSURE		888
-#define EVIL				666
+#define EVIL			666
 
 using namespace std;
 
@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 ("amx control", amx_control_request)\
 (
 			"amx status", amx_status_request)\
-("semantic", semantic_request)("amx status2", 1166);
+("semantic", semantic_request)("amx status2", 1166)("word",
+	semantic_word_request);
 
 	printf("This process is a Controller testing process!.\n");
 
@@ -165,6 +166,7 @@ int main(int argc, char* argv[])
 			case smart_building_getmeetingdata_request:
 			case smart_building_amx_control_access_request:
 			case smart_building_wireless_power_charge_request:
+			case semantic_word_request:
 			case 1166:
 				cmpTest->sendRequest(nCommand);
 				break;

@@ -18,19 +18,21 @@ public:
 	virtual ~CController();
 
 protected:
+	int onCreated(void* nMsqKey);
 	/**
 	 *  Main Process run will callback onInitial
 	 */
-	void onInitial();
+	int onInitial(void* szConfPath);
 
 	/*
 	 *  Main Process terminator will callback onFinish
 	 */
-	void onFinish();
+	int onFinish(void* nMsqKey);
 
 private:
-	int startCmpWordServer();
+	int startCmpWordServer(int nPort, int nMsqKey);
 
 private:
 	CCmpWord *cmpword;
+	int mnMsqKey;
 };

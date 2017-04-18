@@ -22,6 +22,7 @@ CCmpServer::CCmpServer()
 	mapFunc[initial_request] = &CCmpServer::onInitial;
 	mapFunc[sign_up_request] = &CCmpServer::onSignin;
 	mapFunc[access_log_request] = &CCmpServer::onAccesslog;
+	mapFunc[semantic_word_request] = &CCmpServer::onSemanticWord;
 }
 
 CCmpServer::~CCmpServer()
@@ -147,11 +148,12 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 	int result;
 	CMP_HEADER cmpHeader;
 	void *pHeader;
-	void *pBody;
+	void *pBody = 0;
 	int nTotalLen = 0;
 	int nBodyLen = 0;
 	int nCommand = generic_nack;
 	int nSequence = 0;
+	int nStatus;
 
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader);
@@ -169,6 +171,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 		nCommand = ntohl(cmpHeader.command_id);
 		nSequence = ntohl(cmpHeader.sequence_number);
+		nStatus = ntohl(cmpHeader.command_status);
 
 		if( enquire_link_request == nCommand)
 		{
@@ -182,40 +185,46 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		if(0 < nBodyLen)
 		{
 			pBody = buffer;
-			//memset(buffer, 0, sizeof(buffer));
+			memset(buffer, 0, sizeof(buffer));
 			result = socketrecv(nSocketFD, nBodyLen, &pBody);
 			if(result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
+				_log("[CCmpServer] onTcpReceive System Error, Body Length: %d Receive: %d data: %s", nBodyLen, result,
+						pBody);
 				return 0;
 			}
 		}
 
-		if(DATA_LEN < nBodyLen) // large data
-		{
-			map<int, MemFn>::iterator iter;
-			iter = mapFunc.find(nCommand);
-			if(mapFunc.end() == iter)
-			{
-				result = response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
-			}
-			else
-				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
-		}
-		else
-		{
-			char pBuf[DATA_LEN];
-			char* pvBuf = pBuf;
+		printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onTcpReceive ", nSocketFD);
+		(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+		/*
+		 if(DATA_LEN < nBodyLen) // large data
+		 {
+		 map<int, MemFn>::iterator iter;
+		 iter = mapFunc.find(nCommand);
+		 if(mapFunc.end() == iter)
+		 {
+		 result = response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+		 }
+		 else
+		 (this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+		 }
+		 else
+		 {
+		 char pBuf[DATA_LEN];
+		 char* pvBuf = pBuf;
 
-			memset(pBuf, 0, sizeof(pBuf));
-			memcpy(pvBuf, pHeader, sizeof(CMP_HEADER));
-			if(nBodyLen)
-			{
-				pvBuf += sizeof(CMP_HEADER);
-				memcpy(pvBuf, pBody, nBodyLen);
-			}
-			sendMessage(getEventId(), EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen, pBuf);
-		}
+		 memset(pBuf, 0, sizeof(pBuf));
+		 memcpy(pvBuf, pHeader, sizeof(CMP_HEADER));
+		 if(nBodyLen)
+		 {
+		 pvBuf += sizeof(CMP_HEADER);
+		 memcpy(pvBuf, pBody, nBodyLen);
+		 }
+		 sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen, pBuf);
+		 }
+		 */
 	}
 	else
 	{

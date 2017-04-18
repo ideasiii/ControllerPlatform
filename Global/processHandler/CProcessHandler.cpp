@@ -71,10 +71,6 @@ int process(void (*entry)(int), int nMsqKey)
 
 	do
 	{
-		if(-1 != nMsqKey)
-			CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsqKey));
-
-		_close();
 		child_pid = fork();
 		if(-1 == child_pid)
 		{
@@ -131,6 +127,9 @@ int process(void (*entry)(int), int nMsqKey)
 			_log("[Parent Process] receive signal: %d", status);
 		}
 		_error("[process] Child process terminated signal: %d", status);
+		if(-1 != nMsqKey)
+			CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsqKey));
+		_close();
 		sleep(3);
 	}
 	while(SIGTERM != WTERMSIG(status) && !flag);

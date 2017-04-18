@@ -123,6 +123,8 @@ struct CMP_PACKET
 #define smart_building_wireless_power_charge_response 	0x80000055
 #define smart_building_door_control_request				0x00000056
 #define smart_building_door_control_response			0x80000056
+#define semantic_word_request							0x00000057
+#define semantic_word_response							0x80000057
 
 #define MAX_COMMAND								0x000000FF
 
@@ -214,7 +216,8 @@ smart_building_appversion_response, "smart_building_appversion_response")(smart_
 		"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
 		"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
 		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
-		"smart_building_wireless_power_charge_response");
+		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
+semantic_word_response, "semantic_word_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
@@ -245,7 +248,7 @@ static int msnSequence = 0x00000000;
 __attribute__ ((unused)) inline static int getSequence()
 {
 	++msnSequence;
-	if (0x7FFFFFFF <= msnSequence)
+	if(0x7FFFFFFF <= msnSequence)
 		msnSequence = 0x00000001;
 	return msnSequence;
 }

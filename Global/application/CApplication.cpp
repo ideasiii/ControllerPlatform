@@ -30,25 +30,26 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-CApplication::CApplication() :
-		mnMsqKey(-1)
+CApplication::CApplication()
 {
+	mapFunc[MSG_ON_CREATED] = &CApplication::onCreated;
 	mapFunc[MSG_ON_INITIAL] = &CApplication::onInitial;
 	mapFunc[MSG_ON_FINISH] = &CApplication::onFinish;
 }
 
 CApplication::~CApplication()
 {
-
+	mapFunc.clear();
 }
 
-void CApplication::callback(int nMsg)
+int CApplication::callback(int nMsg, void* param)
 {
 	map<int, MemFn>::iterator iter;
 	if(mapFunc.end() != (iter = mapFunc.find(nMsg)))
 	{
-		(this->*this->mapFunc[nMsg])();
+		return (this->*this->mapFunc[nMsg])(param);
 	}
+	return -1;
 }
 
 void CApplication::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
@@ -70,45 +71,41 @@ inline string getConfName(std::string strProcessName)
 	size_t found = strProcessName.find_last_of("/\\");
 	return (strProcessName.substr(++found) + ".conf");
 }
-inline void initLogPath()
+inline string initLogPath()
 {
-	string strPath;
+	string strPath = "controller.log";
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
 	if(config->loadConfig(*pstrConf))
 	{
 		strPath = config->getValue("LOG", "log");
-		if(!strPath.empty())
-		{
-			_setLogPath(strPath.c_str());
-		}
-		else
-		{
-			_setLogPath("./controller.log");
-		}
+		if(strPath.empty())
+			strPath = "controller.log";
+		_setLogPath(strPath.c_str());
 	}
 	delete pstrConf;
 	delete config;
+	return strPath;
 }
 
 void runService(int nMsqKey)
 {
+	int nControllerMsqKey;
 	int nInit = FALSE;
 	int nTmp = -1;
 	string strConfPath;
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 	CController *controller = new CController();
-	if(0 >= controller->mnMsqKey)
-		controller->mnMsqKey = nMsqKey;
-	if(0 < controller->initMessage(controller->mnMsqKey, "Controller"))
+	nControllerMsqKey = controller->callback(MSG_ON_CREATED, &nMsqKey);
+
+	if(0 < controller->initMessage(nControllerMsqKey, "Controller"))
 	{
 		initLogPath();
-		_log("[runService] Controller Message Queue Key: %d", controller->mnMsqKey);
 		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
 		controller->setConfPath(getConfName(__progname).c_str());
-		controller->callback(MSG_ON_INITIAL);
+		controller->callback(MSG_ON_INITIAL, (void*) getConfName(__progname).c_str());
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
-		controller->callback(MSG_ON_FINISH);
+		controller->callback(MSG_ON_FINISH, &nControllerMsqKey);
 		CMessageHandler::release();
 	}
 	_close(); // close log file

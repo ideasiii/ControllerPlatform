@@ -206,8 +206,6 @@ void CATcpServer::runTcpReceive()
 
 	while(1)
 	{
-		usleep(1000);
-		updateClientAlive(nSocketFD);
 		if(0 >= onTcpReceive(nSocketFD))
 			break;
 	}

@@ -5,7 +5,11 @@
  *      Author: Jugo
  */
 #include <stdio.h>
+#include <string>
 #include "CController.h"
+#include <typeinfo>
+#include <iostream>
+using namespace std;
 
 CController::CController()
 {
@@ -17,12 +21,21 @@ CController::~CController()
 
 }
 
-void CController::onInitial()
+int CController::onCreated(void* nMsqKey)
 {
-
+	// reinterpret_cast 將一種型態的指標轉換為另一種型態的指標
+	int nKey = *(reinterpret_cast<int>(nMsqKey));
+	return nKey;
 }
 
-void CController::onFinish()
+int CController::onInitial(void* szConfPath)
 {
+	string strConfPath = reinterpret_cast<const char>(szConfPath);
+	return 0;
+}
 
+int CController::onFinish(void* nMsqKey)
+{
+	int nKey = *(reinterpret_cast<int>(nMsqKey));
+	return nKey;
 }

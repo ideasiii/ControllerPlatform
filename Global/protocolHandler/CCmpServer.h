@@ -43,6 +43,11 @@ protected:
 		return 0;
 	}
 	;
+	virtual int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData)
+	{
+		return 0;
+	}
+	;
 
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);

@@ -11,7 +11,18 @@
 
 class CCmpWord: public CCmpServer
 {
+	typedef struct _WORD_REQUEST
+	{
+		int nId;
+		int nType;
+		int nTotal;
+		int nNumber;
+		std::string strWord;
+	} WORD_REQUEST;
 public:
 	explicit CCmpWord();
 	virtual ~CCmpWord();
+
+protected:
+	int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData);
 };

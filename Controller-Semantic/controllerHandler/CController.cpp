@@ -11,13 +11,14 @@
 #include "CConfig.h"
 #include "utility.h"
 #include "event.h"
+#include <string>
 
 using namespace std;
 
 CController::CController() :
-		cmpword(0)
+		cmpword(0), mnMsqKey(-1)
 {
-	this->mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
+
 }
 
 CController::~CController()
@@ -25,59 +26,58 @@ CController::~CController()
 
 }
 
-void CController::onInitial()
+int CController::onCreated(void* nMsqKey)
 {
-	startCmpWordServer();
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC; //*(reinterpret_cast<int*>(nMsqKey));
+	return mnMsqKey;
 }
 
-void CController::onFinish()
+int CController::onInitial(void* szConfPath)
+{
+	string strConfPath = reinterpret_cast<const char*>(szConfPath);
+	if(strConfPath.empty())
+		return FALSE;
+
+	int nPort;
+	string strPort;
+	CConfig *config;
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
+	{
+		strPort = config->getValue("SERVER WORD", "port");
+		if(!strPort.empty())
+		{
+			convertFromString(nPort, strPort);
+			startCmpWordServer(nPort, mnMsqKey);
+		}
+	}
+	delete config;
+	return TRUE;
+}
+
+int CController::onFinish(void* nMsqKey)
 {
 	if(0 != cmpword)
 	{
 		delete cmpword;
 		cmpword = 0;
 	}
+	return TRUE;
 }
 
-int CController::startCmpWordServer()
+int CController::startCmpWordServer(int nPort, int nMsqKey)
 {
-	int nPort;
 	int nResult = FALSE;
-	string strPort;
-	string strConfPath;
-	CConfig *config;
 
-	strConfPath = getConfPath();
-
-	if(strConfPath.empty())
+	if(0 != cmpword)
 	{
-		_log("[CController] No config path");
-		return FALSE;
+		delete cmpword;
+		cmpword = 0;
 	}
 
-	config = new CConfig();
-	if(config->loadConfig(strConfPath))
-	{
-		strPort = config->getValue("SERVER WORD", "port");
-
-		if(!strPort.empty())
-		{
-			if(0 != cmpword)
-			{
-				delete cmpword;
-				cmpword = 0;
-			}
-			convertFromString(nPort, strPort);
-			cmpword = new CCmpWord();
-			cmpword->start(0, nPort, this->mnMsqKey);
-			nResult = TRUE;
-		}
-	}
-	else
-	{
-		_log("[CController] startCmpWordServer Fail, loadConfig Fail: %s", strConfPath.c_str());
-	}
-	delete config;
+	cmpword = new CCmpWord();
+	cmpword->start(0, nPort, nMsqKey);
+	nResult = TRUE;
 
 	return nResult;
 }
