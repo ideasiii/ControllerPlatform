@@ -12,4 +12,4 @@
 #define TYPE_RESP_STORY				2
 #define TYPE_RESP_TTS				3
 
-#define STORY_HOST					"http://175.98.119.122/story/"
+#define STORY_HOST					"https://iiideasmartbuilding.sytes.net/story/"
