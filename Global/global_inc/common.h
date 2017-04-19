@@ -43,11 +43,10 @@ extern "C"
 #define _EXCEPTION(msg, arg...) _log("[EXCEPTION] %s:%s(%d): " msg"\n" ,__FILE__, __FUNCTION__, __LINE__, ##arg)
 
 //=========== Function ===========//
-#define BUF_SIZE		2048	// socket send & recv buffer
-#define BACKLOG		128		// How many pending connections queue will hold
-#define SUCCESS		1
-#define	 FAIL				-1
-//typedef void (*CBFun)(void* param);
+#define BUF_SIZE				2048	// socket send & recv buffer
+#define BACKLOG					128		// How many pending connections queue will hold
+#define MAX_SOCKET_READ			87380
+#define MAX_SOCKET_WRITE		16384
 
 //========= Exception ===========//
 #define _TRY		try{

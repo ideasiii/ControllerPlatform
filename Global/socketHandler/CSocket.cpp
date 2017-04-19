@@ -113,7 +113,6 @@ int CSocket::createSocket(int nSocketType, int nStyle)
 		/* Check the status for the keepalive option */
 
 		int yes = 1;
-		int no = 0;
 
 		if(-1 == setsockopt(m_nSocketFD, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(int)))
 		{

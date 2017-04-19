@@ -26,7 +26,6 @@ public:
 	void stop();
 	void closeClient(int nClientFD);
 	int getEventId();
-	void updateClientAlive(unsigned long int ulSocketFD);
 
 	/**
 	 * Below function is called by thread
@@ -48,8 +47,20 @@ protected:
 	 * Overload function
 	 */
 protected:
-	virtual void onTimer(int nId) = 0;
-	virtual void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData) = 0;
+	virtual void onTimer(int nId)
+	{
+	}
+	;
+	/**
+	 * 自行定義封包處理層，不需實作 socket recv
+	 */
+	virtual void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData)
+	{
+	}
+	;
+	/**
+	 *  自行定義 TCP 接收層，須實作 socket recv
+	 */
 	virtual int onTcpReceive(unsigned long int nSocketFD);
 
 private:
@@ -61,6 +72,7 @@ private:
 	unsigned long munRunThreadId; // Message queue run thread ID.
 	unsigned long int getClientSocketFD(unsigned long int unThreadId);
 	unsigned long int getClientThreadID(unsigned long int unSocketFD);
+	void updateClientAlive(unsigned long int ulSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 };
 

@@ -30,7 +30,7 @@ static DBClientConnection *DBconn = 0;
 CMongoDBHandler::CMongoDBHandler()
 {
 	client::GlobalInstance instance;
-	if (!instance.initialized())
+	if(!instance.initialized())
 	{
 		std::cout << "failed to initialize the client driver: " << instance.status() << std::endl;
 		_log("[CMongoDBHandler] Initialized Mongodb Fail");
@@ -46,7 +46,7 @@ CMongoDBHandler::~CMongoDBHandler()
 
 CMongoDBHandler* CMongoDBHandler::getInstance()
 {
-	if (!mInstance)
+	if(!mInstance)
 	{
 		mInstance = new CMongoDBHandler();
 	}
@@ -63,7 +63,7 @@ int CMongoDBHandler::connectDB()
 
 	ConnectionString cs = ConnectionString::parse(uri, errmsg);
 
-	if (!cs.isValid())
+	if(!cs.isValid())
 	{
 		std::cout << "Error parsing connection string " << uri << ": " << errmsg << std::endl;
 		return FALSE;
@@ -71,7 +71,7 @@ int CMongoDBHandler::connectDB()
 
 	boost::scoped_ptr<DBClientBase> conn(cs.connect(errmsg));
 
-	if (!conn)
+	if(!conn)
 	{
 		cout << "couldn't connect : " << errmsg << endl;
 		return FALSE;
@@ -88,7 +88,7 @@ int CMongoDBHandler::connectDB(string strIP, string strPort)
 	string errmsg;
 	int nRet = FALSE;
 
-	if (!DBconn->connect(strIP + ":" + strPort, errmsg))
+	if(!DBconn->connect(strIP + ":" + strPort, errmsg))
 	{
 		_log("[CMongoDBHandler] DB Connect Fail! , Error: %s", errmsg.c_str());
 	}
@@ -109,14 +109,14 @@ int CMongoDBHandler::connectDB(std::string strIP, std::string strPort, std::stri
 	string strErrMsg;
 	int nRet = FALSE;
 
-	if (!DBconn->connect(strIP + ":" + strPort, strErrMsg))
+	if(!DBconn->connect(strIP + ":" + strPort, strErrMsg))
 	{
 		_log("[CMongoDBHandler] Couldn't connect:%s", strErrMsg.c_str());
 	}
 	else
 	{
 		bool ok = DBconn->auth(strDBName, strUser, strPasswd, strErrMsg);
-		if (!ok)
+		if(!ok)
 		{
 			_log("[CMongoDBHandler] %s", strErrMsg.c_str());
 		}
@@ -133,7 +133,7 @@ int CMongoDBHandler::connectDB(std::string strIP, std::string strPort, std::stri
 
 void CMongoDBHandler::close()
 {
-	if (0 != DBconn)
+	if(0 != DBconn)
 	{
 		delete DBconn;
 		DBconn = 0;
@@ -142,13 +142,13 @@ void CMongoDBHandler::close()
 
 void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::map<std::string, std::string> &mapData)
 {
-	if (!isValid())
+	if(!isValid())
 		return;
 	string strCon = strDB + "." + strCollection;
 	map<string, string>::iterator it;
 	BSONObjBuilder b;
 
-	for (it = mapData.begin(); it != mapData.end(); ++it)
+	for(it = mapData.begin(); it != mapData.end(); ++it)
 	{
 		b.append(it->first, it->second);
 	}
@@ -161,7 +161,7 @@ void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::
 
 void CMongoDBHandler::insert(std::string strDB, std::string strCollection, std::string strColumn, std::string strValue)
 {
-	if (!isValid())
+	if(!isValid())
 		return;
 
 	string strCon = strDB + "." + strCollection;
@@ -177,7 +177,7 @@ string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std
 {
 	string strId;
 
-	if (!isValid())
+	if(!isValid())
 		return strId;
 
 	string strCon = strDB + "." + strCollection;
@@ -197,7 +197,7 @@ string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std
 		OID oid = oi.__oid();
 		strId = oid.toString();
 	}
-	catch (const exception &e)
+	catch(const exception &e)
 	{
 		_log("[CMongoDBHandler] Insert Data Fail, Error:%s", e.what());
 		return strId;
@@ -214,8 +214,8 @@ bool CMongoDBHandler::isValid()
 int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::string strField, std::string strCondition,
 		std::list<std::string> &listJSON)
 {
-	if (!isValid())
-		return FAIL;
+	if(!isValid())
+		return FALSE;
 
 	string strCon = strDB + "." + strCollection;
 	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
@@ -249,14 +249,14 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 
 		BSONObj bsonobj;
 		auto_ptr<DBClientCursor> cursor = DBconn->query(strCon, query2);
-		while (cursor->more())
+		while(cursor->more())
 		{
 			bsonobj = cursor->next();
 			listJSON.push_back(bsonobj.jsonString());
 		}
 
 	}
-	catch (const exception &e)
+	catch(const exception &e)
 	{
 		_log("[CMongoDBHandler] Query Data Fail, Error:%s", e.what());
 		return FALSE;
@@ -268,8 +268,8 @@ int CMongoDBHandler::query(std::string strDB, std::string strCollection, std::st
 int CMongoDBHandler::query(string strDB, string strCollection, string strField, string strFilter, string strCondition,
 		list<string> &listJSON)
 {
-	if (!isValid())
-		return FAIL;
+	if(!isValid())
+		return FALSE;
 
 	string strCon = strDB + "." + strCollection;
 	_log("[CMongoDBHandler] query , con = %s", strCon.c_str());
@@ -280,7 +280,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 
 	auto_ptr<mongo::DBClientCursor> cursor = DBconn->query(strCon, query);
 
-	while (cursor->more())
+	while(cursor->more())
 	{
 		listJSON.push_back(cursor->next().jsonString());
 	}
@@ -291,8 +291,8 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 
 int CMongoDBHandler::query(string strDB, string strCollection, BSONObj bsonobj, list<string> &listJSON)
 {
-	if (!isValid())
-		return FAIL;
+	if(!isValid())
+		return FALSE;
 
 	string strCon = strDB + "." + strCollection;
 
@@ -300,7 +300,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, BSONObj bsonobj, 
 
 	auto_ptr<DBClientCursor> cursor = DBconn->query(strCon, bsonobj);
 
-	while (cursor->more())
+	while(cursor->more())
 	{
 		listJSON.push_back(cursor->next().jsonString());
 	}

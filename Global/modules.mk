@@ -17,6 +17,7 @@ sqliteHandler	\
 threadHandler	\
 mongoDBHandler \
 psqlHandler \
-mysqlHandler
+mysqlHandler \
+protocolHandler
 
 export EXT_MODULES=extInclude

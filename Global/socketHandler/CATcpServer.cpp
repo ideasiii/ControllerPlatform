@@ -208,6 +208,7 @@ void CATcpServer::runTcpReceive()
 	{
 		if(0 >= onTcpReceive(nSocketFD))
 			break;
+		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocketFD, 0, 0);
 	}
 
 	sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_DISCONNECT, nSocketFD, 0, 0);
@@ -217,7 +218,7 @@ void CATcpServer::runTcpReceive()
 int CATcpServer::onTcpReceive(unsigned long int nSocketFD)
 {
 	int result;
-	char pBuf[BUF_SIZE];
+	char pBuf[MAX_SOCKET_READ];
 	void* pvBuf = pBuf;
 	memset(pBuf, 0, sizeof(pBuf));
 	result = socketrecv(nSocketFD, &pvBuf, 0);
@@ -343,7 +344,6 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log("[CATcpServer] Receive Thread Joined, Thread ID: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
-		updateClientAlive(nId);
 		onReceive(nId, nDataLen, pData);
 		break;
 	case EVENT_COMMAND_TIMER:
@@ -355,6 +355,9 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		default:
 			onTimer(nId); // overload function
 		}
+		break;
+	case EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE:
+		updateClientAlive(nId);
 		break;
 	default:
 		_log("[CATcpServer] Unknow message command");
