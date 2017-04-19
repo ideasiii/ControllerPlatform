@@ -69,6 +69,8 @@ int process(void (*entry)(int), int nMsqKey)
 	pid_t w;
 	int status;
 
+	CMessageHandler::closeMsg(0);
+
 	do
 	{
 		child_pid = fork();

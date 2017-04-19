@@ -11,17 +11,21 @@
 #include "utility.h"
 #include "common.h"
 #include "JSONObject.h"
+#include "CSemanticJudge.h"
 
 using namespace std;
 
 #define MAX_SIZE		2048
 
-CCmpWord::CCmpWord()
+CCmpWord::CCmpWord() :
+		semanticJudge(0)
 {
+	semanticJudge = new CSemanticJudge();
 }
 
 CCmpWord::~CCmpWord()
 {
+	delete semanticJudge;
 }
 
 int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData)
@@ -54,6 +58,32 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 			}
 			jobjRoot->release();
 			delete jobjRoot;
+
+			if(0 > wordRequest.nId)
+			{
+				response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+				return FALSE;
+			}
+
+			JSONObject jsonResp;
+			jsonResp.put("id", wordRequest.nId);
+			switch(wordRequest.nType)
+			{
+			case 0: // 語意判斷
+				semanticJudge->word(wordRequest.strWord.c_str(), &jsonResp);
+				break;
+			case 1: // 控制
+				break;
+			case 2: // 會話
+				break;
+			case 3: // 紀錄
+				break;
+			default:
+				response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+				return FALSE;
+			}
+			response(nSocket, nCommand, STATUS_ROK, nSequence, jsonResp.toString().c_str());
+			jsonResp.release();
 		}
 	}
 	return TRUE;
