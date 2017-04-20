@@ -225,7 +225,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 
 	string strSBWirelessPowerCharge =
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
-	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我要聽故事\",\"total\":0,\"number\":0}";
+	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 
 	switch(nCommand)
 	{
