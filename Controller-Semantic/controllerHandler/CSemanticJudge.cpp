@@ -71,7 +71,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 			}
 		}
 		jsonResp->put("story", jsonStory);
-		jsonStory.release();
+		//	jsonStory.release();
 		return;
 	}
 
@@ -89,7 +89,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
-		jsonSpotify.release();
+		//	jsonSpotify.release();
 		return;
 	}
 
@@ -116,7 +116,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		}
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonMusic);
-		jsonMusic.release();
+		//	jsonMusic.release();
 		return;
 	}
 }
