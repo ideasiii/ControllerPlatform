@@ -56,22 +56,28 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	 */
 	if(string::npos != strWord.find("故事"))
 	{
+		bool bMatch = false;
 		JSONObject jsonStory;
 		jsonStory.put("host", STORY_HOST);
 		jsonResp->put("type", TYPE_RESP_STORY);
-		jsonStory.put("file", "三隻小豬.mp3");
-		jsonStory.put("story", "三隻小豬");
+
 		for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
 		{
 			if(string::npos != strWord.find(iter->first))
 			{
+				bMatch = true;
 				jsonStory.put("file", iter->second);
 				jsonStory.put("story", iter->first);
 				break;
 			}
 		}
+		if(!bMatch)
+		{
+			jsonStory.put("file", "三隻小豬.mp3");
+			jsonStory.put("story", "三隻小豬");
+		}
+
 		jsonResp->put("story", jsonStory);
-		//	jsonStory.release();
 		return;
 	}
 
@@ -89,16 +95,16 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
-		//	jsonSpotify.release();
 		return;
 	}
 
 	/**
 	 *  情境3：聽有關情緒關鍵字的音樂
-	 *  關鍵字：("音樂") + ("歡喜" || "忿怒" || "哀傷" || "驚恐" || "愛情")
+	 *  關鍵字：("音樂") + ("歡喜" || "憤怒" || "悲傷" || "驚恐" || "愛情")
 	 */
 	if(string::npos != strWord.find("音樂")) // Local
 	{
+		bool bMatch = false;
 		JSONObject jsonMusic;
 		jsonMusic.put("source", 1);
 		jsonMusic.put("album", "");
@@ -114,9 +120,13 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 				break;
 			}
 		}
+		if(!bMatch)
+		{
+			jsonMusic.put("file", "love.mp3");
+			jsonMusic.put("song", "愛情");
+		}
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonMusic);
-		//	jsonMusic.release();
 		return;
 	}
 }
