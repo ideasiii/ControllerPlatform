@@ -23,7 +23,7 @@ public:
 	virtual ~CCmpTest();
 	void cmpPressure();
 	void ioPressure();
-	int sendRequest(const int nCommandId);
+	int sendRequest(const int nCommandId, const char *szBody = 0);
 	int sendRequestAMX(const int nCommandId);
 	int connectController(const std::string strIP, const int nPort);
 	void closeConnect();
@@ -33,7 +33,7 @@ public:
 
 private:
 	int m_nSocketFD;
-	int formatPacket(int nCommand, void **pPacket, int nSequence);
+	int formatPacket(int nCommand, void **pPacket, int nSequence, const char *szBody = 0);
 	std::string mstrToken;
 	CThreadHandler *threadHandler;
 

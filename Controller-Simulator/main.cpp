@@ -19,6 +19,7 @@
 #include "CCmpTest.h"
 #include "utility.h"
 #include "CEvilTest.h"
+#include "JSONObject.h"
 
 #define BUFSIZE 		1024
 #define BYE				555
@@ -26,22 +27,24 @@
 #define HELP			777
 #define IO_PRESSURE		888
 #define EVIL			666
+#define WORD			2310
 
 using namespace std;
+
+int cmpRequest(int nCommand, CCmpTest *cmpTest);
 
 int main(int argc, char* argv[])
 {
 	string strIP;
 	int nPort = 0;
 	char buffer[BUFSIZE];						// For input
-	int i;                      								// For loop use
-	int running = 1;            						// Main Loop
-	int nCommand = 0;							// command
-
-	int epfd;                  			 				// EPOLL File Descriptor.
-	struct epoll_event ev;                     // Used for EPOLL.
-	struct epoll_event events[5];         // Used for EPOLL.
-	int noEvents;               						// EPOLL event number.
+	int i;                      				// For loop use
+	int running = 1;            				// Main Loop
+	int epfd;                  			 		// EPOLL File Descriptor.
+	struct epoll_event ev;                     	// Used for EPOLL.
+	struct epoll_event events[5];         		// Used for EPOLL.
+	int noEvents;               				// EPOLL event number.
+	int nService;								// Test what service.....
 
 	static map<string, int> mapCommand = create_map<string, int>\
 ("evil", EVIL)\
@@ -96,6 +99,7 @@ int main(int argc, char* argv[])
 	strIP = argv[1];
 	nPort = atoi(argv[2]);
 	printf("Connect IP:%s Port:%d.\n", strIP.c_str(), nPort);
+	nService = nPort;
 
 	CCmpTest *cmpTest = new CCmpTest();
 	if(!cmpTest->connectController(strIP, nPort))
@@ -105,7 +109,7 @@ int main(int argc, char* argv[])
 
 	epfd = epoll_create(5);
 
-	// Add STDIN into the EPOLL set.
+// Add STDIN into the EPOLL set.
 	ev.data.fd = STDIN_FILENO;
 	ev.events = EPOLLIN | EPOLLET;
 	epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
@@ -120,63 +124,47 @@ int main(int argc, char* argv[])
 			fgets(buffer, 1024, stdin);
 			strInput = trim(buffer);
 
-			nCommand = mapCommand[strInput];
-
-			switch(nCommand)
+			if(BYE == mapCommand[strInput])
 			{
-			case EVIL:
-				evil->start(500);
-				break;
-			case BYE:
 				printf("Bye.\n");
 				running = 0;
 				break;
-			case HELP:
-				printf("Test CMP Use:\n");
-				for(map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+			}
+
+			if(WORD == nService)
+			{
+				JSONObject jsonWord;
+				jsonWord.put("id", 0);
+				jsonWord.put("type", 0);
+				jsonWord.put("word", strInput);
+				jsonWord.put("total", 0);
+				jsonWord.put("number", 0);
+				cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
+				jsonWord.release();
+			}
+			else
+			{
+				switch(mapCommand[strInput])
 				{
-					cout << (*i).first << endl;
+				case EVIL:
+					evil->start(500);
+					break;
+				case BYE:
+					printf("Bye.\n");
+					running = 0;
+					break;
+				case HELP:
+					printf("Test CMP Use:\n");
+					for(map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+					{
+						cout << (*i).first << endl;
+					}
+					break;
+				default:
+					cmpRequest(mapCommand[strInput], cmpTest);
+					break;
 				}
-				break;
-			case PRESSURE:
-				cmpTest->cmpPressure();
-				break;
-			case IO_PRESSURE:
-				cmpTest->ioPressure();
-				break;
-			case enquire_link_request:
-			case initial_request:
-			case sign_up_request:
-			case access_log_request:
-			case rdm_login_request:
-			case rdm_operate_request:
-			case rdm_logout_request:
-			case power_port_state_request:
-			case power_port_set_request:
-			case authentication_request:
-			case bind_request:
-			case unbind_request:
-			case semantic_request:
-			case amx_control_request:
-			case amx_status_request:
-			case fcm_id_register_request:
-			case facebook_token_client_request:
-			case smart_building_qrcode_tokn_request:
-			case smart_building_appversion_request:
-			case smart_building_getmeetingdata_request:
-			case smart_building_amx_control_access_request:
-			case smart_building_wireless_power_charge_request:
-			case semantic_word_request:
-			case 1166:
-				cmpTest->sendRequest(nCommand);
-				break;
-			case AMX_BIND:
-			case AMX_SYSTEM_ON:
-				cmpTest->sendRequestAMX(nCommand);
-				break;
-			default:
-				printf("Unknow command, use help to show valid command.\n");
-				break;
+
 			}
 		}
 	}
@@ -185,5 +173,53 @@ int main(int argc, char* argv[])
 	delete cmpTest;
 	close(epfd);
 	return 0;
+}
+
+int cmpRequest(int nCommand, CCmpTest *cmpTest)
+{
+	switch(nCommand)
+	{
+	case PRESSURE:
+		cmpTest->cmpPressure();
+		break;
+	case IO_PRESSURE:
+		cmpTest->ioPressure();
+		break;
+	case enquire_link_request:
+	case initial_request:
+	case sign_up_request:
+	case access_log_request:
+	case rdm_login_request:
+	case rdm_operate_request:
+	case rdm_logout_request:
+	case power_port_state_request:
+	case power_port_set_request:
+	case authentication_request:
+	case bind_request:
+	case unbind_request:
+	case semantic_request:
+	case amx_control_request:
+	case amx_status_request:
+	case fcm_id_register_request:
+	case facebook_token_client_request:
+	case smart_building_qrcode_tokn_request:
+	case smart_building_appversion_request:
+	case smart_building_getmeetingdata_request:
+	case smart_building_amx_control_access_request:
+	case smart_building_wireless_power_charge_request:
+	case semantic_word_request:
+	case 1166:
+		cmpTest->sendRequest(nCommand, 0);
+		break;
+	case AMX_BIND:
+	case AMX_SYSTEM_ON:
+		cmpTest->sendRequestAMX(nCommand);
+		break;
+	default:
+		printf("Unknow command, use help to show valid command.\n");
+		break;
+	}
+
+	return 1;
 }
 

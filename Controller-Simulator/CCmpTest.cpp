@@ -101,9 +101,10 @@ int CCmpTest::getSocketfd() const
 	return m_nSocketFD;
 }
 
-int CCmpTest::sendRequest(const int nCommandId)
+int CCmpTest::sendRequest(const int nCommandId, const char *szBody)
 {
 	int nRet = -1;
+	int nPacketLen;
 
 	if(-1 == m_nSocketFD)
 	{
@@ -115,8 +116,10 @@ int CCmpTest::sendRequest(const int nCommandId)
 	void *pbuf;
 	pbuf = buf;
 
-	int nPacketLen = formatPacket(nCommandId, &pbuf, getSequence());
+	nPacketLen = formatPacket(nCommandId, &pbuf, getSequence(), szBody);
+
 	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
+
 	if(nPacketLen == nRet)
 	{
 		CMP_HEADER *pHeader;
@@ -173,7 +176,7 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 	return nRet;
 }
 
-int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
+int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const char *szBody)
 {
 	static int snId = 0;
 	char bufId[12];
@@ -227,190 +230,200 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence)
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 
-	switch(nCommand)
+	if(0 != szBody)
 	{
-	case bind_request:
-		memcpy(pIndex, strBind.c_str(), strBind.size());
-		pIndex += strBind.size();
-		nBody_len += strBind.size();
+		memcpy(pIndex, szBody, strlen(szBody));
+		pIndex += strlen(szBody);
+		nBody_len += strlen(szBody);
 		memcpy(pIndex, "\0", 1);
 		pIndex += 1;
 		nBody_len += 1;
-		break;
-	case access_log_request:
-		net_type = htonl(TYPE_TEST);
-		memcpy(pIndex, (const char*) &net_type, 4);
-		pIndex += 4;
-		nBody_len += 4;
-		memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
-		pIndex += strAccessLog.length();
-		nBody_len += strAccessLog.length();
-		memcpy(pIndex, "\0", 1);
-		++pIndex;
-		++nBody_len;
-		break;
-	case initial_request:
-		net_type = htonl(TRACKER_APPLIANCE);
-		memcpy(pIndex, (const char*) &net_type, 4);
-		pIndex += 4;
-		nBody_len += 4;
-		break;
-	case sign_up_request:
-		net_type = htonl(TYPE_MOBILE_SERVICE);
-		memcpy(pIndex, (const char*) &net_type, 4);
-		pIndex += 4;
-		nBody_len += 4;
-		memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
-		pIndex += strSignup.length();
-		nBody_len += strSignup.length();
-		memcpy(pIndex, "\0", 1);
-		++pIndex;
-		++nBody_len;
-		break;
-	case rdm_login_request:
-		memcpy(pIndex, strLogin.c_str(), strLogin.size());
-		pIndex += strLogin.size();
-		nBody_len += strLogin.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case rdm_operate_request:
-	case rdm_logout_request:
-		memcpy(pIndex, strLogout.c_str(), strLogout.size());
-		pIndex += strLogout.size();
-		nBody_len += strLogout.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case power_port_state_request:
-		nNum = htonl(1);
-		memcpy(pIndex, (const char*) &nNum, 4);
-		pIndex += 4;
-		nBody_len += 4;
-		break;
-	case power_port_set_request:
-		nNum = htonl(1);
-		memcpy(pIndex, (const char*) &nNum, 4);
-		pIndex += 4;
-		nBody_len += 4;
+	}
+	else
+	{
+		switch(nCommand)
+		{
+		case bind_request:
+			memcpy(pIndex, strBind.c_str(), strBind.size());
+			pIndex += strBind.size();
+			nBody_len += strBind.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case access_log_request:
+			net_type = htonl(TYPE_TEST);
+			memcpy(pIndex, (const char*) &net_type, 4);
+			pIndex += 4;
+			nBody_len += 4;
+			memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
+			pIndex += strAccessLog.length();
+			nBody_len += strAccessLog.length();
+			memcpy(pIndex, "\0", 1);
+			++pIndex;
+			++nBody_len;
+			break;
+		case initial_request:
+			net_type = htonl(TRACKER_APPLIANCE);
+			memcpy(pIndex, (const char*) &net_type, 4);
+			pIndex += 4;
+			nBody_len += 4;
+			break;
+		case sign_up_request:
+			net_type = htonl(TYPE_MOBILE_SERVICE);
+			memcpy(pIndex, (const char*) &net_type, 4);
+			pIndex += 4;
+			nBody_len += 4;
+			memcpy(pIndex, strSignup.c_str(), strSignup.length()); //	sign up data
+			pIndex += strSignup.length();
+			nBody_len += strSignup.length();
+			memcpy(pIndex, "\0", 1);
+			++pIndex;
+			++nBody_len;
+			break;
+		case rdm_login_request:
+			memcpy(pIndex, strLogin.c_str(), strLogin.size());
+			pIndex += strLogin.size();
+			nBody_len += strLogin.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case rdm_operate_request:
+		case rdm_logout_request:
+			memcpy(pIndex, strLogout.c_str(), strLogout.size());
+			pIndex += strLogout.size();
+			nBody_len += strLogout.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case power_port_state_request:
+			nNum = htonl(1);
+			memcpy(pIndex, (const char*) &nNum, 4);
+			pIndex += 4;
+			nBody_len += 4;
+			break;
+		case power_port_set_request:
+			nNum = htonl(1);
+			memcpy(pIndex, (const char*) &nNum, 4);
+			pIndex += 4;
+			nBody_len += 4;
 
-		nNum = htonl(1);
-		memcpy(pIndex, (const char*) &nNum, 4);
-		pIndex += 4;
-		nBody_len += 4;
+			nNum = htonl(1);
+			memcpy(pIndex, (const char*) &nNum, 4);
+			pIndex += 4;
+			nBody_len += 4;
 
-		memcpy(pIndex, "0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case authentication_request:
-		break;
-	case semantic_request:
-		memcpy(pIndex, strSemantic.c_str(), strSemantic.size());
-		pIndex += strSemantic.size();
-		nBody_len += strSemantic.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case amx_control_request:
-		memcpy(pIndex, strAMXControl.c_str(), strAMXControl.size());
-		pIndex += strAMXControl.size();
-		nBody_len += strAMXControl.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case amx_status_request:
-		memcpy(pIndex, strAMXStatus.c_str(), strAMXStatus.size());
-		pIndex += strAMXStatus.size();
-		nBody_len += strAMXStatus.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
+			memcpy(pIndex, "0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case authentication_request:
+			break;
+		case semantic_request:
+			memcpy(pIndex, strSemantic.c_str(), strSemantic.size());
+			pIndex += strSemantic.size();
+			nBody_len += strSemantic.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case amx_control_request:
+			memcpy(pIndex, strAMXControl.c_str(), strAMXControl.size());
+			pIndex += strAMXControl.size();
+			nBody_len += strAMXControl.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case amx_status_request:
+			memcpy(pIndex, strAMXStatus.c_str(), strAMXStatus.size());
+			pIndex += strAMXStatus.size();
+			nBody_len += strAMXStatus.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
 
-	case fcm_id_register_request:
-		memcpy(pIndex, strFCMIdRegister.c_str(), strFCMIdRegister.size());
-		pIndex += strFCMIdRegister.size();
-		nBody_len += strFCMIdRegister.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case facebook_token_client_request:
-		memcpy(pIndex, strFBToken.c_str(), strFBToken.size());
-		pIndex += strFBToken.size();
-		nBody_len += strFBToken.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case smart_building_qrcode_tokn_request:
-		memcpy(pIndex, strQRCodeTokn.c_str(), strQRCodeTokn.size());
-		pIndex += strQRCodeTokn.size();
-		nBody_len += strQRCodeTokn.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case smart_building_appversion_request:
+		case fcm_id_register_request:
+			memcpy(pIndex, strFCMIdRegister.c_str(), strFCMIdRegister.size());
+			pIndex += strFCMIdRegister.size();
+			nBody_len += strFCMIdRegister.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case facebook_token_client_request:
+			memcpy(pIndex, strFBToken.c_str(), strFBToken.size());
+			pIndex += strFBToken.size();
+			nBody_len += strFBToken.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case smart_building_qrcode_tokn_request:
+			memcpy(pIndex, strQRCodeTokn.c_str(), strQRCodeTokn.size());
+			pIndex += strQRCodeTokn.size();
+			nBody_len += strQRCodeTokn.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case smart_building_appversion_request:
 
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case smart_building_getmeetingdata_request:
-		memcpy(pIndex, strSBGetMeetingData.c_str(), strSBGetMeetingData.size());
-		pIndex += strSBGetMeetingData.size();
-		nBody_len += strSBGetMeetingData.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case smart_building_amx_control_access_request:
-		memcpy(pIndex, strSBAmxControlAccess.c_str(), strSBAmxControlAccess.size());
-		pIndex += strSBAmxControlAccess.size();
-		nBody_len += strSBAmxControlAccess.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case smart_building_wireless_power_charge_request:
-		memcpy(pIndex, strSBWirelessPowerCharge.c_str(), strSBWirelessPowerCharge.size());
-		pIndex += strSBWirelessPowerCharge.size();
-		nBody_len += strSBWirelessPowerCharge.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case smart_building_getmeetingdata_request:
+			memcpy(pIndex, strSBGetMeetingData.c_str(), strSBGetMeetingData.size());
+			pIndex += strSBGetMeetingData.size();
+			nBody_len += strSBGetMeetingData.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case smart_building_amx_control_access_request:
+			memcpy(pIndex, strSBAmxControlAccess.c_str(), strSBAmxControlAccess.size());
+			pIndex += strSBAmxControlAccess.size();
+			nBody_len += strSBAmxControlAccess.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case smart_building_wireless_power_charge_request:
+			memcpy(pIndex, strSBWirelessPowerCharge.c_str(), strSBWirelessPowerCharge.size());
+			pIndex += strSBWirelessPowerCharge.size();
+			nBody_len += strSBWirelessPowerCharge.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
 
-	case 1166:
-		memcpy(pIndex, strAMXStatus2.c_str(), strAMXStatus2.size());
-		pIndex += strAMXStatus2.size();
-		nBody_len += strAMXStatus2.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case semantic_word_request:
-		memcpy(pIndex, strSematicWord.c_str(), strSematicWord.size());
-		pIndex += strSematicWord.size();
-		nBody_len += strSematicWord.size();
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
+		case 1166:
+			memcpy(pIndex, strAMXStatus2.c_str(), strAMXStatus2.size());
+			pIndex += strAMXStatus2.size();
+			nBody_len += strAMXStatus2.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case semantic_word_request:
+			memcpy(pIndex, strSematicWord.c_str(), strSematicWord.size());
+			pIndex += strSematicWord.size();
+			nBody_len += strSematicWord.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		}
 	}
 
 	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 	memcpy(*pPacket, &packet, nTotal_len);
-
 	return nTotal_len;
-
 }
 
 void CCmpTest::cmpPressure()
