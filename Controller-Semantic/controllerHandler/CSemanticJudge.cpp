@@ -59,8 +59,8 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		JSONObject jsonStory;
 		jsonStory.put("host", STORY_HOST);
 		jsonResp->put("type", TYPE_RESP_STORY);
-		jsonStory.put("story", "三隻小豬.mp3");
-		jsonStory.put("title", "三隻小豬");
+		jsonStory.put("file", "三隻小豬.mp3");
+		jsonStory.put("story", "三隻小豬");
 		for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
 		{
 			if(string::npos != strWord.find(iter->first))
