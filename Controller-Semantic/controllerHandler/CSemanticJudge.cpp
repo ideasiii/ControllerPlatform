@@ -94,7 +94,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	}
 
 	/**
-	 *  聽有關情緒關鍵字的音樂
+	 *  情境3：聽有關情緒關鍵字的音樂
 	 *  關鍵字：("音樂") + ("歡喜" || "忿怒" || "哀傷" || "驚恐" || "愛情")
 	 */
 	if(string::npos != strWord.find("音樂")) // Local
