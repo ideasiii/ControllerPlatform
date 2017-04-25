@@ -27,14 +27,25 @@ enum HTTPResult
 
 class CHttpClient
 {
-		enum HTTP_METH
-		{
-			HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE, HTTP_HEAD
-		};
+public:
+	typedef struct _RESULT
+	{
+		int nCode;
+		std::string strData;
+	} RESULT;
+	enum HTTP_METH
+	{
+		HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE, HTTP_HEAD
+	};
 
-	public:
-		CHttpClient();
-		virtual ~CHttpClient();
-		int post(std::string strURL, int nPort, std::string strPage, std::string strParam, std::map<std::string, std::string> &mapData);
+public:
+	CHttpClient();
+	virtual ~CHttpClient();
+	int post(std::string strURL, int nPort, std::string strPage, std::string strParam,
+			std::map<std::string, std::string> &mapData);
+	int get(const char *szHost, int nPort, const char *szAPI, const char *szParam, RESULT &rfResult);
+
+private:
+	int httpConnect(const char *szHost, int nPort);
 
 };

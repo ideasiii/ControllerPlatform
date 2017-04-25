@@ -28,6 +28,7 @@
 #include <sstream>
 #include <sys/epoll.h>
 #include "common.h"
+#include "utility.h"
 #include "LogHandler.h"
 
 extern int h_errno;
@@ -37,21 +38,13 @@ extern int h_errno;
 
 using namespace std;
 
-template<class T>
-string ConvertToString(T value)
-{
-	stringstream ss;
-	ss << value;
-	return ss.str();
-}
-
 inline void make_socket_non_blocking(int sfd)
 {
 	int flags, s;
 
 	flags = fcntl(sfd, F_GETFL, 0);
 
-	if (flags == -1)
+	if(flags == -1)
 	{
 		perror("fcntl");
 		return;
@@ -60,7 +53,7 @@ inline void make_socket_non_blocking(int sfd)
 	flags |= O_NONBLOCK;
 	s = fcntl(sfd, F_SETFL, flags);
 
-	if (s == -1)
+	if(s == -1)
 	{
 		perror("fcntl");
 		return;
@@ -94,14 +87,14 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	struct epoll_event events[5];         // Used for EPOLL.
 	int noEvents;               						// EPOLL event number.
 
-	if ((hptr = gethostbyname(strURL.c_str())) == NULL)
+	if((hptr = gethostbyname(strURL.c_str())) == NULL)
 	{
 		_log("[HTTP Client] gethostbyname error for host: %s: %s", strURL.c_str(), hstrerror( h_errno));
 		return nRet;
 	}
 
 	printf("http hostname: %s\n", hptr->h_name);
-	if (hptr->h_addrtype == AF_INET && (pptr = hptr->h_addr_list) != NULL)
+	if(hptr->h_addrtype == AF_INET && (pptr = hptr->h_addr_list) != NULL)
 	{
 		printf("address: %s\n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
 	}
@@ -110,7 +103,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 		fprintf( stderr, "Error call inet_ntop \n");
 	}
 
-	if ((sockfd = socket( AF_INET, SOCK_STREAM, 0)) < 0)
+	if((sockfd = socket( AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		_log("[HTTP Client] Create Socket Fail, Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
 		return nRet;
@@ -120,7 +113,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(nPort);
-	if (0 >= inet_pton( AF_INET, str, &servaddr.sin_addr))
+	if(0 >= inet_pton( AF_INET, str, &servaddr.sin_addr))
 	{
 		_log("[HTTP Client] Socket inet_pton Fail, Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
 		return nRet;
@@ -133,14 +126,14 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	tv.tv_sec = 3; /*  second timeout */
 	tv.tv_usec = 0;
 
-	if (select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
+	if(select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
 	{
 		int so_error;
 		socklen_t len = sizeof so_error;
 
 		getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
 
-		if (so_error != 0)
+		if(so_error != 0)
 		{
 			_log("[HTTP Client] Socket Connect Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
 			return nRet;
@@ -180,7 +173,7 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	printf("%s\n", sendline);
 
 	len = send(sockfd, sendline, strlen(sendline), 0);
-	if (len < 0)
+	if(len < 0)
 	{
 		_log("[HTTP Client] Socket Send Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
 		return nRet;
@@ -189,12 +182,12 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	{
 		_log("[HTTP Client] Socket Send Success, Size: %d\n\n", len);
 		string strRecv;
-		for (int i = 0; i < 3; ++i)
+		for(int i = 0; i < 3; ++i)
 		{
 			noEvents = epoll_wait(epfd, events, 5, 1000);
-			for (int j = 0; j < noEvents; ++j)
+			for(int j = 0; j < noEvents; ++j)
 			{
-				if ((events[j].events & EPOLLIN) && sockfd == events[j].data.fd)
+				if((events[j].events & EPOLLIN) && sockfd == events[j].data.fd)
 				{
 					memset(recvline, 0, sizeof(recvline));
 					len = recv(sockfd, recvline, sizeof(recvline), MSG_NOSIGNAL);
@@ -203,27 +196,27 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 		}
 
 		bool bNextBody = false;
-		if (0 < strlen(recvline))
+		if(0 < strlen(recvline))
 		{
 			string strToken;
 			char *token = NULL;
 			token = strtok(recvline, "\n");
-			while (token)
+			while(token)
 			{
 				printf("Current token: %s\r\n", token);
 				strToken = token;
-				if (string::npos != strToken.find("HTTP/1.1"))
+				if(string::npos != strToken.find("HTTP/1.1"))
 				{
 					mapData["code"] = strToken.substr(9, 3);
 					nRet = HTTP_OK;
 				}
 
-				if (0 == strToken.compare("\r"))
+				if(0 == strToken.compare("\r"))
 				{
 					bNextBody = true;
 				}
 
-				if (bNextBody)
+				if(bNextBody)
 				{
 					mapData["body"] = strToken;
 				}
@@ -234,4 +227,171 @@ int CHttpClient::post(std::string strURL, int nPort, std::string strPage, std::s
 	close(epfd);
 	close(sockfd);
 	return nRet;
+}
+
+int CHttpClient::get(const char *szHost, int nPort, const char *szAPI, const char *szParam, RESULT &rfResult)
+{
+	string strTmp;
+	int nSocket;
+	struct epoll_event ev;                // Used for EPOLL.
+	struct epoll_event events[5];         // Used for EPOLL.
+	int noEvents;               		  // EPOLL event number.
+	char sendline[MAX_SOCKET_WRITE], recvline[MAX_SOCKET_READ];
+	int len;
+
+	nSocket = httpConnect(szHost, nPort);
+	if(0 >= nSocket)
+	{
+		printf("Socket Connect Fail Socket FD: %d\n", nSocket);
+		return -1;
+	}
+
+	// Create epoll file descriptor.
+	int epfd = epoll_create(5);
+
+	// Add socket into the EPOLL set.
+	ev.data.fd = nSocket;
+	ev.events = EPOLLIN | EPOLLET;
+	epoll_ctl(epfd, EPOLL_CTL_ADD, nSocket, &ev);
+
+	//========================= HTTP GET Header ===========================//
+	memset(sendline, 0, sizeof(sendline));
+	strcat(sendline, format("GET %s?%s HTTP/1.1\r\n", szAPI, szParam).c_str());
+	strcat(sendline, format("Host: %s\r\n", szHost).c_str());
+	strcat(sendline, "Cache-Control: no-cache\r\n");
+
+	_log("[CHttpClient] GET: \n%s\n", sendline);
+
+	len = send(nSocket, sendline, strlen(sendline), 0);
+	if(len < 0)
+	{
+		_log("[CHttpClient] Socket Send Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+		return -1;
+	}
+	else
+	{
+		_log("[CHttpClient] GET Request Success, Size: %d", len);
+		string strRecv;
+
+		for(int i = 0; i < 3; ++i)
+		{
+			noEvents = epoll_wait(epfd, events, 5, 1000);
+			_DBG("http receive noEvents:%d .................", noEvents);
+			for(int j = 0; j < noEvents; ++j)
+			{
+				if((events[j].events & EPOLLIN) && nSocket == events[j].data.fd)
+				{
+					memset(recvline, 0, sizeof(recvline));
+					len = recv(nSocket, recvline, sizeof(recvline), MSG_NOSIGNAL);
+					_log("[CHttpClient] GET Response: %s", recvline);
+				}
+			}
+		}
+
+		bool bNextBody = false;
+		if(0 < strlen(recvline))
+		{
+			_log("[CHttpClient] GET Response: %s", recvline);
+//			string strToken;
+//			char *token = NULL;
+//			token = strtok(recvline, "\n");
+//			while(token)
+//			{
+//				printf("Current token: %s\r\n", token);
+//				strToken = token;
+//				if(string::npos != strToken.find("HTTP/1.1"))
+//				{
+//					mapData["code"] = strToken.substr(9, 3);
+//					nRet = HTTP_OK;
+//				}
+//
+//				if(0 == strToken.compare("\r"))
+//				{
+//					bNextBody = true;
+//				}
+//
+//				if(bNextBody)
+//				{
+//					mapData["body"] = strToken;
+//				}
+//				token = strtok( NULL, "\n");
+//			}
+		}
+	}
+	close(epfd);
+	close(nSocket);
+	return nSocket;
+}
+
+int CHttpClient::httpConnect(const char *szHost, int nPort)
+{
+	int sockfd;
+	int nRet = HTTP_ERROR;
+	struct hostent *hptr;
+	char **pptr;
+	char str[50];
+	struct sockaddr_in servaddr;
+	fd_set fdset;
+	struct timeval tv;
+
+	if((hptr = gethostbyname(szHost)) == NULL)
+	{
+		_log("[HTTP Client] gethostbyname error for host: %s: %s", szHost, hstrerror( h_errno));
+		return nRet;
+	}
+	printf("http hostname: %s\n", hptr->h_name);
+	if(hptr->h_addrtype == AF_INET && (pptr = hptr->h_addr_list) != NULL)
+	{
+		printf("address: %s\n", inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
+	}
+	else
+	{
+		fprintf( stderr, "Error call inet_ntop \n");
+		return -1;
+	}
+
+	if((sockfd = socket( AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+		_log("[HTTP Client] Create Socket Fail, Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+		return nRet;
+	};
+	fcntl(sockfd, F_SETFL, O_NONBLOCK);
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_port = htons(nPort);
+	_log("[CHttpClient] httpConnect Address: %s", str);
+	if(0 >= inet_pton( AF_INET, str, &servaddr.sin_addr))
+	{
+		_log("[HTTP Client] Socket inet_pton Fail, Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+		return nRet;
+	}
+
+	connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+//	if(-1 == connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)))
+//	{
+//		_log("[HTTP Client] Socket connect Fail, Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+//		return -1;
+//	}
+
+	FD_ZERO(&fdset);
+	FD_SET(sockfd, &fdset);
+	tv.tv_sec = 3; /*  second timeout */
+	tv.tv_usec = 0;
+
+	if(select(sockfd + 1, NULL, &fdset, NULL, &tv) == 1)
+	{
+		int so_error;
+		socklen_t len = sizeof so_error;
+
+		getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+
+		if(so_error != 0)
+		{
+			close(sockfd);
+			_log("[HTTP Client] Socket getsockopt Fail Error Code: %d，Error: %s\n", h_errno, hstrerror( h_errno));
+			return -1;
+		}
+	}
+
+	return sockfd;
 }

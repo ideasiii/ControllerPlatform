@@ -28,6 +28,10 @@ extern "C"
 #define FALSE	0
 #endif
 
+#ifndef FAIL
+#define FAIL	-1
+#endif
+
 #ifndef ULONG
 #define ULONG	unsigned long
 #endif

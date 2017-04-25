@@ -17,7 +17,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql -I /usr/include/curl
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
@@ -38,7 +38,8 @@ LDLIBS    := $(LIB_LINK) \
 			-lboost_regex \
 			-lboost_program_options \
 			-L/usr/local/lib \
-			-lmysqlclient
+			-lmysqlclient \
+			-lcurl
 					
 vpath %.cpp $(SRC_DIR)
 
@@ -121,6 +122,7 @@ package-u:
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
 	apt-get -y install scons
+	apt-get -y install libcurl4-openssl-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
