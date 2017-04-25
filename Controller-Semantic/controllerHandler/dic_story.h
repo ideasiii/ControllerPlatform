@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include "create_map.h"
-#include <string>
-#include <map>
-using namespace std;
+#include "container.h"
 
 static map<string, string> mapStory = create_map<string, string>\
 ("三隻小豬", "三隻小豬.mp3")("小美人魚", "小美人魚.mp3")("美人魚",

@@ -5,15 +5,15 @@
  *      Author: Jugo
  */
 
+#include <dic_music_mood.h>
+#include <dic_semantic.h>
+#include <dic_story.h>
 #include <map>
 #include <string>
 #include "CSemanticJudge.h"
 #include "JSONObject.h"
 #include "config.h"
-#include "dictionary.h"
 #include "common.h"
-#include "story.h"
-#include "music.h"
 
 using namespace std;
 

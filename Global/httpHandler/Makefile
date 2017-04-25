@@ -12,9 +12,9 @@ SRC_DIR   := $(DIR_APP_ROOT)
 BUILD_DIR := $(DIR_APP_ROOT)
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)*.c*))
 OBJ       := $(patsubst %.cpp, %.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I../global_inc -I../libs/logHandler/heads
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG -std=c++11
-LDLIBS  = -L../libs/logHandler -llogHandler
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I../global_inc -I../libs/logHandler/heads -I /usr/include/curl
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -DDEBUG
+LDLIBS  = -L../libs/logHandler -llogHandler -lcurl
 
 				
 vpath %.cpp $(SRC_DIR)

@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include "create_map.h"
-#include <string>
-#include <map>
-using namespace std;
+#include "container.h"
 
 //======================== Local Mood Music ==============================//
 // ("歡喜" || "忿怒" || "哀傷" || "驚恐" || "愛情")

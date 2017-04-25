@@ -9,6 +9,7 @@
 
 #include "CObject.h"
 #include <map>
+#include <string>
 
 class CApplication: public CObject
 {
