@@ -3,6 +3,7 @@
 #include "event.h"
 #include "common.h"
 #include "CCmpHandler.h"
+#include "ICallback.h"
 #include "CDataHandler.cpp"
 #include "iCommand.h"
 #include "JSONObject.h"
