@@ -37,4 +37,5 @@ public:
 private:
 	int getSubject(const char *szWord);
 	int getAttribute(const char *szWord, WORD_BODY &wordBody);
+	int getVerb(const char *szWord, WORD_ATTR &wordAttr);
 };

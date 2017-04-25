@@ -29,6 +29,7 @@ CSemanticJudge::~CSemanticJudge()
 
 void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
+	int nIndex;
 	int nSubject;
 	string strWord;
 
@@ -78,6 +79,15 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		}
 
 		jsonResp->put("story", jsonStory);
+		return;
+	}
+
+	WORD_ATTR wordAttr;
+	nIndex = getVerb(strWord.c_str(), wordAttr);
+	if(-1 != nIndex)
+	{
+		_log("listen: %d %d %d %s", wordAttr.nIndex, wordAttr.nAttribute, wordAttr.nSubAttr, wordAttr.strWord.c_str());
+
 		return;
 	}
 
@@ -176,5 +186,27 @@ int CSemanticJudge::getAttribute(const char *szWord, WORD_BODY &wordBody)
 		}
 	}
 	return 0;
+}
+
+int CSemanticJudge::getVerb(const char *szWord, WORD_ATTR &wordAttr)
+{
+	int nIndex = -1;
+	map<string, int>::iterator it;
+	string strWord = szWord;
+
+	for(it = mapVerb.begin(); it != mapVerb.end(); ++it)
+	{
+		nIndex = strWord.find(it->first);
+		if((int) string::npos != nIndex)
+		{
+			wordAttr.nAttribute = VERB;
+			wordAttr.nIndex = nIndex;
+			wordAttr.nSubAttr = it->second;
+			wordAttr.strWord = it->first;
+			break;
+		}
+	}
+
+	return nIndex;
 }
 

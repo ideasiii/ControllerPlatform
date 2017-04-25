@@ -34,6 +34,7 @@ public:
 		return m_set;
 	}
 };
+// static set<string> setSample = create_set<string>("");
 
 template<typename T, typename U>
 class create_map
@@ -57,6 +58,7 @@ public:
 		return m_map;
 	}
 };
+// static map<string, string> mapSample = create_map<string, string>("","");
 
 template<typename T, typename U, typename V, typename W>
 class create_map_muliti
