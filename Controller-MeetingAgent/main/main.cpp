@@ -22,7 +22,7 @@ using namespace std;
 
 string getConfName(string strProcessName);
 void options(int argc, char **argv);
-static void runService();
+static void runService(int nMessageQueueId);
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 
 	// Run Process
-	CProcessHandler::runProcess(runService);
+	CProcessHandler::runProcess(runService, EVENT_MSQ_KEY_CONTROLLER_MEETING_AGENT);
 
 	closelog();
 	return EXIT_SUCCESS;
@@ -42,11 +42,11 @@ string getConfName(std::string strProcessName)
 	return (strProcessName.substr(++found) + ".conf");
 }
 
-void runService()
+void runService(int nMessageQueueId)
 {
 	int nInit = TRUE;
 	int nTmp = -1;
-	int nMsgID = -1;
+	int nMsgID = nMessageQueueId;
 	extern char *__progname;
 
 	CController *controller = CController::getInstance();
@@ -114,9 +114,10 @@ void runService()
 	{
 		cout << "\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n" << endl;
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
-		CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsgID));
+
 		cout << "\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n" << endl;
 		controller->stopServer();
+		CMessageHandler::release();
 	}
 	_close();
 	delete controller;

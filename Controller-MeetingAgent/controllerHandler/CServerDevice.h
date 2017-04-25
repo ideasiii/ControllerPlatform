@@ -6,6 +6,7 @@
 
 #include "CSocketServer.h"
 #include "CMPData.h"
+#include "ICallback.h"
 #include "iCommand.h"
 
 using namespace std;
