@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <unistd.h>
+
 /**
  * A helper class for doing AES256, CBC mode encryption/decryption.
  * 
@@ -25,18 +28,18 @@ public:
 	 * Instantiate with a key used for both
 	 * encryption and decryption process.
 	 */
-	AesCrypto(byte *key);
+	AesCrypto(uint8_t *key);
 
-	std::string encrypt(std::string plaintext, byte *iv);
-	std::string decrypt(unsigned char* ciphertext, int textLength, byte *iv);
+	std::string encrypt(std::string plaintext, uint8_t *iv);
+	std::string decrypt(unsigned char* ciphertext, int textLength, uint8_t *iv);
 
 	/**
 	 * A handy function for generating random IV or (probably not) key.
 	 */
-	static void getRandomBytes(byte *outBuf, int bufLen);
+	static void getRandomBytes(uint8_t *outBuf, int bufLen);
 
 private:
-	byte *key;
+	uint8_t *key;
 };
 
 /** example of usage, adapted from official Crypto++ example using CBC mode
@@ -45,11 +48,11 @@ private:
 void cryptoppTest() {
 	// Byte length of key must be 32 bytes (not including teminating null)
 	std::string key = "12345678901234567890123456789012";
-	byte *key = (byte *)key.c_str();
+	uint8_t *key = (uint8_t *)key.c_str();
 
 	// Initial vector can be a array filled with zero or constant value
 	// but it raises security concern, not recommended
-	byte *iv = new byte[AesCrypto::IvLength];
+	uint8_t *iv = new uint8_t[AesCrypto::IvLength];
 
 	auto aes = AesCrypto(key);
 	AesCrypto::getRandomBytes(iv, AesCrypto::IvLength);
@@ -79,7 +82,7 @@ void cryptoppTest() {
 	std::cout << "Cipher Text (" << ciphertext.size() << " bytes)" << std::endl;
 
 	for (unsigned int i = 0; i < ciphertext.size(); i++) {
-	std::cout << "0x" << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
+	std::cout << "0x" << std::hex << (0xFF & static_cast<uint8_t>(ciphertext[i])) << " ";
 	}
 
 	std::cout << std::endl << std::endl;

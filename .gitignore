@@ -74,6 +74,9 @@ $RECYCLE.BIN/
 */bin/
 bin/
 
-# Visual Studio Code project
+# Visual Studio Code project folder
 .vscode
 
+# Visual Studio project file
+*.vcxproj
+*.vcxproj.user

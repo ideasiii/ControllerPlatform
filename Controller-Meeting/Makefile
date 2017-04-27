@@ -9,15 +9,15 @@ include env.mk
 include modules.mk
 
 TARGET    := controller-meeting
-CC        := g++
-LD        := g++
+CC        := clang++
+LD        := clang++
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++11 $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -26,7 +26,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lsqlite3
+			-lsqlite3 \
+			-lcrypto++
 					
 vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 

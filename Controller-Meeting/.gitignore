@@ -1,3 +1,6 @@
 /build/
 /libs/
 /Global/
+controllerHandler/CryptoKey.h
+controllerHandler/DoorAccessControllerParams.h
+

@@ -5,8 +5,8 @@
 
 #include "CSocketClient.h"
 #include "ICallback.h"
-#include <string>
 #include "CMPData.h"
+#include "Ites1fDoorAccessControlHandler.h"
 
 using namespace std;
 
@@ -47,4 +47,5 @@ private:
 	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 
+	Ites1fDoorAccessControlHandler ites1fDoor;
 };

@@ -18,6 +18,7 @@ controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/timerHandler
+../Global/timerHandler \
+../Global/aesCryptoHandler
 			 
 #export EXT_MODULES=extInclude
