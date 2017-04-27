@@ -10,6 +10,7 @@
 #define MAX_WORD_ATTR		7
 
 class JSONObject;
+class Handler;
 
 class CSemanticJudge
 {
@@ -33,9 +34,11 @@ public:
 	explicit CSemanticJudge();
 	virtual ~CSemanticJudge();
 	void word(const char *szInput, JSONObject* jsonResp);
+	int handleMessage(int what, int arg1, int arg2, void *obj);
 
 private:
 	int getSubject(const char *szWord);
 	int getAttribute(const char *szWord, WORD_BODY &wordBody);
 	int getVerb(const char *szWord, WORD_ATTR &wordAttr);
+	Handler *handler;
 };

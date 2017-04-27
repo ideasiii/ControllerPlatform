@@ -30,7 +30,6 @@ CCmpWord::~CCmpWord()
 
 int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData)
 {
-	//response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	char *pBody = (char*) ((char *) const_cast<void*>(szData)); // + sizeof(CMP_HEADER));
 
 	_log("[CCmpWord] onSemanticWord Body: %s", pBody);

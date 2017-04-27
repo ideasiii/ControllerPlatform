@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <map>
 #include <stdio.h>
 #include <sys/types.h>
 #include "LogHandler.h"
@@ -76,3 +77,4 @@ private:
 	int mnTimerEventId;
 	pthread_mutex_t mutex;
 };
+

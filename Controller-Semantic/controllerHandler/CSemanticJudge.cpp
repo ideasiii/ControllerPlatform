@@ -14,12 +14,23 @@
 #include "JSONObject.h"
 #include "config.h"
 #include "common.h"
+#include "Handler.h"
 
 using namespace std;
 
-CSemanticJudge::CSemanticJudge()
+int _handleMessage(int what, int arg1, int arg2, const void *obj, const void *called)
 {
+	CSemanticJudge* ss = reinterpret_cast<CSemanticJudge*>(const_cast<void*>(called));
+	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
+	return 0;
+	return 0;
+}
 
+CSemanticJudge::CSemanticJudge() :
+		handler(0)
+{
+	handler = new Handler();
+	handler->setHandleMessageListener(&_handleMessage);
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -208,5 +219,10 @@ int CSemanticJudge::getVerb(const char *szWord, WORD_ATTR &wordAttr)
 	}
 
 	return nIndex;
+}
+
+int CSemanticJudge::handleMessage(int what, int arg1, int arg2, void *obj)
+{
+	return 0;
 }
 

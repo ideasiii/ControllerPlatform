@@ -189,4 +189,3 @@ void CObject::mutexUnlock()
 {
 	pthread_mutex_unlock(&mutex);
 }
-
