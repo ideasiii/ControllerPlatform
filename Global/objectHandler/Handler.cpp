@@ -26,7 +26,7 @@ inline double createMsqKey()
 }
 
 Handler::Handler(const int nMsqKey) :
-		mnMsqKey(createMsqKey()), mnMsqId(-1)
+		mnMsqKey(createMsqKey()), mnMsqId(-1), pHandleMessage(0), mpInstance(0)
 {
 	close();
 	if(-1 != nMsqKey)
@@ -47,9 +47,10 @@ void Handler::close()
 		CMessageHandler::closeMsg(mnMsqId);
 }
 
-void Handler::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+void Handler::onHandleMessage(Message &message)
 {
-	(*pHandleMessage)(nCommand, nId, nDataLen, pData, pData);
+	if(pHandleMessage && mpInstance)
+		(*pHandleMessage)(message.what, message.arg1, message.arg2, message.obj, mpInstance);
 }
 
 void Handler::runMessageReceive()
@@ -60,8 +61,13 @@ void Handler::runMessageReceive()
 	_log("[Handler] runMessageReceive Stop, Thread join");
 }
 
-void Handler::setHandleMessageListener(pfnHandleMessage handleMessage)
+void Handler::setHandleMessageListener(void *pInstance, pfnHandleMessage handleMessage)
 {
+	mpInstance = pInstance;
 	pHandleMessage = handleMessage;
 }
 
+int Handler::sendMessage(Message &message)
+{
+	return sendHandleMessage(mnMsqId, message);
+}

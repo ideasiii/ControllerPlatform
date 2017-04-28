@@ -39,7 +39,8 @@ LDLIBS    := $(LIB_LINK) \
 			-lboost_program_options \
 			-L/usr/local/lib \
 			-lmysqlclient \
-			-lcurl
+			-lcurl \
+			-lcryptopp
 					
 vpath %.cpp $(SRC_DIR)
 
@@ -123,6 +124,7 @@ package-u:
 	apt-get -y install libmysqld-dev
 	apt-get -y install scons
 	apt-get -y install libcurl4-openssl-dev
+	apt-get -y install libcrypto++-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 

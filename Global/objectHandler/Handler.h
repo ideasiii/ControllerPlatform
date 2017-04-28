@@ -8,7 +8,9 @@
 #pragma once
 #include "CObject.h"
 
-typedef int (*pfnHandleMessage)(int, int, int, const void *, const void *);
+typedef int (*pfnHandleMessage)(int, int, int, void *, void *);
+
+using namespace std;
 
 class Handler: public CObject
 {
@@ -17,13 +19,21 @@ public:
 	virtual ~Handler();
 	void close();
 	void runMessageReceive();
-	void setHandleMessageListener(pfnHandleMessage handleMessage);
+	void setHandleMessageListener(void *pInstance, pfnHandleMessage handleMessage);
+	int sendMessage(Message &message);
 
 protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+	{
+	}
+	;
+	void onHandleMessage(Message &message);
 
 private:
 	int mnMsqKey;
 	int mnMsqId;
 	pfnHandleMessage pHandleMessage;
+	void *mpInstance;
+	void *mpCalled;
 };
+

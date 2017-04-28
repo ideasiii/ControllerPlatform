@@ -31,7 +31,7 @@ class CSemanticJudge
 	typedef std::map<int, WORD_ATTR> WORD_BODY;		// 文字的肉體
 
 public:
-	explicit CSemanticJudge();
+	CSemanticJudge();
 	virtual ~CSemanticJudge();
 	void word(const char *szInput, JSONObject* jsonResp);
 	int handleMessage(int what, int arg1, int arg2, void *obj);

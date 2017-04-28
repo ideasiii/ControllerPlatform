@@ -35,6 +35,7 @@ int CController::onCreated(void* nMsqKey)
 int CController::onInitial(void* szConfPath)
 {
 	string strConfPath = reinterpret_cast<const char*>(szConfPath);
+	_DBG("[CController] onInitial Config File: %s", strConfPath.c_str());
 	if(strConfPath.empty())
 		return FALSE;
 

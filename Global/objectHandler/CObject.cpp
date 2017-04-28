@@ -9,13 +9,13 @@
 #include <sys/wait.h>
 #include <string>
 #include "CObject.h"
-#include "CMessageHandler.h"
 #include "common.h"
 #include "memory.h"
 #include "LogHandler.h"
 #include "CTimer.h"
 #include "event.h"
 #include "CThread.h"
+#include "LogHandler.h"
 
 CObject * object = 0;
 
@@ -55,14 +55,14 @@ int CObject::initMessage(int nKey, const char * szDescript)
 	{
 
 		szDescript ?
-				_log("[Object] %s Register Message Queue Id: %d , Key: %d Fail m>_<m***", szDescript, nMsqid, nKey) :
-				_log("[Object] Register Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
+				_log("[CObject] %s Register Message Queue Id: %d , Key: %d Fail m>_<m***", szDescript, nMsqid, nKey) :
+				_log("[CObject] Register Message Queue Id: %d , Key: %d Fail m>_<m***", nMsqid, nKey);
 		return -1;
 	}
 
 	szDescript ?
-			_log("[Object] %s Register Message Queue Id: %d , Key: %d Success ^^Y", szDescript, nMsqid, nKey) :
-			_log("[Object] Register Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
+			_log("[CObject] %s Register Message Queue Id: %d , Key: %d Success ^^Y", szDescript, nMsqid, nKey) :
+			_log("[CObject] Register Message Queue Id: %d , Key: %d Success ^^Y", nMsqid, nKey);
 
 	return nMsqid;
 }
@@ -74,13 +74,13 @@ int CObject::run(int lFilter, const char * szDescript)
 
 	if(-1 == messageHandler->getMsqid())
 	{
-		_log("[Object] Invalid msqid, not init msq");
+		_log("[CObject] Invalid msqid, not init msq");
 		return -1;
 	}
 
 	if(0 >= lFilter)
 	{
-		_log("[Object] Invalid receive event id");
+		_log("[CObject] Invalid receive event id");
 		return -1;
 	}
 
@@ -90,8 +90,8 @@ int CObject::run(int lFilter, const char * szDescript)
 	messageHandler->setRecvEvent(lFilter);
 
 	szDescript ?
-			_log("[Object] %s Message Receiver Start Run , Event Filter ID:%d ", szDescript, lFilter) :
-			_log("[Object] Message Receiver Start Run , Event Filter ID:%d", lFilter);
+			_log("[CObject] %s Message Receiver Start Run , Event Filter ID:%d ", szDescript, lFilter) :
+			_log("[CObject] Message Receiver Start Run , Event Filter ID:%d", lFilter);
 
 	while(1)
 	{
@@ -100,7 +100,10 @@ int CObject::run(int lFilter, const char * szDescript)
 		nRecv = messageHandler->recvMessage(&pdata);
 		if(0 < nRecv)
 		{
-			onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
+			if(EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
+				onHandleMessage(msgbuf->message);
+			else
+				onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}
 		else if(-2 == nRecv)
 		{
@@ -117,7 +120,8 @@ int CObject::run(int lFilter, const char * szDescript)
 
 	delete msgbuf;
 
-	szDescript ? _log("[Object] %s Message Receiver loop end", szDescript) : _log("[Object] Message Receiver loop end");
+	szDescript ?
+			_log("[CObject] %s Message Receiver loop end", szDescript) : _log("[CObject] Message Receiver loop end");
 
 	return 0;
 }
@@ -125,6 +129,11 @@ int CObject::run(int lFilter, const char * szDescript)
 int CObject::sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	return messageHandler->sendMessage(nEvent, nCommand, nId, nDataLen, pData);
+}
+
+int CObject::sendHandleMessage(int nEvent, Message &message)
+{
+	return messageHandler->sendMessage(nEvent, EVENT_COMMAND_HANDLE_MESSAGE, 0, 0, 0, message);
 }
 
 void CObject::clearMessage()

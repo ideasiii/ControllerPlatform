@@ -81,6 +81,7 @@ clean:
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -rf $(DIR_APP_ROOT)log
+	@rm -rf $(DIR_APP_ROOT)Global
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs

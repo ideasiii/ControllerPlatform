@@ -135,6 +135,45 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 	return nRet;
 }
 
+int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData,
+		Message &message)
+{
+	int nRet;
+	MESSAGE_BUF *pBuf;
+
+	pBuf = new MESSAGE_BUF;
+
+	pBuf->lFilter = lFilter;
+	pBuf->nCommand = nCommand;
+	pBuf->nId = nId;
+	pBuf->message.what = message.what;
+	pBuf->message.arg1 = message.arg1;
+	pBuf->message.arg2 = message.arg2;
+	pBuf->message.obj = message.obj;
+
+	memset(pBuf->cData, 0, sizeof(pBuf->cData));
+	if( NULL != pData && 0 < nDataLen)
+	{
+		memcpy(pBuf->cData, pData, nDataLen);
+		pBuf->nDataLen = nDataLen;
+	}
+
+	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
+	{
+		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
+		errno);
+		nRet = -1;
+	}
+	else
+	{
+		nRet = getBufLength();
+	}
+
+	delete pBuf;
+
+	return nRet;
+}
+
 int CMessageHandler::recvMessage(void **pbuf)
 {
 	ssize_t recvSize = 0;

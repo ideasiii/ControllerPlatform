@@ -10,9 +10,7 @@
 #include <map>
 #include <stdio.h>
 #include <sys/types.h>
-#include "LogHandler.h"
-
-class CMessageHandler;
+#include "CMessageHandler.h"
 
 struct EVENT_EXTERNAL
 {
@@ -49,6 +47,7 @@ public:
 	virtual ~CObject();
 	void clearMessage();
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int sendHandleMessage(int nEvent, Message &message);
 	void _OnTimer(int nId);
 	int initMessage(int nKey, const char * szDescript = 0);
 	int run(int lFilter, const char * szDescript = 0);
@@ -67,6 +66,10 @@ protected:
 	// virtual function, child must overload
 	virtual void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
 			const void* pData) = 0;
+	virtual void onHandleMessage(Message &message)
+	{
+	}
+	;
 	virtual void onTimer(int nId)
 	{
 	}

@@ -9,6 +9,20 @@
 
 #define DATA_LEN     4096
 
+typedef struct _Message
+{
+public:
+	int what;
+	int arg1;
+	int arg2;
+	void *obj;
+	_Message() :
+			what(-1), arg1(-1), arg2(-1), obj(0)
+	{
+
+	}
+} Message;
+
 /*
  * Declare the message structure.
  */
@@ -19,6 +33,7 @@ struct MESSAGE_BUF
 	unsigned long int nId;
 	int nDataLen;
 	char cData[DATA_LEN];
+	Message message;
 };
 
 class CMessageHandler
@@ -29,6 +44,8 @@ public:
 	void close();
 	int init(const long lkey);
 	int sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData,
+			Message &message);
 	int recvMessage(void **pbuf);
 	void setRecvEvent(int nEvent);
 	int getRecvEvent() const;
