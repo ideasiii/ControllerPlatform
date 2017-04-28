@@ -15,7 +15,7 @@ Ites1fDoorAccessControlHandler::Ites1fDoorAccessControlHandler(char *ip, int por
 	serverIp(ip), serverPort(port), aesKey((uint8_t*)ITES_1F_DOOR_CONTROL_AES_KEY)
 {
 	// ITES_1F_DOOR_CONTROL_AES_KEY is defined in CryptoKey.h like this:
-	// #define ITES_1F_DOOR_CONTROL_AES_KEY "a string with length of 32"
+	// #define ITES_1F_DOOR_CONTROL_AES_KEY "a string with 32 characters....."
 
 	// ITES_1F_DOOR_CONTROL_AES_KEY byte array size is actually 33 because of 
 	// terminating null appended at the end, but don't worry about it as it 
@@ -58,17 +58,17 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 	memcpy(buf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
 
 	_log("[Ites1F_DACHandler] Encrypt request PDU body, IV len = %d, ciphertext.size() = %d, bufSize = %d"
-		, AesCrypto::IvLength, ciphertext.size(), bufSize);
+		//, AesCrypto::IvLength, ciphertext.size(), bufSize);
 #else
 	int bufSize = reqBody.size() + 1;
-	uint8_t *buf = reqBody.c_str();
+	uint8_t *buf = (uint8_t *)reqBody.c_str();
 	_log("[Ites1F_DACHandler] Not Encrypting request PDU body, bufSize = %d", bufSize);
 #endif
 
 	int reqPduSize = FakeCmpClient::craftCmpPdu(&reqPdu, bufSize, 
 		smart_building_door_control_request, STATUS_ROK, 0, buf);
 
-#ifndef ENCRYPT_REQUEST_PDU_BODY
+#ifdef ENCRYPT_REQUEST_PDU_BODY
 	delete[] buf;
 #endif
 
@@ -101,7 +101,7 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 	_log("[Ites1F_DACHandler] response ciphertext length = %d", respCipherLen);
 
 	std::string respBodyStr = crypto.decrypt(respBody, respCipherLen, respIv);
-	//_log("[Ites1F_DACHandler] decrypt.length = %d", respBodyStr.length());
+	_log("[Ites1F_DACHandler] decrypt.length = %d", respBodyStr.length());
 
 	if (respBodyStr.length() < 1)
 	{

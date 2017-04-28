@@ -11,14 +11,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define REQUEST_PDU_SIZE_FLOOR 1
-#define TCP_TIMEOUT 5
-#define MAX_PDU_BODY_LEN MAX_DATA_LEN - (int)sizeof(CMP_HEADER)
+#define MAX_PDU_BODY_LEN (int)(MAX_DATA_LEN - sizeof(CMP_HEADER))
+
+#define TCP_TIMEOUT 2 // second
 
 FakeCmpClient::FakeCmpClient(char *ip, int port)
+	: serverIp(ip), serverPort(port)
 {
-	this->serverIp = ip;
-	this->serverPort = port;
 }
 
 FakeCmpClient::~FakeCmpClient()
@@ -185,18 +184,6 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 		//pBody[bodyLength] = '\0';
 		//nTotalLen += bodyLength + 1;
 		nTotalLen += bodyLength;
-
-		if (nTotalLen < REQUEST_PDU_SIZE_FLOOR)
-		{
-			int originalLen = nTotalLen;
-			nTotalLen = REQUEST_PDU_SIZE_FLOOR;
-
-			int fd = open("/dev/urandom", O_RDONLY);
-			read(fd, pBody + (originalLen - sizeof(CMP_PACKET)), nTotalLen - originalLen);
-			close(fd);
-
-			pBody[(REQUEST_PDU_SIZE_FLOOR - sizeof(CMP_HEADER)) - 1] = '\0';
-		}
 	}
 
 	CMP_HEADER *header = &(dst->cmpHeader);
@@ -205,8 +192,8 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 	header->sequence_number = htonl(nSequence);
 	header->command_length = htonl(nTotalLen);
 
-	_log(("[FakeCmpClient] crafting request PDU, (commandLen, command, status, sequence) = (%d, %d, %d, %d)"),
-		nTotalLen, nCommandId, nStatus, nSequence);
+	_log(("[FakeCmpClient] crafting request PDU, (len, command, status, sequence) = (%d, %d, %d, %d)"),
+		//nTotalLen, nCommandId, nStatus, nSequence);
 
 	return nTotalLen;
 }

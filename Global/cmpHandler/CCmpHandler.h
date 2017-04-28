@@ -82,7 +82,7 @@ __attribute__ ((unused)) static int sendPacket(CSocket *socket, const int nSocke
 			_log("[Packet] CMP Send Fail socket: %d", nSocket);
 		}
 
-		delete reallyBigBuffer;
+		delete[] reallyBigBuffer;
 		return nRet;
 	}
 	else
