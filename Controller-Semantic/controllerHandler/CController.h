@@ -10,12 +10,14 @@
 #include "CApplication.h"
 
 class CCmpWord;
+class Handler;
 
 class CController: public CApplication
 {
 public:
 	CController();
 	virtual ~CController();
+	int handleMessage(int what, int arg1, int arg2, void *obj);
 
 protected:
 	int onCreated(void* nMsqKey);
@@ -35,4 +37,5 @@ private:
 private:
 	CCmpWord *cmpword;
 	int mnMsqKey;
+	Handler *handler;
 };

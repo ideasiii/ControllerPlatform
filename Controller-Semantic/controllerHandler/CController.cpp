@@ -12,13 +12,22 @@
 #include "utility.h"
 #include "event.h"
 #include <string>
+#include "Handler.h"
 
 using namespace std;
+
+int CController_handleMessage(int what, int arg1, int arg2, void *obj, void *called)
+{
+	CController* ss = reinterpret_cast<CController*>(called);
+	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
+	return 0;
+}
 
 CController::CController() :
 		cmpword(0), mnMsqKey(-1)
 {
-
+	handler = new Handler(888, 777);
+	handler->setHandleMessageListener(this, &CController_handleMessage);
 }
 
 CController::~CController()
@@ -81,4 +90,10 @@ int CController::startCmpWordServer(int nPort, int nMsqKey)
 	nResult = TRUE;
 
 	return nResult;
+}
+
+int CController::handleMessage(int what, int arg1, int arg2, void *obj)
+{
+	_DBG("[CController] handleMessage what:%d", what);
+	return 0;
 }

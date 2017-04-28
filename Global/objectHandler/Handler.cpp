@@ -25,15 +25,21 @@ inline double createMsqKey()
 	return double(tv.tv_sec) + 0.000001 * tv.tv_usec;
 }
 
-Handler::Handler(const int nMsqKey) :
-		mnMsqKey(createMsqKey()), mnMsqId(-1), pHandleMessage(0), mpInstance(0)
+Handler::Handler(const int nMsqKey, const long lFilter) :
+		mnMsqKey(createMsqKey()), mnMsqId(-1), pHandleMessage(0), mpInstance(0), mlFilter(-1)
 {
 	close();
 	if(-1 != nMsqKey)
 		mnMsqKey = nMsqKey;
 	mnMsqId = initMessage(mnMsqKey, "Handler");
+	if(-1 != lFilter)
+		mlFilter = lFilter;
+	else
+		mlFilter = mnMsqId;
 	if(0 < mnMsqId)
+	{
 		createThread(threadHandlerMessageReceive, this, "Handler Message Receive Thread");
+	}
 }
 
 Handler::~Handler()
@@ -55,7 +61,9 @@ void Handler::onHandleMessage(Message &message)
 
 void Handler::runMessageReceive()
 {
-	run(mnMsqId, "Handler");
+	if(0 > mlFilter)
+		mlFilter = mnMsqId;
+	run(mlFilter, "Handler");
 	threadExit();
 	threadJoin(getThreadID());
 	_log("[Handler] runMessageReceive Stop, Thread join");
@@ -67,7 +75,12 @@ void Handler::setHandleMessageListener(void *pInstance, pfnHandleMessage handleM
 	pHandleMessage = handleMessage;
 }
 
-int Handler::sendMessage(Message &message)
+int Handler::sendMessage(Message &message, long lFilter)
 {
-	return sendHandleMessage(mnMsqId, message);
+	long filter;
+	if(-1 == lFilter)
+		filter = mlFilter;
+	else
+		filter = lFilter;
+	return sendHandleMessage(filter, message);
 }

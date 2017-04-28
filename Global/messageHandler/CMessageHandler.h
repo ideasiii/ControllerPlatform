@@ -16,6 +16,7 @@ public:
 	int arg1;
 	int arg2;
 	void *obj;
+
 	_Message() :
 			what(-1), arg1(-1), arg2(-1), obj(0)
 	{

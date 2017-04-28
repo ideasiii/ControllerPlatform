@@ -18,7 +18,7 @@
 
 using namespace std;
 
-int _handleMessage(int what, int arg1, int arg2, void *obj, void *called)
+int CSemanticJudge_handleMessage(int what, int arg1, int arg2, void *obj, void *called)
 {
 	CSemanticJudge* ss = reinterpret_cast<CSemanticJudge*>(called);
 	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
@@ -28,8 +28,8 @@ int _handleMessage(int what, int arg1, int arg2, void *obj, void *called)
 CSemanticJudge::CSemanticJudge() :
 		handler(0)
 {
-	handler = new Handler();
-	handler->setHandleMessageListener(this, &_handleMessage);
+	handler = new Handler(888, 666);
+	handler->setHandleMessageListener(this, &CSemanticJudge_handleMessage);
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -43,9 +43,8 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
 
 	Message message;
-	message.what = 11;
-	handler->sendMessage(message);
-
+	message.what = 11223;
+	handler->sendMessage(message, 777);
 
 	int nIndex;
 	int nSubject;
