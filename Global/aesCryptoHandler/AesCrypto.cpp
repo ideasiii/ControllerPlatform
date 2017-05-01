@@ -7,19 +7,20 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include "LogHandler.h"
 
 AesCrypto::AesCrypto(uint8_t *key)
 {
 	this->key = key;
 }
 
-std::string AesCrypto::encrypt(std::string plaintext, uint8_t *iv)
+std::string AesCrypto::encrypt(const std::string plaintext, const uint8_t *iv)
 {
 	std::string ciphertext;
 	CryptoPP::AES::Encryption aesEncryption(key, KeyLength);
 	CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
 
+	// Crypto++ will release the sink for us
 	CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new CryptoPP::StringSink(ciphertext));
 	stfEncryptor.Put(reinterpret_cast<const unsigned char*>(plaintext.c_str()), plaintext.size() + 1);
 	stfEncryptor.MessageEnd();
@@ -27,7 +28,7 @@ std::string AesCrypto::encrypt(std::string plaintext, uint8_t *iv)
 	return ciphertext;
 }
 
-std::string AesCrypto::decrypt(unsigned char *ciphertext, int textLength, uint8_t *iv)
+std::string AesCrypto::decrypt(const uint8_t *ciphertext, const int textLength, const uint8_t *iv)
 {
 	std::string decryptedtext;
 	CryptoPP::AES::Decryption aesDecryption(key, KeyLength);
@@ -35,23 +36,22 @@ std::string AesCrypto::decrypt(unsigned char *ciphertext, int textLength, uint8_
 
 	try
 	{
+		// Crypto++ will release the sink for us
 		CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink(decryptedtext));
 		stfDecryptor.Put(ciphertext, textLength);
 		stfDecryptor.MessageEnd();
 	}
 	catch (CryptoPP::Exception const &e)
 	{
-		// TODO make visible outside
-		printf("decrypt failed: %s\n", e.what());
-		//decryptedtext = std::string();
+		_log("[AesCrypto] decrypt failed: %s\n", e.what());
 	}
 	
 	return decryptedtext;
 }
 
-void AesCrypto::getRandomBytes(uint8_t *outBuf, int bufLen)
+void AesCrypto::getRandomBytes(uint8_t *outBuf, const int len)
 {
 	int fd = open("/dev/urandom", O_RDONLY);
-	read(fd, outBuf, bufLen);
+	read(fd, outBuf, len);
 	close(fd);
 }

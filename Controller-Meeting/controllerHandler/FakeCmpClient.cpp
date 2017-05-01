@@ -24,16 +24,20 @@ FakeCmpClient::~FakeCmpClient()
 {
 }
 
-int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu, char **errorDescription)
+void 
+
+int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu)
 {
 	int sockfd, ret, ioTryCount;
 	struct sockaddr_in server;
 	char respBuf[MAX_DATA_LEN];
 
+	_log("[FakeCmpClient] Enter sendOnlyOneRequest()");
+
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1)
 	{
-		*errorDescription = "Could not create socket";
+		_log("[FakeCmpClient] Could not create socket");
 		return -1;
 	}
 
@@ -47,30 +51,37 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 
 	socklen_t len = sizeof(timeout);
 	ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, len);
-	printf("setsockopt 0 ret = %d\n", ret);
+	_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) ret = %d", ret);
+
 	if (ret == -1) {
-		int error = errno;
-		while ((close(sockfd) == -1) && (errno == EINTR));
-		errno = error;
+		_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) failed (%d): %s", 
+			errno, strerror(errno));
+		close(sockfd);
+
 		return -1;
 	}
 
 	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len);
-	printf("setsockopt 1 ret = %d\n", ret);
+	_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) ret (%d): %s", 
+			errno, strerror(errno));
+	
 	if (ret == -1) {
-		int error = errno;
-		while ((close(sockfd) == -1) && (errno == EINTR));
-		errno = error;
+		_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) failed (%d): %s", 
+			errno, strerror(errno));
+		close(sockfd);
+		
 		return -1;
 	}
 
-	// TODO print error on every failed call
-
 	ret = connect(sockfd, (struct sockaddr *)&server, sizeof(server));
-	printf("connect ret = %d\n", ret);
+	_log("[FakeCmpClient] connect ret = %d", ret);
+
 	if (ret < 0)
 	{
-		*errorDescription = strerror(errno);
+		_log("[FakeCmpClient] connect() error (%d): %s", 
+			errno, strerror(errno));
+		close(sockfd);
+
 		return -1;
 	}
 
@@ -80,38 +91,51 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	do
 	{
 		ret = send(sockfd, ((uint8_t*)requestPdu) + total, reqPduLen - total, 0);
-		printf("send ret = %d\n", ret);
+		_log("[FakeCmpClient] send() ret = %d", ret);
+
 		if (ret < 0)
 		{
-			*errorDescription = "Send failed";
+			_log("[FakeCmpClient] send() error (%d): %s", 
+				errno, strerror(errno));
 			close(sockfd);
 			return -1;
 		}
 
 		total += ret;
 		ioTryCount--;
+		_log("[FakeCmpClient] send() total = %d", total);
 	} while (total < reqPduLen && ioTryCount > 0);
 
 	total = 0;
 	do
 	{
 		ret = recv(sockfd, ((uint8_t*)responsePdu) + total, sizeof(CMP_PACKET) - total, 0);
-		printf("recv ret = %d\n", ret);
-		if (ret < 0)
+		_log("[FakeCmpClient] recv() ret = %d", ret);
+
+		if (ret == 0)
 		{
-			*errorDescription = "Receive failed";
+			_log("[FakeCmpClient] recv() 0 server closed the socket while receiving");
+			close(sockfd);
+			return -1;
+		}
+		else if (ret < 0)
+		{
+			_log("[FakeCmpClient] recv() 0 error: (%d): %s", 
+				errno, strerror(errno));
 			close(sockfd);
 			return -1;
 		}
 
 		total += ret;
 		ioTryCount--;
+		_log("[FakeCmpClient] recv() 0 total = %d", total);
 	} while (total < (int)sizeof(CMP_HEADER) && ioTryCount > 0);
 
 	CMP_HEADER *respHeader = ((CMP_HEADER*)responsePdu);
 	if (respHeader->sequence_number != ((CMP_HEADER*)requestPdu)->sequence_number)
 	{
-		*errorDescription = "PDU sequence mismatch";
+		_log("[FakeCmpClient] PDU sequence mismatch (%d vs. %d)", 
+			ntohl(respHeader->sequence_number), ntohl(((CMP_HEADER*)requestPdu)->sequence_number));
 		close(sockfd);
 		return -1;
 	}
@@ -124,7 +148,8 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	if (respHeader->command_length < (int)sizeof(CMP_HEADER)
 		|| respHeader->command_length > MAX_DATA_LEN)
 	{
-		*errorDescription = "Invalid PDU size in response header";
+		_log("[FakeCmpClient] Invalid command length (%d) in response header", 
+			respHeader->command_length);
 		close(sockfd);
 		return -1;
 	}
@@ -134,24 +159,36 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	while (total < respHeader->command_length && ioTryCount > 0)
 	{
 		ret = recv(sockfd, ((uint8_t*)responsePdu) + total, respHeader->command_length - total, 0);
-		if (ret < 0)
+		
+		if (ret == 0)
 		{
-			*errorDescription = "Receive failed";
+			_log("[FakeCmpClient] recv() 1 server closed the socket while receiving");
+			close(sockfd);
+			return -1;
+		}
+		else if (ret < 0)
+		{
+			_log("[FakeCmpClient] recv() 1 error (%d): %s", 
+				errno, strerror(errno));
 			close(sockfd);
 			return -1;
 		}
 
 		ioTryCount--;
 		total += ret;
+		_log("[FakeCmpClient] recv() 1 total = %d", total);
 	}
 
 	close(sockfd);
 
 	if (total != respHeader->command_length)
 	{
-		*errorDescription = "Response size does not match declared";
+		_log("[FakeCmpClient] Response size does not match header (%d vs. %d)",
+			, total, respHeader->command_length);
 		return -1;
 	}
+
+	_log("[FakeCmpClient] Send & Recv ok, recv size = %d", total);
 
 	return total;
 }
@@ -161,7 +198,7 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 {
 	if (dst == nullptr)
 	{
-		_log("[FakeCmpClient] dst is null");
+		_log("[FakeCmpClient] craftCmpPdu: dst is null");
 		return -1;
 	}
 
@@ -176,13 +213,12 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 
 		if (bodyLength > MAX_PDU_BODY_LEN)
 		{
-			_log("[FakeCmpClient] holy crap pdu body is beyond %d (%d bytes here)", MAX_PDU_BODY_LEN, bodyLength);
+			_log("[FakeCmpClient] craftCmpPdu: PDU body exceeds %d (%d bytes here)", 
+				MAX_PDU_BODY_LEN, bodyLength);
 			return -1;
 		}
 
 		memcpy(pBody, szData, bodyLength);
-		//pBody[bodyLength] = '\0';
-		//nTotalLen += bodyLength + 1;
 		nTotalLen += bodyLength;
 	}
 
@@ -192,8 +228,9 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 	header->sequence_number = htonl(nSequence);
 	header->command_length = htonl(nTotalLen);
 
-	_log(("[FakeCmpClient] crafting request PDU, (len, command, status, sequence) = (%d, %d, %d, %d)"),
-		//nTotalLen, nCommandId, nStatus, nSequence);
+	_log("[FakeCmpClient] craftCmpPdu: craft request PDU ok, "
+		"(len, command, status, sequence) = (%d, %d, %d, %d)",
+		nTotalLen, nCommandId, nStatus, nSequence);
 
 	return nTotalLen;
 }

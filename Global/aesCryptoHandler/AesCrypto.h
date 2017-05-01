@@ -4,9 +4,9 @@
 #include <unistd.h>
 
 /**
- * A helper class for doing AES256, CBC mode encryption/decryption.
+ * A helper class for doing AES 256 bit, CBC mode encryption/decryption.
  * 
- * Compilation requires crypto++, you can install it through apt on Debian:
+ * This class relies on crypto++, which can be installed through apt on Debian:
  *     sudo apt-get -y install libcrypto++-dev
  * Linking option: -lcryptopp
  */
@@ -14,29 +14,28 @@ class AesCrypto
 {
 public:
 	/**
-	 * Byte length of initial vector.
+	 * Length of initial vector in bytes.
+	 * Value should be same as block size which is always 128 bits in AES
 	 */
 	static const int IvLength = 16;
 
 	/**
-	 * Byte length of key, not including terminating null. 
-	 * Note that 32 bytes = 256 bit.
+	 * Length of key in bytes.
 	 */
 	static const int KeyLength = 32; 
 
 	/**
-	 * Instantiate with a key used for both
-	 * encryption and decryption process.
+	 * Instantiate with a key used for encryption and decryption.
 	 */
 	AesCrypto(uint8_t *key);
 
-	std::string encrypt(std::string plaintext, uint8_t *iv);
-	std::string decrypt(unsigned char* ciphertext, int textLength, uint8_t *iv);
+	std::string encrypt(const std::string plaintext, const uint8_t *iv);
+	std::string decrypt(const uint8_t* ciphertext, const int textLength, const uint8_t *iv);
 
 	/**
 	 * A handy function for generating random IV or (probably not) key.
 	 */
-	static void getRandomBytes(uint8_t *outBuf, int bufLen);
+	static void getRandomBytes(uint8_t *outBuf, const int bufLen);
 
 private:
 	uint8_t *key;

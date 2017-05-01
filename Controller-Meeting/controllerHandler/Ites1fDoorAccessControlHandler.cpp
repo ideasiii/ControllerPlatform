@@ -1,15 +1,20 @@
 #include "Ites1fDoorAccessControlHandler.h"
 
+#include <errno.h>
+#include <sstream>
+#include <string.h>
+
 #include "AesCrypto.h"
 #include "CryptoKey.h"
 #include "FakeCmpClient.h"
-#include <string.h>
-#include <sstream>
-#include "packet.h"
-#include <errno.h>
+#include "JSONObject.h"
+
 
 #define ENCRYPT_REQUEST_PDU_BODY
 #define DECRYPT_RESPONSE_PDU_BODY
+
+int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t **oBuf);
+std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu);
 
 Ites1fDoorAccessControlHandler::Ites1fDoorAccessControlHandler(char *ip, int port):
 	serverIp(ip), serverPort(port), aesKey((uint8_t*)ITES_1F_DOOR_CONTROL_AES_KEY)
@@ -29,7 +34,7 @@ Ites1fDoorAccessControlHandler::~Ites1fDoorAccessControlHandler()
 bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std::string userUuid,
 	std::string readerId, std::string token, int64_t validFrom, int64_t goodThrough)
 {
-	_log("doorOpen");
+	_log("[Ites1F_DACHandler] Enter doorOpen()");
 	CMP_PACKET reqPdu, respPdu;
 
 	std::stringstream ss;
@@ -41,24 +46,12 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 		<< "}";
 
 	std::string reqBody = ss.str();
-	_log("reqBody.size() = %d", reqBody.size());
+	_log("[Ites1F_DACHandler] reqBody.size() = %d", reqBody.size());
 
-	// encrypt
-	
 #ifdef ENCRYPT_REQUEST_PDU_BODY
 	AesCrypto crypto(aesKey);
-	uint8_t iv[AesCrypto::IvLength];
-	AesCrypto::getRandomBytes(iv, AesCrypto::IvLength);
-
-	std::string ciphertext = crypto.encrypt(reqBody, iv);
-	int bufSize = AesCrypto::IvLength + ciphertext.size();
-	uint8_t *buf = new uint8_t[bufSize];
-
-	memcpy(buf, iv, AesCrypto::IvLength);
-	memcpy(buf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
-
-	_log("[Ites1F_DACHandler] Encrypt request PDU body, IV len = %d, ciphertext.size() = %d, bufSize = %d"
-		//, AesCrypto::IvLength, ciphertext.size(), bufSize);
+	uint8_t *buf;
+	int bufSize = encryptRequestBody(crypto, reqBody, &buf);
 #else
 	int bufSize = reqBody.size() + 1;
 	uint8_t *buf = (uint8_t *)reqBody.c_str();
@@ -81,45 +74,101 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 	_log("[Ites1F_DACHandler] reqPduSize = %d", reqPduSize);
 
 	FakeCmpClient client(this->serverIp, this->serverPort);
-	char *sendErrDesc = nullptr;
-	int respPduSize = client.sendOnlyOneRequest(&reqPdu, reqPduSize, &respPdu, &sendErrDesc);
-	int cmpHeaderSize = sizeof(CMP_HEADER);
-
-	if (respPduSize < cmpHeaderSize)
+	int respPduSize = client.sendOnlyOneRequest(&reqPdu, reqPduSize, &respPdu);
+	
+	if (respPduSize < (int)sizeof(CMP_HEADER))
 	{
-		errorDescription.assign(sendErrDesc);
+		errorDescription.assign("Error sending request");
 		return false;
 	}
 
+	
 	// check return status in header
-	// decrypt first then remove padding (if appended)
 
 #ifdef DECRYPT_RESPONSE_PDU_BODY
-	uint8_t *respIv = (uint8_t*)respPdu.cmpBody.cmpdata;
-	uint8_t *respBody = ((uint8_t*)respPdu.cmpBody.cmpdata) + AesCrypto::IvLength;
-	int respCipherLen = respPdu.cmpHeader.command_length - sizeof(CMP_HEADER) - AesCrypto::IvLength;
-	_log("[Ites1F_DACHandler] response ciphertext length = %d", respCipherLen);
+	std::string respBodyStr = decryptRequestBody(crypto, &respPdu);
 
-	std::string respBodyStr = crypto.decrypt(respBody, respCipherLen, respIv);
-	_log("[Ites1F_DACHandler] decrypt.length = %d", respBodyStr.length());
-
-	if (respBodyStr.length() < 1)
+	if (respBodyStr.length() < 2)
 	{
-		_log("[Ites1F_DACHandler] decrypt response body failed, raw response = %s", respIv);
+		_log("[Ites1F_DACHandler] decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
+		errorDescription.assign("Reading server response failed");
 		return false;
 	}
 	else
 	{
 		_log("[Ites1F_DACHandler] response body decrypt ok: `%s`\n", respBodyStr.c_str());
-		return false;
 	}
 #else
 	std::string respBodyStr(respPdu.cmpBody.cmpdata);
 	_log("[Ites1F_DACHandler] raw response: %s", (uint8_t*)respPdu.cmpBody.cmpdata);
 #endif
 
-	// parse json
-	//respBodyStr
+	JSONObject respJson(respBodyStr);
+	if (!respJson.isValid())
+	{
+		_log("[Ites1F_DACHandler] respJson.isValid() = false");
+		errorDescription.assign("Reading server response failed");
+		return false;
+	}
 
+	bool success = respJson.getBoolean("success");
+	if (!success)
+	{
+		bool granted = respJson.getBoolean("granted");
+		std::string message = respJson.getString("message");
+
+		_log("[Ites1F_DACHandler] Request failed (granted: %s): `%s`\n",
+			granted ? "true" : "false", message.c_str());
+		
+		if(granted)
+		{
+			errorDescription = "Permission granted by remote but action failed: " + message;
+		}
+		else
+		{
+			errorDescription = "Permission not granted by remote: " + message;
+		}
+		
+		return false;
+	}
+	
+	_log("[Ites1F_DACHandler] Request successful\n");
 	return true;
+}
+
+/**
+* 加密 reqBody
+* @param oBuf 儲存加密結果指針的指針，資料的格式為 IV接加密後的reqBody，中間沒有間隔
+* @return 加密後的資料大小
+*/
+int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t **oBuf)
+{
+	uint8_t iv[AesCrypto::IvLength];
+	AesCrypto::getRandomBytes(iv, AesCrypto::IvLength);
+
+	std::string ciphertext = crypto.encrypt(reqBody, iv);
+	int bufSize = AesCrypto::IvLength + ciphertext.size();
+	*oBuf = new uint8_t[bufSize];
+
+	memcpy(*oBuf, iv, AesCrypto::IvLength);
+	memcpy(*oBuf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
+
+	_log("[Ites1F_DACHandler] Encrypt request PDU body, "
+		"IV len = %d, reqBody.size() = %d, ciphertext.size() = %d, bufSize = %d"
+		, AesCrypto::IvLength, reqBody.size(), ciphertext.size(), bufSize);
+
+	return bufSize;
+}
+
+std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu)
+{
+	uint8_t *respIv = (uint8_t*)pdu->cmpBody.cmpdata;
+	uint8_t *respBody = ((uint8_t*)pdu->cmpBody.cmpdata) + AesCrypto::IvLength;
+	int respCipherLen = pdu->cmpHeader.command_length - sizeof(CMP_HEADER) - AesCrypto::IvLength;
+	_log("[Ites1F_DACHandler] response ciphertext length = %d", respCipherLen);
+
+	std::string respBodyStr = crypto.decrypt(respBody, respCipherLen, respIv);
+	_log("[Ites1F_DACHandler] decrypt.length = %d", respBodyStr.length());
+
+	return respBodyStr;
 }
