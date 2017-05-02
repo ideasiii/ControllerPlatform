@@ -15,36 +15,23 @@
 #include "config.h"
 #include "common.h"
 #include "Handler.h"
+#include "CObject.h"
 
 using namespace std;
 
-int CSemanticJudge_handleMessage(int what, int arg1, int arg2, void *obj, void *called)
+CSemanticJudge::CSemanticJudge(CObject *object) :
+		handler(0), mpController(0)
 {
-	CSemanticJudge* ss = reinterpret_cast<CSemanticJudge*>(called);
-	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
-	return 0;
-}
-
-CSemanticJudge::CSemanticJudge() :
-		handler(0)
-{
-	handler = new Handler(888, 666);
-	handler->setHandleMessageListener(this, &CSemanticJudge_handleMessage);
+	mpController = object;
 }
 
 CSemanticJudge::~CSemanticJudge()
 {
-	if(handler)
-		handler->close();
-	delete handler;
+
 }
 
-void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
+int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
-
-	Message message;
-	message.what = 11223;
-	handler->sendMessage(message, 777);
 
 	int nIndex;
 	int nSubject;
@@ -53,7 +40,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	if(0 >= szInput)
 	{
 		jsonResp->put("type", 0);
-		return;
+		return TRUE;
 	}
 
 	strWord = szInput;
@@ -96,7 +83,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		}
 
 		jsonResp->put("story", jsonStory);
-		return;
+		return TRUE;
 	}
 
 	WORD_ATTR wordAttr;
@@ -105,7 +92,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	{
 		_log("listen: %d %d %d %s", wordAttr.nIndex, wordAttr.nAttribute, wordAttr.nSubAttr, wordAttr.strWord.c_str());
 
-		return;
+		return TRUE;
 	}
 
 	/**
@@ -122,7 +109,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
-		return;
+		return TRUE;
 	}
 
 	/**
@@ -154,8 +141,10 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		}
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonMusic);
-		return;
+		return TRUE;
 	}
+
+	return FALSE;
 }
 
 int CSemanticJudge::getSubject(const char *szWord)
@@ -226,10 +215,3 @@ int CSemanticJudge::getVerb(const char *szWord, WORD_ATTR &wordAttr)
 
 	return nIndex;
 }
-
-int CSemanticJudge::handleMessage(int what, int arg1, int arg2, void *obj)
-{
-	_log("[CSemanticJudge] handleMessage what:%d arg1:%d arg2:%d", what, arg1, arg2);
-	return 0;
-}
-

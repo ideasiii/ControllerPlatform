@@ -59,7 +59,6 @@ void CApplication::onReceiveMessage(int nEvent, int nCommand, unsigned long int 
 
 	}
 }
-
 void CApplication::setConfPath(const char * szPath)
 {
 	mstrConfPath = szPath;

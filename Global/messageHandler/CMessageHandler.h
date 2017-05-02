@@ -15,10 +15,11 @@ public:
 	int what;
 	int arg1;
 	int arg2;
+	int opt;
 	void *obj;
 
 	_Message() :
-			what(-1), arg1(-1), arg2(-1), obj(0)
+			what(-1), arg1(-1), arg2(-1), opt(-1), obj(0)
 	{
 
 	}

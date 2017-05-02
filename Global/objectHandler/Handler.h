@@ -35,6 +35,6 @@ private:
 	pfnHandleMessage pHandleMessage;
 	void *mpInstance;
 	long mlFilter;
-	//void *mpCalled;
+	unsigned long int mlnThreadId;
 };
 

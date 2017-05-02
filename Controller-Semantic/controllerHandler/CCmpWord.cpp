@@ -12,78 +12,72 @@
 #include "common.h"
 #include "JSONObject.h"
 #include "CSemanticJudge.h"
+#include "config.h"
 
 using namespace std;
 
-#define MAX_SIZE		2048
-
-CCmpWord::CCmpWord() :
-		semanticJudge(0)
+CCmpWord::CCmpWord(CObject *object) :
+		mpController(0)
 {
-	semanticJudge = new CSemanticJudge();
+	mpController = object;
 }
 
 CCmpWord::~CCmpWord()
 {
-	delete semanticJudge;
+
 }
 
 int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData)
 {
-	char *pBody = (char*) ((char *) const_cast<void*>(szData)); // + sizeof(CMP_HEADER));
+	string strBody = reinterpret_cast<const char*>(szData);
 
-	_log("[CCmpWord] onSemanticWord Body: %s", pBody);
-
-	if(isValidStr((const char*) pBody, MAX_SIZE))
+	if(!strBody.empty() && 0 < strBody.length())
 	{
-		char temp[MAX_SIZE];
-		memset(temp, 0, sizeof(temp));
-		strcpy(temp, pBody);
-
-		if(0 < strlen(temp))
+		WORD_REQUEST wordRequest;
+		JSONObject *jobjRoot = new JSONObject(strBody);
+		if(jobjRoot->isValid())
 		{
-			WORD_REQUEST wordRequest;
-			JSONObject *jobjRoot = new JSONObject(temp);
-			if(jobjRoot->isValid())
-			{
-				wordRequest.nId = jobjRoot->getInt("id");
-				wordRequest.nType = jobjRoot->getInt("type");
-				wordRequest.nTotal = jobjRoot->getInt("total");
-				wordRequest.nNumber = jobjRoot->getInt("number");
-				wordRequest.strWord = jobjRoot->getString("word");
-				_log("[CCmpWord] onSemanticWord: id: %d type: %d total: %d number: %d word: %s Socket[%d]",
-						wordRequest.nId, wordRequest.nType, wordRequest.nTotal, wordRequest.nNumber,
-						wordRequest.strWord.c_str(), nSocket);
-			}
-			jobjRoot->release();
-			delete jobjRoot;
-
-			if(0 > wordRequest.nId)
-			{
-				response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
-				return FALSE;
-			}
-
-			JSONObject jsonResp;
-			jsonResp.put("id", wordRequest.nId);
-			switch(wordRequest.nType)
-			{
-			case 0: // 語意判斷
-				semanticJudge->word(wordRequest.strWord.c_str(), &jsonResp);
-				break;
-			case 1: // 控制
-				break;
-			case 2: // 會話
-				break;
-			case 3: // 紀錄
-				break;
-			default:
-				response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
-				return FALSE;
-			}
-			response(nSocket, nCommand, STATUS_ROK, nSequence, jsonResp.toString().c_str());
-			jsonResp.release();
+			wordRequest.nId = jobjRoot->getInt("id");
+			wordRequest.nType = jobjRoot->getInt("type");
+			wordRequest.nTotal = jobjRoot->getInt("total");
+			wordRequest.nNumber = jobjRoot->getInt("number");
+			wordRequest.strWord = jobjRoot->getString("word");
+			_log("[CCmpWord] onSemanticWord: id: %d type: %d total: %d number: %d word: %s Socket[%d]", wordRequest.nId,
+					wordRequest.nType, wordRequest.nTotal, wordRequest.nNumber, wordRequest.strWord.c_str(), nSocket);
 		}
+		jobjRoot->release();
+		delete jobjRoot;
+
+		if(0 > wordRequest.nId)
+		{
+			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+			return FALSE;
+		}
+
+		Message message;
+		switch(wordRequest.nType)
+		{
+		case 0: // 語意判斷
+			message.what = TYPE_REQ_NODEFINE;
+			break;
+		case 1: // 控制
+			message.what = TYPE_REQ_CONTROL;
+			break;
+		case 2: // 會話
+			message.what = TYPE_REQ_TALK;
+			break;
+		case 3: // 紀錄
+			message.what = TYPE_REQ_RECORD;
+			break;
+		default:
+			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+			return FALSE;
+		}
+		message.arg1 = nSocket;
+		message.arg2 = nSequence;
+		message.opt = wordRequest.nId;
+		message.obj = _VOID(wordRequest.strWord.c_str());
+		mpController->sendMessage(message);
 	}
 	return TRUE;
 }

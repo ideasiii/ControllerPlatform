@@ -11,6 +11,7 @@
 
 class JSONObject;
 class Handler;
+class CObject;
 
 class CSemanticJudge
 {
@@ -31,14 +32,14 @@ class CSemanticJudge
 	typedef std::map<int, WORD_ATTR> WORD_BODY;		// 文字的肉體
 
 public:
-	CSemanticJudge();
+	explicit CSemanticJudge(CObject *object);
 	virtual ~CSemanticJudge();
-	void word(const char *szInput, JSONObject* jsonResp);
-	int handleMessage(int what, int arg1, int arg2, void *obj);
+	int word(const char *szInput, JSONObject* jsonResp);
 
 private:
 	int getSubject(const char *szWord);
 	int getAttribute(const char *szWord, WORD_BODY &wordBody);
 	int getVerb(const char *szWord, WORD_ATTR &wordAttr);
 	Handler *handler;
+	CObject *mpController;
 };

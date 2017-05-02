@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
 			if(WORD == nService)
 			{
 				JSONObject jsonWord;
-				jsonWord.put("id", 0);
+				jsonWord.put("id", 1);
 				jsonWord.put("type", 0);
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);

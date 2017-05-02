@@ -245,7 +245,6 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		}
 		else
 		{
-			_DBG("[CCmpServer] onTcpReceive Call function: %d Direct", nCommand);
 			(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
 		}
 	}

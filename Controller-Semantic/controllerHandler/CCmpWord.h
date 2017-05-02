@@ -9,8 +9,6 @@
 
 #include "CCmpServer.h"
 
-class CSemanticJudge;
-
 class CCmpWord: public CCmpServer
 {
 	typedef struct _WORD_REQUEST
@@ -29,12 +27,10 @@ class CCmpWord: public CCmpServer
 		}
 	} WORD_REQUEST;
 public:
-	explicit CCmpWord();
+	explicit CCmpWord(CObject *object);
 	virtual ~CCmpWord();
 
 protected:
 	int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData);
-
-private:
-	CSemanticJudge *semanticJudge;
+	CObject *mpController;
 };

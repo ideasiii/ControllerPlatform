@@ -9,15 +9,14 @@
 
 #include "CApplication.h"
 
+class CSemanticJudge;
 class CCmpWord;
-class Handler;
 
 class CController: public CApplication
 {
 public:
 	CController();
 	virtual ~CController();
-	int handleMessage(int what, int arg1, int arg2, void *obj);
 
 protected:
 	int onCreated(void* nMsqKey);
@@ -30,12 +29,13 @@ protected:
 	 *  Main Process terminator will callback onFinish
 	 */
 	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 private:
 	int startCmpWordServer(int nPort, int nMsqKey);
 
 private:
-	CCmpWord *cmpword;
 	int mnMsqKey;
-	Handler *handler;
+	CCmpWord *cmpword;
+	CSemanticJudge *semanticJudge;
 };

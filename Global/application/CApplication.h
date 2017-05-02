@@ -27,6 +27,10 @@ protected:
 	virtual int onCreated(void* nMsqKey) = 0;
 	virtual int onInitial(void* szConfPath) = 0;
 	virtual int onFinish(void* nMsqKey) = 0;
+	virtual void onHandleMessage(Message &message)
+	{
+	}
+	;
 
 private:
 	typedef int (CApplication::*MemFn)(void*);
