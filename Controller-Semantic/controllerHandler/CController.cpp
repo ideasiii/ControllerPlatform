@@ -14,15 +14,21 @@
 #include "Handler.h"
 #include "CObject.h"
 #include "CSemanticJudge.h"
+#include "CSemanticControl.h"
+#include "CSemanticTalk.h"
+#include "CSemanticRecord.h"
 #include "packet.h"
 #include "JSONObject.h"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0)
+		mnMsqKey(-1)
 {
 	semanticJudge = new CSemanticJudge(_OBJ(this));
+	semanticControl = new CSemanticControl(_OBJ(this));
+	semanticTalk = new CSemanticTalk(_OBJ(this));
+	semanticRecord = new CSemanticRecord(_OBJ(this));
 	cmpword = new CCmpWord(_OBJ(this));
 }
 
@@ -66,6 +72,9 @@ int CController::onFinish(void* nMsqKey)
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
+	delete semanticControl;
+	delete semanticTalk;
+	delete semanticRecord;
 	return TRUE;
 }
 
@@ -76,13 +85,14 @@ int CController::startCmpWordServer(int nPort, int nMsqKey)
 
 void CController::onHandleMessage(Message &message)
 {
-	_log("[CController] onHandleMessage what: %d obj: %s", message.what, reinterpret_cast<const char*>(message.obj));
+	//_log("[CController] onHandleMessage what: %d obj: %s", message.what, reinterpret_cast<const char*>(message.obj));
 
 	int nId = -1;
 	string strWord;
 	JSONObject* jsonResp;
 
 	strWord = reinterpret_cast<const char*>(message.obj);
+	_log("[CController] onHandleMessage Word: %s", strWord.c_str());
 
 	if(strWord.empty())
 	{
@@ -98,13 +108,13 @@ void CController::onHandleMessage(Message &message)
 		semanticJudge->word(strWord.c_str(), jsonResp);
 		break;
 	case 1: // 控制
-
+		semanticControl->word(strWord.c_str(), jsonResp);
 		break;
 	case 2: // 會話
-
+		semanticTalk->word(strWord.c_str(), jsonResp);
 		break;
 	case 3: // 紀錄
-
+		semanticRecord->word(strWord.c_str(), jsonResp);
 		break;
 	default:
 		jsonResp->put("type", 0);

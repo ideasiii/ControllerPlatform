@@ -1,21 +1,21 @@
 /*
- * CSemanticControl.h
+ * CJudgeStory.h
  *
  *  Created on: 2017年5月2日
  *      Author: Jugo
  */
 
 #pragma once
-
-class CObject;
+#include "CSemantic.h"
 
 class JSONObject;
-class CObject;
 
-class CSemanticControl
+class CJudgeStory: public CSemantic
 {
 public:
-	explicit CSemanticControl(CObject *object);
-	virtual ~CSemanticControl();
+	explicit CJudgeStory();
+	virtual ~CJudgeStory();
 	int word(const char *szInput, JSONObject* jsonResp);
+	int evaluate(const char *szWord);
+
 };

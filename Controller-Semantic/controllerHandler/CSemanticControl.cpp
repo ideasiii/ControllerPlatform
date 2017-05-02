@@ -7,6 +7,7 @@
 
 #include "CSemanticControl.h"
 #include "CObject.h"
+#include "JSONObject.h"
 
 CSemanticControl::CSemanticControl(CObject *object)
 {
@@ -16,5 +17,10 @@ CSemanticControl::CSemanticControl(CObject *object)
 CSemanticControl::~CSemanticControl()
 {
 
+}
+
+int CSemanticControl::word(const char *szInput, JSONObject* jsonResp)
+{
+	return 0;
 }
 

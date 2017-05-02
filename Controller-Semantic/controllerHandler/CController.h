@@ -10,6 +10,9 @@
 #include "CApplication.h"
 
 class CSemanticJudge;
+class CSemanticControl;
+class CSemanticTalk;
+class CSemanticRecord;
 class CCmpWord;
 
 class CController: public CApplication
@@ -38,4 +41,7 @@ private:
 	int mnMsqKey;
 	CCmpWord *cmpword;
 	CSemanticJudge *semanticJudge;
+	CSemanticControl *semanticControl;
+	CSemanticTalk *semanticTalk;
+	CSemanticRecord *semanticRecord;
 };

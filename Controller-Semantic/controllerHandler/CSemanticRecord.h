@@ -9,9 +9,13 @@
 
 class CObject;
 
+class JSONObject;
+class CObject;
+
 class CSemanticRecord
 {
 public:
 	explicit CSemanticRecord(CObject *object);
 	virtual ~CSemanticRecord();
+	int word(const char *szInput, JSONObject* jsonResp);
 };

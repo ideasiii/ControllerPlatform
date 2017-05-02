@@ -7,6 +7,7 @@
 
 #include "CSemanticTalk.h"
 #include "CObject.h"
+#include "JSONObject.h"
 
 CSemanticTalk::CSemanticTalk(CObject *object)
 {
@@ -16,5 +17,10 @@ CSemanticTalk::CSemanticTalk(CObject *object)
 CSemanticTalk::~CSemanticTalk()
 {
 
+}
+
+int CSemanticTalk::word(const char *szInput, JSONObject* jsonResp)
+{
+	return 0;
 }
 
