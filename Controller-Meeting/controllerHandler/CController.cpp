@@ -35,6 +35,7 @@ int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
 
 /**
  *  Define Socket Server Receive Function
+ *  implement sendCommand() and cmpSend() if this function does something (really?)
  */
 int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 {
@@ -44,6 +45,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 
 /**
  *  Define extern function.
+ *  not used by this CController, cmp PDU is handled by CClientMeetingAgent
  */
 int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
 {
@@ -71,6 +73,7 @@ int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isRe
 	return nRet;
 }
 
+// not used by this CController, cmp PDU is handled by CClientMeetingAgent
 int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int nSequence, const char * szData)
 {
 	int nRet = -1;
@@ -129,6 +132,7 @@ CController* CController::getInstance()
 	return controller;
 }
 
+// on incoming from message queue
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	switch (nCommand)
@@ -139,7 +143,9 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
-
+		// TODO 重新連線
+		// TODO startClientMeetingAgent()?????????????
+		// TODO 用 enquire link 
 		break;
 
 	default:

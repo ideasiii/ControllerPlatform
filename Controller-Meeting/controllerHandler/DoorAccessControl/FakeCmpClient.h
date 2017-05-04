@@ -27,7 +27,7 @@ public:
 	* @param  responsePdu 存放接收的 PDU 指針，header 會轉換為 host byte order
 	* @return             how many bytes received (PDU length), <0 on error.
 	*/
-	int sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu, char **errorDescription);
+	int sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu);
 	
 	/**
 	* helper function for building request PDU

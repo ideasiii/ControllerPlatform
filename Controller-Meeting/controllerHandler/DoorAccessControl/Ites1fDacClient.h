@@ -3,11 +3,14 @@
 #include <string>
 #include "packet.h"
 
-class Ites1fDoorAccessControlHandler
+/**
+ * Client of ITeS 1F Door Access Controller
+ */
+class Ites1fDacClient
 {
 public:
-	Ites1fDoorAccessControlHandler(char *ip, int port);
-	~Ites1fDoorAccessControlHandler();
+	Ites1fDacClient(char *ip, int port);
+	~Ites1fDacClient();
 
 	/**
 	 * 發送開門請求

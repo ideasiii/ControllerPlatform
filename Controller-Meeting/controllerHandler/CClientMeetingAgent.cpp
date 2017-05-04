@@ -6,27 +6,15 @@
 #include "CClientMeetingAgent.h"
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
-
+#include "TestStringsDefinition.h"
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
 
-#include "DoorAccessControllerParams.h"
-
 static CClientMeetingAgent * clientMeetingAgent = 0;
 
-/**
- * returns Unix timestamp in milliseconds
- */
-int64_t unixTimeMilli()
-{
-	return std::chrono::duration_cast<std::chrono::milliseconds>
-        (std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
 CClientMeetingAgent::CClientMeetingAgent() :
-		CSocketClient(), cmpParser(CCmpHandler::getInstance()),
-		ites1fDoor((char *)ITES_1F_DOOR_ACCESS_CONTROLLER_IP, ITES_1F_DOOR_ACCESS_CONTROLLER_PORT)
+		CSocketClient(), cmpParser(CCmpHandler::getInstance())
 {
 
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBind;
@@ -222,92 +210,51 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 			}
 
 		}
-		else if (strRequestBodyData.find(
-				"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu4ZZuE0qtj0uU2wxVsoCszE72bP9JSDoXCPaQL4sxIXOqwua6ZVn+VdtCI3ushUzi8qSogC3J7UtO5Kk4Vg+nC2k5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs=")
-				!= string::npos)
+		else if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+				|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
+				|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos
+				|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
 		{
-			//101 door lock
-			if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
+			// Door access
+			std::string uuid;
+			if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos)
 			{
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
+				uuid = TEST_USER_HAS_MEETING_IN_001;
 			}
-			else
+			else if(strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_002) != string::npos)
 			{
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
+				uuid = TEST_USER_HAS_MEETING_IN_002;
 			}
-		}
-		// TODO make this string to QR code
-		else if (strRequestBodyData.find(
-				"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72SDF9jslzsH4Ahd1nu4ZZuE0qtj0uU2wxVsoCszE72bP9JSDoXCPaQL4sxIXOqwua6ZVn+VdtCI3ushUzi8qSogC3J7UtO5Kk4Vg+nC2k5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4aDsoYs=")
-				!= string::npos)
-		{
-			//101 door lock (REALLY opens the door)
-			if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
+
+			if (uuid.size() > 0)
 			{
-				// TODO validate token
-				string uuid = "00000000-ffff-0000-ffff-ffffffffffff";
-				string token = "eeeeeeee-ffff-0000-ffff-ffffffffffff";
-				string reader = "001"; // constant
-				int64_t extendTime = 100000;
-				int64_t validFrom = unixTimeMilli() - extendTime;
-				int64_t goodThru = unixTimeMilli() + extendTime;
+				std::string meetingRoom = "000";
 
-				int64_t unixTimeNow = unixTimeMilli();
-
-				if (unixTimeNow < validFrom || unixTimeNow > goodThru)
+				if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos)
 				{
-					strResponseBodyData = "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\": \"No permission to open 101\"}}";
+					meetingRoom = "101";
+				}
+				else if (strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
+				{
+					meetingRoom = "102";
+				}
+
+				if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos)
+				{
+					strResponseBodyData = doorAccessHandler.doRequestDummy(uuid, meetingRoom);
 				}
 				else
 				{
-					// TODO call handler to open door
-					std::string errorDescription;
-					ites1fDoor.doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
-
-					strResponseBodyData =
-							"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened\"}}";
-					}
+					strResponseBodyData = doorAccessHandler.doRequest(uuid, meetingRoom);
+				}
 			}
 			else
 			{
 				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
-			}
-		}
-		else if (strRequestBodyData.find(
-				"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu7rcrcq4Qa9+rJUZBqP+U4T13BrnqwsDCTY9FGqMK8giWAWH6ZKuuZjhZvXXFxAlJ4XEXkY1LDmXQYSlMF/L+3xk5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs=")
-				!= string::npos)
-		{
-			//102 door lock
-			if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
-			{
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
-			}
-			else
-			{
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
-			}
-		}
-		// TODO make this string to QR code
-		else if (strRequestBodyData.find(
-				"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu7rcrcq4Qa9+rJUZBqP+U4T13BrnqwsDCTY9uU2wxVsoCszE6ZKuuZjhZvXXFxAlJ4XEXkY1LDmXQYSlMF/L+3xk5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs=")
-				!= string::npos)
-		{
-			//102 door lock
-			if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
-			{
-				// TODO call handler to open door
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened\"}}";
-			}
-			else
-			{
-				strResponseBodyData =
-						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
+						"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"No permission to open this door\"}}";
 			}
 		}
 		else
@@ -323,7 +270,7 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 
 int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	_DBG("[CClientMeetingAgent]cmpAPPVersion");
+	_DBG("[CClientMeetingAgent] cmpAPPVersion");
 
 	string bodyData =
 			"{\"VERSION\": \"1.0\",\"APP_DOWNLOAD_URL\": \"http://XXX/ideas/sdk/download/libs/android/XXX.apk\"}";
@@ -462,3 +409,8 @@ CMPData CClientMeetingAgent::parseCMPData(int nSocket, int nCommand, int nSequen
 	}
 }
 
+int64_t CClientMeetingAgent::unixTimeMilli()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>
+		(std::chrono::system_clock::now().time_since_epoch()).count();
+}
