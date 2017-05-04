@@ -65,20 +65,13 @@ bool JSONObject::getBoolean(string name)
 
 bool JSONObject::getBoolean(string name, bool defaultValue)
 {
-	int nValue = -1;
-	if(cjsonObj)
+	if(cjsonObj && !isNull(name))
 	{
-		if(!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
-		{
-			nValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
-		}
+		int type = cJSON_GetObjectItem(cjsonObj, name.c_str())->type;
+		return (cJSON_False == type) ? false : (cJSON_True == type) ? true : defaultValue;
 	}
-	if(-1 == nValue)
-		return defaultValue;
 
-	if(0 == nValue)
-		return false;
-	return true;
+	return defaultValue;
 }
 
 string JSONObject::getString(string name)

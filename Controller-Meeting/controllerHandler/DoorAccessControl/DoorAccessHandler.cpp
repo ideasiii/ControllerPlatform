@@ -65,30 +65,29 @@ std::string DoorAccessHandler::doRequest(std::string uuid, std::string meetingRo
 
 	if (unixTimeNow < validFrom || unixTimeNow > goodThru)
 	{
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\": \"Bad timing to open " + meetingRoom + ""\"}}";
+		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\": \"Bad timing to open " + meetingRoom + "\"}}";
+	}
+
+	// å¦‚æœä¸€å®šæ™‚é–“å…§å·²ç¶“æˆåŠŸé–‹é–€ï¼Œå› ç‚ºè€ƒæ…®åˆ°é–€ä¸æœƒé¦¬ä¸Šè¢«é—œä¸Šï¼Œæ•…ç›´æ¥è¿”å›æˆåŠŸï¼Œä¸å†ç™¼é€æŒ‡ä»¤åˆ°é ç«¯
+	if (lastOpenedTime.find(reader) != lastOpenedTime.end()
+		&& unixTimeNow - lastOpenedTime[reader] < 2000)
+	{
+		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened (cached)\"}}";
+	}
+
+	std::string errorDescription;
+	bool apiCallOk = ites1fDoor.doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
+	if (!apiCallOk)
+	{
+		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY failed to open: "
+			+ errorDescription + "\"}}";
 	}
 	else
 	{
-		// ¦pªG¤@©w®É¶¡¤º¤w¸g¦¨¥\¶}ªù¡A¦]¬°¦Ò¼{¨ìªù¤£·|°¨¤W³QÃö¤W¡A¬Gª½±µªğ¦^¦¨¥\¡A¤£¦Aµo°e«ü¥O¨ì»·ºİ
-		if (lastSuccessOpenedTime.find(reader) != lastSuccessOpenedTime.end()
-			&& unixTimeNow - lastSuccessOpenedTime[reader] < 2000)
-		{
-			return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened (cached)\"}}";
-		}
-
-		std::string errorDescription;
-		bool apiCallOk = ites1fDoor.doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
-		if (!apiCallOk)
-		{
-			return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY failed to open: "
-				+ errorDescription + "\"}}";
-		}
-		else
-		{
-			lastSuccessOpenedTime[reader] = unixTimeMilli();
-			return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened\"}}";
-		}		
-	}
+		lastOpenedTime[reader] = unixTimeMilli();
+		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened\"}}";
+	}		
+	
 }
 
 int64_t DoorAccessHandler::unixTimeMilli()
