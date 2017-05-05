@@ -6,7 +6,7 @@
 #include "CSocketClient.h"
 #include "ICallback.h"
 #include "CMPData.h"
-#include "Ites1fDoorAccessControlHandler.h"
+#include "DoorAccessControl/DoorAccessHandler.h"
 
 using namespace std;
 
@@ -47,5 +47,10 @@ private:
 	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 
-	Ites1fDoorAccessControlHandler ites1fDoor;
+	/**
+	 * returns Unix timestamp in milliseconds
+	 */
+	int64_t unixTimeMilli();
+
+	DoorAccessHandler doorAccessHandler;
 };

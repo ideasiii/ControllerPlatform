@@ -1,5 +1,5 @@
-export MODULES=main \
-controllerHandler \
+export MODULES=controllerHandler \
+../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler	\

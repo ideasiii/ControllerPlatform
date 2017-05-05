@@ -41,14 +41,3 @@ int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void 
 {
 	return response(nSocket, nCommand, STATUS_ROK, nSequence, RESP_DISPATCH);
 }
-
-int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	return 0;
-}
-
-int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	return 0;
-}
-

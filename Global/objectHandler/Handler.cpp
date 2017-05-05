@@ -38,13 +38,14 @@ Handler::Handler(const int nMsqKey, const long lFilter) :
 		mlFilter = mnMsqId;
 	if(0 < mnMsqId)
 	{
-		createThread(threadHandlerMessageReceive, this, "Handler Message Receive Thread");
+		mlnThreadId = createThread(threadHandlerMessageReceive, this, "Handler Message Receive Thread");
 	}
 }
 
 Handler::~Handler()
 {
-	close();
+	threadCancel(mlnThreadId);
+	threadJoin(mlnThreadId);
 }
 
 void Handler::close()
@@ -82,5 +83,5 @@ int Handler::sendMessage(Message &message, long lFilter)
 		filter = mlFilter;
 	else
 		filter = lFilter;
-	return sendHandleMessage(filter, message);
+	return CObject::sendMessage(filter, message);
 }

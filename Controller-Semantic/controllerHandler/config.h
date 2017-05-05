@@ -7,7 +7,13 @@
 
 #pragma once
 
-//==================================== 封包內容定義 =========================================//
+//==================================== 封包 Request 內容定義 =========================================//
+#define TYPE_REQ_NODEFINE			0
+#define TYPE_REQ_CONTROL			1
+#define TYPE_REQ_TALK				2
+#define TYPE_REQ_RECORD				3
+
+//==================================== 封包 Response 內容定義 =========================================//
 #define TYPE_RESP_UNKNOW			0
 #define TYPE_RESP_MUSIC				1
 #define TYPE_RESP_STORY				2

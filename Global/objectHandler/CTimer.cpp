@@ -12,6 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "CTimer.h"
+#include "LogHandler.h"
 #include <map>
 
 using namespace std;
@@ -45,7 +46,7 @@ timer_t _SetTimer(int nId, int nSec, int nInterSec, TimerCBFun tcbf)
 
 	if(-1 == timer_create(CLOCK_REALTIME, &evp, &timerid))
 	{
-		printf("[Timer] timer_create fail\n");
+		_log("[Timer] timer_create fail\n");
 		return 0;
 	}
 
@@ -67,7 +68,7 @@ timer_t _SetTimer(int nId, int nSec, int nInterSec, TimerCBFun tcbf)
 		return 0;
 	}
 
-	printf("[Timer] Timer Create Success Id = %ld\n", (long) mapTimerId[nId]);
+	_log("[Timer] Timer Create Success Id = %ld\n", (long) mapTimerId[nId]);
 	return mapTimerId[nId];
 }
 

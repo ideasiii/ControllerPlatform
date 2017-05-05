@@ -149,6 +149,7 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 	pBuf->message.what = message.what;
 	pBuf->message.arg1 = message.arg1;
 	pBuf->message.arg2 = message.arg2;
+	pBuf->message.opt = message.opt;
 	pBuf->message.obj = message.obj;
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));

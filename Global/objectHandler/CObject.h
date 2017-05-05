@@ -12,6 +12,9 @@
 #include <sys/types.h>
 #include "CMessageHandler.h"
 
+#define _OBJ(obj)			reinterpret_cast<CObject*>(obj)
+#define _VOID(const_char)	const_cast<void*>(reinterpret_cast<const void*>(const_char))
+
 struct EVENT_EXTERNAL
 {
 	int m_nMsgId;
@@ -47,7 +50,9 @@ public:
 	virtual ~CObject();
 	void clearMessage();
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-	int sendHandleMessage(int nEvent, Message &message);
+	int sendMessage(int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int sendMessage(int nEvent, Message &message);
+	int sendMessage(Message &message);
 	void _OnTimer(int nId);
 	int initMessage(int nKey, const char * szDescript = 0);
 	int run(int lFilter, const char * szDescript = 0);
@@ -79,5 +84,6 @@ private:
 	CMessageHandler *messageHandler;
 	int mnTimerEventId;
 	pthread_mutex_t mutex;
+	int mnFilter;
 };
 

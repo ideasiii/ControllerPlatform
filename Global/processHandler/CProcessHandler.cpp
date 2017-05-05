@@ -12,15 +12,44 @@
 #include <unistd.h>
 #include <string.h>
 #include <event.h>
+#include <string>
 
 #include "CMessageHandler.h"
 #include "CProcessHandler.h"
 #include "common.h"
 #include "LogHandler.h"
+#include "CConfig.h"
+
+extern char *__progname;
+
+using namespace std;
 
 int mnMsqKey;
 volatile int flag = 0;
 pid_t child_pid = -1; //Global
+
+inline string getConfName(std::string strProcessName)
+{
+	size_t found = strProcessName.find_last_of("/\\");
+	return (strProcessName.substr(++found) + ".conf");
+}
+
+inline string initLogPath()
+{
+	string strPath = "controller.log";
+	CConfig *config = new CConfig();
+	string *pstrConf = new string(getConfName(__progname));
+	if(config->loadConfig(*pstrConf))
+	{
+		strPath = config->getValue("LOG", "log");
+		if(strPath.empty())
+			strPath = "controller.log";
+		_setLogPath(strPath.c_str());
+	}
+	delete pstrConf;
+	delete config;
+	return strPath;
+}
 
 /**
  * Child signal handler
@@ -70,6 +99,7 @@ int process(void (*entry)(int), int nMsqKey)
 	int status;
 
 	CMessageHandler::closeMsg(0);
+	initLogPath();
 
 	do
 	{
@@ -131,11 +161,11 @@ int process(void (*entry)(int), int nMsqKey)
 		_error("[process] Child process terminated signal: %d", status);
 		if(-1 != nMsqKey)
 			CMessageHandler::closeMsg(CMessageHandler::registerMsq(nMsqKey));
-		_close();
+
 		sleep(3);
 	}
 	while(SIGTERM != WTERMSIG(status) && !flag);
-
+	_close();
 	return 1;
 }
 

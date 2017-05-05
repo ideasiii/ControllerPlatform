@@ -11,6 +11,7 @@
 #include "LogHandler.h"
 #include "event.h"
 #include "utility.h"
+#include "common.h"
 
 using namespace std;
 
@@ -118,7 +119,7 @@ void CATcpServer::stop()
 			CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
 		}
 	}
-
+	_TRACE("");
 	/**
 	 * Close all Client Socket
 	 */
@@ -130,6 +131,7 @@ void CATcpServer::stop()
 		threadJoin(it->second.ulReceiveThreadID);
 	}
 	mapClient.clear();
+	_TRACE("");
 }
 
 void CATcpServer::closeClient(int nClientFD)
@@ -262,7 +264,7 @@ void CATcpServer::setIdleTimeout(int nSeconds)
 void CATcpServer::runIdleTimeout(bool bRun)
 {
 	if(bRun && (0 < IDLE_TIMEOUT))
-		setTimer(IDLE_TIMER, 3, 1, mnMsqKey);
+		setTimer(IDLE_TIMER, 3, 1, EVENT_FILTER_SOCKET_SERVER);
 	else
 		killTimer(IDLE_TIMER);
 }

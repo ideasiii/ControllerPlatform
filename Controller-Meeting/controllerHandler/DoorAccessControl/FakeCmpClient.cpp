@@ -13,7 +13,11 @@
 
 #define MAX_PDU_BODY_LEN (int)(MAX_DATA_LEN - sizeof(CMP_HEADER))
 
-#define TCP_TIMEOUT 2 // second
+#define TCP_TIMEOUT 3 // second
+
+int setSocketTimeout(int sockfd);
+int sendToSocket(int sockfd, const uint8_t *buf, int len);
+int recvFromSocket(int sockfd, uint8_t *buf, int len, int bufLen);
 
 FakeCmpClient::FakeCmpClient(char *ip, int port)
 	: serverIp(ip), serverPort(port)
@@ -23,8 +27,6 @@ FakeCmpClient::FakeCmpClient(char *ip, int port)
 FakeCmpClient::~FakeCmpClient()
 {
 }
-
-void 
 
 int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu)
 {
@@ -45,36 +47,15 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	server.sin_family = AF_INET;
 	server.sin_port = htons(this->serverPort);
 
-	struct timeval timeout;
-	timeout.tv_sec = TCP_TIMEOUT;
-	timeout.tv_usec = 0;
-
-	socklen_t len = sizeof(timeout);
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, len);
-	_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) ret = %d", ret);
-
-	if (ret == -1) {
-		_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) failed (%d): %s", 
-			errno, strerror(errno));
+	ret = setSocketTimeout(sockfd);
+	if (ret == -1)
+	{
 		close(sockfd);
-
-		return -1;
-	}
-
-	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len);
-	_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) ret (%d): %s", 
-			errno, strerror(errno));
-	
-	if (ret == -1) {
-		_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) failed (%d): %s", 
-			errno, strerror(errno));
-		close(sockfd);
-		
 		return -1;
 	}
 
 	ret = connect(sockfd, (struct sockaddr *)&server, sizeof(server));
-	_log("[FakeCmpClient] connect ret = %d", ret);
+	_log("[FakeCmpClient] connect ret() = %d", ret);
 
 	if (ret < 0)
 	{
@@ -84,52 +65,27 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 
 		return -1;
 	}
+		
+	ret = sendToSocket(sockfd, (uint8_t*)requestPdu, reqPduLen);
+	if (ret != reqPduLen)
+	{
+		_log("[FakeCmpClient] sendToSocket() ret != reqPduLen (%d != %d)", ret, reqPduLen);
+		close(sockfd);
+
+		return -1;
+	}
 
 	int total = 0;
-	ioTryCount = MAX_DATA_LEN;
+	ret = recvFromSocket(sockfd, ((uint8_t*)responsePdu), sizeof(CMP_HEADER), sizeof(CMP_PACKET));
+	total += ret;
 
-	do
+	if (ret < (int)sizeof(CMP_HEADER))
 	{
-		ret = send(sockfd, ((uint8_t*)requestPdu) + total, reqPduLen - total, 0);
-		_log("[FakeCmpClient] send() ret = %d", ret);
+		_log("[FakeCmpClient] recvFromSocket() ret is less than sizeof(CMP_HEADER)");
+		close(sockfd);
 
-		if (ret < 0)
-		{
-			_log("[FakeCmpClient] send() error (%d): %s", 
-				errno, strerror(errno));
-			close(sockfd);
-			return -1;
-		}
-
-		total += ret;
-		ioTryCount--;
-		_log("[FakeCmpClient] send() total = %d", total);
-	} while (total < reqPduLen && ioTryCount > 0);
-
-	total = 0;
-	do
-	{
-		ret = recv(sockfd, ((uint8_t*)responsePdu) + total, sizeof(CMP_PACKET) - total, 0);
-		_log("[FakeCmpClient] recv() ret = %d", ret);
-
-		if (ret == 0)
-		{
-			_log("[FakeCmpClient] recv() 0 server closed the socket while receiving");
-			close(sockfd);
-			return -1;
-		}
-		else if (ret < 0)
-		{
-			_log("[FakeCmpClient] recv() 0 error: (%d): %s", 
-				errno, strerror(errno));
-			close(sockfd);
-			return -1;
-		}
-
-		total += ret;
-		ioTryCount--;
-		_log("[FakeCmpClient] recv() 0 total = %d", total);
-	} while (total < (int)sizeof(CMP_HEADER) && ioTryCount > 0);
+		return -1;
+	}
 
 	CMP_HEADER *respHeader = ((CMP_HEADER*)responsePdu);
 	if (respHeader->sequence_number != ((CMP_HEADER*)requestPdu)->sequence_number)
@@ -137,6 +93,7 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 		_log("[FakeCmpClient] PDU sequence mismatch (%d vs. %d)", 
 			ntohl(respHeader->sequence_number), ntohl(((CMP_HEADER*)requestPdu)->sequence_number));
 		close(sockfd);
+		
 		return -1;
 	}
 
@@ -151,40 +108,20 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 		_log("[FakeCmpClient] Invalid command length (%d) in response header", 
 			respHeader->command_length);
 		close(sockfd);
+		
 		return -1;
 	}
 
-	ioTryCount = MAX_DATA_LEN;
-
-	while (total < respHeader->command_length && ioTryCount > 0)
-	{
-		ret = recv(sockfd, ((uint8_t*)responsePdu) + total, respHeader->command_length - total, 0);
-		
-		if (ret == 0)
-		{
-			_log("[FakeCmpClient] recv() 1 server closed the socket while receiving");
-			close(sockfd);
-			return -1;
-		}
-		else if (ret < 0)
-		{
-			_log("[FakeCmpClient] recv() 1 error (%d): %s", 
-				errno, strerror(errno));
-			close(sockfd);
-			return -1;
-		}
-
-		ioTryCount--;
-		total += ret;
-		_log("[FakeCmpClient] recv() 1 total = %d", total);
-	}
-
+	ret = recvFromSocket(sockfd, ((uint8_t*)responsePdu) + total,
+		respHeader->command_length - total, (int)sizeof(CMP_PACKET) - total);
+	
+	total += ret;
 	close(sockfd);
 
 	if (total != respHeader->command_length)
 	{
 		_log("[FakeCmpClient] Response size does not match header (%d vs. %d)",
-			, total, respHeader->command_length);
+			total, respHeader->command_length);
 		return -1;
 	}
 
@@ -203,8 +140,6 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 	}
 
 	int nTotalLen = sizeof(CMP_HEADER);
-	CMP_HEADER *pHeader = &(dst->cmpHeader);
-
 	memset(dst, 0, sizeof(CMP_PACKET));
 
 	if (szData != nullptr)
@@ -233,4 +168,86 @@ int FakeCmpClient::craftCmpPdu(CMP_PACKET *dst, int bodyLength, const int nComma
 		nTotalLen, nCommandId, nStatus, nSequence);
 
 	return nTotalLen;
+}
+
+int setSocketTimeout(int sockfd)
+{
+	struct timeval timeout;
+	timeout.tv_sec = TCP_TIMEOUT;
+	timeout.tv_usec = 0;
+
+	int ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+	_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) ret = %d", ret);
+
+	if (ret == -1) {
+		_log("[FakeCmpClient] setsockopt() (SO_SNDTIMEO) failed (%d): %s",
+			errno, strerror(errno));
+
+		return -1;
+	}
+
+	ret = setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+	_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) ret = %d", ret);
+
+	if (ret == -1) {
+		_log("[FakeCmpClient] setsockopt() (SO_RCVTIMEO) failed (%d): %s",
+			errno, strerror(errno));
+
+		return -1;
+	}
+
+	return 0;
+}
+
+int sendToSocket(int sockfd, const uint8_t *buf, int len)
+{
+	int total = 0, ioTryCount = MAX_DATA_LEN, ret;
+
+	do
+	{
+		ret = send(sockfd, buf + total, len - total, 0);
+		_log("[FakeCmpClient] send() ret = %d", ret);
+
+		if (ret < 0)
+		{
+			_log("[FakeCmpClient] send() error (%d): %s",
+				errno, strerror(errno));
+			
+			return -1;
+		}
+
+		total += ret;
+		ioTryCount -= 1;
+		_log("[FakeCmpClient] send() total = %d", total);
+	} while (total < len && ioTryCount > 0);
+
+	return total;
+}
+
+int recvFromSocket(int sockfd, uint8_t *buf, int len, int bufLen)
+{
+	int total = 0, ret;
+
+	while (total < len)
+	{
+		ret = recv(sockfd, buf + total, bufLen - total, 0);
+		_log("[FakeCmpClient] recv() ret = %d", ret);
+
+		if (ret == 0)
+		{
+			_log("[FakeCmpClient] recv() server closed the socket while receiving");
+			return -1;
+		}
+		else if (ret < 0)
+		{
+			_log("[FakeCmpClient] recv() error: (%d): %s",
+				errno, strerror(errno));
+			return -1;
+		}
+
+		total += ret;
+		_log("[FakeCmpClient] recv() total = %d", total);
+	}
+
+	return total;
 }

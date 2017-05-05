@@ -106,10 +106,11 @@ package-s:
 	@echo "\n"
 	
 package-u:
-	apt-get -y install sqlite3 libsqlite3-dev
-	apt-get -y install libboost-all-dev libboost-thread-dev
-	apt-get -y install build-essential
-	apt-get -y install autoconf automake libtool
+	apt-get -y install sqlite3 libsqlite3-dev \
+		 libboost-all-dev libboost-thread-dev \
+		 build-essential \
+		 autoconf automake libtool \
+		 libcrypto++-dev libcurl4-openssl-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 	

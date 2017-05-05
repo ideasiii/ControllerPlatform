@@ -4,30 +4,32 @@
  *  Created on: 2017年4月8日
  *      Author: Jugo
  */
-#include <stdio.h>
+#include <string>
 #include "CController.h"
 #include "CCmpWord.h"
 #include "common.h"
 #include "CConfig.h"
 #include "utility.h"
 #include "event.h"
-#include <string>
 #include "Handler.h"
+#include "CObject.h"
+#include "CSemanticJudge.h"
+#include "CSemanticControl.h"
+#include "CSemanticTalk.h"
+#include "CSemanticRecord.h"
+#include "packet.h"
+#include "JSONObject.h"
 
 using namespace std;
 
-int CController_handleMessage(int what, int arg1, int arg2, void *obj, void *called)
-{
-	CController* ss = reinterpret_cast<CController*>(called);
-	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
-	return 0;
-}
-
 CController::CController() :
-		cmpword(0), mnMsqKey(-1)
+		mnMsqKey(-1)
 {
-	handler = new Handler(888, 777);
-	handler->setHandleMessageListener(this, &CController_handleMessage);
+	semanticJudge = new CSemanticJudge(_OBJ(this));
+	semanticControl = new CSemanticControl(_OBJ(this));
+	semanticTalk = new CSemanticTalk(_OBJ(this));
+	semanticRecord = new CSemanticRecord(_OBJ(this));
+	cmpword = new CCmpWord(_OBJ(this));
 }
 
 CController::~CController()
@@ -44,7 +46,7 @@ int CController::onCreated(void* nMsqKey)
 int CController::onInitial(void* szConfPath)
 {
 	string strConfPath = reinterpret_cast<const char*>(szConfPath);
-	_DBG("[CController] onInitial Config File: %s", strConfPath.c_str());
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
 	if(strConfPath.empty())
 		return FALSE;
 
@@ -67,33 +69,58 @@ int CController::onInitial(void* szConfPath)
 
 int CController::onFinish(void* nMsqKey)
 {
-	if(0 != cmpword)
-	{
-		delete cmpword;
-		cmpword = 0;
-	}
+	cmpword->stop();
+	delete cmpword;
+	delete semanticJudge;
+	delete semanticControl;
+	delete semanticTalk;
+	delete semanticRecord;
 	return TRUE;
 }
 
 int CController::startCmpWordServer(int nPort, int nMsqKey)
 {
-	int nResult = FALSE;
-
-	if(0 != cmpword)
-	{
-		delete cmpword;
-		cmpword = 0;
-	}
-
-	cmpword = new CCmpWord();
-	cmpword->start(0, nPort, nMsqKey);
-	nResult = TRUE;
-
-	return nResult;
+	return cmpword->start(0, nPort, nMsqKey);
 }
 
-int CController::handleMessage(int what, int arg1, int arg2, void *obj)
+void CController::onHandleMessage(Message &message)
 {
-	_DBG("[CController] handleMessage what:%d", what);
-	return 0;
+	//_log("[CController] onHandleMessage what: %d obj: %s", message.what, reinterpret_cast<const char*>(message.obj));
+
+	int nId = -1;
+	string strWord;
+	JSONObject* jsonResp;
+
+	strWord = reinterpret_cast<const char*>(message.obj);
+	_log("[CController] onHandleMessage Word: %s", strWord.c_str());
+
+	if(strWord.empty())
+	{
+		cmpword->response(message.arg1, semantic_word_request, STATUS_RINVJSON, message.arg2, 0);
+		return;
+	}
+
+	jsonResp = new JSONObject();
+
+	switch(message.what)
+	{
+	case 0: // 語意判斷
+		semanticJudge->word(strWord.c_str(), jsonResp);
+		break;
+	case 1: // 控制
+		semanticControl->word(strWord.c_str(), jsonResp);
+		break;
+	case 2: // 會話
+		semanticTalk->word(strWord.c_str(), jsonResp);
+		break;
+	case 3: // 紀錄
+		semanticRecord->word(strWord.c_str(), jsonResp);
+		break;
+	default:
+		jsonResp->put("type", 0);
+		break;
+	}
+
+	jsonResp->put("id", message.opt);
+	cmpword->response(message.arg1, semantic_word_request, STATUS_ROK, message.arg2, jsonResp->toString().c_str());
 }

@@ -28,7 +28,7 @@ void _onTimer(int nId)
 }
 
 CObject::CObject() :
-		messageHandler(new CMessageHandler), mnTimerEventId(-1)
+		messageHandler(new CMessageHandler), mnTimerEventId(-1), mnFilter(-1)
 {
 	pthread_mutex_init(&mutex, 0);
 }
@@ -131,9 +131,22 @@ int CObject::sendMessage(int nEvent, int nCommand, unsigned long int nId, int nD
 	return messageHandler->sendMessage(nEvent, nCommand, nId, nDataLen, pData);
 }
 
-int CObject::sendHandleMessage(int nEvent, Message &message)
+/**
+ *  Send Message to this Object's run receive filter
+ */
+int CObject::sendMessage(int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+{
+	return messageHandler->sendMessage(messageHandler->getRecvEvent(), nCommand, nId, nDataLen, pData);
+}
+
+int CObject::sendMessage(int nEvent, Message &message)
 {
 	return messageHandler->sendMessage(nEvent, EVENT_COMMAND_HANDLE_MESSAGE, 0, 0, 0, message);
+}
+
+int CObject::sendMessage(Message &message)
+{
+	return messageHandler->sendMessage(messageHandler->getRecvEvent(), EVENT_COMMAND_HANDLE_MESSAGE, 0, 0, 0, message);
 }
 
 void CObject::clearMessage()

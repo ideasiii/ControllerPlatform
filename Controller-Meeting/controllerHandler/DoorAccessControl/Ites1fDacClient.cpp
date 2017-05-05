@@ -1,22 +1,23 @@
-#include "Ites1fDoorAccessControlHandler.h"
+#include "Ites1fDacClient.h"
 
 #include <errno.h>
 #include <sstream>
 #include <string.h>
 
 #include "AesCrypto.h"
-#include "CryptoKey.h"
+#include "../CryptoKey.h"
 #include "FakeCmpClient.h"
 #include "JSONObject.h"
+#include "cJSON.h"
 
 
 #define ENCRYPT_REQUEST_PDU_BODY
 #define DECRYPT_RESPONSE_PDU_BODY
 
-int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t **oBuf);
+int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t *oBuf, int bufSize);
 std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu);
 
-Ites1fDoorAccessControlHandler::Ites1fDoorAccessControlHandler(char *ip, int port):
+Ites1fDacClient::Ites1fDacClient(char *ip, int port):
 	serverIp(ip), serverPort(port), aesKey((uint8_t*)ITES_1F_DOOR_CONTROL_AES_KEY)
 {
 	// ITES_1F_DOOR_CONTROL_AES_KEY is defined in CryptoKey.h like this:
@@ -27,11 +28,11 @@ Ites1fDoorAccessControlHandler::Ites1fDoorAccessControlHandler(char *ip, int por
 	// will be truncated by AesCrypto.
 }
 
-Ites1fDoorAccessControlHandler::~Ites1fDoorAccessControlHandler()
+Ites1fDacClient::~Ites1fDacClient()
 {
 }
 
-bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std::string userUuid,
+bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUuid,
 	std::string readerId, std::string token, int64_t validFrom, int64_t goodThrough)
 {
 	_log("[Ites1F_DACHandler] Enter doorOpen()");
@@ -50,8 +51,14 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 
 #ifdef ENCRYPT_REQUEST_PDU_BODY
 	AesCrypto crypto(aesKey);
-	uint8_t *buf;
-	int bufSize = encryptRequestBody(crypto, reqBody, &buf);
+	uint8_t buf[MAX_DATA_LEN];
+	int bufSize = encryptRequestBody(crypto, reqBody, buf, sizeof(buf));
+
+	if (bufSize < 1)
+	{
+		errorDescription = "Encrypting request body failed";
+		return false;
+	}
 #else
 	int bufSize = reqBody.size() + 1;
 	uint8_t *buf = (uint8_t *)reqBody.c_str();
@@ -60,10 +67,6 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 
 	int reqPduSize = FakeCmpClient::craftCmpPdu(&reqPdu, bufSize, 
 		smart_building_door_control_request, STATUS_ROK, 0, buf);
-
-#ifdef ENCRYPT_REQUEST_PDU_BODY
-	delete[] buf;
-#endif
 
 	if (reqPduSize < 1)
 	{
@@ -138,26 +141,33 @@ bool Ites1fDoorAccessControlHandler::doorOpen(std::string &errorDescription, std
 
 /**
 * 加密 reqBody
-* @param oBuf 儲存加密結果指針的指針，資料的格式為 IV接加密後的reqBody，中間沒有間隔
+* @param oBuf 儲存加密結果的指針，資料的格式為 IV接加密後的reqBody，中間沒有間隔
 * @return 加密後的資料大小
 */
-int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t **oBuf)
+int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody,
+	uint8_t *oBuf, int bufSize)
 {
 	uint8_t iv[AesCrypto::IvLength];
 	AesCrypto::getRandomBytes(iv, AesCrypto::IvLength);
 
 	std::string ciphertext = crypto.encrypt(reqBody, iv);
-	int bufSize = AesCrypto::IvLength + ciphertext.size();
-	*oBuf = new uint8_t[bufSize];
+	int outputSize = AesCrypto::IvLength + ciphertext.size();
 
-	memcpy(*oBuf, iv, AesCrypto::IvLength);
-	memcpy(*oBuf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
+	if (outputSize > bufSize)
+	{
+		_log("[Ites1F_DACHandler] Encrypt request PDU body failed, outputSize > bufSize (%d > %d)",
+			outputSize, bufSize);
+		return -1;
+	}
+
+	memcpy(oBuf, iv, AesCrypto::IvLength);
+	memcpy(oBuf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
 
 	_log("[Ites1F_DACHandler] Encrypt request PDU body, "
-		"IV len = %d, reqBody.size() = %d, ciphertext.size() = %d, bufSize = %d"
-		, AesCrypto::IvLength, reqBody.size(), ciphertext.size(), bufSize);
+		"IV len = %d, reqBody.size() = %d, ciphertext.size() = %d, outputSize = %d"
+		, AesCrypto::IvLength, reqBody.size(), ciphertext.size(), outputSize);
 
-	return bufSize;
+	return outputSize;
 }
 
 std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu)

@@ -7,6 +7,7 @@
 
 export MODULES=main \
 controllerHandler \
+controllerHandler/DoorAccessControl \
 ../Global/cmpHandler	\
 ../Global/global_inc \
 ../Global/configHandler	\

@@ -15,37 +15,26 @@
 #include "config.h"
 #include "common.h"
 #include "Handler.h"
+#include "CObject.h"
+#include "CJudgeStory.h"
 
 using namespace std;
 
-int CSemanticJudge_handleMessage(int what, int arg1, int arg2, void *obj, void *called)
+CSemanticJudge::CSemanticJudge(CObject *object)
 {
-	CSemanticJudge* ss = reinterpret_cast<CSemanticJudge*>(called);
-	ss->handleMessage(what, arg1, arg2, const_cast<void*>(obj));
-	return 0;
-}
-
-CSemanticJudge::CSemanticJudge() :
-		handler(0)
-{
-	handler = new Handler(888, 666);
-	handler->setHandleMessageListener(this, &CSemanticJudge_handleMessage);
+	mpController = object;
+	mpJudgeStory = new CJudgeStory;
 }
 
 CSemanticJudge::~CSemanticJudge()
 {
-	if(handler)
-		handler->close();
-	delete handler;
+	delete mpJudgeStory;
 }
 
-void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
+int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
-
-	Message message;
-	message.what = 11223;
-	handler->sendMessage(message, 777);
-
+	int nHigher;
+	int nScore;
 	int nIndex;
 	int nSubject;
 	string strWord;
@@ -53,61 +42,22 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	if(0 >= szInput)
 	{
 		jsonResp->put("type", 0);
-		return;
+		return TRUE;
 	}
 
+	nScore = 0;
+	nHigher = TYPE_RESP_UNKNOW;
 	strWord = szInput;
-
-	WORD_BODY wordBody;
-	getAttribute(szInput, wordBody);
-
-	for(WORD_BODY::iterator iter = wordBody.begin(); iter != wordBody.end(); ++iter)
-	{
-		_DBG("attr:%d index:%d subattr:%d word:%s", iter->second.nAttribute, iter->second.nIndex, iter->second.nSubAttr,
-				iter->second.strWord.c_str());
-	}
 
 	//=============== Dummy ========================================//
 	/**
 	 *  情境1：故事
 	 *  關鍵字："故事" + ("三隻小豬" || "小美人魚" || "睡美人" || "醜小鴨")
 	 */
-	if(string::npos != strWord.find("故事"))
-	{
-		bool bMatch = false;
-		JSONObject jsonStory;
-		jsonStory.put("host", STORY_HOST);
-		jsonResp->put("type", TYPE_RESP_STORY);
+	nScore = mpJudgeStory->evaluate(strWord.c_str());
+	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
 
-		for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
-		{
-			if(string::npos != strWord.find(iter->first))
-			{
-				bMatch = true;
-				jsonStory.put("file", iter->second);
-				jsonStory.put("story", iter->first);
-				break;
-			}
-		}
-		if(!bMatch)
-		{
-			jsonStory.put("file", "三隻小豬.mp3");
-			jsonStory.put("story", "三隻小豬");
-		}
-
-		jsonResp->put("story", jsonStory);
-		return;
-	}
-
-	WORD_ATTR wordAttr;
-	nIndex = getVerb(strWord.c_str(), wordAttr);
-	if(-1 != nIndex)
-	{
-		_log("listen: %d %d %d %s", wordAttr.nIndex, wordAttr.nAttribute, wordAttr.nSubAttr, wordAttr.strWord.c_str());
-
-		return;
-	}
-
+	mpJudgeStory->word(strWord.c_str(), jsonResp);
 	/**
 	 *  情境2：聽歌 From Spotify
 	 *  關鍵字：("歌") + (??)
@@ -122,7 +72,7 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
-		return;
+		return TRUE;
 	}
 
 	/**
@@ -154,82 +104,8 @@ void CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		}
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonMusic);
-		return;
-	}
-}
-
-int CSemanticJudge::getSubject(const char *szWord)
-{
-	if(0 < szWord)
-	{
-		string strWord = szWord;
-		map<string, int>::iterator it;
-
-		for(it = mapSubject.begin(); it != mapSubject.end(); ++it)
-		{
-			if(string::npos != strWord.find(it->first))
-				return it->second;
-		}
+		return TRUE;
 	}
 
-	return 0;
+	return FALSE;
 }
-
-int CSemanticJudge::getAttribute(const char *szWord, WORD_BODY &wordBody)
-{
-	int nCount;
-	int nNumber;
-	int nIndex;
-	string strWord = szWord;
-	map<string, int>::iterator it;
-
-	// 主詞
-	nNumber = 0;
-	nCount = 0;
-	for(it = mapSubject.begin(); it != mapSubject.end(); ++it)
-	{
-		nIndex = strWord.find(it->first);
-		if((int) string::npos != nIndex)
-		{
-			nNumber = nCount++;
-			if(MAX_WORD_ATTR <= nNumber)
-				break;
-			WORD_ATTR wordAttr;
-			wordAttr.nAttribute = SUBJECT;
-			wordAttr.nIndex = nIndex;
-			wordAttr.nSubAttr = it->second;
-			wordAttr.strWord = it->first;
-			wordBody[nNumber] = wordAttr;
-		}
-	}
-	return 0;
-}
-
-int CSemanticJudge::getVerb(const char *szWord, WORD_ATTR &wordAttr)
-{
-	int nIndex = -1;
-	map<string, int>::iterator it;
-	string strWord = szWord;
-
-	for(it = mapVerb.begin(); it != mapVerb.end(); ++it)
-	{
-		nIndex = strWord.find(it->first);
-		if((int) string::npos != nIndex)
-		{
-			wordAttr.nAttribute = VERB;
-			wordAttr.nIndex = nIndex;
-			wordAttr.nSubAttr = it->second;
-			wordAttr.strWord = it->first;
-			break;
-		}
-	}
-
-	return nIndex;
-}
-
-int CSemanticJudge::handleMessage(int what, int arg1, int arg2, void *obj)
-{
-	_log("[CSemanticJudge] handleMessage what:%d arg1:%d arg2:%d", what, arg1, arg2);
-	return 0;
-}
-
