@@ -49,7 +49,7 @@ int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
 	return 0;
 }
 
-void CController::onMeetingCommand(int nSocketFD, int nDataLen, const void *pData)
+void CController::l(int nSocketFD, int nDataLen, const void *pData)
 {
 
 	//const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);

@@ -22,6 +22,14 @@ CCmpServer::CCmpServer() :
 	mapFunc[sign_up_request] = &CCmpServer::onSignin;
 	mapFunc[access_log_request] = &CCmpServer::onAccesslog;
 	mapFunc[semantic_word_request] = &CCmpServer::onSemanticWord;
+	mapFunc[fcm_id_register_request] = &CCmpServer::onFCMIdRegister;
+	mapFunc[facebook_token_client_request] = &CCmpServer::onFBToken;
+	mapFunc[smart_building_qrcode_tokn_request] = &CCmpServer::onQRCodeToken;
+	mapFunc[smart_building_appversion_request] = &CCmpServer::onAPPVersion;
+	mapFunc[smart_building_getmeetingdata_request] = &CCmpServer::onGetMeetingData;
+	mapFunc[smart_building_amx_control_access_request] = &CCmpServer::onAMXControlAccess;
+	mapFunc[smart_building_wireless_power_charge_request] = &CCmpServer::onWirelessPowerCharge;
+
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();
 }

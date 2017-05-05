@@ -64,6 +64,45 @@ protected:
 	}
 	;
 
+	//for other Controller Data
+	virtual int onFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onFBToken(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onWirelessPowerCharge(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+
+	//for Controller-Meeting Data
+	virtual int onQRCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onAPPVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onGetMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);
 	std::map<int, MemFn> mapFunc;
