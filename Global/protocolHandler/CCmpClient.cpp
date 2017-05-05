@@ -149,13 +149,13 @@ int CCmpClient::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 
 	return nResult;
 }
-void CCmpServer::idleTimeout(bool bRun, int nIdleTime)
+void CCmpClient::idleTimeout(bool bRun, int nIdleTime)
 {
 	setIdleTimeout(nIdleTime);
 	runIdleTimeout(bRun);
 }
 
-int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
+int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 {
 //======= Receive CMP Header ==========//
 	int result;
@@ -211,7 +211,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 		printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onTcpReceive ", nSocketFD);
 
-		if (confCmpServer->bUseQueueReceive)
+		if (confCmpClient->bUseQueueReceive)
 		{
 			if (DATA_LEN < nBodyLen) // large data
 			{

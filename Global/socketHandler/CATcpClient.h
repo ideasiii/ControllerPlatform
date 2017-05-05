@@ -28,7 +28,8 @@ public:
 	int start(const char* cszAddr, short nPort, int nMsqKey);
 	void stop();
 	void closeServer();
-
+	void runMessageReceive();
+	void runTcpReceive();
 	/**
 	 * Be called by message queue run
 	 */
@@ -58,13 +59,15 @@ protected:
 	virtual int onTcpReceive(unsigned long int nSocketFD);
 
 private:
+	int IDLE_TIMEOUT ; // secons
+
+	int mnExtMsqKey;
 	void checkIdle();
 	void updateClientAlive();
 
 	int mnMsqKey; // Message queue key and filter ID.
 	unsigned long munRunThreadId; // Message queue run thread ID.
-	void runMessageReceive();
-	void runTcpReceive();
+
 	SOCKET_SERVER mSocketServer ;
 };
 

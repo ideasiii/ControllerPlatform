@@ -206,7 +206,7 @@ int CSocket::connectServer()
 		break;
 	case AF_INET:
 		server = gethostbyname((const char *) szIP);
-		if(0 >= server)
+		if(!server)
 		{
 			_log("[Socket] ERROR, no such host");
 			return -1;

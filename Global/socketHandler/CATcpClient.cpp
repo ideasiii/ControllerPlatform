@@ -16,9 +16,7 @@
 using namespace std;
 
 #define IDLE_TIMER			469107
-int IDLE_TIMEOUT = 10; // seconds
 
-int mnExtMsqKey;
 
 void *threadCATcpClientMessageReceive(void *argv)
 {
@@ -27,7 +25,7 @@ void *threadCATcpClientMessageReceive(void *argv)
 	return 0;
 }
 
-void *threadTcpReceive(void *argv)
+void *aClientthreadTcpReceive(void *argv)
 {
 	CATcpClient* ss = reinterpret_cast<CATcpClient*>(argv);
 	ss->runTcpReceive();
@@ -92,6 +90,7 @@ int CATcpClient::start(const char* cszAddr, short nPort, int nMsqKey)
 {
 	int nMsgId = -1;
 	int nSocketFD;
+	IDLE_TIMEOUT = 10;//second
 	mnExtMsqKey = FALSE;
 
 	if (-1 != nMsqKey)
@@ -133,8 +132,8 @@ int CATcpClient::start(const char* cszAddr, short nPort, int nMsqKey)
 			munRunThreadId = 0;
 		}
 
-		createThread(threadClientMessageReceive, this);
-		createThread(threadTcpReceive, this);
+		createThread(threadCATcpClientMessageReceive, this);
+		createThread(aClientthreadTcpReceive, this);
 		_log("[CATcpClient] Socket connect success, FD:%d", getSocketfd());
 
 		return getSocketfd();

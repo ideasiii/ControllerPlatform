@@ -120,6 +120,8 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	apt-get -y install libmongo-client-dev mongodb-clients
+	apt-get -y install libbson-dev
+	apt-get -y install libmongoc-dev
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
 	apt-get -y install scons

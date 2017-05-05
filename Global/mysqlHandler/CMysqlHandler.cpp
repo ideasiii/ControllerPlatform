@@ -138,7 +138,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		string strItem;
 		string strField;
 
-		while((row = mysql_fetch_row(result)) > 0)
+		while((row = mysql_fetch_row(result)) )
 		{
 			// 獲取下一行
 			//row = mysql_fetch_row(result);
