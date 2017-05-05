@@ -5,52 +5,74 @@
  *      Author: Jugo
  */
 
+#include <string>
 #include "common.h"
-#include "LogHandler.h"
 #include "CController.h"
 #include "CDispatcher.h"
 #include "CConfig.h"
 #include "event.h"
+#include "utility.h"
 
-static CController * controller = 0;
+using namespace std;
 
 CController::CController() :
-		CObject(), dispatcher(CDispatcher::getInstance())
+		mnMsqKey(-1), dispatcher(CDispatcher::getInstance())
 {
 
 }
 
 CController::~CController()
 {
-	delete dispatcher;
+
 }
 
-CController* CController::getInstance()
+int CController::onCreated(void* nMsqKey)
 {
-	if(0 == controller)
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_DISPATCHER;
+	return mnMsqKey;
+}
+
+int CController::onInitial(void* szConfPath)
+{
+	int nRet;
+	int nPort;
+	string strPort;
+	CConfig *config;
+	string strConfPath;
+
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
+	if(strConfPath.empty())
+		return FALSE;
+
+	nRet = FALSE;
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
 	{
-		controller = new CController();
+		strPort = config->getValue("SERVER DISPATCHER", "port");
+		if(!strPort.empty())
+		{
+			convertFromString(nPort, strPort);
+			nRet = startDispatcher(nPort, mnMsqKey);
+		}
 	}
-	return controller;
+	delete config;
+	return nRet;
 }
 
-void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
-{
-
-}
-
-int CController::startDispatcher(const char *szIP, const int nPort)
-{
-	if(dispatcher->start(szIP, nPort))
-	{
-		dispatcher->idleTimeout(true, 10);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-int CController::stop()
+int CController::onFinish(void* nMsqKey)
 {
 	dispatcher->stop();
+	delete dispatcher;
+	return TRUE;
+}
+
+int CController::startDispatcher(const int nPort, int nMsqKey)
+{
+	if(dispatcher->start(0, nPort, nMsqKey))
+	{
+		dispatcher->idleTimeout(true, 5);
+		return TRUE;
+	}
 	return FALSE;
 }

@@ -264,7 +264,7 @@ void CATcpServer::setIdleTimeout(int nSeconds)
 void CATcpServer::runIdleTimeout(bool bRun)
 {
 	if(bRun && (0 < IDLE_TIMEOUT))
-		setTimer(IDLE_TIMER, 3, 1, mnMsqKey);
+		setTimer(IDLE_TIMER, 3, 1, EVENT_FILTER_SOCKET_SERVER);
 	else
 		killTimer(IDLE_TIMER);
 }

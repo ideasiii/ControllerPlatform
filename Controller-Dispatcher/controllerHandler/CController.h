@@ -7,23 +7,24 @@
 
 #pragma once
 
-#include "CObject.h"
+#include "CApplication.h"
 
 class CDispatcher;
 
-class CController: public CObject
+class CController: public CApplication
 {
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startDispatcher(const char *szIP, const int nPort);
-	int stop();
 
 protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
 
 private:
-	explicit CController();
+	int mnMsqKey;
+	int startDispatcher(const int nPort, int nMsqKey);
 	CDispatcher *dispatcher;
 
 };

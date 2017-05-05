@@ -18,7 +18,7 @@ class CCmpWord;
 class CController: public CApplication
 {
 public:
-	CController();
+	explicit CController();
 	virtual ~CController();
 
 protected:
