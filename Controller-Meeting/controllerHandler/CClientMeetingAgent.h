@@ -18,7 +18,7 @@ class CClientMeetingAgent: public CSocketClient
 public:
 	void onReceive(const int nSocketFD, const void *pData);
 public:
-	static CClientMeetingAgent * getInstance();
+	explicit CClientMeetingAgent();
 	virtual ~CClientMeetingAgent();
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
@@ -26,7 +26,7 @@ public:
 
 private:
 	CMPData parseCMPData(int nSocket, int nCommand, int nSequence, const void *pData, bool isBodyExist);
-	CClientMeetingAgent();
+	
 	CCmpHandler *cmpParser;
 	typedef int (CClientMeetingAgent::*MemFn)(int, int, int, const void *);
 	map<int, MemFn> mapFunc;

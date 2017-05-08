@@ -1,49 +1,38 @@
-/*
- * CController.h
- *
- *  Created on: 2016年06月27日
- *      Author: Jugo
- */
-
 #pragma once
 
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
-#include "CObject.h"
+#include "CApplication.h"
 #include "common.h"
 #include "packet.h"
 
 using namespace std;
 
-class CCmpHandler;
 class CThreadHandler;
-class CJsonHandler;
 class CClientMeetingAgent;
-class CSocket;
 
-class CController: public CObject
+class CController: public CApplication
 {
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqId);
-	void stopServer();
 
 protected:
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
 private:
-	explicit CController();
-
-public:
-	CCmpHandler *cmpParser;
-
-private:
+	int mnMsqKey; 
 	CClientMeetingAgent *mCClientMeetingAgent;
 
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
+
+	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);
 };

@@ -1,10 +1,13 @@
 #include "DoorAccessHandler.h"
 #include <chrono>
 #include "DoorAccessControllerParams.h"
+#include "../CryptoKey.h"
 #include "../TestStringsDefinition.h"
 
 DoorAccessHandler::DoorAccessHandler() :
-		ites1fDoor((char *)ITES_1F_DOOR_ACCESS_CONTROLLER_IP, ITES_1F_DOOR_ACCESS_CONTROLLER_PORT)
+	ites1fDoor((char *)ITES_1F_DOOR_ACCESS_CONTROLLER_IP,
+		ITES_1F_DOOR_ACCESS_CONTROLLER_PORT,
+		(uint8_t*)ITES_1F_DOOR_CONTROL_AES_KEY)
 {
 }
 

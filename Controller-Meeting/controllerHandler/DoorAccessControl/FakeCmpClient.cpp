@@ -19,7 +19,7 @@ int setSocketTimeout(int sockfd);
 int sendToSocket(int sockfd, const uint8_t *buf, int len);
 int recvFromSocket(int sockfd, uint8_t *buf, int len, int bufLen);
 
-FakeCmpClient::FakeCmpClient(char *ip, int port)
+FakeCmpClient::FakeCmpClient(const char *ip, int port)
 	: serverIp(ip), serverPort(port)
 {
 }

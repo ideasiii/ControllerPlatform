@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "packet.h"
 
 /**
@@ -9,7 +10,7 @@
 class Ites1fDacClient
 {
 public:
-	Ites1fDacClient(char *ip, int port);
+	Ites1fDacClient(const char* ip, int port, const uint8_t* key);
 	~Ites1fDacClient();
 
 	/**
@@ -22,7 +23,7 @@ public:
 		std::string readerId, std::string token, int64_t validFrom, int64_t goodThrough);
 
 private:
-	char *serverIp;
+	std::string serverIp;
 	int serverPort;
-	uint8_t *aesKey; 
+	std::vector<uint8_t> aesKey;
 };

@@ -18,7 +18,7 @@
 class FakeCmpClient
 {
 public:
-	FakeCmpClient(char *ip, int port);
+	FakeCmpClient(const char *ip, int port);
 	~FakeCmpClient();
 
 	/**
@@ -40,6 +40,6 @@ public:
 		const int nStatus, const int nSequence, const uint8_t *szData);
 
 private:
-	char *serverIp;
-	int serverPort;
+	const char *serverIp;
+	const int serverPort;
 };

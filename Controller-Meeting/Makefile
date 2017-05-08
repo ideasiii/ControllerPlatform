@@ -1,7 +1,5 @@
 #####################################
-# ControllerAmx make file
-# Created on: 2016-07-05
-# Author: Jugo
+# Controller Meeting make file
 # Project: Smart Building
 #####################################
 
@@ -14,7 +12,7 @@ LD        := clang++
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
-SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
+SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
 CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++11 $(LOG)
@@ -98,20 +96,16 @@ mk_debug:
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
 	@echo 'Libs:'${LIB_NAMES}"\n"
 	
-package-s:
-	yum -y install sqlite-devel.x86_64
-	yum -y install boost boost-devel
-	yum -y install gcc-c++
-	@echo -ne '\n###### Package for CentSO install completed. ######\n'
-	@echo "\n"
+# say goodbye to RedHat
+#package-s:
 	
 package-u:
-	apt-get -y install sqlite3 libsqlite3-dev \
+	apt-get -y install \
 		 libboost-all-dev libboost-thread-dev \
-		 build-essential \
+		 build-essential clang \
 		 autoconf automake libtool \
 		 libcrypto++-dev libcurl4-openssl-dev
-	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
+	@echo -ne '\n###### Installed build dependency on Debian-based distribution. ######\n'
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

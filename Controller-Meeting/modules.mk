@@ -5,9 +5,9 @@
 # Project: Smart Building
 #####################################
 
-export MODULES=main \
-controllerHandler \
+export MODULES=controllerHandler \
 controllerHandler/DoorAccessControl \
+../Global/application \
 ../Global/cmpHandler	\
 ../Global/global_inc \
 ../Global/configHandler	\
