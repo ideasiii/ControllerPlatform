@@ -33,7 +33,7 @@ int CController::onCreated(void* nMsqKey)
 {
 	trackerServer = new CTrackerServer(this);
 	mongodb = CMongoDBHandler::getInstance();
-	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SIGNIN;
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_MONGODB;
 	return mnMsqKey;
 }
 
