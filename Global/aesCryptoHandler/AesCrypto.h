@@ -29,6 +29,11 @@ public:
 	 */
 	AesCrypto(uint8_t *key);
 
+	/**
+	 * 加密 plaintext
+	 * @param  plaintext 要加密的字串，注意 plaintext 的 teminating null 也會被當做要加密的內容
+	 * @param  iv        initial vector
+	 */
 	std::string encrypt(const std::string plaintext, const uint8_t *iv);
 	std::string decrypt(const uint8_t* ciphertext, const int textLength, const uint8_t *iv);
 
