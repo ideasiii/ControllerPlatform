@@ -11,7 +11,6 @@
 #include "CController.h"
 #include "CCmpSignin.h"
 #include "event.h"
-#include "callback.h"
 #include "CMysqlHandler.h"
 #include "JSONObject.h"
 #include "CConfig.h"
@@ -159,7 +158,6 @@ void CController::onHandleMessage(Message &message)
 	switch(message.what)
 	{
 	case sign_up_request:
-		_DBG("[CController] onHandleMessage %s", message.strData.c_str());
 		onSignin(message.strData.c_str());
 		break;
 	}

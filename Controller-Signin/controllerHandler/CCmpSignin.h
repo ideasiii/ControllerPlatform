@@ -20,7 +20,7 @@ public:
 	virtual ~CCmpSignin();
 
 protected:
-	int onSignin(int nSocket, int nCommand, int nSequence, const void *szData);
+	int onSignin(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
 	CObject * mpController;

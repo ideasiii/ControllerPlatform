@@ -23,11 +23,11 @@ CCmpSignin::~CCmpSignin()
 
 }
 
-int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *pData)
+int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
-	const char *pBody = reinterpret_cast<const char*>(pData);
+	const char *pBody = reinterpret_cast<const char*>(szBody);
 
 	int nType = ntohl(*((int*) pBody));
 	pBody += 4;
@@ -36,7 +36,6 @@ int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *p
 	{
 		Message message;
 		message.what = sign_up_request;
-		//strcpy(message.cData, pBody);
 		message.strData = pBody;
 		mpController->sendMessage(message);
 	}
