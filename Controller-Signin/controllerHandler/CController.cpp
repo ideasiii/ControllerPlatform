@@ -5,79 +5,94 @@
  *      Author: Jugo
  */
 
+#include <string>
 #include <map>
 #include "common.h"
-#include "LogHandler.h"
 #include "CController.h"
 #include "CCmpSignin.h"
 #include "event.h"
 #include "callback.h"
 #include "CMysqlHandler.h"
 #include "JSONObject.h"
+#include "CConfig.h"
+#include "utility.h"
+#include "packet.h"
 
 using namespace std;
 
 #define COMMAND_ON_SIGNIN		9000
 
-static CController * controller = 0;
-
 /** Callback Function send SQL to message queue then run it **/
 void _onSignin(void* param)
 {
 	string strParam = reinterpret_cast<const char*>(param);
-	controller->sendMessage(EVENT_FILTER_CONTROLLER, COMMAND_ON_SIGNIN, 0, strParam.length(), strParam.c_str());
+	//controller->sendMessage(EVENT_FILTER_CONTROLLER, COMMAND_ON_SIGNIN, 0, strParam.length(), strParam.c_str());
 }
 
 CController::CController() :
-		CObject(), cmpSignin(new CCmpSignin()), mysql(new CMysqlHandler)
+		cmpSignin(0), mysql(0), mnMsqKey(-1)
 {
 
 }
 
 CController::~CController()
 {
+
+}
+
+int CController::onCreated(void* nMsqKey)
+{
+	cmpSignin = new CCmpSignin(this);
+	mysql = new CMysqlHandler;
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SIGNIN;
+	return mnMsqKey;
+}
+
+int CController::onInitial(void* szConfPath)
+{
+	int nPort;
+	string strPort;
+	CConfig *config;
+	string strConfPath;
+
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
+	if(strConfPath.empty())
+		return FALSE;
+
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
+	{
+		strPort = config->getValue("SERVER SIGNIN", "port");
+		if(!strPort.empty())
+		{
+			convertFromString(nPort, strPort);
+			startSignin(nPort, mnMsqKey);
+		}
+
+		setMysql(config->getValue("MYSQL", "host").c_str(), config->getValue("MYSQL", "port").c_str(),
+				config->getValue("MYSQL", "database").c_str(), config->getValue("MYSQL", "user").c_str(),
+				config->getValue("MYSQL", "password").c_str());
+	}
+	delete config;
+	return TRUE;
+}
+
+int CController::onFinish(void* nMsqKey)
+{
 	delete mysql;
+	cmpSignin->stop();
 	delete cmpSignin;
+	return TRUE;
 }
 
-CController* CController::getInstance()
+int CController::startSignin(const int nPort, const int nMsqId)
 {
-	if(0 == controller)
+	if(cmpSignin->start(0, nPort, nMsqId))
 	{
-		controller = new CController();
-	}
-	return controller;
-}
-
-void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
-{
-	switch(nCommand)
-	{
-	case COMMAND_ON_SIGNIN:
-		onSignin((char *) const_cast<void*>(pData));
-		break;
-	}
-}
-
-void CController::onTimer(int nId)
-{
-
-}
-
-int CController::startSignin(const char *szIP, const int nPort, const int nMsqId)
-{
-	if(cmpSignin->start(szIP, nPort))
-	{
-		cmpSignin->setCallback(CB_RUN_MYSQL_SQL, _onSignin);
-		cmpSignin->idleTimeout(true, 30);
+		cmpSignin->idleTimeout(true, 5);
 		return TRUE;
 	}
-	return FALSE;
-}
-
-int CController::stop()
-{
-	cmpSignin->stop();
 	return FALSE;
 }
 
@@ -137,4 +152,15 @@ void CController::onSignin(const char *szData)
 		}
 	}
 	jsonData.release();
+}
+
+void CController::onHandleMessage(Message &message)
+{
+	switch(message.what)
+	{
+	case sign_up_request:
+		_DBG("[CController] onHandleMessage %s", message.strData.c_str());
+		onSignin(message.strData.c_str());
+		break;
+	}
 }

@@ -14,7 +14,7 @@ LD        := g++
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
-SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
+SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql
 CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -g
@@ -28,7 +28,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lm -lrt -ldl \
 			-lmysqlclient
 					
-vpath %.cpp $(SRC_DIR)
+vpath %.cpp $(SRC_DIR) ../Global
 
 define make-goal
 $1/%.o: %.cpp

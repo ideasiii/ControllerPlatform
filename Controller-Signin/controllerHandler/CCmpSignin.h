@@ -11,16 +11,17 @@
 #include "ICallback.h"
 #include <map>
 
+class CObject;
+
 class CCmpSignin: public CCmpServer
 {
 public:
-	CCmpSignin();
+	explicit CCmpSignin(CObject *object);
 	virtual ~CCmpSignin();
-	void setCallback(const int nId, CBFun cbfun);
 
 protected:
 	int onSignin(int nSocket, int nCommand, int nSequence, const void *szData);
 
 private:
-	std::map<int, CBFun> mapCallback;
+	CObject * mpController;
 };

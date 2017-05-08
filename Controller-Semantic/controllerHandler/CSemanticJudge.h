@@ -7,8 +7,6 @@
 
 #pragma once
 
-
-
 class JSONObject;
 class CObject;
 class CJudgeStory;
@@ -21,8 +19,6 @@ public:
 	int word(const char *szInput, JSONObject* jsonResp);
 
 private:
-
-
 	CObject *mpController;
 	CJudgeStory *mpJudgeStory;
 };

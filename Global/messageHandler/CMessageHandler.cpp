@@ -151,6 +151,9 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 	pBuf->message.arg2 = message.arg2;
 	pBuf->message.opt = message.opt;
 	pBuf->message.obj = message.obj;
+	pBuf->message.strData = message.strData;
+	memset(pBuf->message.szData, 0, sizeof(pBuf->message.szData));
+	memcpy(pBuf->message.szData, message.szData, sizeof(pBuf->message.szData));
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));
 	if( NULL != pData && 0 < nDataLen)
@@ -159,7 +162,7 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 		pBuf->nDataLen = nDataLen;
 	}
 
-	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
+	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), 0))
 	{
 		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
 		errno);

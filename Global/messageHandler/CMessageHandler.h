@@ -7,22 +7,19 @@
 
 #pragma once
 
+#include <string>
+
 #define DATA_LEN     4096
 
 typedef struct _Message
 {
-public:
 	int what;
 	int arg1;
 	int arg2;
 	int opt;
 	void *obj;
-
-	_Message() :
-			what(-1), arg1(-1), arg2(-1), opt(-1), obj(0)
-	{
-
-	}
+	char szData[2048];
+	std::string strData;
 } Message;
 
 /*

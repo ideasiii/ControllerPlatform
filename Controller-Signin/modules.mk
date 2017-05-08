@@ -1,5 +1,5 @@
-export MODULES=main \
-controllerHandler \
+export MODULES=controllerHandler \
+../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler	\
@@ -10,7 +10,6 @@ controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/cmpHandler \
 ../Global/mysqlHandler \
 ../Global/protocolHandler
 			 

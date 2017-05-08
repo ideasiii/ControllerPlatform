@@ -17,7 +17,6 @@ using namespace std;
 
 #define IDLE_TIMER			469107
 
-
 void *threadCATcpClientMessageReceive(void *argv)
 {
 	CATcpClient* ss = reinterpret_cast<CATcpClient*>(argv);
@@ -38,7 +37,7 @@ void CATcpClient::runTcpReceive()
 	int nSocketFD;
 
 	nSocketFD = getSocketfd();
-	if (0 >= nSocketFD)
+	if(0 >= nSocketFD)
 	{
 		_log("[CATcpClient] runTcpReceive Fail, Invalid Socket FD");
 		sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
@@ -48,9 +47,9 @@ void CATcpClient::runTcpReceive()
 
 	sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_CONNECT, nSocketFD, 0, 0);
 
-	while (1)
+	while(1)
 	{
-		if (0 >= onTcpReceive(nSocketFD))
+		if(0 >= onTcpReceive(nSocketFD))
 		{
 			break;
 		}
@@ -70,7 +69,7 @@ int CATcpClient::onTcpReceive(unsigned long int nSocketFD)
 	result = socketrecv(nSocketFD, &pvBuf, 0);
 	_log("[CATcpClient] onTcpReceive Result: %d Socket[%d]", result, nSocketFD);
 
-	if (0 < result)
+	if(0 < result)
 	{
 		sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_CLIENT_RECEIVE, nSocketFD, result, pBuf);
 	}
@@ -90,10 +89,10 @@ int CATcpClient::start(const char* cszAddr, short nPort, int nMsqKey)
 {
 	int nMsgId = -1;
 	int nSocketFD;
-	IDLE_TIMEOUT = 10;//second
+	IDLE_TIMEOUT = 10; //second
 	mnExtMsqKey = FALSE;
 
-	if (-1 != nMsqKey)
+	if(-1 != nMsqKey)
 	{
 		mnMsqKey = nMsqKey;
 		mnExtMsqKey = TRUE;
@@ -102,30 +101,30 @@ int CATcpClient::start(const char* cszAddr, short nPort, int nMsqKey)
 	{
 		mnMsqKey = clock();
 	}
-	if (-1 == mnMsqKey)
+	if(-1 == mnMsqKey)
 	{
 		mnMsqKey = 20170503;
 	}
 
 	nMsgId = initMessage(mnMsqKey, "TCP Client");
 
-	if (-1 == nMsgId)
+	if(-1 == nMsgId)
 	{
 		_log("[CATcpServer] Init Message Queue Fail");
 		return -1;
 	}
 
-	if (-1 != createSocket(AF_INET, SOCK_STREAM))
+	if(-1 != createSocket(AF_INET, SOCK_STREAM))
 	{
 
-		if (-1 == connectServer())
+		if(-1 == connectServer())
 		{
 			socketClose();
 			_log("[CATcpClient] Set INET socket address & port fail");
 			return -1;
 		}
 
-		if (0 != munRunThreadId)
+		if(0 != munRunThreadId)
 		{
 			threadCancel(munRunThreadId);
 			threadJoin(munRunThreadId);
@@ -155,13 +154,13 @@ void CATcpClient::stop()
 	/**
 	 * Close Message queue run thread
 	 */
-	if (0 < munRunThreadId)
+	if(0 < munRunThreadId)
 	{
 		threadCancel(munRunThreadId);
 		threadJoin(munRunThreadId);
 		munRunThreadId = 0;
 
-		if (!mnExtMsqKey)
+		if(!mnExtMsqKey)
 		{
 			CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
 		}
@@ -179,7 +178,7 @@ void CATcpClient::checkIdle()
 {
 	double diff;
 	diff = difftime(nowSecond(), mSocketServer.ulAliveTime);
-	if (IDLE_TIMEOUT < (int) diff)
+	if(IDLE_TIMEOUT < (int) diff)
 	{
 		_log("[CATcpServer] Socket Client: %d idle: %d seconds", mSocketServer, (int) diff);
 		closeServer();
@@ -191,6 +190,15 @@ void CATcpClient::updateClientAlive()
 	mSocketServer.ulAliveTime = nowSecond();
 }
 
+void CATcpClient::setIdleTimeout(int nSeconds)
+{
+
+}
+
+void CATcpClient::runIdleTimeout(bool bRun)
+{
+
+}
 /**========================================================================================================
  *  IPC Message queue callback function.
  *  Receive MSQ message from sendMessage.
@@ -200,7 +208,7 @@ void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	unsigned long int ulThreadID;
 	unsigned long int ulSocjetFD;
 
-	switch (nCommand)
+	switch(nCommand)
 	{
 
 	case EVENT_COMMAND_SOCKET_CONNECT:
@@ -209,7 +217,7 @@ void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT: // Server Disconnect
 		ulThreadID = getThreadID();
-		if (ulThreadID)
+		if(ulThreadID)
 		{
 			threadJoin(ulThreadID);
 		}
@@ -217,7 +225,7 @@ void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_COLSE: // Client close Server
 		ulThreadID = getThreadID();
-		if (ulThreadID)
+		if(ulThreadID)
 		{
 			threadCancel(ulThreadID);
 			threadJoin(ulThreadID);
@@ -233,7 +241,7 @@ void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 		break;
 	case EVENT_COMMAND_TIMER:
-		switch (nId)
+		switch(nId)
 		{
 		case IDLE_TIMER:
 			checkIdle();
