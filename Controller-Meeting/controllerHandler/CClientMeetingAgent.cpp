@@ -4,6 +4,7 @@
 #include "CClientMeetingAgent.h"
 #include "CCmpHandler.h"
 #include "CDataHandler.cpp"
+#include "TestStringsDefinition.h"
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
@@ -11,6 +12,7 @@
 CClientMeetingAgent::CClientMeetingAgent() :
 	CSocketClient(), cmpParser(CCmpHandler::getInstance())
 {
+
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBind;
 	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbind;
 
@@ -28,14 +30,10 @@ CClientMeetingAgent::~CClientMeetingAgent()
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
 {
 	_DBG("[CClientMeetingAgent] startClient()");
-	
 	if (0 >= nPort || 0 >= nMsqId)
-	{
 		return FALSE;
-	}
-		
 
-	/** Run socket client to controller-meetingagent **/
+	/** Run socket client client to controller-meetingagent **/
 	if (0 < nMsqId)
 	{
 		setPackageReceiver(nMsqId, EVENT_FILTER_CONTROLLER, EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE);
@@ -70,6 +68,7 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 
 int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 {
+
 	vector<int>::iterator it;
 
 	int nSocket = -1;
@@ -197,36 +196,51 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 			}
 
 		}
-		else if (strRequestBodyData.find(
-			"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu4ZZuE0qtj0uU2wxVsoCszE72bP9JSDoXCPaQL4sxIXOqwua6ZVn+VdtCI3ushUzi8qSogC3J7UtO5Kk4Vg+nC2k5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs=")
-			!= string::npos)
+		else if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+			|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
+			|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos
+			|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
 		{
-			//101 door lock
-			if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
+			// Door access
+			std::string uuid;
+			if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos)
 			{
-				strResponseBodyData =
-					"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
+				uuid = TEST_USER_HAS_MEETING_IN_001;
+			}
+			else if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_002) != string::npos)
+			{
+				uuid = TEST_USER_HAS_MEETING_IN_002;
+			}
+
+			if (uuid.size() > 0)
+			{
+				std::string meetingRoom = "000";
+
+				if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos)
+				{
+					meetingRoom = "101";
+				}
+				else if (strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
+				{
+					meetingRoom = "102";
+				}
+
+				if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
+					|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos)
+				{
+					strResponseBodyData = doorAccessHandler.doRequestDummy(uuid, meetingRoom);
+				}
+				else
+				{
+					strResponseBodyData = doorAccessHandler.doRequest(uuid, meetingRoom);
+				}
 			}
 			else
 			{
 				strResponseBodyData =
-					"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
-			}
-		}
-		else if (strRequestBodyData.find(
-			"E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu7rcrcq4Qa9+rJUZBqP+U4T13BrnqwsDCTY9FGqMK8giWAWH6ZKuuZjhZvXXFxAlJ4XEXkY1LDmXQYSlMF/L+3xk5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs=")
-			!= string::npos)
-		{
-			//102 door lock
-			if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
-			{
-				strResponseBodyData =
-					"{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door Open\"}}";
-			}
-			else
-			{
-				strResponseBodyData =
-					"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"You Do Not Have Permission to Open Door\"}}";
+					"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"No permission to open this door\"}}";
 			}
 		}
 		else
@@ -242,7 +256,7 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 
 int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	_DBG("[CClientMeetingAgent]cmpAPPVersion");
+	_DBG("[CClientMeetingAgent] cmpAPPVersion");
 
 	string bodyData =
 		"{\"VERSION\": \"1.0\",\"APP_DOWNLOAD_URL\": \"http://XXX/ideas/sdk/download/libs/android/XXX.apk\"}";
@@ -380,4 +394,3 @@ CMPData CClientMeetingAgent::parseCMPData(int nSocket, int nCommand, int nSequen
 		return CMPData(-1, -1, -1, "");
 	}
 }
-
