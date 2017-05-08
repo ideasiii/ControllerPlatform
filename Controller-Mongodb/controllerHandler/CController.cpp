@@ -5,72 +5,104 @@
  *      Author: Louis Ju
  */
 
+#include <string>
+#include <map>
 #include "CController.h"
-
 #include "common.h"
 #include "event.h"
 #include "packet.h"
-#include "CCmpHandler.h"
 #include "utility.h"
-#include "CDataHandler.cpp"
-#include "IReceiver.h"
-#include <map>
+#include "CConfig.h"
 #include "CMongoDBHandler.h"
-#include "LogHandler.h"
-#include "packet.h"
 #include "CTrackerServer.h"
 
 using namespace std;
 
-static CController * controller = 0;
-
 CController::CController() :
-		CObject(), trackerServer(CTrackerServer::getInstance()), mongodb(CMongoDBHandler::getInstance())
+		trackerServer(0), mongodb(0), mnMsqKey(-1)
 {
 
 }
 
 CController::~CController()
 {
-	delete mongodb;
-	delete trackerServer;
+
 }
 
-CController* CController::getInstance()
+int CController::onCreated(void* nMsqKey)
 {
-	if(0 == controller)
+	trackerServer = new CTrackerServer(this);
+	mongodb = CMongoDBHandler::getInstance();
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SIGNIN;
+	return mnMsqKey;
+}
+
+int CController::onInitial(void* szConfPath)
+{
+	int nRet;
+	int nPort;
+	string strIP;
+	string strPort;
+	CConfig *config;
+	string strConfPath;
+
+	nRet = FALSE;
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
+	if(strConfPath.empty())
+		return FALSE;
+
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
 	{
-		controller = new CController();
+		strIP = config->getValue("MONGODB", "ip");
+		strPort = config->getValue("MONGODB", "port");
+		nRet = startMongoClient(strIP.c_str(), strPort.c_str());
+
+		if(nRet)
+		{
+			strPort = config->getValue("SERVER TRACKER", "port");
+			if(!strPort.empty())
+			{
+				convertFromString(nPort, strPort);
+				nRet = startTrackerServer(nPort, mnMsqKey);
+			}
+		}
 	}
-	return controller;
+
+	delete config;
+	return nRet;
 }
 
-int CController::startTrackerServer(const char *szIP, const int nPort)
-{
-	if(trackerServer->start(szIP, nPort))
-	{
-		return TRUE;
-	}
-	return FALSE;
-}
-
-int CController::startMongoClient()
-{
-	return mongodb->connectDB("175.98.119.121", "27017");
-}
-
-int CController::stop()
+int CController::onFinish(void* nMsqKey)
 {
 	trackerServer->stop();
-	return FALSE;
+	delete mongodb;
+	delete trackerServer;
+	return TRUE;
 }
 
-void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+void CController::onHandleMessage(Message &message)
 {
-
+	switch(message.what)
+	{
+	case access_log_request:
+		insertLog(TYPE_MOBILE_SERVICE, message.strData);
+		break;
+	}
 }
 
-std::string CController::insertLog(const int nType, std::string strData)
+int CController::startTrackerServer(const int nPort, const int nMsqId)
+{
+	return trackerServer->start(0, nPort, nMsqId);
+}
+
+int CController::startMongoClient(const char *szIP, const char *szPort)
+{
+	return mongodb->connectDB(szIP, szPort);
+}
+
+string CController::insertLog(const int nType, string strData)
 {
 	string strOID;
 	switch(nType)

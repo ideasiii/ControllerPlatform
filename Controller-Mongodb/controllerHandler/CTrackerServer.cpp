@@ -5,19 +5,17 @@
  *      Author: root
  */
 
+#include <string>
 #include "CTrackerServer.h"
 #include "common.h"
-#include "LogHandler.h"
 #include "packet.h"
-#include <string>
+#include "JSONObject.h"
 
 using namespace std;
 
-static CTrackerServer * trackerServer = 0;
-
-CTrackerServer::CTrackerServer()
+CTrackerServer::CTrackerServer(CObject *object)
 {
-
+	mpController = object;
 }
 
 CTrackerServer::~CTrackerServer()
@@ -25,27 +23,24 @@ CTrackerServer::~CTrackerServer()
 
 }
 
-CTrackerServer* CTrackerServer::getInstance()
+int CTrackerServer::onAccesslog(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	if(0 == trackerServer)
+	const char *pBody = reinterpret_cast<const char*>(szBody);
+	bool bValid;
+	JSONObject *jsonObj = new JSONObject(pBody);
+	bValid = jsonObj->isValid();
+	jsonObj->release();
+	delete jsonObj;
+
+	if(!bValid)
 	{
-		trackerServer = new CTrackerServer();
+		return response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 	}
-	return trackerServer;
-}
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
-int CTrackerServer::onAccessLog(int nSocket, int nCommand, int nSequence, const void *szData)
-{
-	return response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	Message message;
+	message.what = access_log_request;
+	message.strData = pBody;
+	mpController->sendMessage(message);
+	return TRUE;
 }
-
-int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	return 0;
-}
-
-int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	return 0;
-}
-

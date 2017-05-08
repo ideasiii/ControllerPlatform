@@ -39,3 +39,11 @@ int CController::onFinish(void* nMsqKey)
 	int nKey = *(reinterpret_cast<int*>(nMsqKey));
 	return nKey;
 }
+
+void CController::onHandleMessage(Message &message)
+{
+	switch(message.what)
+	{
+
+	}
+}

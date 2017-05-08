@@ -152,8 +152,8 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 	pBuf->message.opt = message.opt;
 	pBuf->message.obj = message.obj;
 	pBuf->message.strData = message.strData;
-	memset(pBuf->message.szData, 0, sizeof(pBuf->message.szData));
-	memcpy(pBuf->message.szData, message.szData, sizeof(pBuf->message.szData));
+//	memset(pBuf->message.szData, 0, sizeof(pBuf->message.szData));
+//	memcpy(pBuf->message.szData, message.szData, sizeof(pBuf->message.szData));
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));
 	if( NULL != pData && 0 < nDataLen)

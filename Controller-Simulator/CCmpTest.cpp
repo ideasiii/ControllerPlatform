@@ -190,7 +190,12 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 
 	sprintf(bufId, "%d", ++snId);
 	strId = bufId;
-	packet.cmpHeader.command_id = htonl(nCommand);
+
+	if(27027 == nCommand)
+		packet.cmpHeader.command_id = htonl(access_log_request);
+	else
+		packet.cmpHeader.command_id = htonl(nCommand);
+
 	packet.cmpHeader.command_status = htonl( STATUS_ROK);
 	packet.cmpHeader.sequence_number = htonl(nSequence);
 
@@ -201,7 +206,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	//string strAccessLog =
 	//	"\"PRODUCTION\":\"GSC大和^o^Y~~ي‎ al-ʻarabiyyahʻarabī \",\"PAGE\":\"我是測試檔123ABC ~@$我是测试档\",\"LOCATION\":\"25.0537591,121.5522948\",\"SOURCE_FROM\":\"justTest\",\"TYPE\":\"5\",\"ID\":\"AAAA1472030569161FFFF\",\"DATE\":\"2016-03-16 14:16:59\"}";
 	string strAccessLog =
-			"YPE\":\"2000\",\"ID\":\"dcd916573cc91456802938790gyvmac@gmail.com\",\"PAGE\":\"Application\",\"DATE\":\"2017-04-05  12:22:06\",\"LOCATION\":\"22.7896215,120.2836315\",\"SOURCE_FROM\":\"Soohoobook Inc.\"}";
+			"{\"TYPE\":\"2000\",\"ID\":\"dcd916573cc91456802938790gyvmac@gmail.com\",\"PAGE\":\"Application\",\"DATE\":\"2017-04-05  12:22:06\",\"LOCATION\":\"22.7896215,120.2836315\",\"SOURCE_FROM\":\"Soohoobook Inc.\"}";
 
 	string strSignup =
 			"{\"id\": \"" + strId
@@ -256,6 +261,14 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			memcpy(pIndex, (const char*) &net_type, 4);
 			pIndex += 4;
 			nBody_len += 4;
+			memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
+			pIndex += strAccessLog.length();
+			nBody_len += strAccessLog.length();
+			memcpy(pIndex, "\0", 1);
+			++pIndex;
+			++nBody_len;
+			break;
+		case 27027:
 			memcpy(pIndex, strAccessLog.c_str(), strAccessLog.length()); //	log data
 			pIndex += strAccessLog.length();
 			nBody_len += strAccessLog.length();

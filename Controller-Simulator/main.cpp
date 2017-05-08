@@ -28,6 +28,7 @@
 #define IO_PRESSURE		888
 #define EVIL			666
 #define WORD			2310
+#define MONGO			27027
 
 using namespace std;
 
@@ -52,10 +53,12 @@ int main(int argc, char* argv[])
 ("help", HELP)\
 ("pressure",
 	PRESSURE)\
+("mongo", MONGO)\
 ("cmp fcm", fcm_id_register_request)\
 ("cmp fbtoken", facebook_token_client_request)\
-("cmp qrcode",
-	smart_building_qrcode_tokn_request)\
+(
+			"cmp qrcode",
+			smart_building_qrcode_tokn_request)\
 ("cmp sbversion", smart_building_appversion_request)\
 ("cmp sbdata",
 	smart_building_getmeetingdata_request)\
@@ -209,6 +212,7 @@ int cmpRequest(int nCommand, CCmpTest *cmpTest)
 	case smart_building_wireless_power_charge_request:
 	case semantic_word_request:
 	case 1166:
+	case 27027:
 		cmpTest->sendRequest(nCommand, 0);
 		break;
 	case AMX_BIND:

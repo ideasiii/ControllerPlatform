@@ -7,36 +7,30 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <list>
-#include "CObject.h"
+#include "CApplication.h"
 
 class CTrackerServer;
 class CMongoDBHandler;
 
-class CController: public CObject
+class CController: public CApplication
 {
-
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startTrackerServer(const char *szIP, const int nPort);
-	int startMongoClient();
-	int stop();
-
-	int startServer(const int nPort);
-	void stopServer();
-	void onClientCMP(int nClientFD, int nDataLen, const void *pData);
 
 protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 private:
-	explicit CController();
+	int startTrackerServer(const int nPort, const int nMsqId);
+	int startMongoClient(const char *szIP, const char *szPort);
 	std::string insertLog(const int nType, std::string strData);
 
 private:
 	CTrackerServer *trackerServer;
 	CMongoDBHandler *mongodb;
+	int mnMsqKey;
 };

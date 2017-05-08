@@ -197,6 +197,14 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		nSequence = ntohl(cmpHeader.sequence_number);
 		nStatus = ntohl(cmpHeader.command_status);
 
+		map<int, MemFn>::iterator iter;
+		iter = mapFunc.find(nCommand);
+
+		if(mapFunc.end() == iter)
+		{
+			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+		}
+
 		if( enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
@@ -226,14 +234,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		{
 			if(DATA_LEN < nBodyLen) // large data
 			{
-				map<int, MemFn>::iterator iter;
-				iter = mapFunc.find(nCommand);
-				if(mapFunc.end() == iter)
-				{
-					result = response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
-				}
-				else
-					(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
 			}
 			else
 			{

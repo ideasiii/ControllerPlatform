@@ -20,5 +20,6 @@ protected:
 	int onCreated(void* nMsqKey);
 	int onInitial(void* szConfPath);
 	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 };

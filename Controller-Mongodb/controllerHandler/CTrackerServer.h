@@ -9,18 +9,15 @@
 
 #include "CCmpServer.h"
 
-
+class CObject;
 
 class CTrackerServer: public CCmpServer
 {
 public:
-	static CTrackerServer* getInstance();
+	explicit CTrackerServer(CObject *object);
 	virtual ~CTrackerServer();
 
 protected:
-	int onAccessLog(int nSocket, int nCommand, int nSequence, const void *szData);
-
-private:
-	explicit CTrackerServer();
-
+	int onAccesslog(int nSocket, int nCommand, int nSequence, const void *szBody);
+	CObject *mpController;
 };

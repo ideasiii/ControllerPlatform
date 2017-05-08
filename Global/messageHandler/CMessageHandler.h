@@ -18,7 +18,6 @@ typedef struct _Message
 	int arg2;
 	int opt;
 	void *obj;
-	char szData[2048];
 	std::string strData;
 } Message;
 
