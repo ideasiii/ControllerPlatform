@@ -45,11 +45,12 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		return TRUE;
 	}
 
+	_log("[CSemanticJudge] word input: %s", szInput);
+
 	nScore = 0;
 	nHigher = TYPE_RESP_UNKNOW;
 	strWord = szInput;
 
-	_DBG("[CSemanticJudge] nHigher: %d", nHigher);
 	//=============== Dummy ========================================//
 	/**
 	 *  情境1：故事

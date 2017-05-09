@@ -57,7 +57,7 @@ void Handler::close()
 void Handler::onHandleMessage(Message &message)
 {
 	if(pHandleMessage && mpInstance)
-		(*pHandleMessage)(message.what, message.arg1, message.arg2, 0, mpInstance);
+		(*pHandleMessage)(message.what, message.arg[0], message.arg[1], 0, mpInstance);
 }
 
 void Handler::runMessageReceive()

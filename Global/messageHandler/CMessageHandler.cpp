@@ -149,8 +149,12 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 
 	//====== Handle Message ========//
 	pBuf->what = message.what;
-	pBuf->arg1 = message.arg1;
-	pBuf->arg2 = message.arg2;
+	for(int i = 0; i < ARG_LEN; ++i)
+	{
+		pBuf->arg[i] = message.arg[i];
+	}
+//	pBuf->arg1 = message.arg1;
+//	pBuf->arg2 = message.arg2;
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));
 	if(DATA_LEN >= message.strData.length())

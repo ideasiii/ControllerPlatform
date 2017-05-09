@@ -104,8 +104,12 @@ int CObject::run(int lFilter, const char * szDescript)
 			{
 				Message message;
 				message.what = msgbuf->what;
-				message.arg1 = msgbuf->arg1;
-				message.arg2 = msgbuf->arg2;
+				for(int i = 0; i < ARG_LEN; ++i)
+				{
+					message.arg[i] = msgbuf->arg[i];
+				}
+//				message.arg1 = msgbuf->arg1;
+//				message.arg2 = msgbuf->arg2;
 				message.strData = msgbuf->cData;
 				onHandleMessage(message);
 			}

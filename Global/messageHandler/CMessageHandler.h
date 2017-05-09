@@ -9,13 +9,13 @@
 
 #include <string>
 
-#define DATA_LEN     4096
+#define DATA_LEN    4096
+#define ARG_LEN		9
 
 typedef struct _Message
 {
 	int what;
-	int arg1;
-	int arg2;
+	int arg[ARG_LEN];
 	std::string strData;
 } Message;
 
@@ -30,8 +30,9 @@ struct MESSAGE_BUF
 	int nDataLen;
 	char cData[DATA_LEN];
 	int what;
-	int arg1;
-	int arg2;
+	int arg[ARG_LEN];
+//	int arg1;
+//	int arg2;
 };
 
 class CMessageHandler

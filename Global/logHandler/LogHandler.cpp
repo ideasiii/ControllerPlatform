@@ -16,8 +16,10 @@
 using namespace std;
 
 static FILE *pstream = 0;
-static string mstrLogPath;
+static string mstrLogPath = "./run.log";
 static string mstrLogDate = "2015-07-27";
+
+volatile bool bBusy = false;
 
 inline void writeLog(int nSize, const char *pLog)
 {
@@ -27,11 +29,10 @@ inline void writeLog(int nSize, const char *pLog)
 	memset(mbstr, 0, 16);
 	std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
 
-	if(0 < strlen(mbstr) && 0 != mstrLogDate.compare(mbstr))
+	if(0 < strlen(mbstr) && 0 != mstrLogDate.compare(mbstr) && !bBusy)
 	{
-		if(0 != pstream)
-			fclose(pstream);
-
+		bBusy = true;
+		_close();
 		mstrLogDate = mbstr;
 		string strPath = format("%s.%s", mstrLogPath.c_str(), mbstr);
 		pstream = fopen(strPath.c_str(), "a+");
@@ -43,10 +44,13 @@ inline void writeLog(int nSize, const char *pLog)
 			}
 			printf("[LogHandler] Open Log File Success, Path: %s\n", strPath.c_str());
 		}
+		bBusy = false;
 	}
 
-	if(pstream)
+	if(pstream && !bBusy)
 		fwrite(pLog, 1, nSize, pstream);
+	else
+		_error("[LogHandler] _log Busy can't write log: %s", pLog);
 }
 
 void _log(const char* format, ...)
@@ -66,7 +70,7 @@ void _log(const char* format, ...)
 
 	strLog = currentDateTime() + " : " + strLog + "\n";
 
-	if(!mstrLogPath.empty())
+	if(!mstrLogPath.empty() && pstream)
 	{
 		writeLog(strLog.length(), strLog.c_str());
 	}

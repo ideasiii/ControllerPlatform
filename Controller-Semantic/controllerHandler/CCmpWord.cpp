@@ -29,14 +29,6 @@ CCmpWord::~CCmpWord()
 
 int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-
-//	const char *pBody = reinterpret_cast<const char*>(szBody);
-//	Message message;
-//	message.what = TYPE_REQ_NODEFINE;
-//	message.strData = pBody;
-//	mpController->sendMessage(message);
-//	return 1;
-
 	string strBody = string(reinterpret_cast<const char*>(szBody));
 	if(!strBody.empty() && 0 < strBody.length())
 	{
@@ -49,8 +41,6 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 			wordRequest.nTotal = jobjRoot->getInt("total");
 			wordRequest.nNumber = jobjRoot->getInt("number");
 			wordRequest.strWord = jobjRoot->getString("word");
-			_log("[CCmpWord] onSemanticWord: id: %d type: %d total: %d number: %d word: %s Socket[%d]", wordRequest.nId,
-					wordRequest.nType, wordRequest.nTotal, wordRequest.nNumber, wordRequest.strWord.c_str(), nSocket);
 		}
 		jobjRoot->release();
 		delete jobjRoot;
@@ -80,11 +70,14 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 			return FALSE;
 		}
-		message.arg1 = nSocket;
-		message.arg2 = nSequence;
+		message.arg[0] = nSocket;
+		message.arg[1] = nSequence;
+		message.arg[2] = wordRequest.nId;
 		message.strData = wordRequest.strWord;
 		mpController->sendMessage(message);
 	}
+	else
+		response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 	return TRUE;
 }
 

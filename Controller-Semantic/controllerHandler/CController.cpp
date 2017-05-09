@@ -85,26 +85,28 @@ int CController::startCmpWordServer(int nPort, int nMsqKey)
 
 void CController::onHandleMessage(Message &message)
 {
-	//_log("[CController] onHandleMessage what: %d obj: %s", message.what, reinterpret_cast<const char*>(message.obj));
-
-	int nId = -1;
+	int nWhat;
+	int nId;
+	int nSocket;
+	int nSequence;
 	string strWord;
 	JSONObject* jsonResp;
 
+	nSocket = message.arg[0];
+	nSequence = message.arg[1];
+	nId = message.arg[2];
+	nWhat = message.what;
 	strWord = message.strData;
-
-	_log("[CController] onHandleMessage Word: %s", strWord.c_str());
-	_log("[CController] onHandleMessage Word size : %d", strWord.length());
 
 	if(strWord.empty())
 	{
-		cmpword->response(message.arg1, semantic_word_request, STATUS_RINVJSON, message.arg2, 0);
+		cmpword->response(nSocket, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
 		return;
 	}
 
 	jsonResp = new JSONObject();
 
-	switch(message.what)
+	switch(nWhat)
 	{
 	case 0: // 語意判斷
 		semanticJudge->word(strWord.c_str(), jsonResp);
@@ -123,6 +125,6 @@ void CController::onHandleMessage(Message &message)
 		break;
 	}
 
-	//jsonResp->put("id", message.opt);
-	cmpword->response(message.arg1, semantic_word_request, STATUS_ROK, message.arg2, jsonResp->toString().c_str());
+	jsonResp->put("id", nId);
+	cmpword->response(nSocket, semantic_word_request, STATUS_ROK, nSequence, jsonResp->toString().c_str());
 }
