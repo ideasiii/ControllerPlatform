@@ -27,10 +27,17 @@ CCmpWord::~CCmpWord()
 
 }
 
-int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData)
+int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	string strBody = reinterpret_cast<const char*>(szData);
 
+//	const char *pBody = reinterpret_cast<const char*>(szBody);
+//	Message message;
+//	message.what = TYPE_REQ_NODEFINE;
+//	message.strData = pBody;
+//	mpController->sendMessage(message);
+//	return 1;
+
+	string strBody = string(reinterpret_cast<const char*>(szBody));
 	if(!strBody.empty() && 0 < strBody.length())
 	{
 		WORD_REQUEST wordRequest;
@@ -75,8 +82,7 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 		}
 		message.arg1 = nSocket;
 		message.arg2 = nSequence;
-		message.opt = wordRequest.nId;
-		message.obj = _VOID(wordRequest.strWord.c_str());
+		message.strData = wordRequest.strWord;
 		mpController->sendMessage(message);
 	}
 	return TRUE;

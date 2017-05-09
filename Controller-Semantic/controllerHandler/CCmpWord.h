@@ -31,6 +31,6 @@ public:
 	virtual ~CCmpWord();
 
 protected:
-	int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szData);
+	int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szBody);
 	CObject *mpController;
 };

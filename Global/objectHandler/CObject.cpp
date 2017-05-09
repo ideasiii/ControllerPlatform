@@ -101,7 +101,14 @@ int CObject::run(int lFilter, const char * szDescript)
 		if(0 < nRecv)
 		{
 			if(EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
-				onHandleMessage(msgbuf->message);
+			{
+				Message message;
+				message.what = msgbuf->what;
+				message.arg1 = msgbuf->arg1;
+				message.arg2 = msgbuf->arg2;
+				message.strData = msgbuf->cData;
+				onHandleMessage(message);
+			}
 			else
 				onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
 		}

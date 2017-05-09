@@ -16,8 +16,6 @@ typedef struct _Message
 	int what;
 	int arg1;
 	int arg2;
-	int opt;
-	void *obj;
 	std::string strData;
 } Message;
 
@@ -31,7 +29,9 @@ struct MESSAGE_BUF
 	unsigned long int nId;
 	int nDataLen;
 	char cData[DATA_LEN];
-	Message message;
+	int what;
+	int arg1;
+	int arg2;
 };
 
 class CMessageHandler

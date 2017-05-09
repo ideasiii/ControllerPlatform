@@ -119,7 +119,7 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 		pBuf->nDataLen = nDataLen;
 	}
 
-	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), /*IPC_NOWAIT*/0))
+	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), 0))
 	{
 		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
 		errno);
@@ -146,26 +146,28 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 	pBuf->lFilter = lFilter;
 	pBuf->nCommand = nCommand;
 	pBuf->nId = nId;
-	pBuf->message.what = message.what;
-	pBuf->message.arg1 = message.arg1;
-	pBuf->message.arg2 = message.arg2;
-	pBuf->message.opt = message.opt;
-	pBuf->message.obj = message.obj;
-	pBuf->message.strData = message.strData;
-//	memset(pBuf->message.szData, 0, sizeof(pBuf->message.szData));
-//	memcpy(pBuf->message.szData, message.szData, sizeof(pBuf->message.szData));
+
+	//====== Handle Message ========//
+	pBuf->what = message.what;
+	pBuf->arg1 = message.arg1;
+	pBuf->arg2 = message.arg2;
 
 	memset(pBuf->cData, 0, sizeof(pBuf->cData));
-	if( NULL != pData && 0 < nDataLen)
+	if(DATA_LEN >= message.strData.length())
 	{
-		memcpy(pBuf->cData, pData, nDataLen);
-		pBuf->nDataLen = nDataLen;
+		pBuf->nDataLen = message.strData.length();
+		memcpy(pBuf->cData, message.strData.c_str(), message.strData.length());
+	}
+	else
+	{
+		pBuf->nDataLen = 0;
 	}
 
 	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), 0))
 	{
-		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
-		errno);
+		_log("[CMessageHandler] message queue send fail (Message), msqid=%d error=%s errorno=%d", getMsqid(),
+				strerror(errno),
+				errno);
 		nRet = -1;
 	}
 	else

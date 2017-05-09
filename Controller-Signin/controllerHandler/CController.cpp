@@ -19,15 +19,6 @@
 
 using namespace std;
 
-#define COMMAND_ON_SIGNIN		9000
-
-/** Callback Function send SQL to message queue then run it **/
-void _onSignin(void* param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	//controller->sendMessage(EVENT_FILTER_CONTROLLER, COMMAND_ON_SIGNIN, 0, strParam.length(), strParam.c_str());
-}
-
 CController::CController() :
 		cmpSignin(0), mysql(0), mnMsqKey(-1)
 {
@@ -79,9 +70,9 @@ int CController::onInitial(void* szConfPath)
 
 int CController::onFinish(void* nMsqKey)
 {
-	delete mysql;
 	cmpSignin->stop();
 	delete cmpSignin;
+	delete mysql;
 	return TRUE;
 }
 

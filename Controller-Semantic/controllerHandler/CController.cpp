@@ -29,7 +29,7 @@ CController::CController() :
 	semanticControl = new CSemanticControl(_OBJ(this));
 	semanticTalk = new CSemanticTalk(_OBJ(this));
 	semanticRecord = new CSemanticRecord(_OBJ(this));
-	cmpword = new CCmpWord(_OBJ(this));
+	cmpword = new CCmpWord(this);
 }
 
 CController::~CController()
@@ -91,8 +91,10 @@ void CController::onHandleMessage(Message &message)
 	string strWord;
 	JSONObject* jsonResp;
 
-	strWord = reinterpret_cast<const char*>(message.obj);
+	strWord = message.strData;
+
 	_log("[CController] onHandleMessage Word: %s", strWord.c_str());
+	_log("[CController] onHandleMessage Word size : %d", strWord.length());
 
 	if(strWord.empty())
 	{
@@ -121,6 +123,6 @@ void CController::onHandleMessage(Message &message)
 		break;
 	}
 
-	jsonResp->put("id", message.opt);
+	//jsonResp->put("id", message.opt);
 	cmpword->response(message.arg1, semantic_word_request, STATUS_ROK, message.arg2, jsonResp->toString().c_str());
 }
