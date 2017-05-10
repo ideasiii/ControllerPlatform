@@ -5,8 +5,7 @@
  *      Author: root
  */
 
-#include <list>
-#include <ctime>
+#include <fstream>
 #include <stdio.h>
 #include <cstdarg> // for Variable-length argument
 #include "LogHandler.h"
@@ -15,38 +14,30 @@
 
 using namespace std;
 
-static FILE *pstream = 0;
+static fstream fs;
 static string mstrLogPath = "./run.log";
-string mstrLogDate = "2015-07-27";
-
-volatile bool bBusy = false;
+static string mstrLogDate = "2015-07-27";
 
 inline void writeLog(int nSize, const char *pLog)
 {
 	string strCurrentDate = currentDate();
 
-	if(0 != mstrLogDate.compare(strCurrentDate) && !bBusy)
+	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open())
 	{
-		bBusy = true;
+		if(mstrLogPath.empty())
+			mstrLogPath = "./run.log";
 		mstrLogDate = strCurrentDate;
 		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
 		_close();
-		pstream = fopen(strPath.c_str(), "a+");
-		if(pstream)
-		{
-			if(0 != setvbuf(pstream, NULL, _IONBF, 0))
-			{
-				printf("[LogHandler] setvbuf fail \n");
-			}
-			printf("[LogHandler] Open Log File Success, Path: %s\n", strPath.c_str());
-		}
-		bBusy = false;
+		fs.open(strPath.c_str(), fstream::in | fstream::out | fstream::app);
+		fs.rdbuf()->pubsetbuf(0, 0);
+		fs << currentDateTime() + " : [LogHandler] Open File: " + strPath << endl;
 	}
 
-	if(pstream && !bBusy)
-		fwrite(pLog, 1, nSize, pstream);
-	else
-		_error("[LogHandler] _log Busy can't write log: %s", pLog);
+	if(fs.is_open())
+	{
+		fs << pLog << endl;
+	}
 }
 
 void _log(const char* format, ...)
@@ -64,14 +55,11 @@ void _log(const char* format, ...)
 
 	string strLog = string(buffer, size);
 
-	strLog = currentDateTime() + " : " + strLog + "\n";
+	strLog = currentDateTime() + " : " + strLog;
 
-	if(!mstrLogPath.empty() && pstream)
-	{
-		writeLog(strLog.length(), strLog.c_str());
-	}
+	writeLog(strLog.length(), strLog.c_str());
 
-	printf("%s", strLog.c_str());
+	printf("%s\n", strLog.c_str());
 
 }
 
@@ -90,11 +78,11 @@ void _setLogPath(const char *ppath)
 
 void _close()
 {
-	if(0 != pstream)
+	if(fs.is_open())
 	{
-		fclose(pstream);
-		pstream = 0;
-		printf("[LogHandler] Log File Closed\n");
+		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
+		fs << currentDateTime() + " : [LogHandler] Close File: " + strPath << endl;
+		fs.close();
 	}
 }
 
