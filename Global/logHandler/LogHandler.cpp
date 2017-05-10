@@ -17,24 +17,20 @@ using namespace std;
 
 static FILE *pstream = 0;
 static string mstrLogPath = "./run.log";
-static string mstrLogDate = "2015-07-27";
+string mstrLogDate = "2015-07-27";
 
 volatile bool bBusy = false;
 
 inline void writeLog(int nSize, const char *pLog)
 {
-	char mbstr[16];
-	std::time_t t;
-	t = std::time( NULL);
-	memset(mbstr, 0, 16);
-	std::strftime(mbstr, 16, "%Y-%m-%d", std::localtime(&t));
+	string strCurrentDate = currentDate();
 
-	if(0 < strlen(mbstr) && 0 != mstrLogDate.compare(mbstr) && !bBusy)
+	if(0 != mstrLogDate.compare(strCurrentDate) && !bBusy)
 	{
 		bBusy = true;
+		mstrLogDate = strCurrentDate;
+		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
 		_close();
-		mstrLogDate = mbstr;
-		string strPath = format("%s.%s", mstrLogPath.c_str(), mbstr);
 		pstream = fopen(strPath.c_str(), "a+");
 		if(pstream)
 		{

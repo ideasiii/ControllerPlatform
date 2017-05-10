@@ -97,7 +97,16 @@ __attribute__ ((unused)) static const string currentDateTime()
 	char buf[24];
 	tstruct = *localtime(&now);
 	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+	return buf;
+}
 
+__attribute__ ((unused)) static const string currentDate()
+{
+	time_t now = time(0);
+	struct tm tstruct;
+	char buf[24];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
 	return buf;
 }
 
