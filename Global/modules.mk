@@ -18,6 +18,7 @@ threadHandler	\
 mongoDBHandler \
 psqlHandler \
 mysqlHandler \
-protocolHandler
+protocolHandler \
+rankingHandler
 
 export EXT_MODULES=extInclude

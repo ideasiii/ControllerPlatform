@@ -119,7 +119,7 @@ void CATcpServer::stop()
 			CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
 		}
 	}
-	_TRACE("");
+
 	/**
 	 * Close all Client Socket
 	 */
@@ -131,7 +131,6 @@ void CATcpServer::stop()
 		threadJoin(it->second.ulReceiveThreadID);
 	}
 	mapClient.clear();
-	_TRACE("");
 }
 
 void CATcpServer::closeClient(int nClientFD)

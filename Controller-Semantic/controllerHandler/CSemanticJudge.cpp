@@ -17,6 +17,7 @@
 #include "Handler.h"
 #include "CObject.h"
 #include "CJudgeStory.h"
+#include "CRankingHandler.cpp"
 
 using namespace std;
 
@@ -39,6 +40,8 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	int nSubject;
 	string strWord;
 
+	CRankingHandler<int, int> ranking;
+
 	if(0 >= szInput)
 	{
 		jsonResp->put("type", 0);
@@ -46,6 +49,9 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	}
 
 	_log("[CSemanticJudge] word input: %s", szInput);
+
+	//ranking.add(11, 11);
+	_DBG("top: %d #############################################", ranking.top());
 
 	nScore = 0;
 	nHigher = TYPE_RESP_UNKNOW;
