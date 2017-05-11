@@ -57,8 +57,10 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	CMP_HEADER *pHeader;
 	pHeader = (CMP_HEADER *) pData;
 	char *pBody;
+	int nHeaderSize;
 
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+	nHeaderSize = sizeof(CMP_HEADER);
+	memset(&cmpHeader, 0, nHeaderSize);
 
 	cmpHeader.command_id = ntohl(pHeader->command_id);
 	cmpHeader.command_length = ntohl(pHeader->command_length);
@@ -72,9 +74,9 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 		return;
 	}
 
-	if(sizeof(CMP_HEADER) < cmpHeader.command_length)
+	if(nHeaderSize < cmpHeader.command_length)
 	{
-		pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+		pBody = (char*) ((char *) const_cast<void*>(pData) + nHeaderSize);
 	}
 	else
 		pBody = 0;
@@ -187,12 +189,15 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 	int nCommand = generic_nack;
 	int nSequence = 0;
 	int nStatus;
+	int nHeaderSize;
+
+	nHeaderSize = sizeof(CMP_HEADER);
 
 	pHeader = &cmpHeader;
-	result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader);
+	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
 	if(0 >= result)
 		return 0;
-	if(sizeof(CMP_HEADER) == result)
+	if(nHeaderSize == result)
 	{
 		nTotalLen = ntohl(cmpHeader.command_length);
 
@@ -220,7 +225,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		}
 
 		//=================== Get CMP Body ===================//
-		nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+		nBodyLen = nTotalLen - nHeaderSize;
 		char buffer[nBodyLen];
 		if(0 < nBodyLen)
 		{
@@ -257,10 +262,10 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 				char* pvBuf = pBuf;
 
 				memset(pBuf, 0, sizeof(pBuf));
-				memcpy(pvBuf, pHeader, sizeof(CMP_HEADER));
+				memcpy(pvBuf, pHeader, nHeaderSize);
 				if(nBodyLen)
 				{
-					pvBuf += sizeof(CMP_HEADER);
+					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
 				}
 				sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
