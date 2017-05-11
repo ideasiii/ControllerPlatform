@@ -9,7 +9,7 @@
 
 #include <string>
 
-class cJSON;
+struct cJSON;
 class JSONObject;
 
 using namespace std;
