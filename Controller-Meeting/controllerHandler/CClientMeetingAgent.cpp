@@ -8,11 +8,11 @@
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
+#include "UserAppDownloadLinkHandler.h"
 
-CClientMeetingAgent::CClientMeetingAgent() :
-	CSocketClient(), cmpParser(CCmpHandler::getInstance())
+CClientMeetingAgent::CClientMeetingAgent(UserAppDownloadLinkHandler *appLinkHandler) :
+	CSocketClient(), cmpParser(CCmpHandler::getInstance()), userAppDownloadLinkHandler(appLinkHandler)
 {
-
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBindResponse;
 	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbindResponse;
 
@@ -25,6 +25,11 @@ CClientMeetingAgent::CClientMeetingAgent() :
 CClientMeetingAgent::~CClientMeetingAgent()
 {
 	stop();
+
+	if (this->userAppDownloadLinkHandler != nullptr)
+	{
+		userAppDownloadLinkHandler->stop();
+	}
 }
 
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
@@ -63,6 +68,11 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 		_log("[CClientMeetingAgent] Connect to Controller-MeetingAgent OK!!");
 		_log("[CClientMeetingAgent] send bind request");
 		this->cmpBindRequest();
+	}
+
+	if (userAppDownloadLinkHandler != nullptr)
+	{
+		userAppDownloadLinkHandler->start();
 	}
 
 	return TRUE;
@@ -266,12 +276,22 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_DBG("[CClientMeetingAgent] cmpAPPVersion");
+	string bodyData;
 
-	string bodyData =
-		"{\"VERSION\": \"1.0\",\"APP_DOWNLOAD_URL\": \"http://XXX/ideas/sdk/download/libs/android/XXX.apk\"}";
+	if (this->userAppDownloadLinkHandler == nullptr)
+	{
+		bodyData =
+			"{\"VERSION\": \"0.0.0"\", \"VERSION_CODE\": 0, \"APP_DOWNLOAD_URL\": \"\"}";
+	} 
+	else
+	{
+		bodyData =
+			"{\"VERSION\": \"" + userAppDownloadLinkHandler->getVersionName()
+			+ "\", \"VERSION_CODE\": " + std::to_string(userAppDownloadLinkHandler->getVersionCode())
+			+ ", \"APP_DOWNLOAD_URL\": \"" + userAppDownloadLinkHandler->getDownloadLink() + "\"}";
+	}
 
 	sendCommand(generic_nack | nCommand, nSequence, bodyData);
-
 	return TRUE;
 }
 

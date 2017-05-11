@@ -5,3 +5,5 @@ controllerHandler/CryptoKey.h
 controllerHandler/DoorAccessControllerParams.h
 .project
 .settings
+*.o
+

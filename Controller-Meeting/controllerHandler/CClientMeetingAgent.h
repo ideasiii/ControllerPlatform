@@ -2,23 +2,25 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include "CSocketClient.h"
 #include "ICallback.h"
 #include "CMPData.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
 
-using namespace std;
-
 class CCmpHandler;
 class CSocketClient;
+class UserAppDownloadLinkHandler;
 
 class CClientMeetingAgent: public CSocketClient
 {
 public:
 	void onReceive(const int nSocketFD, const void *pData);
 public:
-	explicit CClientMeetingAgent();
+	// ownership of appLinkHandler will be transfered!
+	explicit CClientMeetingAgent(UserAppDownloadLinkHandler *appLinkHandler);
+
 	virtual ~CClientMeetingAgent();
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
@@ -47,4 +49,5 @@ private:
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 	
 	DoorAccessHandler doorAccessHandler;
+	unique_ptr<UserAppDownloadLinkHandler> userAppDownloadLinkHandler;
 };

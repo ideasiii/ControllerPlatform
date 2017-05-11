@@ -9,8 +9,9 @@
 
 using namespace std;
 
-class CThreadHandler;
 class CClientMeetingAgent;
+class CThreadHandler;
+class UserAppVersionHandler;
 
 class CController: public CApplication
 {
@@ -38,5 +39,6 @@ private:
 	CThreadHandler *tdExportLog;
 	std::vector<int> vEnquireLink;
 
+	UserAppVersionHandler *initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
 	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);
 };

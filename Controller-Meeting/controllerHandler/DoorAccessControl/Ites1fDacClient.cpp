@@ -7,8 +7,6 @@
 #include "AesCrypto.h"
 #include "FakeCmpClient.h"
 #include "JSONObject.h"
-#include "cJSON.h"
-
 
 #define ENCRYPT_REQUEST_PDU_BODY
 #define DECRYPT_RESPONSE_PDU_BODY

@@ -14,10 +14,12 @@
 #include "CThreadHandler.h"
 #include "ICallback.h"
 #include "JSONObject.h"
+#include "UserAppVersionHandler.h"
 
 using namespace std;
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
+#define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG"
 
 CController::CController() :
 		mnMsqKey(-1), mCClientMeetingAgent(nullptr),
@@ -33,16 +35,6 @@ CController::~CController()
 
 int CController::onCreated(void* nMsqKey)
 {
-	std::string aaptPath = "/data/opt/android-sdk-build-tools_latest/aapt";
-	std::string apkPackageName = "com.edgecase.smabuild";
-	std::string apkPath = "/home/eanu/more_connect_apks/smabuild_1.0.4_0424.apk";
-	std::unique_ptr<AndroidPackageInfoQuierer> apkInfo(new AndroidPackageInfoQuierer(aaptPath, apkPackageName));
-	bool ok = apkInfo->extractVersionFromApk(apkPath);
-	if (ok)
-	{
-		_log("ok, apk versionCode = %d, versionName = %s", apkInfo->getVersionCode(), apkInfo->getVersionName().c_str());
-	}
-	
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_MEETING;
 
 	// I can't give any reason to use *nMsqKey instead of a predefined ID
@@ -62,7 +54,6 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 	
-	mCClientMeetingAgent = new CClientMeetingAgent();
 	tdEnquireLink = new CThreadHandler();
 	tdExportLog = new CThreadHandler();
 	
@@ -77,15 +68,23 @@ int CController::onInitial(void* szConfPath)
 
 	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "ip");
 	string strPort = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "port");
-
+	
 	if (strServerIp.empty() || strPort.empty())
 	{
-		_log("[CController] onInitial() Meeting-Agent server info 404");
+		_log("[CController] onInitial() agent server config 404");
 		return FALSE;
 	}
 
 	int nPort;
 	convertFromString(nPort, strPort);
+
+	auto userAppVersionHandler = initUserAppVersionHandler(config);
+	if (userAppVersionHandler == nullptr)
+	{
+		return FALSE;
+	}
+
+	mCClientMeetingAgent = new CClientMeetingAgent(userAppVersionHandler);
 	nRet = startClientMeetingAgent(strServerIp, nPort, mnMsqKey);
 	
 	if (!nRet)
@@ -98,6 +97,36 @@ int CController::onInitial(void* szConfPath)
 	}
 
 	return nRet;
+}
+
+UserAppVersionHandler *initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
+{
+	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
+	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
+	
+	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
+	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
+	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
+	string strDownloadLinkBase = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "download_link_base");
+	
+	if (!strAaptPath.empty()  && !strApkDir.empty()
+		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
+	{
+		_log("[CController] onInitial(): init AppVersionHandler with apk scanning method");
+		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
+		return new UserAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
+	} 
+	else if (!strAppDownloadLinkConfigDir.empty() 
+		&& !strAppDownloadLinkConfigName.empty())
+	{
+		_log("[CController] onInitial(): init AppVersionHandler with config file scanning method");
+		return new UserAppVersionHandler(strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
+	}
+	else
+	{
+		_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
+		return nullptr;
+	}
 }
 
 int CController::onFinish(void* nMsqKey)
