@@ -8,10 +8,12 @@
 export MODULES=controllerHandler \
 controllerHandler/DoorAccessControl \
 ../Global/application \
-../Global/cmpHandler	\
+../Global/aesCryptoHandler \
+../Global/androidPackageInfoQuerier \
+../Global/cmpHandler \
 ../Global/global_inc \
 ../Global/configHandler	\
-../Global/messageHandler	\
+../Global/messageHandler \
 ../Global/objectHandler	\
 ../Global/socketHandler	\
 ../Global/threadHandler	\
@@ -19,7 +21,6 @@ controllerHandler/DoorAccessControl \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/timerHandler \
-../Global/aesCryptoHandler
+../Global/timerHandler
 			 
 #export EXT_MODULES=extInclude

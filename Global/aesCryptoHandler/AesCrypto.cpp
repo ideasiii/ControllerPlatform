@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include "LogHandler.h"
 
-AesCrypto::AesCrypto(uint8_t *key)
+AesCrypto::AesCrypto(const uint8_t *key)
 {
 	this->key = key;
 }

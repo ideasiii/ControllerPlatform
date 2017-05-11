@@ -8,7 +8,7 @@
 #pragma once
 #include <string>
 
-class cJSON;
+struct cJSON;
 class JSONArray;
 
 class JSONObject

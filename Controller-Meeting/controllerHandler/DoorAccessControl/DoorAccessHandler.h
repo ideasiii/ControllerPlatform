@@ -13,7 +13,10 @@ public:
 	DoorAccessHandler();
 	~DoorAccessHandler();
 	
+	// 處理 (測試 QR code) 的要求
 	std::string doRequestDummy(std::string uuid, std::string meetingRoom);
+
+	// 處理 (真的 QR code) 的要求 
 	std::string doRequest(std::string uuid, std::string meetingRoom);
 
 private:
