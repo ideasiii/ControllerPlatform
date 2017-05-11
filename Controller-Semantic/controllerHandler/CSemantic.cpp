@@ -5,7 +5,7 @@
  *      Author: Jugo
  */
 
-#include <map>
+
 #include <string>
 #include "CSemantic.h"
 #include "config.h"

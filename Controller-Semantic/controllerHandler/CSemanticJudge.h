@@ -10,6 +10,7 @@
 class JSONObject;
 class CObject;
 class CJudgeStory;
+class CJudgeMusic;
 
 class CSemanticJudge
 {
@@ -21,4 +22,5 @@ public:
 private:
 	CObject *mpController;
 	CJudgeStory *mpJudgeStory;
+	CJudgeMusic *mpJudgeMusic;
 };

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <map>
+
 typedef struct _WORD_ATTR
 {
 	int nIndex;				// 字詞位置
