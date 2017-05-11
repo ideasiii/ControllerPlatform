@@ -17,8 +17,10 @@ public:
 	virtual ~CRankingHandler();
 	std::multimap<VALUE, KEY> flip_map(std::map<KEY, VALUE> & src);
 	void add(KEY, VALUE);
-	VALUE top();
-	VALUE low();
+	VALUE topValue();
+	VALUE lowValue();
+	KEY topValueKey();
+	KEY lowValueKey();
 	int size();
 
 private:

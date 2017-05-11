@@ -12,6 +12,7 @@ export MODULES=controllerHandler \
 ../Global/processHandler \
 ../Global/mysqlHandler \
 ../Global/protocolHandler \
-../Global/rankingHandler
+../Global/rankingHandler \
+../Global/httpHandler
 			 
 #export EXT_MODULES=extInclude

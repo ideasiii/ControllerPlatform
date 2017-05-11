@@ -37,6 +37,7 @@ CSemanticJudge::~CSemanticJudge()
 
 int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
+	int nTop;
 	int nScore;
 	int nIndex;
 	int nSubject;
@@ -54,10 +55,8 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	nScore = 0;
 	strWord = szInput;
 
-	//=============== Dummy ========================================//
 	/**
 	 *  情境1：故事
-	 *  關鍵字："故事" + ("三隻小豬" || "小美人魚" || "睡美人" || "醜小鴨")
 	 */
 	nScore = mpJudgeStory->evaluate(strWord.c_str());
 	ranking.add(CONTENT_STORY, nScore);
@@ -66,11 +65,22 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	//mpJudgeStory->word(strWord.c_str(), jsonResp);
 	/**
 	 *  情境2：聽歌 From Spotify
-	 *  關鍵字：("歌") + (??)
 	 */
 	nScore = mpJudgeMusic->evaluate(strWord.c_str());
-	ranking.add(CONTENT_MUSIC, nScore);
+	ranking.add(CONTENT_MUSIC_SPOTIFY, nScore);
 	_log("[CSemanticJudge] word - Judge Music Score: %d", nScore);
+
+	nTop = ranking.topValueKey();
+	_log("[CSemanticJudge] word Top Key is %d", nTop);
+	switch(nTop)
+	{
+	case CONTENT_STORY:
+		mpJudgeStory->word(strWord.c_str(), jsonResp);
+		break;
+	case CONTENT_MUSIC_SPOTIFY:
+		mpJudgeMusic->word(strWord.c_str(), jsonResp);
+		break;
+	}
 
 //	if(string::npos != strWord.find("歌")) // spotify
 //	{
@@ -116,6 +126,5 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 //		jsonResp->put("music", jsonMusic);
 //		return TRUE;
 //	}
-
 	return FALSE;
 }

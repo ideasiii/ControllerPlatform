@@ -41,12 +41,11 @@ void CRankingHandler<KEY, VALUE>::add(KEY key, VALUE value)
 }
 
 template<typename KEY, typename VALUE>
-VALUE CRankingHandler<KEY, VALUE>::top()
+VALUE CRankingHandler<KEY, VALUE>::topValue()
 {
 	if(!size())
 	{
-		VALUE nopos;
-		return nopos;
+		return 0;
 	}
 	multimap<VALUE, KEY> dst;
 
@@ -57,12 +56,11 @@ VALUE CRankingHandler<KEY, VALUE>::top()
 }
 
 template<typename KEY, typename VALUE>
-VALUE CRankingHandler<KEY, VALUE>::low()
+VALUE CRankingHandler<KEY, VALUE>::lowValue()
 {
 	if(!size())
 	{
-		VALUE nopos;
-		return nopos;
+		return 0;
 	}
 	multimap<VALUE, KEY> dst;
 
@@ -70,6 +68,36 @@ VALUE CRankingHandler<KEY, VALUE>::low()
 
 	typename multimap<VALUE, KEY>::const_iterator it = dst.begin();
 	return it->first;
+}
+
+template<typename KEY, typename VALUE>
+KEY CRankingHandler<KEY, VALUE>::topValueKey()
+{
+	if(!size())
+	{
+		return 0;
+	}
+	multimap<VALUE, KEY> dst;
+
+	dst = flip_map(mapData);
+
+	typename multimap<VALUE, KEY>::const_reverse_iterator it = dst.rbegin();
+	return it->second;
+}
+
+template<typename KEY, typename VALUE>
+KEY CRankingHandler<KEY, VALUE>::lowValueKey()
+{
+	if(!size())
+	{
+		return 0;
+	}
+	multimap<VALUE, KEY> dst;
+
+	dst = flip_map(mapData);
+
+	typename multimap<VALUE, KEY>::const_iterator it = dst.begin();
+	return it->second;
 }
 
 template<typename KEY, typename VALUE>

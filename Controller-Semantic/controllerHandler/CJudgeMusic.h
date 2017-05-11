@@ -18,4 +18,8 @@ public:
 	virtual ~CJudgeMusic();
 	int word(const char *szInput, JSONObject* jsonResp);
 	int evaluate(const char *szWord);
+
+private:
+	std::string getArtistTaiwan(const char *szWord);
+	std::string getArtistEnglish(const char *szWord);
 };

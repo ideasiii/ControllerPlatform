@@ -9,7 +9,8 @@
 
 //==================================== 內容定義 =========================================//
 #define CONTENT_STORY				0x00000001
-#define CONTENT_MUSIC				0x00000002
+#define CONTENT_MUSIC_SPOTIFY		0x00000002
+#define CONTENT_MUSIC_MOOD			0x00000003
 
 //==================================== 封包 Request 內容定義 =========================================//
 #define TYPE_REQ_NODEFINE			0x00000000
