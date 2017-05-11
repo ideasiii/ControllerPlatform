@@ -29,6 +29,7 @@ CCmpServer::CCmpServer() :
 	mapFunc[smart_building_getmeetingdata_request] = &CCmpServer::onGetMeetingData;
 	mapFunc[smart_building_amx_control_access_request] = &CCmpServer::onAMXControlAccess;
 	mapFunc[smart_building_wireless_power_charge_request] = &CCmpServer::onWirelessPowerCharge;
+	mapFunc[enquire_link_request] = &CCmpServer::onEnquireLink;
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();
@@ -55,6 +56,7 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	CMP_HEADER cmpHeader;
 	CMP_HEADER *pHeader;
 	pHeader = (CMP_HEADER *) pData;
+	char *pBody;
 
 	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 
@@ -70,11 +72,19 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 		return;
 	}
 
+	if(sizeof(CMP_HEADER) < cmpHeader.command_length)
+	{
+		pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
+	}
+	else
+		pBody = 0;
+
 	if( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
 		// This is response package.
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 				"[CCmpServer] onReceive Response ", nSocketFD);
+		onResponse(nSocketFD, cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, pBody);
 		return;
 	}
 	else
@@ -92,7 +102,6 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 		return;
 	}
 
-	char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
 	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pBody);
 
 }
@@ -197,23 +206,22 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		nSequence = ntohl(cmpHeader.sequence_number);
 		nStatus = ntohl(cmpHeader.command_status);
 
-		map<int, MemFn>::iterator iter;
-		iter = mapFunc.find(nCommand);
-
-		if(mapFunc.end() == iter)
-		{
-			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
-		}
-
 		if( enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
 
+		map<int, MemFn>::iterator iter;
+		iter = mapFunc.find(nCommand);
+
+		if(mapFunc.end() == iter && (generic_nack != (generic_nack & cmpHeader.command_id)))
+		{
+			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+		}
+
+		//=================== Get CMP Body ===================//
 		nBodyLen = nTotalLen - sizeof(CMP_HEADER);
-
 		char buffer[nBodyLen];
-
 		if(0 < nBodyLen)
 		{
 			pBody = buffer;
@@ -228,13 +236,20 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 			}
 		}
 
-		printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onTcpReceive ", nSocketFD);
-
 		if(confCmpServer->bUseQueueReceive)
 		{
 			if(DATA_LEN < nBodyLen) // large data
 			{
-				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+				if( generic_nack == (generic_nack & cmpHeader.command_id))
+				{
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
+					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
+				}
+				else
+				{
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Request ", nSocketFD);
+					(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+				}
 			}
 			else
 			{
@@ -254,7 +269,17 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		}
 		else
 		{
-			(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+			//================== Check CMP Response ===================//
+			if( generic_nack == (generic_nack & cmpHeader.command_id))
+			{
+				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
+				onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
+			}
+			else
+			{
+				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Request ", nSocketFD);
+				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+			}
 		}
 	}
 	else

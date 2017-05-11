@@ -34,7 +34,6 @@ CSemanticJudge::~CSemanticJudge()
 
 int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 {
-	int nHigher;
 	int nScore;
 	int nIndex;
 	int nSubject;
@@ -50,11 +49,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 
 	_log("[CSemanticJudge] word input: %s", szInput);
 
-	//ranking.add(11, 11);
-	_DBG("top: %d #############################################", ranking.top());
-
 	nScore = 0;
-	nHigher = TYPE_RESP_UNKNOW;
 	strWord = szInput;
 
 	//=============== Dummy ========================================//
@@ -63,6 +58,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	 *  關鍵字："故事" + ("三隻小豬" || "小美人魚" || "睡美人" || "醜小鴨")
 	 */
 	nScore = mpJudgeStory->evaluate(strWord.c_str());
+	ranking.add(11, nScore);
 	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
 
 	mpJudgeStory->word(strWord.c_str(), jsonResp);

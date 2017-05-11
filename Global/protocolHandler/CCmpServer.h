@@ -43,6 +43,11 @@ protected:
 	 * 				szBody: CMP Body Data
 	 */
 protected:
+	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
 	virtual int onInitial(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;
@@ -98,6 +103,11 @@ protected:
 	}
 	;
 	virtual int onAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onEnquireLink(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;
 	}
