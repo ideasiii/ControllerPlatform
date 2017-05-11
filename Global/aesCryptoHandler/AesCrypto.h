@@ -27,7 +27,7 @@ public:
 	/**
 	 * Instantiate with a key used for encryption and decryption.
 	 */
-	AesCrypto(uint8_t *key);
+	AesCrypto(const uint8_t *key);
 
 	/**
 	 * 加密 plaintext
@@ -35,15 +35,15 @@ public:
 	 * @param  iv        initial vector
 	 */
 	std::string encrypt(const std::string plaintext, const uint8_t *iv);
-	std::string decrypt(const uint8_t* ciphertext, const int textLength, const uint8_t *iv);
+	std::string decrypt(const uint8_t* ciphertext, int textLength, const uint8_t *iv);
 
 	/**
 	 * A handy function for generating random IV or (probably not) key.
 	 */
-	static void getRandomBytes(uint8_t *outBuf, const int bufLen);
+	static void getRandomBytes(uint8_t *outBuf, int bufLen);
 
 private:
-	uint8_t *key;
+	const uint8_t *key;
 };
 
 /** example of usage, adapted from official Crypto++ example using CBC mode

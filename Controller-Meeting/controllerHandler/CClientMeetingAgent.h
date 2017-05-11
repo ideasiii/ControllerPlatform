@@ -34,11 +34,10 @@ private:
 	//MeetingAgent Request for bind and unbind
 	void cmpBindRequest();
 	void cmpUnbindRequest();
-
-
+	
 	//MeetingAgent Response for bind and unbind
-	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpBindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
+	int cmpUnbindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 
 
 	//MeetingAgent Request for SmartBuilding
@@ -46,11 +45,6 @@ private:
 	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
-
-	/**
-	 * returns Unix timestamp in milliseconds
-	 */
-	int64_t unixTimeMilli();
-
+	
 	DoorAccessHandler doorAccessHandler;
 };

@@ -13,8 +13,8 @@ CClientMeetingAgent::CClientMeetingAgent() :
 	CSocketClient(), cmpParser(CCmpHandler::getInstance())
 {
 
-	mapFunc[bind_response] = &CClientMeetingAgent::cmpBind;
-	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbind;
+	mapFunc[bind_response] = &CClientMeetingAgent::cmpBindResponse;
+	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbindResponse;
 
 	mapFunc[smart_building_qrcode_tokn_request] = &CClientMeetingAgent::cmpQRCodeToken;
 	mapFunc[smart_building_appversion_request] = &CClientMeetingAgent::cmpAPPVersion;
@@ -29,9 +29,12 @@ CClientMeetingAgent::~CClientMeetingAgent()
 
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
 {
-	_DBG("[CClientMeetingAgent] startClient()");
+	_log("[CClientMeetingAgent] startClient() server IP: %s, port: %d, msqId: %d", strIP.c_str(), nPort, nMsqId);
+
 	if (0 >= nPort || 0 >= nMsqId)
+	{
 		return FALSE;
+	}
 
 	/** Run socket client client to controller-meetingagent **/
 	if (0 < nMsqId)
@@ -52,14 +55,13 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 	start(AF_INET, cszAddr, nPort);
 	if (!this->isValidSocketFD())
 	{
-		_log("[CClientMeetingAgent] Socket Create Fail");
+		_log("[CClientMeetingAgent] Socket Creation Failed");
 		return FALSE;
 	}
 	else
 	{
-		_log("[CClientMeetingAgent] Connect Controller-MeetingAgent Success!!");
-
-		_DBG("[CClientMeetingAgent] now bind request");
+		_log("[CClientMeetingAgent] Connect to Controller-MeetingAgent OK!!");
+		_log("[CClientMeetingAgent] send bind request");
 		this->cmpBindRequest();
 	}
 
@@ -156,7 +158,8 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 	_DBG("[CClientMeetingAgent]cmpQRCodeToken");
 	const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
 
-	if (htonl(cmpPacket->cmpHeader.command_length) > 16)
+
+	if (htonl(cmpPacket->cmpHeader.command_length) > (int)sizeof(CMP_HEADER))
 	{
 		_log("[ClientMeetingAgent] In CMPQRcodeToken get body:%s", cmpPacket->cmpBody.cmpdata);
 		string strRequestBodyData = string(cmpPacket->cmpBody.cmpdata);
@@ -251,6 +254,12 @@ int CClientMeetingAgent::cmpQRCodeToken(int nSocket, int nCommand, int nSequence
 
 		sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);
 	}
+	else
+	{
+		// fail them!
+		//sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);
+	}
+
 	return TRUE;
 }
 
@@ -318,6 +327,7 @@ int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSeq
 			//OK can control AMX
 			strResponseBodyData =
 				"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"54.199.198.94\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
+				//"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"175.98.119.121\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
 
 		}
 		else
@@ -332,14 +342,14 @@ int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSeq
 	return TRUE;
 }
 
-int CClientMeetingAgent::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CClientMeetingAgent::cmpBindResponse(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_log("[CClientMeetingAgent] cmpBind Response");
 
 	return TRUE;
 }
 
-int CClientMeetingAgent::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CClientMeetingAgent::cmpUnbindResponse(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	_log("[CClientMeetingAgent] cmpUnbind Response");
 

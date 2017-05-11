@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <list>
 #include <map>
 #include "CApplication.h"
 #include "common.h"
@@ -20,12 +19,17 @@ public:
 	virtual ~CController();
 
 protected:
+	// return message queue key here
 	int onCreated(void* nMsqKey);
-	int onInitial(void* szConfPath);
-	int onFinish(void* nMsqKey);
-	void onHandleMessage(Message &message);
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 
+	// allocate resources here
+	int onInitial(void* szConfPath);
+
+	// release resources here
+	int onFinish(void* nMsqKey);
+
+	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	virtual void onHandleMessage(Message &message);
 private:
 	int mnMsqKey; 
 	CClientMeetingAgent *mCClientMeetingAgent;

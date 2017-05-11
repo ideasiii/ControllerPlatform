@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "packet.h"
+#include "AesCrypto.h"
 
 /**
  * Client of ITeS 1F Door Access Controller
@@ -25,5 +26,5 @@ public:
 private:
 	std::string serverIp;
 	int serverPort;
-	std::vector<uint8_t> aesKey;
+	uint8_t aesKey[AesCrypto::KeyLength];
 };

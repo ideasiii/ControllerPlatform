@@ -22,8 +22,7 @@ Ites1fDacClient::Ites1fDacClient(const char *ip, int port, const uint8_t *key):
 	// ITES_1F_DOOR_CONTROL_AES_KEY is defined in CryptoKey.h like this:
 	// #define ITES_1F_DOOR_CONTROL_AES_KEY "a string with 32 characters....."
 	
-	//aesKey.assign(AesCrypto::KeyLength);
-	aesKey.assign(key, key + AesCrypto::KeyLength);
+	memcpy(aesKey, key, AesCrypto::KeyLength);
 }
 
 Ites1fDacClient::~Ites1fDacClient()
@@ -48,7 +47,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	_log("[Ites1F_DAClient] reqBody.size() = %d", reqBody.size());
 
 #ifdef ENCRYPT_REQUEST_PDU_BODY
-	AesCrypto crypto(aesKey.data());
+	AesCrypto crypto(aesKey);
 	uint8_t buf[MAX_DATA_LEN];
 	int bufSize = encryptRequestBody(crypto, reqBody, buf, sizeof(buf));
 
