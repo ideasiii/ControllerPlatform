@@ -1,12 +1,11 @@
 #####################################
-# ControllerAmx module file
-# Created on: 2016-12-28
-# Author: Jugo
+# ControllerMeeting module file
 # Project: Smart Building
 #####################################
 
 export MODULES=controllerHandler \
 controllerHandler/DoorAccessControl \
+controllerHandler/UserAppVersionHandler \
 ../Global/application \
 ../Global/aesCryptoHandler \
 ../Global/androidPackageInfoQuerier \

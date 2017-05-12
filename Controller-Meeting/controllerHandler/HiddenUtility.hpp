@@ -27,6 +27,8 @@ public:
 			return errno;
 		}
 
+		_log("[HiddenUtility] Added watch on %s", dir);
+
 		*oFd = fd;
 		*oWd = wd;
 		return 0;

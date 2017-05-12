@@ -8,7 +8,7 @@
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
-#include "UserAppVersionHandler.h"
+#include "UserAppVersionHandler/UserAppVersionHandler.h"
 #include "CThreadHandler.h"
 
 CClientMeetingAgent::CClientMeetingAgent(UserAppVersionHandler *appVerHandler) :

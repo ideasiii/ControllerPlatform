@@ -14,7 +14,9 @@
 #include "CThreadHandler.h"
 #include "ICallback.h"
 #include "JSONObject.h"
-#include "UserAppVersionHandler.h"
+#include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
+#include "UserAppVersionHandler/UserAppVersionHandler.h"
+#include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
 
 using namespace std;
 
@@ -101,9 +103,6 @@ int CController::onInitial(void* szConfPath)
 
 UserAppVersionHandler *CController::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
 {
-	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
-	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
-	
 	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
 	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
 	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
@@ -112,21 +111,23 @@ UserAppVersionHandler *CController::initUserAppVersionHandler(std::unique_ptr<CC
 	if (!strAaptPath.empty()  && !strApkDir.empty()
 		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
 	{
-		_log("[CController] onInitial(): init AppVersionHandler with apk scanning method");
+		_log("[CController] onInitial(): get UserApkPeekingAppVersionHandler");
 		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
-		return new UserAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
+		return new UserApkPeekingAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
 	} 
-	else if (!strAppDownloadLinkConfigDir.empty() 
+
+	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
+	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
+	
+	if (!strAppDownloadLinkConfigDir.empty() 
 		&& !strAppDownloadLinkConfigName.empty())
 	{
-		_log("[CController] onInitial(): init AppVersionHandler with config file scanning method");
-		return new UserAppVersionHandler(strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
+		_log("[CController] onInitial(): get UserConfigFileAppVersionHandler");
+		return new UserConfigFileAppVersionHandler(strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
 	}
-	else
-	{
-		_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
-		return nullptr;
-	}
+
+	_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
+	return nullptr;
 }
 
 int CController::onFinish(void* nMsqKey)
