@@ -62,7 +62,7 @@ private:
 	// apk info 最後更新時間
 	int64_t lastUpdated;
 
-	int watcherThreadId;
+	pthread_t watcherThreadId;
 	int stopSignalPipeFd[2];
 
 	// run runConfigChangeWatcher() in a thread

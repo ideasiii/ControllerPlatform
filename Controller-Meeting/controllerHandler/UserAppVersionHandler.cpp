@@ -18,15 +18,21 @@
 
 void *threadConfigChangeWatcher(void *argv)
 {
+	_log("[threadConfigChangeWatcher] enter threadConfigChangeWatcher()");
 	auto uadlh = reinterpret_cast<UserAppVersionHandler*>(argv);
 	uadlh->runConfigChangeWatcher();
+	_log("[threadConfigChangeWatcher] exit() threadConfigChangeWatcher()"); 
+	
 	return 0;
 }
 
 void *threadNewApkWatcher(void *argv)
 {
+	_log("[threadNewApkWatcher] enter threadNewApkWatcher()");
 	auto uadlh = reinterpret_cast<UserAppVersionHandler*>(argv);
 	uadlh->runNewApkWatcher();
+	_log("[threadNewApkWatcher] exit threadNewApkWatcher()");
+
 	return 0;
 }
 
@@ -46,6 +52,7 @@ UserAppVersionHandler::UserAppVersionHandler
 
 UserAppVersionHandler:: ~UserAppVersionHandler()
 {
+	stop();
 }
 
 void UserAppVersionHandler::start()
@@ -89,24 +96,33 @@ void UserAppVersionHandler::startNewApkWatcher()
 
 void UserAppVersionHandler::stop()
 {
-	if (stopSignalPipeFd > 0)
+	pthread_detach(pthread_self());
+
+	_log("[UserAppVersionHandler::stop()] stopSignalPipeFd[1] = %d", stopSignalPipeFd[1]);
+	if (stopSignalPipeFd[1] > 0)
 	{
 		char whatever = 'a';
+		_log("[UserAppVersionHandler::stop()] write to pipe");
 		write(stopSignalPipeFd[1], &whatever, 1);
+		_log("[UserAppVersionHandler::stop()] write to pipe ok");
 		close(stopSignalPipeFd[1]);
+		stopSignalPipeFd[1] = -1;
 	}
 
-	if (0 < watcherThreadId)
+	/*if (0 < watcherThreadId)
 	{
-		//threadCancel(watcherThreadId);
+		_log("[UserAppVersionHandler::stop()] threadCancel(watcherThreadId)");
+		threadCancel(watcherThreadId);
+		_log("[UserAppVersionHandler::stop()] threadJoin(watcherThreadId)");
 		threadJoin(watcherThreadId);
 		watcherThreadId = 0;
-	}
+	}*/
 }
 
 void UserAppVersionHandler::runNewApkWatcher()
 {
-	this->watcherThreadId = getThreadID();
+	watcherThreadId = getThreadID();
+
 	bool doit = true;
 	while(doit)
 	{
@@ -151,7 +167,12 @@ void UserAppVersionHandler::runNewApkWatcher()
 
 			if (FD_ISSET(stopSignalPipeFd[0], &readFdSet))
 			{
+				_log("[UserAppVersionHandler] Received stop signal from pipe, quit watcher");
 				doit = false;
+
+				close(stopSignalPipeFd[0]);
+				stopSignalPipeFd[0] = -1;
+
 				break;
 			}
 
@@ -188,11 +209,6 @@ void UserAppVersionHandler::runNewApkWatcher()
 
 		inotify_rm_watch(inotifyFd, inotifyWd);
 		close(inotifyFd);
-	}
-
-	if (stopSignalPipeFd[0] > 0)
-	{
-		close(stopSignalPipeFd[0]);
 	}
 }
 
