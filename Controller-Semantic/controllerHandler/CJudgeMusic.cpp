@@ -7,12 +7,15 @@
 
 #include <algorithm>
 #include <string>
+#include <set>
+#include <map>
 #include "CJudgeMusic.h"
 #include "JSONObject.h"
 #include "common.h"
 #include "dic_artist.h"
 #include "dic_semantic.h"
 #include "config.h"
+#include "CSpotify.h"
 
 using namespace std;
 
@@ -37,6 +40,19 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 
 	if(strArtist.empty())
 		strArtist = "";
+	else
+	{
+		CSpotify spotify;
+		map<string, string> mapAlbums;
+		map<string, string>::const_iterator it;
+		if(spotify.getAlbum(strArtist.c_str(), mapAlbums))
+		{
+			for(it = mapAlbums.begin(); mapAlbums.end() != it; ++it)
+			{
+				_log("[CJudgeMusic] word get %s - %s -- %s", strArtist.c_str(), it->first.c_str(), it->second.c_str());
+			}
+		}
+	}
 
 	JSONObject jsonSpotify;
 	jsonSpotify.put("source", 2);
@@ -66,23 +82,23 @@ int CJudgeMusic::evaluate(const char *szWord)
 
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 
-	//======== 評估關鍵字 ==========//
+//======== 評估關鍵字 ==========//
 	if(string::npos != strWord.find("歌"))
 	{
 		++nScore;
 	}
 
-	//======== 評估中文歌手字典檔 ==========//
+//======== 評估中文歌手字典檔 ==========//
 	strArtist = getArtistTaiwan(szWord);
 	if(!strArtist.empty())
 		++nScore;
 
-	//======== 評估英文歌手字典檔 ==========//
+//======== 評估英文歌手字典檔 ==========//
 	strArtist = getArtistEnglish(szWord);
 	if(!strArtist.empty())
 		++nScore;
 
-	//======== 評估動詞 ===========//
+//======== 評估動詞 ===========//
 	WORD_ATTR wordAttr;
 	if(0 <= getVerb(strWord.c_str(), wordAttr))
 	{
