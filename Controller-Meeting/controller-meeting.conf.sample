@@ -1,13 +1,16 @@
+# copy this file and rename to controller-meeting.conf before any editing
+# copy this file and rename to controller-meeting.conf before any editing
+# copy this file and rename to controller-meeting.conf before any editing
+
 #-------------------------------Client Service-------------------------------#
 [CLIENT MEETING_AGENT]
 ip     = 127.0.0.1
-#ip     = 175.98.119.121
 port   = 2101
 
 #-------------------------------System Log-------------------------------------------#
 [LOG]
 # Base path of log file, date (yyyy-mm-dd) will be appended to the end
-log =/data/opt/tomcat/webapps/logs/Controller-Meeting.log
+log =
 
 [APP DOWNLOAD INFO CONFIG]
 # 2 ways to get app download link watcher working
@@ -15,11 +18,11 @@ log =/data/opt/tomcat/webapps/logs/Controller-Meeting.log
 # 1
 # why put config_name in config_dir?
 # TODO explain
-#config_dir = /home/eanu/app_config_dummy_config
-#config_name = app_config_dummy_config.json
+#config_dir = 
+#config_name = 
 
 # 2: use apk scanner
-aapt_path = /data/opt/android-sdk-build-tools-latest/aapt
-apk_dir = ????
-package_name = com.edgecase........
-download_link_base = https://iiideasmartbuilding.sytes.net/????
+aapt_path = 
+apk_dir = 
+package_name = 
+download_link_base = 

@@ -1,3 +1,4 @@
+#include <memory>
 #include "CObject.h"
 
 class AndroidPackageInfoQuierer;
@@ -34,9 +35,6 @@ protected:
 		const void* pData);
 	
 private:
-	int watcherThreadId;
-	int stopSignalPipeFd[2];
-
 	// path of config path, config file contains a JSON object 
 	// stores download link and version info about user app
 	const bool useConfigWatcherMethod;
@@ -45,10 +43,10 @@ private:
 
 	const bool useApkScanningMethod;
 	const std::string apkDir;
-	unique_ptr<AndroidPackageInfoQuierer> apkQuierer;
-	const std::string downloadLinkBasePath;
+	std::unique_ptr<AndroidPackageInfoQuierer> apkQuierer;
 	std::string apkName;
-
+	const std::string downloadLinkBasePath;
+	
 	// Android apk 的 package name
 	std::string packageName;
 	
@@ -63,6 +61,9 @@ private:
 
 	// apk info 最後更新時間
 	int64_t lastUpdated;
+
+	int watcherThreadId;
+	int stopSignalPipeFd[2];
 
 	// run runConfigChangeWatcher() in a thread
 	void startConfigChangeWatcher();

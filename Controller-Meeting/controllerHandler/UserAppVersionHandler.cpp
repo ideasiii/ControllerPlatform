@@ -1,5 +1,6 @@
 #include "UserAppVersionHandler.h"
 
+#include <dirent.h>
 #include <errno.h>
 #include <fstream>
 #include <string>
@@ -7,13 +8,10 @@
 #include <sys/inotify.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "AndroidPackageInfoQuierer.hpp"
 #include "HiddenUtility.hpp"
 #include "LogHandler.h"
 #include "JSONObject.h"
-#include "AndroidPackageInfoQuierer.hpp"
-
-// TODO create pipe to receive stop event
-// TODO use select() to get inotify event
 
 #define INOTIFY_EVENT_SIZE  (sizeof (struct inotify_event))
 #define INOTIFY_BUF_LEN     (1024 * (INOTIFY_EVENT_SIZE + 16))
@@ -33,15 +31,16 @@ void *threadNewApkWatcher(void *argv)
 }
 
 UserAppVersionHandler::UserAppVersionHandler(std::string dir, std::string name) :
-		configDir(dir), configName(name), lastUpdated(-1),
-		useConfigWatcherMethod(true), useApkScanningMethod(false)
+		useConfigWatcherMethod(true), configDir(dir), configName(name), 
+		useApkScanningMethod(false), lastUpdated(-1), stopSignalPipeFd{ -1, -1 }
 {
 }
 
 UserAppVersionHandler::UserAppVersionHandler
 	(AndroidPackageInfoQuierer *q, std::string pkgName, std::string dir, std::string dlLinkBase) :
-		apkQuierer(q), pagkageName(pkgName), apkDir(dir), downloadLinkBasePath(dlLinkBase), lastUpdated(-1),
-		useConfigWatcherMethod(true), useApkScanningMethod(false)
+		useConfigWatcherMethod(false), useApkScanningMethod(true), apkDir(dir), 
+		apkQuierer(q), downloadLinkBasePath(dlLinkBase), packageName(pkgName),
+		lastUpdated(-1), stopSignalPipeFd{ -1, -1 }
 {
 }
 
@@ -90,9 +89,12 @@ void UserAppVersionHandler::startNewApkWatcher()
 
 void UserAppVersionHandler::stop()
 {
-	// TODO send signal to pipe
-	char whatever = 'a';
-	write(stopSignalPipeFd[1], &whatever, 1);
+	if (stopSignalPipeFd > 0)
+	{
+		char whatever = 'a';
+		write(stopSignalPipeFd[1], &whatever, 1);
+		close(stopSignalPipeFd[1]);
+	}
 
 	if (0 < watcherThreadId)
 	{
@@ -100,8 +102,6 @@ void UserAppVersionHandler::stop()
 		threadJoin(watcherThreadId);
 		watcherThreadId = 0;
 	}
-
-	close(stopSignalPipeFd[1]);
 }
 
 void UserAppVersionHandler::runNewApkWatcher()
@@ -113,15 +113,16 @@ void UserAppVersionHandler::runNewApkWatcher()
 		int inotifyFd, inotifyWd;
 		do
 		{
+			_log("[UserAppVersionHandler] Adding watch to %s", apkDir.c_str());
 			int ret = HiddenUtility::initInotifyWithOneWatchDirectory(
-				&inotifyFd, &inotifyWd, configDir.c_str(), IN_CREATE);
+				&inotifyFd, &inotifyWd, apkDir.c_str(), IN_CLOSE_WRITE);
 			if (ret == 0)
 			{
 				break;
 			}	
 			
 			lastUpdated = -1;
-			sleep(1);
+			sleep(10);
 		} while(true);
 		
 
@@ -131,12 +132,15 @@ void UserAppVersionHandler::runNewApkWatcher()
 		fd_set readFdSet;
 		FD_ZERO(&readFdSet);
 		FD_SET(inotifyFd, &readFdSet);
-		FD_SET(stopSignalPipeFd[0], &readFdSet);
+		if (stopSignalPipeFd[0] > 0)
+		{
+			FD_SET(stopSignalPipeFd[0], &readFdSet);
+		}
 		int maxFd = (stopSignalPipeFd[0] > inotifyFd ? stopSignalPipeFd[0] : inotifyFd) + 1;
 
 		while(true)
 		{	
-			_log("[UserAppVersionHandler] Watching changes in %s", configDir.c_str());
+			_log("[UserAppVersionHandler] Watching changes in %s", apkDir.c_str());
 			
 			int ret = select(maxFd, &readFdSet, NULL, NULL, NULL);
 			if ((ret < 0) && (errno!=EINTR)) 
@@ -154,13 +158,13 @@ void UserAppVersionHandler::runNewApkWatcher()
 			uint8_t buf[INOTIFY_BUF_LEN];
 			size_t len = read(inotifyFd, buf, INOTIFY_BUF_LEN);
 			
-			if (len < 0)
+			if (len < 1)
 			{
-				_log("[UserAppVersionHandler] Error on read(): %s", strerror(errno));
+				_log("[UserAppVersionHandler] read() failed: %s", strerror(errno));
 				break;
 			}
 
-			_log("[UserAppVersionHandler] Detected config file change, len = %d", len);
+			_log("[UserAppVersionHandler] Detected apk dir change, len = %d", len);
 			
 			int i = 0;
 			while (i < len) 
@@ -168,12 +172,12 @@ void UserAppVersionHandler::runNewApkWatcher()
 				struct inotify_event *event = (struct inotify_event *) &buf[i];
 				if (event->len) 
 				{
-					if (event->mask & IN_CREATE
-						&& strcmp(configName.c_str(), (char*)event->name) == 0 
-							&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
+					if (event->mask & IN_CLOSE_WRITE
+						&& HiddenUtility::strEndsWith((char*)event->name, ".apk")
+						&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
 					{
-						_log("[UserAppVersionHandler] Config changed, reloading");
-						reloadConfig();
+						_log("[UserAppVersionHandler] APK created in apk dir, reloading");
+						reloadNewestApkInfo();
 						break;
 					}
 				}
@@ -186,7 +190,10 @@ void UserAppVersionHandler::runNewApkWatcher()
 		close(inotifyFd);
 	}
 
-	close(stopSignalPipeFd[0]);
+	if (stopSignalPipeFd[0] > 0)
+	{
+		close(stopSignalPipeFd[0]);
+	}
 }
 
 void UserAppVersionHandler::runConfigChangeWatcher()
@@ -198,6 +205,7 @@ void UserAppVersionHandler::runConfigChangeWatcher()
 		int inotifyFd, inotifyWd;
 		do
 		{
+			_log("[UserAppVersionHandler] Adding watch to %s", configDir.c_str());
 			int ret = HiddenUtility::initInotifyWithOneWatchDirectory(
 				&inotifyFd, &inotifyWd, configDir.c_str(), IN_CLOSE_WRITE);
 			if (ret == 0)
@@ -206,7 +214,7 @@ void UserAppVersionHandler::runConfigChangeWatcher()
 			}	
 			
 			lastUpdated = -1;
-			sleep(1);
+			sleep(10);
 		} while(true);
 		
 
@@ -219,13 +227,13 @@ void UserAppVersionHandler::runConfigChangeWatcher()
 			uint8_t buf[INOTIFY_BUF_LEN];
 			size_t len = read(inotifyFd, buf, INOTIFY_BUF_LEN);
 			
-			if (len < 0)
+			if (len < 1)
 			{
-				_log("[UserAppVersionHandler] Error on read(): %s", strerror(errno));
+				_log("[UserAppVersionHandler] read() failed: %s", strerror(errno));
 				break;
 			}
 
-			_log("[UserAppVersionHandler] Detected config file change, len = %d", len);
+			_log("[UserAppVersionHandler] Detected config dir change, len = %d", len);
 			
 			int i = 0;
 			while (i < len) 
@@ -234,11 +242,11 @@ void UserAppVersionHandler::runConfigChangeWatcher()
 				if (event->len) 
 				{
 					if (event->mask & IN_CLOSE_WRITE
-						&& HiddenUtility::strEndsWith((char*)event->name, ".apk")
-							&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
+						&& strcmp(configName.c_str(), (char*)event->name) == 0
+						&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
 					{
 						_log("[UserAppVersionHandler] Config changed, reloading");
-						reloadNewestApkInfo();
+						reloadConfig();
 						break;
 					}
 				}
@@ -355,7 +363,7 @@ std::string UserAppVersionHandler::getPackageName()
 	if (useConfigWatcherMethod)
 	{
 		// 這時的 packageName 是從 config 檔案讀取的變數
-		return lastUpdated > 0 ? this->packageName;
+		return lastUpdated > 0 ? this->packageName : "";
 	}
 	else if(useApkScanningMethod)
 	{

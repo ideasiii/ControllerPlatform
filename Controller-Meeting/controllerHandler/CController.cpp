@@ -99,7 +99,7 @@ int CController::onInitial(void* szConfPath)
 	return nRet;
 }
 
-UserAppVersionHandler *initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
+UserAppVersionHandler *CController::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
 {
 	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
 	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");

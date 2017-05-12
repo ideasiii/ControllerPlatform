@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
 #include "CApplication.h"
 #include "common.h"
 #include "packet.h"
@@ -10,6 +11,7 @@
 using namespace std;
 
 class CClientMeetingAgent;
+class CConfig;
 class CThreadHandler;
 class UserAppVersionHandler;
 

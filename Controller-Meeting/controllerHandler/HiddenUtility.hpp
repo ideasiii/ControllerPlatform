@@ -10,7 +10,7 @@ public:
 			(std::chrono::system_clock::now().time_since_epoch()).count();
 	}
 
-	int initInotifyWithOneWatchDirectory(int *oFd, int *oWd, const char *dir, uint32_t mask)
+	static int initInotifyWithOneWatchDirectory(int *oFd, int *oWd, const char *dir, uint32_t mask)
 	{
 		int fd = inotify_init();
 		if (fd == -1)
@@ -32,12 +32,12 @@ public:
 		return 0;
 	}
 
-	bool strEndsWith(char *hay, char *needle)
+	static bool strEndsWith(const char *hay, const char *needle)
 	{
-		int hayLen = strlen(hay);
-		int needleLen = strlen(needle);
+		const int hayLen = strlen(hay);
+		const int needleLen = strlen(needle);
 
-		return hayLen >= needleLen && !strcmp(hay + hayLen - needleLen, needle);
+		return hayLen >= needleLen && strcmp(hay + hayLen - needleLen, needle) == 0;
 	}
 
 private:

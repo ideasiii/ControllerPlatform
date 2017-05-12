@@ -8,10 +8,10 @@
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
-#include "UserAppDownloadLinkHandler.h"
+#include "UserAppVersionHandler.h"
 
-CClientMeetingAgent::CClientMeetingAgent(UserAppDownloadLinkHandler *appLinkHandler) :
-	CSocketClient(), cmpParser(CCmpHandler::getInstance()), userAppDownloadLinkHandler(appLinkHandler)
+CClientMeetingAgent::CClientMeetingAgent(UserAppVersionHandler *appVerHandler) :
+	CSocketClient(), cmpParser(CCmpHandler::getInstance()), userAppVersionHandler(appVerHandler)
 {
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBindResponse;
 	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbindResponse;
@@ -26,9 +26,9 @@ CClientMeetingAgent::~CClientMeetingAgent()
 {
 	stop();
 
-	if (this->userAppDownloadLinkHandler != nullptr)
+	if (this->userAppVersionHandler != nullptr)
 	{
-		userAppDownloadLinkHandler->stop();
+		userAppVersionHandler->stop();
 	}
 }
 
@@ -70,9 +70,9 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 		this->cmpBindRequest();
 	}
 
-	if (userAppDownloadLinkHandler != nullptr)
+	if (userAppVersionHandler != nullptr)
 	{
-		userAppDownloadLinkHandler->start();
+		userAppVersionHandler->start();
 	}
 
 	return TRUE;
@@ -278,17 +278,17 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	_DBG("[CClientMeetingAgent] cmpAPPVersion");
 	string bodyData;
 
-	if (this->userAppDownloadLinkHandler == nullptr)
+	if (this->userAppVersionHandler == nullptr)
 	{
 		bodyData =
-			"{\"VERSION\": \"0.0.0"\", \"VERSION_CODE\": 0, \"APP_DOWNLOAD_URL\": \"\"}";
+			R"({"VERSION": "0.0.0", "VERSION_CODE": 0, "APP_DOWNLOAD_URL": ""})";
 	} 
 	else
 	{
 		bodyData =
-			"{\"VERSION\": \"" + userAppDownloadLinkHandler->getVersionName()
-			+ "\", \"VERSION_CODE\": " + std::to_string(userAppDownloadLinkHandler->getVersionCode())
-			+ ", \"APP_DOWNLOAD_URL\": \"" + userAppDownloadLinkHandler->getDownloadLink() + "\"}";
+			"{\"VERSION\": \"" + userAppVersionHandler->getVersionName()
+			+ "\", \"VERSION_CODE\": " + std::to_string(userAppVersionHandler->getVersionCode())
+			+ ", \"APP_DOWNLOAD_URL\": \"" + userAppVersionHandler->getDownloadLink() + "\"}";
 	}
 
 	sendCommand(generic_nack | nCommand, nSequence, bodyData);

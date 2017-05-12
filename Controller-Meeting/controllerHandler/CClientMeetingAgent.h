@@ -11,7 +11,7 @@
 
 class CCmpHandler;
 class CSocketClient;
-class UserAppDownloadLinkHandler;
+class UserAppVersionHandler;
 
 class CClientMeetingAgent: public CSocketClient
 {
@@ -19,7 +19,7 @@ public:
 	void onReceive(const int nSocketFD, const void *pData);
 public:
 	// ownership of appLinkHandler will be transfered!
-	explicit CClientMeetingAgent(UserAppDownloadLinkHandler *appLinkHandler);
+	explicit CClientMeetingAgent(UserAppVersionHandler *appVerHandler);
 
 	virtual ~CClientMeetingAgent();
 	int startClient(string strIP, const int nPort, const int nMsqId);
@@ -49,5 +49,5 @@ private:
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 	
 	DoorAccessHandler doorAccessHandler;
-	unique_ptr<UserAppDownloadLinkHandler> userAppDownloadLinkHandler;
+	unique_ptr<UserAppVersionHandler> userAppVersionHandler;
 };
