@@ -13,6 +13,7 @@ export MODULES=controllerHandler \
 ../Global/mysqlHandler \
 ../Global/protocolHandler \
 ../Global/rankingHandler \
-../Global/httpHandler
+../Global/httpHandler \
+../Global/spotifyHandler
 			 
 #export EXT_MODULES=extInclude

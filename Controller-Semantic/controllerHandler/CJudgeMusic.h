@@ -22,4 +22,5 @@ public:
 private:
 	std::string getArtistTaiwan(const char *szWord);
 	std::string getArtistEnglish(const char *szWord);
+
 };

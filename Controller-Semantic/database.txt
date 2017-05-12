@@ -1,0 +1,38 @@
+########################################## 
+# Database: Mysql
+#
+#
+##########################################
+
+# music database schema and table create
+CREATE SCHEMA `music` DEFAULT CHARACTER SET utf8 ;
+
+CREATE TABLE `music`.`artist` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`name`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `music`.`album` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) NOT NULL,
+  `artist_id` INT UNSIGNED NULL,
+  `create_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+  )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `music`.`song` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) NOT NULL,
+  `artist_id` INT UNSIGNED NOT NULL,
+  `album_id` INT UNSIGNED NOT NULL,
+  `create_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+  
