@@ -63,6 +63,15 @@ protected:
 	 */
 	virtual int onTcpReceive(unsigned long int nSocketFD);
 
+	virtual void onClientConnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+	virtual void onClientDisconnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+
 private:
 	void checkIdle();
 	void eraseClient(unsigned long int ulSocketFD);

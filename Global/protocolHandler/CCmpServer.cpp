@@ -219,7 +219,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		map<int, MemFn>::iterator iter;
 		iter = mapFunc.find(nCommand);
 
-		if(mapFunc.end() == iter && (generic_nack != (generic_nack & cmpHeader.command_id)))
+		if(mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
 		{
 			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
 		}
@@ -245,7 +245,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		{
 			if(DATA_LEN < nBodyLen) // large data
 			{
-				if( generic_nack == (generic_nack & cmpHeader.command_id))
+				if( generic_nack == (generic_nack & nCommand))
 				{
 					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
 					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
@@ -275,7 +275,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		else
 		{
 			//================== Check CMP Response ===================//
-			if( generic_nack == (generic_nack & cmpHeader.command_id))
+			if( generic_nack == (generic_nack & nCommand))
 			{
 				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
 				onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);

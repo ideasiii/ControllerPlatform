@@ -11,7 +11,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "CObject.h"
+#include "CApplication.h"
 
 class CCmpHandler;
 class CThreadHandler;
@@ -20,13 +20,21 @@ class CServerAMX;
 class CServerDevice;
 class CSocket;
 
-class CController: public CObject
+class CController: public CApplication
 {
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startServerAMX(std::string strIP, const int nPort, const int nMsqId);
-	int startServerDevice(std::string strIP, const int nPort, const int nMsqId);
+
+protected:
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
+
+private:
+	int startServerAMX(const char *szIP, const int nPort, const int nMsqId);
+	int startServerDevice(const char *szIP, const int nPort, const int nMsqId);
 	void stopServer();
 	void onAMXCommand(std::string strCommand);
 	void onAMXResponseStatus(std::string strStatus);
@@ -34,9 +42,6 @@ public:
 
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-
-private:
-	explicit CController();
 
 public:
 	CCmpHandler *cmpParser;
@@ -46,5 +51,5 @@ private:
 	CServerDevice *serverDevice;
 	CThreadHandler *tdEnquireLink;
 	CThreadHandler *tdExportLog;
-	std::vector<int> vEnquireLink;
+	//std::vector<int> vEnquireLink;
 };

@@ -5,9 +5,8 @@
 # Project: Smart Building
 #####################################
 
-export MODULES=main \
-controllerHandler \
-../Global/cmpHandler	\
+export MODULES=controllerHandler \
+../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler	\
@@ -19,5 +18,3 @@ controllerHandler \
 ../Global/logHandler \
 ../Global/processHandler \
 ../Global/protocolHandler
-			 
-#export EXT_MODULES=extInclude

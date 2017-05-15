@@ -318,10 +318,12 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		}
 		break;
 	case EVENT_COMMAND_SOCKET_CONNECT:
+		onClientConnect(nId);
 		_log("[CATcpServer] Socket Client Connect FD: %lu", nId);
 		updateClientAlive(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT: // Client Disconnect
+		onClientDisconnect(nId);
 		ulThreadID = getClientThreadID(nId);
 		if(ulThreadID)
 			threadJoin(ulThreadID);
