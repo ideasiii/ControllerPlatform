@@ -30,6 +30,10 @@ CCmpServer::CCmpServer() :
 	mapFunc[smart_building_amx_control_access_request] = &CCmpServer::onAMXControlAccess;
 	mapFunc[smart_building_wireless_power_charge_request] = &CCmpServer::onWirelessPowerCharge;
 	mapFunc[enquire_link_request] = &CCmpServer::onEnquireLink;
+	mapFunc[bind_request] = &CCmpServer::onBind;
+	mapFunc[unbind_request] = &CCmpServer::onUnbind;
+	mapFunc[amx_control_request] = &CCmpServer::onAmxControl;
+	mapFunc[amx_status_request] = &CCmpServer::onAmxStatus;
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();
@@ -108,13 +112,13 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 
 }
 
-int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
+int CCmpServer::request(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData)
 {
-	return sendPacket(nSocket, nCommand, nStatus, nSequence, szData);
+	return sendPacket(nSocketFD, nCommand, nStatus, nSequence, szData);
 }
-int CCmpServer::response(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
+int CCmpServer::response(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData)
 {
-	return sendPacket(nSocket, nCommand | generic_nack, nStatus, nSequence, szData);
+	return sendPacket(nSocketFD, nCommand | generic_nack, nStatus, nSequence, szData);
 }
 
 int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
