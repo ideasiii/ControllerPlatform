@@ -96,7 +96,7 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 	{
 		if (bodyData.size() > 0)
 		{
-			_log("[CServerMeeting] command %d, seqNum is %d, data: %s\n", commandID, seqNum, bodyData.c_str());
+			_log("[CServerMeeting] command %s, seqNum is %d, data: %s\n", numberToHex(commandID).c_str(), seqNum, bodyData.c_str());
 			if (bodyData.size() > MAX_SIZE - 17)
 			{
 				nRet = sendPacket(dynamic_cast<CSocket*>(this), nSocket, commandID, STATUS_ROK, seqNum,
@@ -110,7 +110,7 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 		}
 		else
 		{
-			_log("[CServerMeeting] command %d, seqNum is %d\n", commandID, seqNum);
+			_log("[CServerMeeting] command %s, seqNum is %d\n", numberToHex(commandID).c_str(), seqNum);
 			nRet = sendPacket(dynamic_cast<CSocket*>(this), nSocket, commandID, STATUS_ROK, seqNum, 0);
 		}
 	}
