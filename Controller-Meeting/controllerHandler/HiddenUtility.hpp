@@ -1,4 +1,9 @@
 #include <chrono>
+#include <errno.h>
+#include <string.h>
+#include <sys/inotify.h>
+#include <unistd.h>
+#include "LogHandler.h"
 
 class HiddenUtility
 {
@@ -31,6 +36,7 @@ public:
 
 		*oFd = fd;
 		*oWd = wd;
+
 		return 0;
 	}
 

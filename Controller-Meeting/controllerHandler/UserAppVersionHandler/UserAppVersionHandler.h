@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <sys/inotify.h>
 #include "CObject.h"
@@ -37,23 +39,23 @@ protected:
 	// apk info 最後更新時間
 	int64_t lastUpdated;
 
-	explicit UserAppVersionHandler(std::string watchDirectory);
+	explicit UserAppVersionHandler(std::string watchDirectory, int inotifyMask);
 
 	// 這個類別不使用 message queue 傳遞訊息
 	virtual void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
 		const void* pData);
 
-	// 在目前的執行緒執行 watcher
-	// 沒事不要用，應該呼叫 start()
-	virtual void runWatcher() = 0;
-
 	// 刷新類別內的變數
 	virtual void reload() = 0;
 	virtual bool onInotifyEvent(struct inotify_event *event) = 0;
 private:
-	int watcherThreadId;
-	int stopSignalPipeFd[2];
-	const int inotifyEventMask;
+	const int inotifyEventMask; 
+	pthread_t watcherThreadId;
+	bool doLoop;
+	
+	// 在目前的執行緒執行 watcher
+	// 沒事不要用，應該呼叫 start()
+	virtual void runWatcher();
 
 	friend void *threadStartRoutine_UserAppVersionHandler_runWatcher(void *);
 };

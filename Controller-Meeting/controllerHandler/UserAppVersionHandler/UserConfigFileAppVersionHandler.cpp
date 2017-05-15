@@ -3,9 +3,10 @@
 #include <errno.h>
 #include <fstream>
 #include <string>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "HiddenUtility.hpp"
+#include "../HiddenUtility.hpp"
 #include "LogHandler.h"
 #include "JSONObject.h"
 
@@ -14,6 +15,10 @@
 UserConfigFileAppVersionHandler::UserConfigFileAppVersionHandler(
 	std::string configDir, std::string configName) :
 		UserAppVersionHandler(configDir, INOTIFY_WATCH_EVENT), configName(configName)
+{
+}
+
+UserConfigFileAppVersionHandler::~UserConfigFileAppVersionHandler()
 {
 }
 

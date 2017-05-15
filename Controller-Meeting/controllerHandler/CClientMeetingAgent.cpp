@@ -76,17 +76,6 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 		userAppVersionHandler->start();
 	}
 
-	CThreadHandler *ct = new CThreadHandler();
-	ct->createThread([](void* args) -> void*
-	{
-		sleep(10);
-		_log("[YOOOOOOOOOOOOOOOOOO] Thread timeout reached, call stop() to stop UserAppVersionHandler watcher");
-		UserAppVersionHandler *uavh = (reinterpret_cast<UserAppVersionHandler*>(args));
-		_log("[YOOOOOOOOOOOOOOOOOO] got uavh, stop it"); 
-		uavh->stop();
-		return NULL;
-	}, (void *) userAppVersionHandler.get());
-
 	return TRUE;
 }
 

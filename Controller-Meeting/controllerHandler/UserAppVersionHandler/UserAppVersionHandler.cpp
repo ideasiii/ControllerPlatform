@@ -3,9 +3,11 @@
 #include <errno.h>
 #include <fstream>
 #include <string>
+#include <string.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "HiddenUtility.hpp"
+#include "../HiddenUtility.hpp"
 #include "LogHandler.h"
 
 #define INOTIFY_EVENT_SIZE  (sizeof (struct inotify_event))
@@ -13,18 +15,20 @@
 
 void *threadStartRoutine_UserAppVersionHandler_runWatcher(void *argv)
 {
-	_log("[UserAppVersionHandler] Do runWatcher() in a thread");
 
-	watcherThreadId = getThreadID();
-	auto uadlh = reinterpret_cast<UserAppVersionHandler*>(argv);
+	_log("[UserAppVersionHandler] threadStartRoutine_UserAppVersionHandler_runWatcher() step in");
+
+	auto uadlh = reinterpret_cast<UserAppVersionHandler*>(argv); 
+	uadlh->watcherThreadId = pthread_self();
+	uadlh->doLoop = true;
 	uadlh->runWatcher();			
 	
+	_log("[UserAppVersionHandler] threadStartRoutine_UserAppVersionHandler_runWatcher() step out");
 	return 0;
 }
 
 UserAppVersionHandler::UserAppVersionHandler(std::string watchDirectory, int inotifyMask) : 
-	watchDir(watchDirectory), lastUpdated(-1),
-	stopSignalPipeFd{ -1, -1 }, inotifyEventMask(inotifyMask)
+	watchDir(watchDirectory), lastUpdated(-1), inotifyEventMask(inotifyMask), doLoop(false)
 {
 }
 
@@ -35,65 +39,40 @@ UserAppVersionHandler::~UserAppVersionHandler()
 
 void UserAppVersionHandler::start()
 {
-	int ret = pipe(stopSignalPipeFd);
-	if (ret < 0)
-	{
-		_log("[UserAppVersionHandler] start() cannot create pipe");	
-		return;
-	}
-
 	createThread(threadStartRoutine_UserAppVersionHandler_runWatcher, 
 		this, "UserAppVersionHandler Watcher Thread");
 }
 
 void UserAppVersionHandler::stop()
 {
-	if (0 >= watcherThreadId)
+	if (0 == watcherThreadId)
 	{
+		_log("[UserAppVersionHandler] stop() 0 == watcherThreadId");
 		return;
 	}
 
-	pthread_detach(pthread_self());
+	doLoop = false;
 
-	_log("[UserAppVersionHandler] stop() stopSignalPipeFd[1] = %d", stopSignalPipeFd[1]);
-	if (stopSignalPipeFd[1] > 0)
-	{
-		char whatever = 'a';
-		_log("[UserAppVersionHandler] stop() write to pipe");
-		write(stopSignalPipeFd[1], &whatever, 1);
-		_log("[UserAppVersionHandler] stop() write to pipe ok");
-		close(stopSignalPipeFd[1]);
-		stopSignalPipeFd[1] = -1;
-	}
-
-	/*_log("[UserAppVersionHandler::stop()] threadCancel(watcherThreadId)");
-	threadCancel(watcherThreadId);
-	_log("[UserAppVersionHandler::stop()] threadJoin(watcherThreadId)");
-	threadJoin(watcherThreadId);*/
+	//pthread_detach(watcherThreadId);
+	threadJoin(watcherThreadId);
 	watcherThreadId = 0;
 }
 
 void UserAppVersionHandler::runWatcher()
 {
-	if (stopSignalPipeFd[0] < 0 || stopSignalPipeFd[1] < 0)
-	{
-		_log("[UserAppVersionHandler] runWatcher() broken pipe??");
-		return;
-	}
-
 	_log("[UserAppVersionHandler] Initializing members once before going into watch loop");
 	reload();
 
-	bool doLoop = true;
 	while(doLoop)
 	{
 		int inotifyFd, inotifyWd;
 		do
 		{
 			int ret = HiddenUtility::initInotifyWithOneWatchDirectory(
-				&inotifyFd, &inotifyWd, watchDir.c_str(), inotifyMask);
+				&inotifyFd, &inotifyWd, watchDir.c_str(), inotifyEventMask);
 			if (ret == 0)
 			{
+				_log("[UserAppVersionHandler] Watch created, break creating loop");
 				break;
 			}	
 			
@@ -101,19 +80,40 @@ void UserAppVersionHandler::runWatcher()
 			sleep(10);
 		} while(true);
 		
-		int maxFd = (stopSignalPipeFd[0] > inotifyFd ? stopSignalPipeFd[0] : inotifyFd) + 1;
-		fd_set readFdSet;
-		FD_ZERO(&readFdSet);
-
+		int maxFd = inotifyFd + 1;
+		
+				
+		_log("[UserAppVersionHandler] Watching changes in %s", watchDir.c_str());
+		
 		while(true)
-		{	
+		{
+			fd_set readFdSet;
+			FD_ZERO(&readFdSet);
 			FD_SET(inotifyFd, &readFdSet);
-			FD_SET(stopSignalPipeFd[0], &readFdSet);
 			
-			_log("[UserAppVersionHandler] Watching changes in %s", apkDir.c_str());
-			
-			int ret = select(maxFd, &readFdSet, NULL, NULL, NULL);
-			if (ret < 0) 
+			// On Linux, select() modifies timeout to reflect the amount of time not slept
+			struct timeval timeout;
+			timeout.tv_sec = 1;
+			timeout.tv_usec = 0;
+
+			//_log("[UserAppVersionHandler] select() step in");
+			int ret = select(maxFd, &readFdSet, NULL, NULL, &timeout);
+			//_log("[UserAppVersionHandler] select() stepped out, ret = %d", ret);
+
+			if (ret == 0)
+			{
+				// timeout
+				if (!doLoop)
+				{
+					_log("[UserAppVersionHandler] doLoop = false, break loop", ret);
+					break;
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if (ret < 0)
 			{
 				if (errno != EINTR)
 				{
@@ -124,18 +124,7 @@ void UserAppVersionHandler::runWatcher()
 				_log("[UserAppVersionHandler] select() failed: %s", strerror(errno));
 				break;
 			}
-
-			if (FD_ISSET(stopSignalPipeFd[0], &readFdSet))
-			{
-				_log("[UserAppVersionHandler] Received signal from pipe, quit runWatcher() loop");
-				doLoop = false;
-
-				close(stopSignalPipeFd[0]);
-				stopSignalPipeFd[0] = -1;
-
-				break;
-			}
-
+			
 			uint8_t buf[INOTIFY_BUF_LEN];
 			size_t len = read(inotifyFd, buf, INOTIFY_BUF_LEN);
 			
@@ -150,11 +139,12 @@ void UserAppVersionHandler::runWatcher()
 			int i = 0;
 			while (i < len) 
 			{
+				// TODO MOVED_FROM and MOVE_TO and IGNORE handling
+				// when dir is moved from original tree
 				struct inotify_event *event = (struct inotify_event *) &buf[i];
-				if (event->len) 
+				if (event->len && (event->mask & inotifyEventMask)) 
 				{
-					bool shouldContinue = onInotifyEvent(event);
-					if (!shouldContinue)
+					if (!onInotifyEvent(event))
 					{
 						break;
 					}
@@ -166,12 +156,16 @@ void UserAppVersionHandler::runWatcher()
 
 		inotify_rm_watch(inotifyFd, inotifyWd);
 		close(inotifyFd);
+		inotifyFd = -1;
 		
 		if (doLoop)
 		{
+			_log("[UserAppVersionHandler] Sleep before doing next watch loop");
 			sleep(10);
-		}
+		}	
 	}
+
+	_log("[UserAppVersionHandler] Exit runWatcher()");
 }
 
 void UserAppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,

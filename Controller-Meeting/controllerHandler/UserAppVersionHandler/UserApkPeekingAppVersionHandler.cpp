@@ -3,10 +3,11 @@
 #include <dirent.h>
 #include <fstream>
 #include <string>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "../HiddenUtility.hpp"
 #include "AndroidPackageInfoQuierer.hpp"
-#include "HiddenUtility.hpp"
 #include "LogHandler.h"
 
 #define INOTIFY_WATCH_EVENT IN_CLOSE_WRITE
@@ -14,7 +15,12 @@
 UserApkPeekingAppVersionHandler::UserApkPeekingAppVersionHandler
 	(AndroidPackageInfoQuierer *q, std::string pkgName, std::string apkDir, std::string dlLinkBase) :
 		UserAppVersionHandler(apkDir, INOTIFY_WATCH_EVENT), apkQuierer(q), 
-		downloadLinkBasePath(dlLinkBase), packageName(pkgName)
+		downloadLinkBasePath(dlLinkBase)
+{
+	packageName = pkgName;
+}
+
+UserApkPeekingAppVersionHandler::~UserApkPeekingAppVersionHandler()
 {
 }
 
