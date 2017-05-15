@@ -5,24 +5,12 @@
  *      Author: Jugo
  */
 
-#include <list>
-#include <ctime>
-
-#include "CSocket.h"
-#include "CSocketServer.h"
-#include "CSocketClient.h"
-#include "event.h"
-#include "utility.h"
-#include "CCmpHandler.h"
 #include "CController.h"
-#include "CDataHandler.cpp"
-#include "CThreadHandler.h"
 #include "CServerAMX.h"
-#include "CServerDevice.h"
-#include "AMXCommand.h"
-#include "iCommand.h"
-#include "JSONObject.h"
-#include "packet.h"
+#include "common.h"
+#include "config.h"
+#include "CConfig.h"
+#include "CServerCMP.h"
 
 using namespace std;
 
@@ -139,7 +127,7 @@ using namespace std;
 //	return nRet;
 //}
 CController::CController() :
-		serverAMX(CServerAMX::getInstance()), serverDevice(CServerDevice::getInstance())
+		mnMsqKey(-1), serverAMX(0), serverDevice(0)
 {
 
 }
@@ -151,22 +139,87 @@ CController::~CController()
 
 int CController::onCreated(void* nMsqKey)
 {
-
+	serverAMX = new CServerAMX(this);
+	serverDevice = new CServerDevice(this);
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_AMX;
+	return mnMsqKey;
 }
 
 int CController::onInitial(void* szConfPath)
 {
+	int nSecond;
+	int nRet;
+	int nPort;
+	string strPort;
+	CConfig *config;
+	string strConfPath;
+	string strTimer;
 
+	nRet = FALSE;
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
+	if(strConfPath.empty())
+		return nRet;
+
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
+
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
+	{
+		strPort = config->getValue("SERVER AMX", "port");
+		if(!strPort.empty())
+		{
+			convertFromString(nPort, strPort);
+			if(startServerAMX(nPort, mnMsqKey))
+			{
+				strPort = config->getValue("SERVER DEVICE", "port");
+				if(!strPort.empty())
+				{
+					convertFromString(nPort, strPort);
+					if(startServerDevice(nPort, mnMsqKey))
+					{
+						strTimer = config->getValue("TIMER", "amx_busy");
+						if(!strTimer.empty())
+						{
+							convertFromString(nSecond, strTimer);
+							serverDevice->setAmxBusyTimeout(nSecond);
+						}
+						nRet = TRUE;
+					}
+				}
+			}
+		}
+
+	}
+	delete config;
+	return nRet;
 }
 
 int CController::onFinish(void* nMsqKey)
 {
+	if(serverAMX)
+	{
+		serverAMX->stop();
+		delete serverAMX;
+		serverAMX = 0;
+	}
 
+	if(serverDevice)
+	{
+		serverDevice->stop();
+		delete serverDevice;
+		serverDevice = 0;
+	}
+
+	return TRUE;
 }
 
 void CController::onHandleMessage(Message &message)
 {
-
+	switch(message.what)
+	{
+	case RESPONSE_AMX_STATUS:
+		break;
+	}
 }
 
 //void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
@@ -197,37 +250,12 @@ void CController::onHandleMessage(Message &message)
 //	}
 //}
 
-int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
+int CController::startServerAMX(const int nPort, const int nMsqId)
 {
-	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(strIP, nPort, nMsqId);
+	return serverAMX->start(0, nPort, nMsqId);
 }
 
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
+int CController::startServerDevice(const int nPort, const int nMsqId)
 {
-	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
-}
-
-void CController::stopServer()
-{
-	if(serverAMX)
-	{
-		serverAMX->stopServer();
-		delete serverAMX;
-		serverAMX = 0;
-	}
-
-	if(serverDevice)
-	{
-		serverDevice->stopServer();
-		delete serverDevice;
-		serverDevice = 0;
-	}
-}
-
-void CController::setAMXBusyTimer(int nSec)
-{
-	serverDevice->setAmxBusyTimeout(nSec);
+	return serverDevice->start(0, nPort, nMsqId);
 }

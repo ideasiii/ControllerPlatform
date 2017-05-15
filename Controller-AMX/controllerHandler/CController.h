@@ -33,23 +33,17 @@ protected:
 	void onHandleMessage(Message &message);
 
 private:
-	int startServerAMX(const char *szIP, const int nPort, const int nMsqId);
-	int startServerDevice(const char *szIP, const int nPort, const int nMsqId);
-	void stopServer();
-	void onAMXCommand(std::string strCommand);
-	void onAMXResponseStatus(std::string strStatus);
-	void setAMXBusyTimer(int nSec);
+	int startServerAMX(const int nPort, const int nMsqId);
+	int startServerDevice(const int nPort, const int nMsqId);
 
 protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-
-public:
-	CCmpHandler *cmpParser;
+	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+	{
+	}
+	;
 
 private:
+	int mnMsqKey;
 	CServerAMX *serverAMX;
 	CServerDevice *serverDevice;
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
-	//std::vector<int> vEnquireLink;
 };
