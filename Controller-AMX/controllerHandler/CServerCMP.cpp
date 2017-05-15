@@ -5,19 +5,21 @@
  *      Author: Jugo
  */
 
+#include <string>
 #include "CServerCMP.h"
 #include "AMXCommand.h"
 #include "common.h"
+#include "packet.h"
+#include "JSONObject.h"
 
 #define TIMER_ID_AMX_BUSY	666
 
-CServerCMP::CServerCMP() :
-		mnBusy(FALSE), mAmxBusyTimeout(5)
+using namespace std;
+
+CServerCMP::CServerCMP(CObject *object) :
+		mnBusy(FALSE), mAmxBusyTimeout(5), mpController(0)
 {
-//	mapFunc[amx_control_request] = &CServerDevice::cmpAmxControl;
-//	mapFunc[amx_status_request] = &CServerDevice::cmpAmxStatus;
-//	mapFunc[bind_request] = &CServerDevice::cmpBind;
-//	mapFunc[unbind_request] = &CServerDevice::cmpUnbind;
+	mpController = object;
 }
 
 CServerCMP::~CServerCMP()
@@ -25,34 +27,78 @@ CServerCMP::~CServerCMP()
 
 }
 
-int CServerCMP::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerCMP::onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-
 	mapClient[nSocket] = nSocket;
-	_log("[Server Device] Socket Client FD:%d Binded", nSocket);
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	_log("[CServerCMP] Socket Client FD:%d Binded", nSocket);
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 
-int CServerCMP::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerCMP::onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	deleteClient(nSocket);
-	sendPacket(dynamic_cast<CSocket*>(serverDevice), nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	if(mapClient.end() != mapClient.find(nSocket))
+	{
+		mapClient.erase(nSocket);
+		_log("[Server Device] Socket Client FD:%d Unbinded", nSocket);
+	}
 	return TRUE;
 }
 
-int CServerCMP::onBind(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
+int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
+	string strBody;
+	string strCommand;
+	AMX_COMMAND amxCommand;
 
-}
+	strBody = reinterpret_cast<const char*>(szBody);
 
-int CServerCMP::onUnbind(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
-{
+	if(!strBody.empty())
+	{
+		JSONObject *jobj = new JSONObject(strBody);
+		if(jobj->isValid())
+		{
+			amxCommand.nFunction = jobj->getInt("function");
+			amxCommand.nDevice = jobj->getInt("device");
+			amxCommand.nControl = jobj->getInt("control");
+			strCommand = getAMXControlRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nControl);
+			if(!strCommand.empty())
+			{
+				response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+				if(mnBusy)
+				{
+					nStatus = STATUS_RSYSBUSY;
+					_log("[Server Device] AMX Control Request Fail, System Busy, Socket FD:%d", nSocket);
+				}
+				else
+				{
+					mnBusy = TRUE;
+					_log("[Server Device] AMX Controller Busy set to True");
+					nStatus = STATUS_ROK;
+					(*mapCallback[CB_AMX_COMMAND_CONTROL])(static_cast<void*>(const_cast<char*>(strCommand.c_str())));
 
-}
+					setTimer(TIMER_ID_AMX_BUSY, mAmxBusyTimeout, 0);
+				}
+			}
+			else
+			{
+				response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+			}
+		}
+		else
+		{
+			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+		}
 
-int CServerCMP::cmpAmxControl(int nSocket, int nCommand, int nSequence, const void *pData)
-{
+		jobj->release();
+		delete jobj;
+
+	}
+	else
+	{
+		response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+	}
+
 	int nStatus = STATUS_RINVBODY;
 
 	CDataHandler<string> rData;
@@ -108,15 +154,7 @@ int CServerCMP::cmpAmxControl(int nSocket, int nCommand, int nSequence, const vo
 	return FALSE;
 }
 
-/**
- * AMX Status Request
- * {
- "function": 1,
- "device": 0,
- " request-status ": 1
- }
- */
-int CServerCMP::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerCMP::onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	int nStatus = STATUS_RINVBODY;
 
@@ -160,30 +198,6 @@ int CServerCMP::cmpAmxStatus(int nSocket, int nCommand, int nSequence, const voi
 	return FALSE;
 }
 
-void CServerCMP::addClient(const int nSocketFD)
-{
-	_log("[Server Device] Socket Client FD:%d Connected", nSocketFD);
-}
-
-void CServerCMP::deleteClient(const int nSocketFD)
-{
-	if(mapClient.end() != mapClient.find(nSocketFD))
-	{
-		mapClient.erase(nSocketFD);
-		_log("[Server Device] Socket Client FD:%d Unbinded", nSocketFD);
-	}
-	_log("[Server Device] Socket Client FD:%d Disconnected", nSocketFD);
-}
-
-/**
- * AMX Status Response
- {
- “function”:1,
- “device”:0,
- “status”:1
- }
- *
- */
 void CServerCMP::broadcastAMXStatus(const char *szStatus)
 {
 	int nId = AMX_STATUS_RESP[szStatus];

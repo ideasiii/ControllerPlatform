@@ -11,6 +11,7 @@
 #include "config.h"
 #include "CConfig.h"
 #include "CServerCMP.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -127,7 +128,7 @@ using namespace std;
 //	return nRet;
 //}
 CController::CController() :
-		mnMsqKey(-1), serverAMX(0), serverDevice(0)
+		mnMsqKey(-1), serverAMX(0), serverCMP(0)
 {
 
 }
@@ -140,7 +141,7 @@ CController::~CController()
 int CController::onCreated(void* nMsqKey)
 {
 	serverAMX = new CServerAMX(this);
-	serverDevice = new CServerDevice(this);
+	serverCMP = new CServerCMP(this);
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_AMX;
 	return mnMsqKey;
 }
@@ -181,7 +182,7 @@ int CController::onInitial(void* szConfPath)
 						if(!strTimer.empty())
 						{
 							convertFromString(nSecond, strTimer);
-							serverDevice->setAmxBusyTimeout(nSecond);
+							serverCMP->setAmxBusyTimeout(nSecond);
 						}
 						nRet = TRUE;
 					}
@@ -203,11 +204,11 @@ int CController::onFinish(void* nMsqKey)
 		serverAMX = 0;
 	}
 
-	if(serverDevice)
+	if(serverCMP)
 	{
-		serverDevice->stop();
-		delete serverDevice;
-		serverDevice = 0;
+		serverCMP->stop();
+		delete serverCMP;
+		serverCMP = 0;
 	}
 
 	return TRUE;
@@ -257,5 +258,5 @@ int CController::startServerAMX(const int nPort, const int nMsqId)
 
 int CController::startServerDevice(const int nPort, const int nMsqId)
 {
-	return serverDevice->start(0, nPort, nMsqId);
+	return serverCMP->start(0, nPort, nMsqId);
 }

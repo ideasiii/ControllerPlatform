@@ -14,7 +14,7 @@ LD        := g++
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
-SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*))) $(DIR_APP_ROOT)main/main.cpp
+SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
@@ -25,8 +25,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
-			-lm -lrt -ldl \
-			-lsqlite3
+			-lm -lrt -ldl
 					
 vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 

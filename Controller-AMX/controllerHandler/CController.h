@@ -13,12 +13,8 @@
 #include <map>
 #include "CApplication.h"
 
-class CCmpHandler;
-class CThreadHandler;
-class CJsonHandler;
 class CServerAMX;
-class CServerDevice;
-class CSocket;
+class CServerCMP;
 
 class CController: public CApplication
 {
@@ -45,5 +41,5 @@ protected:
 private:
 	int mnMsqKey;
 	CServerAMX *serverAMX;
-	CServerDevice *serverDevice;
+	CServerCMP *serverCMP;
 };
