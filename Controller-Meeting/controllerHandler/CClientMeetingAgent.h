@@ -9,7 +9,9 @@
 #include "CMPData.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
 
+class CClientAmxController;
 class CCmpHandler;
+class CConfig;
 class CSocketClient;
 class UserAppVersionHandler;
 
@@ -18,10 +20,16 @@ class CClientMeetingAgent: public CSocketClient
 public:
 	void onReceive(const int nSocketFD, const void *pData);
 public:
-	// ownership of appLinkHandler will be transfered!
-	explicit CClientMeetingAgent(UserAppVersionHandler *appVerHandler);
-
+	// Ownership of appLinkHandler will be transfered!
+	// Do not use appVerHandler outside CClientMeetingAgent later on
+	explicit CClientMeetingAgent();
 	virtual ~CClientMeetingAgent();
+
+	// Intializes members that needs parameters in config.
+	// Returns FALSE if anything bad happens
+	int initMember(std::unique_ptr<CConfig> &config);
+	int initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
+
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
 	int sendCommand(int commandID, int seqNum, string bodyData);
@@ -50,4 +58,5 @@ private:
 	
 	DoorAccessHandler doorAccessHandler;
 	unique_ptr<UserAppVersionHandler> userAppVersionHandler;
+	unique_ptr<CClientAmxController> amxControllerClient;
 };

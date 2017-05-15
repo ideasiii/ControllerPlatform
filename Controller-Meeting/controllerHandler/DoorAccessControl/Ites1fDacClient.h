@@ -11,7 +11,7 @@
 class Ites1fDacClient
 {
 public:
-	Ites1fDacClient(const char* ip, int port, const uint8_t* key);
+	Ites1fDacClient(const std::string ip, int port, const uint8_t* key);
 	~Ites1fDacClient();
 
 	/**

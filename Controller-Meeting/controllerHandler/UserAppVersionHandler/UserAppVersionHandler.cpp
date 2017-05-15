@@ -15,7 +15,6 @@
 
 void *threadStartRoutine_UserAppVersionHandler_runWatcher(void *argv)
 {
-
 	_log("[UserAppVersionHandler] threadStartRoutine_UserAppVersionHandler_runWatcher() step in");
 
 	auto uadlh = reinterpret_cast<UserAppVersionHandler*>(argv); 
@@ -60,7 +59,7 @@ void UserAppVersionHandler::stop()
 
 void UserAppVersionHandler::runWatcher()
 {
-	_log("[UserAppVersionHandler] Initializing members once before going into watch loop");
+	_log("[UserAppVersionHandler] runWatcher() Initializing members once before going into watch loop");
 	reload();
 
 	while(doLoop)
@@ -72,20 +71,18 @@ void UserAppVersionHandler::runWatcher()
 				&inotifyFd, &inotifyWd, watchDir.c_str(), inotifyEventMask);
 			if (ret == 0)
 			{
-				_log("[UserAppVersionHandler] Watch created, break creating loop");
+				_log("[UserAppVersionHandler] runWatcher() watch created, break creating loop");
 				break;
 			}	
 			
 			lastUpdated = -1;
 			sleep(10);
-		} while(true);
+		} while(doLoop);
 		
 		int maxFd = inotifyFd + 1;
+		_log("[UserAppVersionHandler] runWatcher() watching changes in %s", watchDir.c_str());
 		
-				
-		_log("[UserAppVersionHandler] Watching changes in %s", watchDir.c_str());
-		
-		while(true)
+		while(doLoop)
 		{
 			fd_set readFdSet;
 			FD_ZERO(&readFdSet);
@@ -105,7 +102,7 @@ void UserAppVersionHandler::runWatcher()
 				// timeout
 				if (!doLoop)
 				{
-					_log("[UserAppVersionHandler] doLoop = false, break loop", ret);
+					_log("[UserAppVersionHandler] runWatcher() doLoop = false, break loop", ret);
 					break;
 				}
 				else
@@ -117,11 +114,11 @@ void UserAppVersionHandler::runWatcher()
 			{
 				if (errno != EINTR)
 				{
-					_log("[UserAppVersionHandler] select() returned with EINTR, try again");
+					_log("[UserAppVersionHandler] runWatcher() select() returned with EINTR, try again");
 					continue;
 				}
 
-				_log("[UserAppVersionHandler] select() failed: %s", strerror(errno));
+				_log("[UserAppVersionHandler] runWatcher() select() failed: %s", strerror(errno));
 				break;
 			}
 			
@@ -130,11 +127,11 @@ void UserAppVersionHandler::runWatcher()
 			
 			if (len < 1)
 			{
-				_log("[UserAppVersionHandler] read() failed: %s", strerror(errno));
+				_log("[UserAppVersionHandler] runWatcher() read() failed: %s", strerror(errno));
 				break;
 			}
 
-			_log("[UserAppVersionHandler] Detected dir change, len = %d", len);
+			_log("[UserAppVersionHandler] runWatcher() detected dir change, len = %d", len);
 			
 			int i = 0;
 			while (i < len) 
@@ -156,16 +153,15 @@ void UserAppVersionHandler::runWatcher()
 
 		inotify_rm_watch(inotifyFd, inotifyWd);
 		close(inotifyFd);
-		inotifyFd = -1;
 		
 		if (doLoop)
 		{
-			_log("[UserAppVersionHandler] Sleep before doing next watch loop");
+			_log("[UserAppVersionHandler] runWatcher() sleep before next watch loop");
 			sleep(10);
-		}	
+		}
 	}
 
-	_log("[UserAppVersionHandler] Exit runWatcher()");
+	_log("[UserAppVersionHandler] runWatcher() exit");
 }
 
 void UserAppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,

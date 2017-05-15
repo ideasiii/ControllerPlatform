@@ -2,7 +2,6 @@
 #include <memory>
 #include "event.h"
 #include "utility.h"
-#include "AndroidPackageInfoQuierer.hpp"
 #include "CClientMeetingAgent.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
@@ -21,7 +20,6 @@
 using namespace std;
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
-#define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG"
 
 CController::CController() :
 		mnMsqKey(-1), mCClientMeetingAgent(nullptr),
@@ -68,7 +66,7 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 
-	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "ip");
+	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "server_ip");
 	string strPort = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "port");
 	
 	if (strServerIp.empty() || strPort.empty())
@@ -80,16 +78,16 @@ int CController::onInitial(void* szConfPath)
 	int nPort;
 	convertFromString(nPort, strPort);
 
-	auto userAppVersionHandler = initUserAppVersionHandler(config);
-	if (userAppVersionHandler == nullptr)
+	mCClientMeetingAgent = new CClientMeetingAgent();
+	nRet = mCClientMeetingAgent->initMember(config);
+	if (nRet == FALSE)
 	{
+		_log("[CController] onInitial() mCClientMeetingAgent->configMember() failed");
 		return FALSE;
 	}
 
-	mCClientMeetingAgent = new CClientMeetingAgent(userAppVersionHandler);
 	nRet = startClientMeetingAgent(strServerIp, nPort, mnMsqKey);
-	
-	if (!nRet)
+	if (nRet == FALSE)
 	{
 		_log("[CController] onInitial() Start CClientMeetingAgent Failed. Port: %d, MsqKey: %d", nPort, mnMsqKey);
 	}
@@ -99,35 +97,6 @@ int CController::onInitial(void* szConfPath)
 	}
 
 	return nRet;
-}
-
-UserAppVersionHandler *CController::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
-{
-	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
-	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
-	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
-	string strDownloadLinkBase = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "download_link_base");
-	
-	if (!strAaptPath.empty()  && !strApkDir.empty()
-		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
-	{
-		_log("[CController] onInitial(): get UserApkPeekingAppVersionHandler");
-		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
-		return new UserApkPeekingAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
-	} 
-
-	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
-	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
-	
-	if (!strAppDownloadLinkConfigDir.empty() 
-		&& !strAppDownloadLinkConfigName.empty())
-	{
-		_log("[CController] onInitial(): get UserConfigFileAppVersionHandler");
-		return new UserConfigFileAppVersionHandler(strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
-	}
-
-	_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
-	return nullptr;
 }
 
 int CController::onFinish(void* nMsqKey)

@@ -152,8 +152,9 @@ __attribute__ ((unused)) static long int nowSecond()
 	return tnow;
 }
 
+// 將 i 的數值轉換為 16 進位表示法的字串
 template<typename T>
-std::string numberToHex(T i)
+__attribute__ ((unused)) static std::string numberToHex(T i)
 {
 	std::stringstream stream;
 	stream << "0x"

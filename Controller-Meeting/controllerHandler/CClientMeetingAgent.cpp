@@ -1,18 +1,27 @@
+#include "CClientMeetingAgent.h"
+
 #include "IReceiver.h"
 #include "event.h"
 #include "common.h"
-#include "CClientMeetingAgent.h"
+#include "AndroidPackageInfoQuierer.hpp"
+#include "CClientAmxController.h"
 #include "CCmpHandler.h"
+#include "CConfig.h"
 #include "CDataHandler.cpp"
 #include "TestStringsDefinition.h"
 #include "JSONObject.h"
 #include "ICallback.h"
 #include "packet.h"
-#include "UserAppVersionHandler/UserAppVersionHandler.h"
 #include "CThreadHandler.h"
+#include "UserAppVersionHandler/UserAppVersionHandler.h"
+#include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
+#include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
 
-CClientMeetingAgent::CClientMeetingAgent(UserAppVersionHandler *appVerHandler) :
-	CSocketClient(), cmpParser(CCmpHandler::getInstance()), userAppVersionHandler(appVerHandler)
+#define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG WATCHER"
+#define CONF_BLOCK_AMX_CONTROLLER "CLIENT AMX CONTROLLER"
+
+CClientMeetingAgent::CClientMeetingAgent() :
+	CSocketClient(), cmpParser(CCmpHandler::getInstance())
 {
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBindResponse;
 	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbindResponse;
@@ -31,6 +40,61 @@ CClientMeetingAgent::~CClientMeetingAgent()
 	{
 		userAppVersionHandler->stop();
 	}
+}
+
+int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
+{
+	if (initUserAppVersionHandler(config) == FALSE)
+	{
+		return FALSE;
+	}
+
+	string strAmxControllerIp = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "server_ip");
+	string strAmxControllerPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "port");
+	if (strAmxControllerIp.empty() || strAmxControllerPort.empty())
+	{
+		_log("[CController] onInitial(): AMX controller client config 404");
+		return FALSE;
+	}
+
+	int amxControllerPort;
+	convertFromString(amxControllerPort, strAmxControllerPort);
+	amxControllerClient.reset(new CClientAmxController(strAmxControllerIp, amxControllerPort));
+
+	return doorAccessHandler.initMember(config);
+}
+
+int CClientMeetingAgent::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
+{
+	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
+	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
+	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
+	string strDownloadLinkBase = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "download_link_base");
+
+	if (!strAaptPath.empty() && !strApkDir.empty()
+		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
+	{
+		_log("[CController] onInitial(): init UserApkPeekingAppVersionHandler");
+		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
+		userAppVersionHandler.reset(new UserApkPeekingAppVersionHandler(
+			apkQuierer, strPkgName, strApkDir, strDownloadLinkBase));
+		return TRUE;
+	}
+
+	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
+	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
+
+	if (!strAppDownloadLinkConfigDir.empty()
+		&& !strAppDownloadLinkConfigName.empty())
+	{
+		_log("[CController] onInitial(): init UserConfigFileAppVersionHandler");
+		userAppVersionHandler.reset(new UserConfigFileAppVersionHandler(
+			strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName));
+		return TRUE;
+	}
+
+	_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
+	return FALSE;
 }
 
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
@@ -338,18 +402,21 @@ int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSeq
 
 	if (htonl(cmpPacket->cmpHeader.command_length) > 16)
 	{
-		_log("[ClientMeetingAgent] In CMPQRcodeToken get body:%s", cmpPacket->cmpBody.cmpdata);
+		_log("[ClientMeetingAgent] In CMPQRcodeToken get body: %s", cmpPacket->cmpBody.cmpdata);
 		string strRequestBodyData = string(cmpPacket->cmpBody.cmpdata);
 		string strResponseBodyData = "";
 
-		if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos
+		if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
 			&& strRequestBodyData.find("ITES_101") != string::npos)
 		{
 			//OK can control AMX
-			strResponseBodyData =
-				"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"54.199.198.94\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
-				//"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"175.98.119.121\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
 
+			std::stringstream ss;
+			ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
+				<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerClient->getServerIp()
+				<< "\", \"ROOM_PORT\": " << amxControllerClient->getServerPort()
+				<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
+			strResponseBodyData = ss.str();
 		}
 		else
 		{

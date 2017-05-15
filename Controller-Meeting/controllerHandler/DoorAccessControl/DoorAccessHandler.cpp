@@ -1,18 +1,41 @@
 #include "DoorAccessHandler.h"
+
 #include <chrono>
-#include "DoorAccessControllerParams.h"
-#include "../CryptoKey.h"
+#include "common.h"
+#include "utility.h"
+#include "CConfig.h"
 #include "../TestStringsDefinition.h"
 
-DoorAccessHandler::DoorAccessHandler() :
-	ites1fDoor((char *)ITES_1F_DOOR_ACCESS_CONTROLLER_IP,
-		ITES_1F_DOOR_ACCESS_CONTROLLER_PORT,
-		(uint8_t*)ITES_1F_DOOR_CONTROL_AES_KEY)
+#define CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER "CLIENT ITES 1F DOOR CONTROLLER"
+
+DoorAccessHandler::DoorAccessHandler()
 {
 }
 
 DoorAccessHandler::~DoorAccessHandler()
 {
+}
+
+int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
+{
+	string strItes1fServerIp = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "server_ip");
+	string strItes1fServerPort = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "port");
+	string strItes1fServerAesKey = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "aes_key");
+
+	if (strItes1fServerIp.empty() || strItes1fServerPort.empty()
+		|| strItes1fServerAesKey.empty())
+	{
+		_log("[DoorAccessHandler] configMember() 404");
+		return FALSE;
+	}
+
+	int ites1fServerPort;
+	convertFromString(ites1fServerPort, strItes1fServerPort);
+	
+	this->ites1fDoor = std::make_unique<Ites1fDacClient>(strItes1fServerIp,
+		ites1fServerPort, (uint8_t*)strItes1fServerAesKey.c_str());
+
+	return TRUE;
 }
 
 std::string DoorAccessHandler::doRequestDummy(std::string uuid, std::string meetingRoom)
@@ -79,7 +102,7 @@ std::string DoorAccessHandler::doRequest(std::string uuid, std::string meetingRo
 	}
 
 	std::string errorDescription;
-	bool apiCallOk = ites1fDoor.doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
+	bool apiCallOk = ites1fDoor->doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
 	if (!apiCallOk)
 	{
 		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY failed to open: "

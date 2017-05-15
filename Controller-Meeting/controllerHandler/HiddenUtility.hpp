@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "LogHandler.h"
 
+// Some functions in HiddenUtility requires C++11 support
 class HiddenUtility
 {
 public:
