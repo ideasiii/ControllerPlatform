@@ -202,6 +202,16 @@ inline static string getAMXStatusRequest(const int nFunction, const int nDevice,
 	return strCommand;
 }
 
+inline static int getAMXStatusResponse(const char * szCommand)
+{
+	int nStatus = -1;
+	map<string, int>::const_iterator it;
+	it = AMX_STATUS_RESP.find(szCommand);
+	if(AMX_STATUS_RESP.end() != it)
+		nStatus = AMX_STATUS_RESP[szCommand];
+	return nStatus;
+}
+
 //================================================================================================================================
 /** deprecated **/
 template<typename T, typename U, typename V, typename W>

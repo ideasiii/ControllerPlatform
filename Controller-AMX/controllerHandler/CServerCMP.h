@@ -18,6 +18,7 @@ class CServerCMP: public CCmpServer
 		int nFunction;
 		int nDevice;
 		int nControl;
+		int nStatus;
 	} AMX_COMMAND;
 public:
 	CServerCMP(CObject *object);
@@ -25,18 +26,14 @@ public:
 	void broadcastAMXStatus(const char *szStatus);
 	void addClient(const int nSocketFD);
 	void deleteClient(const int nSocketFD);
-	void setAmxBusyTimeout(int nSec);
 
 protected:
-	void onTimer(int nId);
 	int onBind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
-	volatile int mnBusy;
-	int mAmxBusyTimeout;
 	std::map<int, int> mapClient;
 	CObject *mpController;
 

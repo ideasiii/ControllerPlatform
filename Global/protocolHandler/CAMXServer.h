@@ -21,8 +21,8 @@ public:
 protected:
 	void onTimer(int nId);
 	int onTcpReceive(unsigned long int nSocketFD);
-	void onClientConnect(unsigned long int nSocketFD);
-	void onClientDisconnect(unsigned long int nSocketFD);
+	virtual void onClientConnect(unsigned long int nSocketFD);
+	virtual void onClientDisconnect(unsigned long int nSocketFD);
 	virtual int onAmxStatus(unsigned long int nSocketFD, const char *szStatus) = 0;
 
 private:

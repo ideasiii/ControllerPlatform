@@ -29,16 +29,6 @@ protected:
 	void onHandleMessage(Message &message);
 
 private:
-	int startServerAMX(const int nPort, const int nMsqId);
-	int startServerDevice(const int nPort, const int nMsqId);
-
-protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
-	{
-	}
-	;
-
-private:
 	int mnMsqKey;
 	CServerAMX *serverAMX;
 	CServerCMP *serverCMP;

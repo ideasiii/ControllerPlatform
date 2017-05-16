@@ -54,11 +54,14 @@ int CApplication::callback(int nMsg, void* param)
 
 void CApplication::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
-	switch(nCommand)
-	{
 
-	}
 }
+
+void CApplication::onHandleMessage(Message &message)
+{
+
+}
+
 void CApplication::setConfPath(const char * szPath)
 {
 	mstrConfPath = szPath;
