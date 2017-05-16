@@ -3,14 +3,12 @@
 #include "utility.h"
 #include "common.h"
 #include "CClientControllerMongoDB.h"
-#include "CCmpHandler.h"
-#include "CDataHandler.cpp"
 #include "JSONObject.h"
 #include "packet.h"
 #include "DynamicField.h"
 
 CClientControllerMongoDB::CClientControllerMongoDB(CObject * object) :
-		cmpParser(CCmpHandler::getInstance()), dynamicField(new DynamicField)
+		dynamicField(new DynamicField)
 {
 	mpController = object;
 	dynamicField->setMySQLInfo("175.98.119.121", "tracker", "ideas123!", "ideas", "field");
@@ -20,24 +18,11 @@ CClientControllerMongoDB::~CClientControllerMongoDB()
 {
 
 }
-/*
-int CClientControllerMongoDB::onAccesslogResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	//deal with response
-	_log("[CClientControllerMongoDB]onAccesslogResponse");
-	return TRUE;
-}
-
-int CClientControllerMongoDB::onEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	_log("[CClientControllerMongoDB] Get Enquire Link Response!");
-	return 1;
-}
-*/
 
 int CClientControllerMongoDB::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_log("[CClientControllerMongoDB] Get Response!!");
+	//_log("[CClientControllerMongoDB] Get AccessLog Response!! Status:%d Sequence: %d ", nStatus, nSequence);
+	printPacket(nCommand, nStatus, nSequence, 16, "[CClientControllerMongoDB] onResponse Response ", nSocket);
 	return 0;
 }
 

@@ -23,7 +23,7 @@ CCmpClient::CCmpClient() :
 
 CCmpClient::~CCmpClient()
 {
-	_log("[CCmpClient] ~CCmpClient");
+	//_log("[CCmpClient] ~CCmpClient");
 	stop();
 	delete confCmpClient;
 }

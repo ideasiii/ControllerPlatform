@@ -25,13 +25,9 @@ private:
 	int cmpAccessLogRequest(string strType, string strLog);
 	int cmpEnquireLinkRequest(const int nSocketFD);
 
-	//int onAccesslogResponse(int nSocket, int nCommand, int nSequence, const void *szBody);
-	//int onEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 
-	CCmpHandler *cmpParser;
 	DynamicField * dynamicField;
-
 	CObject *mpController;
 
 

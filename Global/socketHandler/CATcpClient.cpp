@@ -91,6 +91,7 @@ int CATcpClient::connect(const char* cszAddr, short nPort, int nMsqKey)
 	int nSocketFD;
 	IDLE_TIMEOUT = 10; //second
 	mnExtMsqKey = FALSE;
+	munRunThreadId = 0;
 
 	if (-1 != nMsqKey)
 	{
@@ -130,6 +131,7 @@ int CATcpClient::connect(const char* cszAddr, short nPort, int nMsqKey)
 			return -1;
 		}
 
+		_log("munRunThreadId: %d", munRunThreadId);
 		if (0 != munRunThreadId)
 		{
 			threadCancel(munRunThreadId);
@@ -155,28 +157,27 @@ void CATcpClient::stop()
 	 * Close Message queue run thread
 	 */
 
-	_log("[CATcpClient] Close Message Queue START");
+//	_log("[CATcpClient] Close Message Queue START");
 	if (0 < munRunThreadId)
 	{
-		_log("[CATcpClient] munRunThreadId > 0");
+		//	_log("[CATcpClient] munRunThreadId > 0");
 		threadCancel(munRunThreadId);
 		threadJoin(munRunThreadId);
 		munRunThreadId = 0;
 
 		if (mnExtMsqKey == FALSE)
 		{
-			_log("[CATcpClient] closeMsg");
+			//	_log("[CATcpClient] closeMsg");
 			CMessageHandler::closeMsg(CMessageHandler::registerMsq(mnMsqKey));
 		}
 	}
 	else
 	{
-		_log("[CATcpClient] munRunThreadId < 0");
+		//_log("[CATcpClient] munRunThreadId < 0");
 	}
-	_log("[CATcpClient] Close Message Queue END");
+	//_log("[CATcpClient] Close Message Queue END");
 
-	_log("[CATcpClient] Close all Client Socket START");
-
+	//_log("[CATcpClient] Close all Client Socket START");
 
 	//threadCancel(getThreadID());
 	//_log("[CATcpClient] Close all Client threadCancel END");
