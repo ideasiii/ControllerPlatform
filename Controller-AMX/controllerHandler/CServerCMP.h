@@ -19,6 +19,8 @@ class CServerCMP: public CCmpServer
 		int nDevice;
 		int nControl;
 		int nStatus;
+		std::string strToken;
+		std::string strId;
 	} AMX_COMMAND;
 public:
 	CServerCMP(CObject *object);

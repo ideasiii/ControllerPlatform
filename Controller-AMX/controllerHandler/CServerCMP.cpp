@@ -62,6 +62,8 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 			amxCommand.nFunction = jobj->getInt("function");
 			amxCommand.nDevice = jobj->getInt("device");
 			amxCommand.nControl = jobj->getInt("control");
+			amxCommand.strToken = jobj->getString("TOKEN");
+			amxCommand.strId = jobj->getString("ID");
 			strCommand = getAMXControlRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nControl);
 			if(!strCommand.empty())
 			{

@@ -15,9 +15,16 @@
 
 class CServerAMX;
 class CServerCMP;
+class CServerAuth;
 
 class CController: public CApplication
 {
+	typedef struct _AMX_CTRL_AUTH
+	{
+		std::string strToken;
+		std::string strId;
+	} AMX_CTRL_AUTH;
+
 public:
 	explicit CController();
 	virtual ~CController();
@@ -32,4 +39,5 @@ private:
 	int mnMsqKey;
 	CServerAMX *serverAMX;
 	CServerCMP *serverCMP;
+	CServerAuth *serverAuth;
 };
