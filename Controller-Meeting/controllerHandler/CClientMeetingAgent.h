@@ -4,10 +4,10 @@
 #include <map>
 #include <memory>
 
-#include "CSocketClient.h"
-#include "ICallback.h"
 #include "CMPData.h"
+#include "CSocketClient.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
+#include "ICallback.h"
 
 class CClientAmxController;
 class CCmpHandler;
@@ -28,7 +28,6 @@ public:
 	// Intializes members that needs parameters in config.
 	// Returns FALSE if anything bad happens
 	int initMember(std::unique_ptr<CConfig> &config);
-	int initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
 
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
@@ -49,13 +48,14 @@ private:
 	int cmpBindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpUnbindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 
-
 	//MeetingAgent Request for SmartBuilding
 	int cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 	
+	int initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
+
 	DoorAccessHandler doorAccessHandler;
 	unique_ptr<UserAppVersionHandler> userAppVersionHandler;
 	unique_ptr<CClientAmxController> amxControllerClient;

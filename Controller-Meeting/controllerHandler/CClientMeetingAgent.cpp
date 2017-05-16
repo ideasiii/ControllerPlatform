@@ -1,18 +1,18 @@
 #include "CClientMeetingAgent.h"
 
-#include "IReceiver.h"
-#include "event.h"
 #include "common.h"
+#include "event.h"
+#include "packet.h"
 #include "AndroidPackageInfoQuierer.hpp"
 #include "CClientAmxController.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
 #include "CDataHandler.cpp"
-#include "TestStringsDefinition.h"
-#include "JSONObject.h"
-#include "ICallback.h"
-#include "packet.h"
 #include "CThreadHandler.h"
+#include "ICallback.h"
+#include "IReceiver.h"
+#include "JSONObject.h"
+#include "TestStringsDefinition.h"
 #include "UserAppVersionHandler/UserAppVersionHandler.h"
 #include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
 #include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
@@ -34,12 +34,7 @@ CClientMeetingAgent::CClientMeetingAgent() :
 
 CClientMeetingAgent::~CClientMeetingAgent()
 {
-	stop();
-
-	if (this->userAppVersionHandler != nullptr)
-	{
-		userAppVersionHandler->stop();
-	}
+	stopClient();
 }
 
 int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
@@ -50,20 +45,26 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 	}
 
 	string strAmxControllerIp = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "server_ip");
-	string strAmxControllerPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "port");
-	if (strAmxControllerIp.empty() || strAmxControllerPort.empty())
+	string strAmxControllerUserControlPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "user_port");
+	string strAmxControllerValidationPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "validation_port");
+	if (strAmxControllerIp.empty() || strAmxControllerUserControlPort.empty()
+		|| strAmxControllerValidationPort.empty())
 	{
 		_log("[CController] onInitial(): AMX controller client config 404");
 		return FALSE;
 	}
 
-	int amxControllerPort;
-	convertFromString(amxControllerPort, strAmxControllerPort);
-	amxControllerClient.reset(new CClientAmxController(strAmxControllerIp, amxControllerPort));
+	int amxControllerUserControlPort;
+	int amxControllerValidationPort;
+	convertFromString(amxControllerUserControlPort, strAmxControllerUserControlPort);
+	convertFromString(amxControllerValidationPort, strAmxControllerValidationPort);
+	amxControllerClient.reset(new CClientAmxController(strAmxControllerIp,
+		amxControllerUserControlPort, amxControllerValidationPort));
 
 	return doorAccessHandler.initMember(config);
 }
 
+// 根據 config 檔有甚麼可以用的就初始化其中一種 UserAppVersionHandler
 int CClientMeetingAgent::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
 {
 	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
@@ -188,6 +189,17 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 void CClientMeetingAgent::stopClient()
 {
 	stop();
+
+	if (this->userAppVersionHandler != nullptr)
+	{
+		userAppVersionHandler->stop();
+	}
+
+	if (amxControllerClient != nullptr)
+	{
+		//amxControllerClient->stop();
+	}
+
 }
 
 void CClientMeetingAgent::onReceive(const int nSocketFD, const void *pData)
@@ -396,7 +408,6 @@ int CClientMeetingAgent::cmpGetMeetingData(int nSocket, int nCommand, int nSeque
 
 int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	_DBG("[CClientMeetingAgent]cmpAMXControlAcess");
 	const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
 	_log("[ClientMeetingAgent] In CMPAMXControlAccess get body: %s", cmpPacket->cmpBody.cmpdata);
 
@@ -406,25 +417,31 @@ int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSeq
 		string strRequestBodyData = string(cmpPacket->cmpBody.cmpdata);
 		string strResponseBodyData = "";
 
+		std::stringstream ss;
+
 		if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
 			&& strRequestBodyData.find("ITES_101") != string::npos)
 		{
 			//OK can control AMX
-
-			std::stringstream ss;
 			ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
 				<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerClient->getServerIp()
-				<< "\", \"ROOM_PORT\": " << amxControllerClient->getServerPort()
+				<< "\", \"ROOM_PORT\": " << amxControllerClient->getUserPort()
 				<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
 			strResponseBodyData = ss.str();
 		}
 		else
 		{
 			//NO can not control AMX
-			strResponseBodyData = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\",\"RESULT\": false}";
+			ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
+				<< "\", \"RESULT\": false}";
+			strResponseBodyData = ss.str();
 		}
 
 		sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);
+	}
+	else 
+	{
+		// pdu bad size, send reject
 	}
 
 	return TRUE;

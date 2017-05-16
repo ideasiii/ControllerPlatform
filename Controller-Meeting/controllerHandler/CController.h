@@ -1,12 +1,12 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
-#include "CApplication.h"
+#include <string>
+#include <vector>
 #include "common.h"
 #include "packet.h"
+#include "CApplication.h"
 
 using namespace std;
 
@@ -34,10 +34,10 @@ protected:
 	virtual void onHandleMessage(Message &message);
 private:
 	int mnMsqKey; 
-	CClientMeetingAgent *mCClientMeetingAgent;
+	std::unique_ptr<CClientMeetingAgent> mCClientMeetingAgent;
 
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
+	std::unique_ptr<CThreadHandler> tdEnquireLink;
+	std::unique_ptr<CThreadHandler> tdExportLog;
 	std::vector<int> vEnquireLink;
 
 	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);

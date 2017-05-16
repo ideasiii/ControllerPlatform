@@ -1,5 +1,6 @@
 #include <list>
 #include <memory>
+#include <limits.h>
 #include "event.h"
 #include "utility.h"
 #include "CClientMeetingAgent.h"
@@ -11,6 +12,7 @@
 #include "CSocketClient.h"
 #include "CSocketServer.h"
 #include "CThreadHandler.h"
+#include "HiddenUtility.hpp"
 #include "ICallback.h"
 #include "JSONObject.h"
 #include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
@@ -46,16 +48,16 @@ int CController::onCreated(void* nMsqKey)
 
 int CController::onInitial(void* szConfPath)
 {
-	string strConfPath = reinterpret_cast<const char*>(szConfPath);
-	_log("[CController] onInitial() Config path = %s", strConfPath.c_str());
+	// We use the config lies under the same directory with process image
+	//string strConfPath = reinterpret_cast<const char*>(szConfPath);
+	
+	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
+	_log("[CController] onInitial() Config path = `%s`", strConfPath.c_str());
 	
 	if(strConfPath.empty())
 	{
 		return FALSE;
 	}
-	
-	tdEnquireLink = new CThreadHandler();
-	tdExportLog = new CThreadHandler();
 	
 	std::unique_ptr<CConfig> config = make_unique<CConfig>();
 	int nRet = config->loadConfig(strConfPath);
@@ -78,7 +80,7 @@ int CController::onInitial(void* szConfPath)
 	int nPort;
 	convertFromString(nPort, strPort);
 
-	mCClientMeetingAgent = new CClientMeetingAgent();
+	mCClientMeetingAgent.reset(new CClientMeetingAgent());
 	nRet = mCClientMeetingAgent->initMember(config);
 	if (nRet == FALSE)
 	{
@@ -96,6 +98,9 @@ int CController::onInitial(void* szConfPath)
 		_log("[CController] onInitial() Start CClientMeetingAgent Success. Port: %d, MsqKey: %d", nPort, mnMsqKey);
 	}
 
+	tdEnquireLink.reset(new CThreadHandler());
+	tdExportLog.reset(new CThreadHandler());
+
 	return nRet;
 }
 
@@ -104,7 +109,6 @@ int CController::onFinish(void* nMsqKey)
 	if (mCClientMeetingAgent != nullptr)
 	{
 		mCClientMeetingAgent->stopClient();
-		delete mCClientMeetingAgent;
 		mCClientMeetingAgent = nullptr;
 	}
 
@@ -112,7 +116,6 @@ int CController::onFinish(void* nMsqKey)
 	{
 		// TODO how to turn off?
 		//tdEnquireLink->thread?????????
-		delete tdEnquireLink;
 		tdEnquireLink = nullptr;
 	}
 
@@ -120,7 +123,6 @@ int CController::onFinish(void* nMsqKey)
 	{
 		// TODO how to turn off?
 		//tdExportLog->thread?????????
-		delete tdExportLog;
 		tdExportLog = nullptr;
 	}
 

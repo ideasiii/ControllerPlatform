@@ -49,6 +49,26 @@ public:
 		return hayLen >= needleLen && strcmp(hay + hayLen - needleLen, needle) == 0;
 	}
 
+	// Get path of current process
+	// This only works on Linux
+	static void getSelfExePath(char *dest, size_t destLen)
+	{
+		int pathLen = readlink("/proc/self/exe", dest, destLen);
+		dest[pathLen] = '\0';
+	}
+
+	// 取得與 process image 位於同一資料夾內的 config 檔
+	static std::string getConfigPathInProcessImageDirectory()
+	{
+		char selfExePath[PATH_MAX];
+
+		getSelfExePath(selfExePath, PATH_MAX);
+		std::string strConfPath(selfExePath);
+		strConfPath.append(".conf");
+
+		return strConfPath;
+	}
+
 private:
 	HiddenUtility()
 	{

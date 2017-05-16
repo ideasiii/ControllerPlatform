@@ -2,27 +2,75 @@
 # copy this file and rename to controller-meeting.conf before any editing
 # copy this file and rename to controller-meeting.conf before any editing
 
-#-------------------------------Client Service-------------------------------#
-[CLIENT MEETING_AGENT]
-ip     = 127.0.0.1
-port   = 2101
+# put it to bin/
+# put it to bin/
+# put it to bin/
 
-#-------------------------------System Log-------------------------------------------#
+# config file for controller-meeting
+
+#---------- System Log ----------#
 [LOG]
 # Base path of log file, date (yyyy-mm-dd) will be appended to the end
-log =
+log =/data/opt/tomcat/webapps/logs/Controller-Meeting.log
 
-[APP DOWNLOAD INFO CONFIG]
-# 2 ways to get app download link watcher working
+#---------- Client Service ----------#
+[CLIENT MEETING_AGENT]
+# controller-meetingagent 的 IP
+#server_ip = 175.98.119.121
+server_ip = 54.199.198.94
+#server_ip = 127.0.0.1
 
-# 1
-# why put config_name in config_dir?
-# TODO explain
-#config_dir = 
-#config_name = 
+port = 2101
 
-# 2: use apk scanner
-aapt_path = 
-apk_dir = 
-package_name = 
-download_link_base = 
+
+[CLIENT ITES 1F DOOR CONTROLLER]
+# 伺服器 IP
+#server_ip = 175.98.119.102
+server_ip = 192.168.127.1
+
+# 連接埠
+port = 57099
+
+# 加密用的 key, 長度為32字元
+aes_key = 0123456789abcdef0123456789abcdef
+
+
+[CLIENT AMX CONTROLLER]
+# AMX controller 的 IP
+server_ip = 54.199.198.94
+
+# 給使用者連線用的連接埠, 會回傳給 app 供它們連接 AMX controller
+user_port = 2309
+
+# 驗證 token 用的連接埠, controller-meeting 會作為客戶端連線到 AMX controller
+# 透過這個 port 接收 token 驗證要求
+validation_port = 2311
+
+
+[APP DOWNLOAD INFO CONFIG WATCHER]
+# app 版本檢查的相關設定. 當客戶端要求最新的 app 版本時
+# controller-meeting 會傳回最新的 app 版本以及下載位址
+#
+# 本區塊的設定都是要餵給 UserAppVersionHandler 的某個子類別, 每個子類別分別對應到一種監控方法.
+# 這些類別透過持續監控某個資料夾是否有更新內容, 及時更新要傳回給使用者的 app 版本以及下載網址
+# 每種方法會監控不同的東西. 若所有的參數皆有設定, 優先使用方法 2, 否則使用方法 1
+# 故以下的設定會使用方法 2 進行 app 版本 handling
+
+# 方法 1: 監控一個資料夾下的 json 檔案, json 檔寫有 app 版本以及下載網址.
+# 若發布新版本, 先把新版 apk 放在下載伺服器, 再修改 config_dir 下的 config_name 內的內容,
+# 就能在不重啟 controller-meeting 的情況下更新 UserAppVersionHandler 傳回給客戶端的最新 app 版本以及下載網址
+# config_name 指向的檔案應該包含的內容可以參考 app_version_handler_config.sample.json
+#config_dir = /you/can/put/json/file/in/the/dir/where/controller-meeting/resides
+#config_name = app_version_handler_config.json
+
+# 方法 2: 監控一個資料夾下的 apk 檔案
+# 這個方法需要使用 Android 官方發布的 aapt 工具才能運作, 在 aapt_path 指定 aapt 路徑
+# package_name 是 app 的 package name, 作為過濾非相關 apk 之用
+# download_link_base 是下載網址前綴，結尾不加上 '/'
+# 若發布新版本, 先把新版 apk 放在下載伺服器, 再把新版 apk 放在 apk_dir
+# 就能在不重啟 controller-meeting 的情況下更新 UserAppVersionHandler 傳回給客戶端的最新 app 版本
+# 下載網址就會是 [download_link_base]/[新版apk名稱], 故放在伺服器上的 apk 名稱要跟放在 apk_dir 內的 apk 名稱相同
+aapt_path = /full/path/of/android-sdk/build-tools/aapt
+apk_dir = /dir/where/apk/is
+package_name = packname.name.of.app
+download_link_base = https://domain.yo/folder-for-app-apks

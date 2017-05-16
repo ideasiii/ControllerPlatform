@@ -40,10 +40,18 @@ bool UserApkPeekingAppVersionHandler::onInotifyEvent(struct inotify_event *event
 
 void UserApkPeekingAppVersionHandler::reload()
 {
+	_log("[UserApkPeekingAppVersionHandler] reload() get version of apks in `%s`", watchDir.c_str());
+
 	int largestVersionCode = -1;
 	std::string newestApkName;
 
 	DIR* dirp = opendir(watchDir.c_str());
+	if (dirp == NULL)
+	{
+		_log("[UserApkPeekingAppVersionHandler] reload() opendir() failed: %s", strerror(errno));
+		return;
+	}
+
 	struct dirent * dp;
 
 	while ((dp = readdir(dirp)) != NULL) 

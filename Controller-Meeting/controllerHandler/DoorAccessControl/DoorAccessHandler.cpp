@@ -3,8 +3,8 @@
 #include <chrono>
 #include "common.h"
 #include "utility.h"
-#include "CConfig.h"
 #include "../TestStringsDefinition.h"
+#include "CConfig.h"
 
 #define CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER "CLIENT ITES 1F DOOR CONTROLLER"
 

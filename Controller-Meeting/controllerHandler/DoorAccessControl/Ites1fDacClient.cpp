@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <sstream>
 #include <string.h>
-
 #include "AesCrypto.h"
 #include "FakeCmpClient.h"
 #include "JSONObject.h"

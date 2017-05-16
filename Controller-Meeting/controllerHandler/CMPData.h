@@ -10,19 +10,17 @@
 #ifndef CONTROLLER_MEETINGAGENT_CONTROLLERHANDLER_CMPDATA_H_
 #define CONTROLLER_MEETINGAGENT_CONTROLLERHANDLER_CMPDATA_H_
 
-using namespace std;
-
 class CMPData
 {
 public:
 	CMPData();
 	CMPData(CMPData *);
-	CMPData(int,int,int ,string);
+	CMPData(int, int, int, std::string);
 	virtual ~CMPData();
 	int nFD;
 	int nSequence;
 	int nCommand;
-	string bodyData;
+	std::string bodyData;
 	bool isVaild();
 
 };
