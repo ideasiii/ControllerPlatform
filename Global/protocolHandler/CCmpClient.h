@@ -35,7 +35,8 @@ protected:
 	int onTcpReceive(unsigned long int nSocketFD);
 
 protected:
-	virtual int onAccesslog(int nSocket, int nCommand, int nSequence, const void *szBody)
+
+	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
 		return 0;
 	}

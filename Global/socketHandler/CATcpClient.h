@@ -25,7 +25,7 @@ class CATcpClient: public CSocket, public CObject
 	} SOCKET_SERVER;
 
 public:
-	int start(const char* cszAddr, short nPort, int nMsqKey);
+	int connect(const char* cszAddr, short nPort, int nMsqKey);
 	void stop();
 	void closeServer();
 	void runMessageReceive();

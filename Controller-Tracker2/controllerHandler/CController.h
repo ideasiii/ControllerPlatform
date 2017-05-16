@@ -12,7 +12,7 @@
 #include <list>
 #include <map>
 
-#include "CObject.h"
+#include "CApplication.h"
 #include "common.h"
 #include "packet.h"
 
@@ -23,34 +23,40 @@ class CServerAccessLog;
 class CSocket;
 class CClientControllerMongoDB;
 
-class CController: public CObject
+class CController: public CApplication
 {
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startServerAccesslog(std::string strIP, const int nPort);
-	void stopServerAccesslog();
-	void onMongoDBCommand(const void * param);
-	int startClientMongoDB(std::string strIP, const int nPort, const int nMsqId);
 	void runEnquireLinkRequest();
-	CCmpHandler *cmpParser;
-
 protected:
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 private:
-	explicit CController();
 
-	int reStartClientMongoDB();
-	int sendCommand(int commandID, int seqNum);
+	void setClientMongoValues(std::string, int ,int);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-	CServerAccessLog * cmpAccesslog;
+	int startServerAccesslog(std::string strIP, const int nPort, const int);
 
+	void onMongoDBCommand(const void * param);
+	int startClientMongoDB();
+
+
+
+	CServerAccessLog * cmpAccesslog;
 	CThreadHandler *tdEnquireLink;
-	//std::vector<int> vEnquireLink;
 	CClientControllerMongoDB *clientMongo;
 
-	std::string clientMongoDBIP;
-	int clientMongoDBPort;
-	int clientMongoDBMsqId;
+	std::string clientMongoIP;
+	int clientMongoPort;
+	int clientMongoMsqId;
+	bool clientMongoInit;
+
+	bool isEquireLinkThreadStart;
+
+	int mnMsqKey;
 };

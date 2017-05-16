@@ -17,14 +17,13 @@ CCmpClient::CCmpClient() :
 		confCmpClient(0)
 {
 
-	mapFunc[access_log_request] = &CCmpClient::onAccesslog;
-
 	confCmpClient = new CONF_CMP_CLIENT;
 	confCmpClient->init();
 }
 
 CCmpClient::~CCmpClient()
 {
+	_log("[CCmpClient] ~CCmpClient");
 	stop();
 	delete confCmpClient;
 }
@@ -44,32 +43,49 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	CMP_HEADER cmpHeader;
 	CMP_HEADER *pHeader;
 	pHeader = (CMP_HEADER *) pData;
+	char *pBody;
+	int nHeaderSize;
 
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
+	nHeaderSize = sizeof(CMP_HEADER);
+	memset(&cmpHeader, 0, nHeaderSize);
 
 	cmpHeader.command_id = ntohl(pHeader->command_id);
 	cmpHeader.command_length = ntohl(pHeader->command_length);
 	cmpHeader.command_status = ntohl(pHeader->command_status);
 	cmpHeader.sequence_number = ntohl(pHeader->sequence_number);
 
+	_log("[CCmpClient]onReceive %u", cmpHeader.command_id);
+
 	if (0 >= cmpHeader.command_length || MAX_SOCKET_READ < cmpHeader.command_length)
 	{
-		_log("[CCmpServer] onTcpReceive receive invaild packet");
+		_log("[CCmpClient] onTcpReceive receive invaild packet");
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDLEN, cmpHeader.sequence_number, 0);
 		return;
 	}
 
+	if (nHeaderSize < cmpHeader.command_length)
+	{
+		pBody = (char*) ((char *) const_cast<void*>(pData) + nHeaderSize);
+	}
+	else
+	{
+		pBody = 0;
+	}
 	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
+		_log("[CCmpClient] onReceive Response");
+
 		// This is response package.
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-				"[CCmpServer] onReceive Response ", nSocketFD);
+				"[CCmpClient] onReceive Response ", nSocketFD);
+		onResponse(nSocketFD, cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, pBody);
 		return;
 	}
 	else
 	{
+		_log("[CCmpClient] onReceive Request");
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
-				"[CCmpServer] onReceive Request ", nSocketFD);
+				"[CCmpClient] onReceive Request ", nSocketFD);
 	}
 
 	map<int, MemFn>::iterator iter;
@@ -81,7 +97,6 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 		return;
 	}
 
-	char *pBody = (char*) ((char *) const_cast<void*>(pData) + sizeof(CMP_HEADER));
 	(this->*this->mapFunc[cmpHeader.command_id])(nSocketFD, cmpHeader.command_id, cmpHeader.sequence_number, pBody);
 
 }
@@ -145,8 +160,9 @@ int CCmpClient::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 		_log("[CCmpClient] CMP response Fail socket: %d", nSocket);
 	}
 	else
+	{
 		sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
-
+	}
 	return nResult;
 }
 void CCmpClient::idleTimeout(bool bRun, int nIdleTime)
@@ -157,7 +173,7 @@ void CCmpClient::idleTimeout(bool bRun, int nIdleTime)
 
 int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 {
-//======= Receive CMP Header ==========//
+	//======= Receive CMP Header ==========//
 	int result;
 	CMP_HEADER cmpHeader;
 	void *pHeader;
@@ -167,18 +183,21 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 	int nCommand = generic_nack;
 	int nSequence = 0;
 	int nStatus;
+	int nHeaderSize;
+
+	nHeaderSize = sizeof(CMP_HEADER);
 
 	pHeader = &cmpHeader;
-	result = socketrecv(nSocketFD, sizeof(CMP_HEADER), &pHeader);
+	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
 	if (0 >= result)
 		return 0;
-	if (sizeof(CMP_HEADER) == result)
+	if (nHeaderSize == result)
 	{
 		nTotalLen = ntohl(cmpHeader.command_length);
 
 		if (0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
 		{
-			_log("[CCmpServer] onTcpReceive receive invaild packet");
+			_log("[CCmpClient] onTcpReceive receive invaild packet");
 			return 0;
 		}
 
@@ -190,11 +209,23 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
+		/*	if ( enquire_link_response == nCommand)
+		 {
+		 return 1;
+		 }*/
 
-		nBodyLen = nTotalLen - sizeof(CMP_HEADER);
+		map<int, MemFn>::iterator iter;
+		iter = mapFunc.find(nCommand);
 
+		//if is a request && unkonown request
+		if (mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
+		{
+			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+		}
+
+		//=================== Get CMP Body ===================//
+		nBodyLen = nTotalLen - nHeaderSize;
 		char buffer[nBodyLen];
-
 		if (0 < nBodyLen)
 		{
 			pBody = buffer;
@@ -203,26 +234,35 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 			if (result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
-				_log("[CCmpServer] onTcpReceive System Error, Body Length: %d Receive: %d data: %s", nBodyLen, result,
+				_log("[CCmpClient] onTcpReceive System Error, Body Length: %d Receive: %d data: %s", nBodyLen, result,
 						pBody);
 				return 0;
 			}
 		}
 
-		printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onTcpReceive ", nSocketFD);
-
 		if (confCmpClient->bUseQueueReceive)
 		{
 			if (DATA_LEN < nBodyLen) // large data
 			{
-				map<int, MemFn>::iterator iter;
-				iter = mapFunc.find(nCommand);
-				if (mapFunc.end() == iter)
+				if ( generic_nack == (generic_nack & nCommand))
 				{
-					result = response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTCPReceive Response ",
+							nSocketFD);
+					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
 				}
 				else
-					(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+				{
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTCPReceive Request ",
+							nSocketFD);
+					if (mapFunc.end() != iter)
+					{
+						(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+					}
+					else
+					{
+						return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
+					}
+				}
 			}
 			else
 			{
@@ -230,20 +270,29 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 				char* pvBuf = pBuf;
 
 				memset(pBuf, 0, sizeof(pBuf));
-				memcpy(pvBuf, pHeader, sizeof(CMP_HEADER));
+				memcpy(pvBuf, pHeader, nHeaderSize);
 				if (nBodyLen)
 				{
-					pvBuf += sizeof(CMP_HEADER);
+					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
 				}
-				sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_CLIENT_RECEIVE, nSocketFD, nTotalLen,
-										pBuf);
+				sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
+						pBuf);
 			}
 		}
 		else
 		{
-			_DBG("[CCmpClient] onTcpReceive Call function: %d Direct", nCommand);
-			(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+			//================== Check CMP Response ===================//
+			if ( generic_nack == (generic_nack & nCommand))
+			{
+				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onReceive Response ", nSocketFD);
+				onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
+			}
+			else
+			{
+				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onReceive Request ", nSocketFD);
+				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
+			}
 		}
 	}
 	else
