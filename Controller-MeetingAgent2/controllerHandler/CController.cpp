@@ -1,10 +1,10 @@
-
 #include <stdio.h>
 #include "CController.h"
 #include "common.h"
 #include "CConfig.h"
 #include "utility.h"
 #include "event.h"
+#include "packet.h"
 #include "CServerDevice.h"
 #include "CServerMeeting.h"
 #include "iCommand.h"
@@ -13,57 +13,29 @@
 
 using namespace std;
 
-CController::CController() :
-		cmpword(0), mnMsqKey(-1)
-{
-
-}
-
-CController::~CController()
-{
-
-}
-
-
-/**
- * Define Socket Client ReceiveFunction
- */
-int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	//controlcenter->receiveCMP(nSocketFD, nDataLen, pData);
-	return 0;
-}
-
-/**
- *  Define Socket Server Receive Function
- */
-int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	mtx.lock();
-	controller->onMeetingCommand(nSocketFD, nDataLen, pData);
-	mtx.unlock();
-	return 0;
-}
+static CController *mCController = 0;
 
 void IonMeetingCommand(void *param)
 {
 	const CMPData *strParam = reinterpret_cast<const CMPData*>(param);
-	this->onMeetingCommand(strParam);
+	mCController->onMeetingCommand(strParam);
 }
 
 void IonDeviceCommand(void *param)
 {
 	const CMPData *strParam = reinterpret_cast<const CMPData*>(param);
-	this->onDeviceCommand(strParam);
+	mCController->onDeviceCommand(strParam);
 }
-void CController::onMeetingCommand(int nSocketFD, int nDataLen, const void *pData)
+
+CController::CController() :
+		serverMeeting(0), serverDevice(0), mnMsqKey(-1)
 {
-
-	//const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
-	//_log("[CController] cmpPacket body: %s",cmpPacket->cmpBodyUnlimit.cmpdata);
-
-	serverMeeting->controllerCallBack(nSocketFD, nDataLen, pData);
 }
+
+CController::~CController()
+{
+}
+
 void CController::onDeviceCommand(const CMPData * sendBackData)
 {
 	map<int, CMPData>::iterator itr = deviceMapData.find(sendBackData->nSequence);
@@ -80,8 +52,8 @@ void CController::onDeviceCommand(const CMPData * sendBackData)
 
 		deviceMapData.erase(itr->first);
 
-		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,
-				sendBackData->bodyData);
+		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,sendBackData->bodyData);
+
 	}
 }
 void CController::onMeetingCommand(const CMPData * mCMPData)
@@ -99,10 +71,12 @@ int CController::onCreated(void* nMsqKey)
 
 int CController::onInitial(void* szConfPath)
 {
+	mCController = this;
 	string strConfPath = reinterpret_cast<const char*>(szConfPath);
 	if (strConfPath.empty())
+	{
 		return FALSE;
-
+	}
 	int nPort;
 	string strDevicePort;
 	string strControllerMeetingPort;
@@ -114,14 +88,14 @@ int CController::onInitial(void* szConfPath)
 		if (!strDevicePort.empty())
 		{
 			convertFromString(nPort, strDevicePort);
-			startServerDevice(0,  nPort,-1);
+			startServerDevice(0, nPort, -1);
 		}
 
 		strControllerMeetingPort = config->getValue("SERVER CONTROLLER_METTING", "port");
 		if (!strControllerMeetingPort.empty())
 		{
 			convertFromString(nPort, strControllerMeetingPort);
-			startServerMeeting(0,nPort, -1);
+			startServerMeeting(0, nPort, -1);
 		}
 
 	}
@@ -131,11 +105,7 @@ int CController::onInitial(void* szConfPath)
 
 int CController::onFinish(void* nMsqKey)
 {
-	if (0 != cmpword)
-	{
-		delete cmpword;
-		cmpword = 0;
-	}
+
 	return TRUE;
 }
 
@@ -143,14 +113,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 {
 	switch (nCommand)
 	{
-	case EVENT_COMMAND_SOCKET_TCP_MEETING_RECEIVE:
-		_log("[CController] get Controller-Meeting Socket Data from Message Queue");
-		serverMeeting->onReceive(nId, pData);
-		break;
-	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		_log("[CController] get Device Socket Data from Message Queue");
-		serverDevice->onReceive(nId, pData);
-		break;
+
 	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_MEETING:
 		serverMeeting->addClient(nId);
 		break;
@@ -172,29 +135,17 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 int CController::startServerMeeting(string strIP, const int nPort, const int nMsqId)
 {
+	serverMeeting = new CServerMeeting(this);
+
 	serverMeeting->setCallback(CB_DEVCIE_COMMAND, IonDeviceCommand);
-	return serverMeeting->startServer(strIP, nPort, nMsqId);
+	return serverMeeting->start(strIP.c_str(), nPort, nMsqId);
 }
 
 int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
 {
+	serverDevice = new CServerDevice(this);
+
 	serverDevice->setCallback(CB_MEETING_COMMAND, IonMeetingCommand);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
+	return serverDevice->start(strIP.c_str(), nPort, nMsqId);
 }
 
-int CController::startCmpWordServer(int nPort, int nMsqKey)
-{
-	int nResult = FALSE;
-
-	if (0 != cmpword)
-	{
-		delete cmpword;
-		cmpword = 0;
-	}
-
-	cmpword = new CCmpWord();
-	cmpword->start(0, nPort, nMsqKey);
-	nResult = TRUE;
-
-	return nResult;
-}

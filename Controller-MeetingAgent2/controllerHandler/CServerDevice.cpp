@@ -2,37 +2,25 @@
 #include "IReceiver.h"
 #include "event.h"
 #include "common.h"
-#include "CCmpHandler.h"
 #include "ICallback.h"
-#include "CDataHandler.cpp"
 #include "iCommand.h"
 #include "JSONObject.h"
 #include "packet.h"
 
-
-CServerDevice::CServerDevice()
+CServerDevice::CServerDevice(CObject *object)
 {
-	this->setUseQueueReceive(true);
+	mpController = object;
 }
 
 CServerDevice::~CServerDevice()
 {
-	mapClient.clear();
 }
 
-void CServerDevice::sendCommand(int socketFD, int commandID, int seqNum, string bodyData)
-{
-	_log("[CServerDevice] Send Command back to Device socketFD:%d, command:%d, seqNum:%d, data:%s\n", socketFD,
-			commandID, seqNum, bodyData.c_str());
-
-	sendPacket(socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
-
-}
 int CServerDevice::onFCMIdRegister(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CServerDevice]cmpFCMIdRegister");
 
-	sendPacket(nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
 	return TRUE;
 }
@@ -41,7 +29,7 @@ int CServerDevice::onFBToken(int nSocket, int nCommand, int nSequence, const voi
 {
 	_DBG("[CServerDevice]cmpFBToken");
 
-	sendPacket(nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, 0);
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
 	return TRUE;
 }
@@ -51,7 +39,7 @@ int CServerDevice::onWirelessPowerCharge(int nSocket, int nCommand, int nSequenc
 	_DBG("[CServerDevice]cmpWirelessPowerCharge");
 	string chargeData = "{\"CHARGE_LOCATION\": \"1\"}";
 
-	sendPacket(nSocket, generic_nack | nCommand, STATUS_ROK, nSequence, chargeData.c_str());
+	response(nSocket, nCommand, STATUS_ROK, nSequence, chargeData.c_str());
 
 	return TRUE;
 }
@@ -60,7 +48,7 @@ int CServerDevice::onQRCodeToken(int nSocket, int nCommand, int nSequence, const
 {
 	_DBG("[CServerDevice]cmpQRCodeToken");
 
-	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody, true);
+	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
 		(*mapCallback[CB_MEETING_COMMAND])(static_cast<void*>(const_cast<CMPData*>(&mCMPData)));
@@ -76,7 +64,7 @@ int CServerDevice::onQRCodeToken(int nSocket, int nCommand, int nSequence, const
 int CServerDevice::onAPPVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CServerDevice]cmpAPPVersion");
-	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody, false);
+	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
 		(*mapCallback[CB_MEETING_COMMAND])(static_cast<void*>(const_cast<CMPData*>(&mCMPData)));
@@ -91,7 +79,7 @@ int CServerDevice::onAPPVersion(int nSocket, int nCommand, int nSequence, const 
 int CServerDevice::onGetMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CServerDevice]cmpGetMeetingData");
-	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody, true);
+	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
 		(*mapCallback[CB_MEETING_COMMAND])(static_cast<void*>(const_cast<CMPData*>(&mCMPData)));
@@ -101,13 +89,22 @@ int CServerDevice::onGetMeetingData(int nSocket, int nCommand, int nSequence, co
 		return FALSE;
 	}
 	return TRUE;
+}
+
+
+void CServerDevice::sendCommand(int socketFD, int commandID, int seqNum, std::string bodyData)
+{
+
+	response(socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
+
+
 }
 
 int CServerDevice::onAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CServerDevice]cmpAMXControlAcess");
 
-	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody, true);
+	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
 		(*mapCallback[CB_MEETING_COMMAND])(static_cast<void*>(const_cast<CMPData*>(&mCMPData)));
@@ -119,25 +116,21 @@ int CServerDevice::onAMXControlAccess(int nSocket, int nCommand, int nSequence, 
 	return TRUE;
 }
 
-CMPData CServerDevice::parseCMPData(int nSocket, int nCommand, int nSequence, const void *szBody, bool isBodyExist)
+CMPData CServerDevice::parseCMPData(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	string *data = static_cast<const string*>(szBody);
 
-	string s = *data;
-	delete data;
+	const char *pBody = reinterpret_cast<const char*>(szBody);
 
-	if (s.size() > 0)
+
+	if (pBody)
 	{
-		return CMPData(nSocket, nCommand, nSequence, s);
-	}
-	else if (isBodyExist == false)
-	{
-		return CMPData(nSocket, nCommand, nSequence, "");
+		return CMPData(nSocket, nCommand, nSequence, pBody);
 	}
 	else
 	{
-		return CMPData(-1, -1, -1, NULL);
+		return CMPData(nSocket, nCommand, nSequence, "");
 	}
+
 }
 
 void CServerDevice::setCallback(const int nId, CBFun cbfun)

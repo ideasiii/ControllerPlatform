@@ -1,8 +1,8 @@
 #####################################
-# ControllerAmx make file
-# Created on: 2016-07-05
-# Author: Jugo
-# Project: Smart Building
+# Controller-Tracker make file
+# Created on: 2016-05-16
+# Author: Joe
+# Project: Tracker
 #####################################
 
 include env.mk

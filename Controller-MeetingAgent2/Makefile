@@ -1,13 +1,14 @@
 #####################################
-# Controller Semantic make file
-# Created on: 2016-09-09
-# Author: Jugo
+# Controller-Meetingagent make file
+# Created on: 2016-05-16
+# Author: Joe
+# Project: Meetingagent
 #####################################
 
 include env.mk
 include modules.mk
 
-TARGET    := controller-semantic
+TARGET    := controller-meetingagent
 CC        := g++
 LD        := g++
 
@@ -15,8 +16,8 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+CXXFLAGS  := -Wall -Wno-unused-variable -g -std=c++11 -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -25,7 +26,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lmysqlclient
+		
 					
 vpath %.cpp $(SRC_DIR) ../Global
 
@@ -53,7 +54,7 @@ init: package-u checkdirs bin/$(TARGET)
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
-	strip -s $@
+	#strip -s $@
 	@echo "\n"
 
 lib:
