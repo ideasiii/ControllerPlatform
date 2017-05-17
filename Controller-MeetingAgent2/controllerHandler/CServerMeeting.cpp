@@ -17,11 +17,6 @@ CServerMeeting::CServerMeeting(CObject *object) :
 {
 
 	mpController = object;
-	if (!equireLinkThreadStart)
-	{
-		equireLinkThreadStart = true;
-		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
-	}
 }
 
 CServerMeeting::~CServerMeeting()
@@ -99,6 +94,12 @@ int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void 
 	_log("[CServerMeeting] Socket Controller-Meeting Client FD:%d Binded", nSocket);
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
+	if (!equireLinkThreadStart)
+	{
+		equireLinkThreadStart = true;
+		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
+	}
+
 	return TRUE;
 }
 
@@ -155,6 +156,7 @@ void CServerMeeting::runEnquireLinkRequest()
 	while (1)
 	{
 		tdEnquireLink->threadSleep(10);
+		_log("[CServerMeeting] Start to run EnquireLink!");
 
 		for (size_t i = 0; i < mapClient.size(); i++)
 		{
