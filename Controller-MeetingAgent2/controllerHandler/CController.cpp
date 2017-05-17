@@ -52,7 +52,8 @@ void CController::onDeviceCommand(const CMPData * sendBackData)
 
 		deviceMapData.erase(itr->first);
 
-		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,sendBackData->bodyData);
+		serverDevice->sendCommand(deviceData->nFD, sendBackData->nCommand, deviceData->nSequence,
+				sendBackData->bodyData);
 
 	}
 }
@@ -138,7 +139,15 @@ int CController::startServerMeeting(string strIP, const int nPort, const int nMs
 	serverMeeting = new CServerMeeting(this);
 
 	serverMeeting->setCallback(CB_DEVCIE_COMMAND, IonDeviceCommand);
-	return serverMeeting->start(strIP.c_str(), nPort, nMsqId);
+
+	if (!strIP.empty())
+	{
+		return serverMeeting->start(strIP.c_str(), nPort, nMsqId);
+	}
+	else
+	{
+		serverMeeting->start(0, nPort, nMsqId);
+	}
 }
 
 int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
@@ -146,6 +155,15 @@ int CController::startServerDevice(string strIP, const int nPort, const int nMsq
 	serverDevice = new CServerDevice(this);
 
 	serverDevice->setCallback(CB_MEETING_COMMAND, IonMeetingCommand);
-	return serverDevice->start(strIP.c_str(), nPort, nMsqId);
+
+	if (!strIP.empty())
+	{
+		return serverDevice->start(strIP.c_str(), nPort, nMsqId);
+	}
+	else
+	{
+		return serverDevice->start(0, nPort, nMsqId);
+	}
+
 }
 
