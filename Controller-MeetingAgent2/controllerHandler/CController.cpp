@@ -88,14 +88,14 @@ int CController::onInitial(void* szConfPath)
 		if (!strDevicePort.empty())
 		{
 			convertFromString(nPort, strDevicePort);
-			startServerDevice(0, nPort, -1);
+			startServerDevice("", nPort, -1);
 		}
 
 		strControllerMeetingPort = config->getValue("SERVER CONTROLLER_METTING", "port");
 		if (!strControllerMeetingPort.empty())
 		{
 			convertFromString(nPort, strControllerMeetingPort);
-			startServerMeeting(0, nPort, -1);
+			startServerMeeting("", nPort, -1);
 		}
 
 	}
