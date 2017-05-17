@@ -40,7 +40,6 @@ int CServerMeeting::onResponse(int nSocket, int nCommand, int nStatus, int nSequ
 
 }
 
-
 int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 {
 	if (bodyData.size() > 0)
@@ -77,11 +76,8 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 		_log("[CServerMeeting] ERROR to find Controller-Meeting Socket ID!");
 	}
 
-	if (nRet <= 0)
-	{
-		//mapClient.erase(mapClient.begin());
-	}
-	_log("[CServerMeeting]SendCommand nRet %d");
+
+	_log("[CServerMeeting]SendCommand nRet %d", nRet);
 	return nRet;
 }
 
@@ -103,11 +99,6 @@ int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const voi
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
-
-
-
-
-
 
 void CServerMeeting::addClient(const int nSocketFD)
 {
