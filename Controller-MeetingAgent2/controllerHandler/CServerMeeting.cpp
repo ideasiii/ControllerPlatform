@@ -76,9 +76,14 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 		_log("[CServerMeeting] ERROR to find Controller-Meeting Socket ID!");
 	}
 
-
 	_log("[CServerMeeting]SendCommand nRet %d", nRet);
 	return nRet;
+}
+
+void CServerMeeting::onClientDisconnect(unsigned long int nSocketFD)
+{
+	_log("[CServerMeeting] onClientDisconnect %u", nSocketFD);
+	deleteClient(nSocketFD);
 }
 
 int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void *pData)

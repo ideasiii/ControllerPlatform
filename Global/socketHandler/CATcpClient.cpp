@@ -233,6 +233,10 @@ void CATcpClient::runIdleTimeout(bool bRun)
  */
 void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
+	if (callbackReceiveMessage(nEvent, nCommand, nId, nDataLen, pData))
+	{
+		return;
+	}
 	unsigned long int ulThreadID;
 	unsigned long int ulSocjetFD;
 
@@ -240,16 +244,18 @@ void CATcpClient::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	{
 
 	case EVENT_COMMAND_SOCKET_CONNECT:
-		_log("[CATcpClient] Socket Client Connect FD: %lu", nId);
+		onServerConnect(nId);
+		_log("[CATcpClient] Socket Server Connect FD: %lu", nId);
 		updateClientAlive();
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT: // Server Disconnect
+		onServerDisconnect(nId);
 		ulThreadID = getThreadID();
 		if (ulThreadID)
 		{
 			threadJoin(ulThreadID);
 		}
-		_log("[CATcpClient] Socket Client Disconnect FD: %lu", nId);
+		_log("[CATcpClient] Socket Server Disconnect FD: %lu", nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_COLSE: // Client close Server
 		ulThreadID = getThreadID();
