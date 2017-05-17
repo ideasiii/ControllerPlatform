@@ -47,6 +47,12 @@ protected:
 	 * Overload function
 	 */
 protected:
+	virtual bool callbackReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen,
+			const void* pData)
+	{
+		return false;
+	}
+	;
 	virtual void onTimer(int nId)
 	{
 	}

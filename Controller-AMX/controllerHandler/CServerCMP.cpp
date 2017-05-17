@@ -59,17 +59,29 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 		JSONObject *jobj = new JSONObject(strBody);
 		if(jobj->isValid())
 		{
+			Message message;
+
 			amxCommand.nFunction = jobj->getInt("function");
 			amxCommand.nDevice = jobj->getInt("device");
 			amxCommand.nControl = jobj->getInt("control");
 			amxCommand.strToken = jobj->getString("TOKEN");
 			amxCommand.strId = jobj->getString("ID");
+
+			//========= auth token ==================//
+			if(amxCommand.strToken.empty() || amxCommand.strId.empty())
+			{
+
+			}
+
+			message.what = authentication_request;
+
+			//========= send control command ========//
 			strCommand = getAMXControlRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nControl);
 			if(!strCommand.empty())
 			{
 				_log("[CServerCMP] onAmxControl Command: %s", strCommand.c_str());
 				nStatus = STATUS_ROK;
-				Message message;
+
 				message.what = amx_control_request;
 				message.strData = strCommand;
 				mpController->sendMessage(message);

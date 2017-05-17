@@ -15,7 +15,7 @@ class CServerAuth: public CCmpServer
 public:
 	CServerAuth(CObject *object);
 	virtual ~CServerAuth();
-	int auth(const char *szToken, const char *szIp);
+	int auth(const char *szToken, const char *szID);
 
 protected:
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
@@ -27,3 +27,20 @@ private:
 	unsigned long int mAuthServer;
 	std::map<std::string, int> mapAuth;
 };
+
+//=========================封包說明=========================================//
+// auth request:
+// 		CMP HEADER command id: authentication_request
+//		BODY: {
+//				"TOKEN":"????",
+//				"ID":"????"
+//			  }
+//
+//auth response:
+//		CMP HEADER command id: authentication_response
+//      BODY: {
+//				"ID":"???",  <---- value要跟request的ID value相同，回傳比對用
+//				"AUTH":"y"   <---- "y":認証OK，"n":非法入侵
+//			  }
+//
+//========================================================================//

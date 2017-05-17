@@ -115,12 +115,12 @@ int CController::onFinish(void* nMsqKey)
 void CController::onHandleMessage(Message &message)
 {
 	string strToken;
-	string
+	string strId;
 	switch(message.what)
 	{
 	case amx_control_request: // From CMP Server
-		if(!serverAuth->auth(strToken,strId))
-		serverAMX->requestAMX(message.strData.c_str());
+		if(!serverAuth->auth(strToken, strId))
+			serverAMX->requestAMX(message.strData.c_str());
 		break;
 	case amx_status_request: // From CMP Server
 		serverAMX->requestAMX(message.strData.c_str());

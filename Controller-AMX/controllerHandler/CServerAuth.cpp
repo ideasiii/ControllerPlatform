@@ -39,15 +39,15 @@ int CServerAuth::onUnbind(int nSocket, int nCommand, int nSequence, const void *
 	return TRUE;
 }
 
-int CServerAuth::auth(const char *szToken, const char *szIp)
+int CServerAuth::auth(const char *szToken, const char *szID)
 {
 	string strBody;
 
-	strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szIP);
+	strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szID);
 
 	if(mAuthServer)
 	{
-		mapAuth[szIp] = 0;
+		mapAuth[szID] = 0;
 		request(mAuthServer, authentication_request, STATUS_ROK, getSequence(), strBody.c_str());
 	}
 	else
@@ -63,7 +63,7 @@ int CServerAuth::onResponse(int nSocket, int nCommand, int nStatus, int nSequenc
 	string strBody;
 	string strId;
 
-	if(authentication_response == nCommand && szBody)
+	if((authentication_request == (0x000000FF & nCommand)) && szBody)
 	{
 		strBody = reinterpret_cast<const char*>(szBody);
 		JSONObject *jobj = new JSONObject(strBody);

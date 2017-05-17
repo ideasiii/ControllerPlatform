@@ -310,6 +310,9 @@ void CATcpServer::updateClientAlive(unsigned long int ulSocketFD)
  */
 void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
+	if(callbackReceiveMessage(nEvent, nCommand, nId, nDataLen, pData))
+		return;
+
 	unsigned long int ulThreadID;
 	unsigned long int ulSocjetFD;
 
