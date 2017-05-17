@@ -48,7 +48,6 @@ void *threadTcpReceive(void *argv)
 
 int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 {
-	CATCP_MSQ_EVENT_FILTER = EVENT_FILTER_SOCKET_SERVER + (++CATCP_MSQ_EVENT_FILTER_COUNT);
 	int nMsgId = -1;
 	int nSocketFD;
 	mnExtMsqKey = FALSE;
@@ -103,6 +102,7 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 	else
 		_log("[CATcpServer] Create Server Fail");
 
+	CATCP_MSQ_EVENT_FILTER = nPort;
 	return nSocketFD;
 }
 
@@ -166,6 +166,7 @@ void CATcpServer::runSocketAccept()
 		if(-1 != nChildSocketFD)
 		{
 			_log("[CATcpServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
+			_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 			sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
 		}
 		else
@@ -212,8 +213,10 @@ void CATcpServer::runTcpReceive()
 
 	while(1)
 	{
+		_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 		if(0 >= onTcpReceive(nSocketFD))
 			break;
+		_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 		sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocketFD, 0, 0);
 	}
 
@@ -319,6 +322,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
+		_TRACE("");
 		mapClient[nId].ulReceiveThreadID = createThread(threadTcpReceive, this);
 		if(0 >= mapClient[nId].ulReceiveThreadID)
 		{

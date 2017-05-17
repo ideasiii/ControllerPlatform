@@ -61,20 +61,22 @@ int CController::onInitial(void* szConfPath)
 		if(!strPort.empty())
 		{
 			convertFromString(nPort, strPort);
-			if(serverAMX->start(0, nPort, mnMsqKey))
+			if(serverAMX->start(0, nPort, nPort))
 			{
 				strPort = config->getValue("SERVER DEVICE", "port");
 				if(!strPort.empty())
 				{
 					convertFromString(nPort, strPort);
-					if(serverCMP->start(0, nPort, mnMsqKey))
+					if(serverCMP->start(0, nPort, nPort))
 					{
+						_log("[CController] onInitial CMP Server Start! Port: %d", nPort);
 						strPort = config->getValue("SERVER AUTHENTICATION", "port");
 						if(!strPort.empty())
 						{
 							convertFromString(nPort, strPort);
-							if(serverAuth->start(0, nPort, mnMsqKey))
+							if(serverAuth->start(0, nPort, nPort))
 							{
+								_log("[CController] onInitial Auth Server Start! Port: %d", nPort);
 								nRet = TRUE;
 							}
 						}
