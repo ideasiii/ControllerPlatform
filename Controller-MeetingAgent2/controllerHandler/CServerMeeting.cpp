@@ -27,6 +27,10 @@ CServerMeeting::~CServerMeeting()
 int CServerMeeting::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
 
+	if(nCommand == enquire_link_response)
+	{
+		return TRUE;
+	}
 	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
