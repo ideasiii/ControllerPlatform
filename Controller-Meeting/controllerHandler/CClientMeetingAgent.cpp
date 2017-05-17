@@ -188,6 +188,9 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 
 void CClientMeetingAgent::stopClient()
 {
+	_log("[CClientMeetingAgent] stopClient() step in");
+
+	cmpUnbindRequest();
 	stop();
 
 	if (this->userAppVersionHandler != nullptr)
@@ -478,11 +481,12 @@ void CClientMeetingAgent::cmpUnbindRequest()
 {
 	if (this->isValidSocketFD())
 	{
+		_log("[CClientMeetingAgent] cmpUnbindRequest() send command!");
 		sendCommand(unbind_request, getSequence(), "");
 	}
 	else
 	{
-		_log("[CClientMeetingAgent] ERROR while send unBind Request!");
+		_log("[CClientMeetingAgent] cmpUnbindRequest() ERROR while send unBind Request!");
 	}
 
 }

@@ -1,10 +1,10 @@
-# copy this file and rename to controller-meeting.conf before any editing
-# copy this file and rename to controller-meeting.conf before any editing
-# copy this file and rename to controller-meeting.conf before any editing
+# copy this file with name to controller-meeting.conf before any editing
+# copy this file with name controller-meeting.conf before any editing
+# copy this file with name to controller-meeting.conf before any editing
 
-# put it to bin/
-# put it to bin/
-# put it to bin/
+# put it together with controller-meeting
+# put it together with controller-meeting
+# put it together with controller-meeting
 
 # config file for controller-meeting
 
@@ -15,62 +15,61 @@ log =/data/opt/tomcat/webapps/logs/Controller-Meeting.log
 
 #---------- Client Service ----------#
 [CLIENT MEETING_AGENT]
-# controller-meetingagent ªº IP
-#server_ip = 175.98.119.121
-server_ip = 54.199.198.94
-#server_ip = 127.0.0.1
+# controller-meetingagent çš„ IP
+server_ip = 256.256.256.256
 
 port = 2101
 
 
 [CLIENT ITES 1F DOOR CONTROLLER]
-# ¦øªA¾¹ IP
-#server_ip = 175.98.119.102
-server_ip = 192.168.127.1
+# ä¼ºæœå™¨ IP
+server_ip = 256.256.256.256
 
-# ³s±µ°ğ
+# é€£æ¥åŸ 
 port = 57099
 
-# ¥[±K¥Îªº key, ªø«×¬°32¦r¤¸
+# åŠ å¯†ç”¨çš„ key, é•·åº¦ç‚º32å­—å…ƒ
 aes_key = 0123456789abcdef0123456789abcdef
 
 
 [CLIENT AMX CONTROLLER]
-# AMX controller ªº IP
-server_ip = 54.199.198.94
+# AMX controller çš„ IP
+server_ip = 256.256.256.256
 
-# µ¹¨Ï¥ÎªÌ³s½u¥Îªº³s±µ°ğ, ·|¦^¶Çµ¹ app ¨Ñ¥¦­Ì³s±µ AMX controller
+# çµ¦ä½¿ç”¨è€…é€£ç·šç”¨çš„é€£æ¥åŸ , æœƒå›å‚³çµ¦ app ä¾›å®ƒå€‘é€£æ¥ AMX controller
 user_port = 2309
 
-# ÅçÃÒ token ¥Îªº³s±µ°ğ, controller-meeting ·|§@¬°«È¤áºİ³s½u¨ì AMX controller
-# ³z¹L³o­Ó port ±µ¦¬ token ÅçÃÒ­n¨D
+# é©—è­‰ token ç”¨çš„é€£æ¥åŸ , æœ¬ service æœƒé€éé€™å€‹ port é€£ç·šåˆ° AMX controller
+# ä¸¦æ¥æ”¶ä¾†è‡ªå°æ–¹çš„ token é©—è­‰è¦æ±‚
 validation_port = 2311
 
 
 [APP DOWNLOAD INFO CONFIG WATCHER]
-# app ª©¥»ÀË¬dªº¬ÛÃö³]©w. ·í«È¤áºİ­n¨D³Ì·sªº app ª©¥»®É
-# controller-meeting ·|¶Ç¦^³Ì·sªº app ª©¥»¥H¤Î¤U¸ü¦ì§}
+# app ç‰ˆæœ¬ handler çš„ç›¸é—œè¨­å®š. ç•¶å®¢æˆ¶ç«¯è¦æ±‚å›å‚³æœ€æ–°çš„ app ç‰ˆæœ¬æ™‚
+# controller-meeting æœƒçµ¦å‡ºæœ€æ–°çš„ app ç‰ˆæœ¬ä»¥åŠä¸‹è¼‰ä½å€
 #
-# ¥»°Ï¶ôªº³]©w³£¬O­nÁıµ¹ UserAppVersionHandler ªº¬Y­Ó¤lÃş§O, ¨C­Ó¤lÃş§O¤À§O¹ïÀ³¨ì¤@ºØºÊ±±¤èªk.
-# ³o¨ÇÃş§O³z¹L«ùÄòºÊ±±¬Y­Ó¸ê®Æ§¨¬O§_¦³§ó·s¤º®e, ¤Î®É§ó·s­n¶Ç¦^µ¹¨Ï¥ÎªÌªº app ª©¥»¥H¤Î¤U¸üºô§}
-# ¨CºØ¤èªk·|ºÊ±±¤£¦PªºªF¦è. ­Y©Ò¦³ªº°Ñ¼Æ¬Ò¦³³]©w, Àu¥ı¨Ï¥Î¤èªk 2, §_«h¨Ï¥Î¤èªk 1
-# ¬G¥H¤Uªº³]©w·|¨Ï¥Î¤èªk 2 ¶i¦æ app ª©¥» handling
+# æœ¬å€å¡Šçš„è¨­å®šéƒ½æ˜¯è¦é¤µçµ¦ UserAppVersionHandler çš„æŸå€‹å­é¡åˆ¥, æ¯å€‹å­é¡åˆ¥åˆ†åˆ¥å°æ‡‰åˆ°ä¸€ç¨®ç›£æ§æ–¹æ¡ˆ
+# é€™äº›é¡åˆ¥é€éæŒçºŒç›£æ§æŸå€‹è³‡æ–™å¤¾æ˜¯å¦æœ‰æ›´æ–°å…§å®¹, åŠæ™‚æ›´æ–°è¦å›å‚³çš„ app ç‰ˆæœ¬ä»¥åŠä¸‹è¼‰ç¶²å€
+#
+# è‹¥ä»¥ä¸‹å„ç¨®æ–¹æ¡ˆçš„åƒæ•¸çš†æœ‰è¨­å®š, å„ªå…ˆä½¿ç”¨æ–¹æ¡ˆ 2, å¦å‰‡ä½¿ç”¨æ–¹æ¡ˆ 1
+# ä»¥ä¸‹çš„è¨­å®šæ–¹å¼æœƒä½¿ç”¨æ–¹æ¡ˆ 2 é€²è¡Œ app ç‰ˆæœ¬åƒæ•¸æ›´æ–°
+# è¨˜ä½ä¸€å®šè¦è¨­ç½®è‡³å°‘ä¸€ç¨®æ–¹æ¡ˆçš„åƒæ•¸ï¼Œä¸ç„¶ controller æœƒå£æ‰
 
-# ¤èªk 1: ºÊ±±¤@­Ó¸ê®Æ§¨¤Uªº json ÀÉ®×, json ÀÉ¼g¦³ app ª©¥»¥H¤Î¤U¸üºô§}.
-# ­Yµo¥¬·sª©¥», ¥ı§â·sª© apk ©ñ¦b¤U¸ü¦øªA¾¹, ¦A­×§ï config_dir ¤Uªº config_name ¤ºªº¤º®e,
-# ´N¯à¦b¤£­«±Ò controller-meeting ªº±¡ªp¤U§ó·s UserAppVersionHandler ¶Ç¦^µ¹«È¤áºİªº³Ì·s app ª©¥»¥H¤Î¤U¸üºô§}
-# config_name «ü¦VªºÀÉ®×À³¸Ó¥]§tªº¤º®e¥i¥H°Ñ¦Ò app_version_handler_config.sample.json
-#config_dir = /you/can/put/json/file/in/the/dir/where/controller-meeting/resides
-#config_name = app_version_handler_config.json
+# æ–¹æ¡ˆ 1: ç›£æ§ä¸€å€‹è³‡æ–™å¤¾ä¸‹çš„ json æª”æ¡ˆ, json æª”å¯«æœ‰ app ç‰ˆæœ¬ä»¥åŠä¸‹è¼‰ç¶²å€.
+# è‹¥ç™¼å¸ƒæ–°ç‰ˆæœ¬, å…ˆæŠŠæ–°ç‰ˆ apk æ”¾åœ¨ä¸‹è¼‰ä¼ºæœå™¨, å†ä¿®æ”¹ config_dir ä¸‹çš„ config_name çš„å…§å®¹,
+# å°±èƒ½åœ¨ä¸é‡å•Ÿ controller çš„æƒ…æ³ä¸‹æ›´æ–° UserAppVersionHandler å‚³å›çµ¦å®¢æˆ¶ç«¯çš„æœ€æ–° app ç‰ˆæœ¬ä»¥åŠä¸‹è¼‰ç¶²å€
+# è€Œ config_name æŒ‡å‘çš„æª”æ¡ˆçš„å…§å®¹æ ¼å¼å¯ä»¥åƒè€ƒ app_version_handler_config.sample.json
+# config_dir = /you/can/put/json/file/in/the/dir/where/controller-meeting/resides
+# config_name = app_version_handler_config.json
 
-# ¤èªk 2: ºÊ±±¤@­Ó¸ê®Æ§¨¤Uªº apk ÀÉ®×
-# ³o­Ó¤èªk»İ­n¨Ï¥Î Android ©x¤èµo¥¬ªº aapt ¤u¨ã¤~¯à¹B§@, ¦b aapt_path «ü©w aapt ¸ô®|
-# package_name ¬O app ªº package name, §@¬°¹LÂo«D¬ÛÃö apk ¤§¥Î
-# download_link_base ¬O¤U¸üºô§}«eºó¡Aµ²§À¤£¥[¤W '/'
-# ­Yµo¥¬·sª©¥», ¥ı§â·sª© apk ©ñ¦b¤U¸ü¦øªA¾¹, ¦A§â·sª© apk ©ñ¦b apk_dir
-# ´N¯à¦b¤£­«±Ò controller-meeting ªº±¡ªp¤U§ó·s UserAppVersionHandler ¶Ç¦^µ¹«È¤áºİªº³Ì·s app ª©¥»
-# ¤U¸üºô§}´N·|¬O [download_link_base]/[·sª©apk¦WºÙ], ¬G©ñ¦b¦øªA¾¹¤Wªº apk ¦WºÙ­n¸ò©ñ¦b apk_dir ¤ºªº apk ¦WºÙ¬Û¦P
+# æ–¹æ¡ˆ 2: ç›£æ§ä¸€å€‹è³‡æ–™å¤¾ä¸‹çš„ apk æª”æ¡ˆ
+# é€™å€‹æ–¹æ³•éœ€è¦ä½¿ç”¨ Android çš„ aapt å·¥å…·æ‰èƒ½é‹ä½œ, åœ¨ aapt_path æŒ‡å®š aapt è·¯å¾‘
+# package_name æ˜¯ app çš„ package name, ä½œç‚ºéæ¿¾éç›¸é—œ apk ä¹‹ç”¨
+# download_link_base æ˜¯ä¸‹è¼‰ç¶²å€å‰ç¶´ï¼Œçµå°¾ä¸åŠ ä¸Š '/'
+# è‹¥ç™¼å¸ƒæ–°ç‰ˆæœ¬, å…ˆæŠŠæ–°ç‰ˆ apk æ”¾åœ¨ä¸‹è¼‰ä¼ºæœå™¨, å†æŠŠæ–°ç‰ˆ apk æ”¾åœ¨ apk_dir
+# å°±èƒ½åœ¨ä¸é‡å•Ÿ controller çš„æƒ…æ³ä¸‹æ›´æ–° UserAppVersionHandler å‚³å›çµ¦å®¢æˆ¶ç«¯çš„æœ€æ–° app ç‰ˆæœ¬
+# ä¸‹è¼‰ç¶²å€ç‚º [download_link_base]/[æ–°ç‰ˆapkåç¨±], æ•…æ”¾åœ¨ä¼ºæœå™¨ä¸Šçš„ apk åç¨±è¦è·Ÿæ”¾åœ¨ apk_dir å…§çš„ apk åç¨±ç›¸åŒ
 aapt_path = /full/path/of/android-sdk/build-tools/aapt
-apk_dir = /dir/where/apk/is
+apk_dir = /dir/where/apk/is/in
 package_name = packname.name.of.app
 download_link_base = https://domain.yo/folder-for-app-apks

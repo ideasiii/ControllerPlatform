@@ -19,7 +19,6 @@ controllerHandler/UserAppVersionHandler \
 ../Global/dataHandler	\
 ../Global/jsonHandler \
 ../Global/logHandler \
-../Global/processHandler \
-../Global/timerHandler
+../Global/processHandler
 			 
 #export EXT_MODULES=extInclude

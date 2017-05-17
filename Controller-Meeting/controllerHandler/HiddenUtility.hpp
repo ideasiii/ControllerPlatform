@@ -1,5 +1,6 @@
 #include <chrono>
 #include <errno.h>
+#include <linux/limits.h>
 #include <string.h>
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -57,7 +58,7 @@ public:
 		dest[pathLen] = '\0';
 	}
 
-	// ¨ú±o»P process image ¦ì©ó¦P¤@¸ê®Æ§¨¤ºªº config ÀÉ
+	// å–å¾—èˆ‡ process image ä½æ–¼åŒä¸€è³‡æ–™å¤¾å…§çš„ config æª”
 	static std::string getConfigPathInProcessImageDirectory()
 	{
 		char selfExePath[PATH_MAX];

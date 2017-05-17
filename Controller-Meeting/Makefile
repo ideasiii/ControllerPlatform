@@ -41,12 +41,18 @@ endef
 .IGNORE: clean cleanAll
 
 all: checkdirs bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@ln -s $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+	@ln -s $(DIR_APP_ROOT)app_version_handler_config.json $(DIR_APP_ROOT)bin/app_version_handler_config.json
+
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
 init: package-u checkdirs bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@ln -s $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+	@ln -s $(DIR_APP_ROOT)app_version_handler_config.json $(DIR_APP_ROOT)bin/app_version_handler_config.json
+
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 
