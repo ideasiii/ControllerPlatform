@@ -50,5 +50,5 @@ private:
 	map<int, CBFun> mapCallback;
 	CThreadHandler *tdEnquireLink;
 	CObject * mpController;
-
+	bool equireLinkThreadStart;
 };

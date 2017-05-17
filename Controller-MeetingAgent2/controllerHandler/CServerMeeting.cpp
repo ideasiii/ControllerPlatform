@@ -13,10 +13,15 @@
 void *threadEnquireLinkRequest(void *argv);
 
 CServerMeeting::CServerMeeting(CObject *object) :
-		tdEnquireLink(new CThreadHandler)
+		tdEnquireLink(new CThreadHandler), equireLinkThreadStart(false)
 {
 
 	mpController = object;
+	if (!equireLinkThreadStart)
+	{
+		equireLinkThreadStart = true;
+		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
+	}
 }
 
 CServerMeeting::~CServerMeeting()
@@ -146,8 +151,6 @@ void CServerMeeting::setCallback(const int nId, CBFun cbfun)
 void CServerMeeting::runEnquireLinkRequest()
 {
 	int nSocketFD = -1;
-	string strSql;
-	string strLog;
 
 	while (1)
 	{
