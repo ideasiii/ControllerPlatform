@@ -89,5 +89,6 @@ private:
 	unsigned long int getClientThreadID(unsigned long int unSocketFD);
 	void updateClientAlive(unsigned long int ulSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
+	int CATCP_MSQ_EVENT_FILTER;
 };
 

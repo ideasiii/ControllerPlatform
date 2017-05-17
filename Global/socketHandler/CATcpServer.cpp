@@ -21,10 +21,6 @@ int IDLE_TIMEOUT = 10; // secons
 
 int mnExtMsqKey;
 
-static int CATCP_MSQ_EVENT_FILTER_COUNT = 0;
-
-int CATCP_MSQ_EVENT_FILTER;
-
 void *threadTcpAccept(void *argv)
 {
 	CATcpServer* ss = reinterpret_cast<CATcpServer*>(argv);
@@ -51,6 +47,8 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 	int nMsgId = -1;
 	int nSocketFD;
 	mnExtMsqKey = FALSE;
+
+	CATCP_MSQ_EVENT_FILTER = nPort;
 
 	if(-1 != nMsqKey)
 	{
@@ -102,7 +100,6 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 	else
 		_log("[CATcpServer] Create Server Fail");
 
-	CATCP_MSQ_EVENT_FILTER = nPort;
 	return nSocketFD;
 }
 
@@ -166,7 +163,6 @@ void CATcpServer::runSocketAccept()
 		if(-1 != nChildSocketFD)
 		{
 			_log("[CATcpServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
-			_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 			sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
 		}
 		else
