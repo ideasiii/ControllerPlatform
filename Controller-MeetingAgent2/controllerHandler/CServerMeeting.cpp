@@ -94,10 +94,14 @@ int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void 
 	_log("[CServerMeeting] Socket Controller-Meeting Client FD:%d Binded", nSocket);
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
-	if (!equireLinkThreadStart)
+	if (equireLinkThreadStart == false)
 	{
 		equireLinkThreadStart = true;
 		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
+	}
+	else
+	{
+		_log("[CServerMeeting] equireLinkThread already start");
 	}
 
 	return TRUE;
