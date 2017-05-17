@@ -52,3 +52,8 @@ int CServerAMX::requestAMX(const char *szCommand)
 	}
 	return request(mAmxBox, szCommand);
 }
+
+string CServerAMX::taskName()
+{
+	return "CServerAMX";
+}

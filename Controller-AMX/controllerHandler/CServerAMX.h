@@ -20,8 +20,10 @@ protected:
 	void onClientConnect(unsigned long int nSocketFD);
 	void onClientDisconnect(unsigned long int nSocketFD);
 	int onAmxStatus(unsigned long int nSocketFD, const char *szStatus);
+	std::string taskName();
 
 private:
 	CObject *mpController;
 	unsigned long int mAmxBox;
+
 };

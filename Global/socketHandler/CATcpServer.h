@@ -78,6 +78,7 @@ protected:
 	}
 	;
 
+	virtual std::string taskName();
 private:
 	void checkIdle();
 	void eraseClient(unsigned long int ulSocketFD);
@@ -90,5 +91,6 @@ private:
 	void updateClientAlive(unsigned long int ulSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
 	int CATCP_MSQ_EVENT_FILTER;
+	std::string strTaskName;
 };
 

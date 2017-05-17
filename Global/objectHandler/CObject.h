@@ -80,6 +80,7 @@ protected:
 	}
 	;
 
+	virtual std::string taskName();
 private:
 	CMessageHandler *messageHandler;
 	int mnTimerEventId;

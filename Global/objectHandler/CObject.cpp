@@ -17,6 +17,8 @@
 #include "CThread.h"
 #include "LogHandler.h"
 
+using namespace std;
+
 CObject * object = 0;
 
 void _onTimer(int nId)
@@ -108,8 +110,6 @@ int CObject::run(int lFilter, const char * szDescript)
 				{
 					message.arg[i] = msgbuf->arg[i];
 				}
-//				message.arg1 = msgbuf->arg1;
-//				message.arg2 = msgbuf->arg2;
 				message.strData = msgbuf->cData;
 				onHandleMessage(message);
 			}
@@ -221,4 +221,9 @@ void CObject::mutexLock()
 void CObject::mutexUnlock()
 {
 	pthread_mutex_unlock(&mutex);
+}
+
+string CObject::taskName()
+{
+	return "CObject";
 }

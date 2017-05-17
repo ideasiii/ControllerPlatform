@@ -49,6 +49,7 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 	mnExtMsqKey = FALSE;
 
 	CATCP_MSQ_EVENT_FILTER = nPort;
+	strTaskName = taskName();
 
 	if(-1 != nMsqKey)
 	{
@@ -61,17 +62,17 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 	if(-1 == mnMsqKey)
 		mnMsqKey = 20150727;
 
-	nMsgId = initMessage(mnMsqKey, "TCP Server");
+	nMsgId = initMessage(mnMsqKey, strTaskName.c_str());
 
 	if(-1 == nMsgId)
 	{
-		_log("[CATcpServer] Init Message Queue Fail");
+		_log("[CATcpServer] %s Init Message Queue Fail", strTaskName.c_str());
 		return -1;
 	}
 
 	if(-1 == setInetSocket(cszAddr, nPort))
 	{
-		_log("[CATcpServer] Set INET socket address & port fail");
+		_log("[CATcpServer] %s Set INET socket address & port fail", strTaskName.c_str());
 		return -1;
 	}
 
@@ -90,7 +91,8 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 			}
 			createThread(threadCATcpServerMessageReceive, this, "CATcpServer Message Receive");
 			createThread(threadTcpAccept, this, "CATcpServer Socket Accept Thread");
-			_log("[CATcpServer] Create Server Success Port: %d Socket FD: %lu", nPort, nSocketFD);
+			_log("[CATcpServer] %s Create Server Success Port: %d Socket FD: %lu", strTaskName.c_str(), nPort,
+					nSocketFD);
 		}
 		else
 		{
@@ -98,7 +100,7 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 		}
 	}
 	else
-		_log("[CATcpServer] Create Server Fail");
+		_log("[CATcpServer] %s Create Server Fail", strTaskName.c_str());
 
 	return nSocketFD;
 }
@@ -147,14 +149,14 @@ void CATcpServer::runSocketAccept()
 {
 	int nChildSocketFD = -1;
 
-	_log("[CATcpServer] Thread runSocketAccept Start");
+	_log("[CATcpServer] %s Thread runSocketAccept Start", strTaskName.c_str());
 	while(1)
 	{
 		nChildSocketFD = socketAccept();
 
 		if(MAX_CLIENT < (mapClient.size() + 1))
 		{
-			_log("[CATcpServer] Max Client Connect: %d", mapClient.size());
+			_log("[CATcpServer] %s Max Client Connect: %d", strTaskName.c_str(), mapClient.size());
 			socketClose(nChildSocketFD);
 			sleep(5);
 			continue;
@@ -162,17 +164,17 @@ void CATcpServer::runSocketAccept()
 
 		if(-1 != nChildSocketFD)
 		{
-			_log("[CATcpServer] Socket Accept, Client Socket ID: %d", nChildSocketFD);
+			_log("[CATcpServer] %s Socket Accept, Client Socket ID: %d", strTaskName.c_str(), nChildSocketFD);
 			sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_ACCEPT, nChildSocketFD, 0, NULL);
 		}
 		else
 		{
-			_log("socket server accept fail");
+			_log("[CATcpServer] %s socket server accept fail", strTaskName.c_str());
 			sleep(3);
 		}
 	}
 
-	_log("[CATcpServer] Thread runSocketAccept End");
+	_log("[CATcpServer] %s Thread runSocketAccept End", strTaskName.c_str());
 	sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
 	threadExit();
 }
@@ -180,10 +182,10 @@ void CATcpServer::runSocketAccept()
 void CATcpServer::runMessageReceive()
 {
 	munRunThreadId = getThreadID();
-	run(CATCP_MSQ_EVENT_FILTER, "CATcpServer");
+	run(CATCP_MSQ_EVENT_FILTER, strTaskName.c_str());
 	threadExit();
 	threadJoin(getThreadID());
-	_log("[CATcpServer] runMessageReceive Stop, Thread join");
+	_log("[CATcpServer] %s runMessageReceive Stop, Thread join", strTaskName.c_str());
 }
 
 int CATcpServer::getEventFilter()
@@ -199,7 +201,7 @@ void CATcpServer::runTcpReceive()
 	nSocketFD = getClientSocketFD(getThreadID());
 	if(0 >= nSocketFD)
 	{
-		_log("[CATcpServer] runTcpReceive Fail, Invalid Socket FD");
+		_log("[CATcpServer] %s runTcpReceive Fail, Invalid Socket FD", strTaskName.c_str());
 		sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_THREAD_EXIT, getThreadID(), 0, 0);
 		threadExit();
 		return;
@@ -209,10 +211,8 @@ void CATcpServer::runTcpReceive()
 
 	while(1)
 	{
-		_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 		if(0 >= onTcpReceive(nSocketFD))
 			break;
-		_TRACE("msqkey: %d   CATCP_MSQ_EVENT_FILTER %d", mnMsqKey, CATCP_MSQ_EVENT_FILTER);
 		sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocketFD, 0, 0);
 	}
 
@@ -227,7 +227,7 @@ int CATcpServer::onTcpReceive(unsigned long int nSocketFD)
 	void* pvBuf = pBuf;
 	memset(pBuf, 0, sizeof(pBuf));
 	result = socketrecv(nSocketFD, &pvBuf, 0);
-	_log("[CATcpServer] onTcpReceive Result: %d Socket[%d]", result, nSocketFD);
+	_log("[CATcpServer] %s onTcpReceive Result: %d Socket[%d]", strTaskName.c_str(), result, nSocketFD);
 
 	if(0 < result)
 	{
@@ -281,7 +281,7 @@ void CATcpServer::checkIdle()
 		diff = difftime(nowSecond(), it->second.ulAliveTime);
 		if(IDLE_TIMEOUT < (int) diff)
 		{
-			_log("[CATcpServer] Socket Client: %d idle: %d seconds", it->first, (int) diff);
+			_log("[CATcpServer] %s Socket Client: %d idle: %d seconds", strTaskName.c_str(), it->first, (int) diff);
 			closeClient(it->first);
 		}
 	}
@@ -327,7 +327,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 	case EVENT_COMMAND_SOCKET_CONNECT:
 		onClientConnect(nId);
-		_log("[CATcpServer] Socket Client Connect FD: %lu", nId);
+		_log("[CATcpServer] %s Socket Client Connect FD: %lu", strTaskName.c_str(), nId);
 		updateClientAlive(nId);
 		break;
 	case EVENT_COMMAND_SOCKET_DISCONNECT: // Client Disconnect
@@ -336,7 +336,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		if(ulThreadID)
 			threadJoin(ulThreadID);
 		eraseClient(nId);
-		_log("[CATcpServer] Socket Client Disconnect FD: %lu", nId);
+		_log("[CATcpServer] %s Socket Client Disconnect FD: %lu", strTaskName.c_str(), nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_COLSE: // Server close Client
 		ulThreadID = getClientThreadID(nId);
@@ -352,7 +352,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		ulSocjetFD = getClientSocketFD(nId);
 		if(ulSocjetFD)
 			eraseClient(ulSocjetFD);
-		_log("[CATcpServer] Receive Thread Joined, Thread ID: %lu", nId);
+		_log("[CATcpServer] %s Receive Thread Joined, Thread ID: %lu", strTaskName.c_str(), nId);
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_RECEIVE:
 		onReceive(nId, nDataLen, pData);
@@ -371,8 +371,13 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		updateClientAlive(nId);
 		break;
 	default:
-		_log("[CATcpServer] Unknow message command");
+		_log("[CATcpServer] %s Unknow message command", strTaskName.c_str());
 		break;
 	}
 
+}
+
+string CATcpServer::taskName()
+{
+	return "CATcpServer";
 }

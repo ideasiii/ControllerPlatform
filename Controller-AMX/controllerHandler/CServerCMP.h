@@ -34,6 +34,7 @@ protected:
 	int onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody);
+	std::string taskName();
 
 private:
 	std::map<int, int> mapClient;

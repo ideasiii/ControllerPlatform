@@ -95,3 +95,8 @@ int CServerAuth::onResponse(int nSocket, int nCommand, int nStatus, int nSequenc
 	return nSocket;
 }
 
+string CServerAuth::taskName()
+{
+	return "CServerAuth";
+}
+

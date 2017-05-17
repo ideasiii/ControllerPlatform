@@ -183,3 +183,8 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 			break;
 	}
 }
+
+string CServerCMP::taskName()
+{
+	return "CServerCMP";
+}
