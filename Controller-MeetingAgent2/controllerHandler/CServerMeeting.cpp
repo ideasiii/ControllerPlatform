@@ -79,7 +79,7 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 	return nRet;
 }
 
-int CServerMeeting::cmpBind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 
 	mapClient.push_back(nSocket);
@@ -89,7 +89,7 @@ int CServerMeeting::cmpBind(int nSocket, int nCommand, int nSequence, const void
 	return TRUE;
 }
 
-int CServerMeeting::cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
+int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 	deleteClient(nSocket);
 

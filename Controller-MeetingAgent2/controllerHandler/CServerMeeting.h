@@ -32,8 +32,8 @@ public:
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 private:
 
-	int cmpBind(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
+	int onBind(int nSocket, int nCommand, int nSequence, const void *szBody);
+	int onUnbind(int nSocket, int nCommand, int nSequence, const void *pData);
 
 
 	CMPData parseCMPData(int nSocket, int nCommand, int nSequence, const void *szBody);
