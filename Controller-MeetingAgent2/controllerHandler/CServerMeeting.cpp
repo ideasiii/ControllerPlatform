@@ -40,10 +40,6 @@ int CServerMeeting::onResponse(int nSocket, int nCommand, int nStatus, int nSequ
 
 }
 
-void CServerMeeting::onClientDisconnect(unsigned long int nSocketFD)
-{
-	//deleteClient(nSocketFD);
-}
 
 int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 {
