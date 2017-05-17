@@ -16,6 +16,7 @@ public:
 	CServerAuth(CObject *object);
 	virtual ~CServerAuth();
 	int auth(const char *szToken, const char *szID);
+	int isValid();
 
 protected:
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
@@ -25,7 +26,6 @@ protected:
 private:
 	CObject *mpController;
 	unsigned long int mAuthServer;
-	std::map<std::string, int> mapAuth;
 };
 
 //=========================封包說明=========================================//

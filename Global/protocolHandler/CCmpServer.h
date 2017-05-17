@@ -126,11 +126,13 @@ protected:
 	//=============== AMX Service ======================//
 	virtual int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		printf("[CCmpServer] onAmxControl Command: %d Body: %s\n", nCommand, reinterpret_cast<const char*>(szBody));
 		return 0;
 	}
 	;
 	virtual int onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		printf("[CCmpServer] onAmxStatus Command: %d Body: %s\n", nCommand, reinterpret_cast<const char*>(szBody));
 		return 0;
 	}
 	;

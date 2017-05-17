@@ -23,6 +23,7 @@ class CController: public CApplication
 	{
 		std::string strToken;
 		std::string strId;
+		std::string strCommand;
 	} AMX_CTRL_AUTH;
 
 public:
@@ -40,4 +41,5 @@ private:
 	CServerAMX *serverAMX;
 	CServerCMP *serverCMP;
 	CServerAuth *serverAuth;
+	std::map<int, AMX_CTRL_AUTH> mapCtrlAuth;
 };

@@ -189,9 +189,9 @@ void CATcpServer::runMessageReceive()
 	_log("[CATcpServer] runMessageReceive Stop, Thread join");
 }
 
-int CATcpServer::getEventId()
+int CATcpServer::getEventFilter()
 {
-	return mnMsqKey;
+	return CATCP_MSQ_EVENT_FILTER;
 }
 
 void CATcpServer::runTcpReceive()

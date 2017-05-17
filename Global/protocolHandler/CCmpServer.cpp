@@ -171,7 +171,7 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
 	}
 	else
-		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
+		sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
 
 	return nResult;
 }
@@ -272,8 +272,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
 				}
-				sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
-						pBuf);
+				sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen, pBuf);
 			}
 		}
 		else

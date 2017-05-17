@@ -14,6 +14,7 @@
 #include "utility.h"
 #include "event.h"
 #include "packet.h"
+#include "JSONObject.h"
 
 using namespace std;
 
@@ -114,21 +115,84 @@ int CController::onFinish(void* nMsqKey)
 
 void CController::onHandleMessage(Message &message)
 {
-	string strToken;
-	string strId;
+
 	switch(message.what)
 	{
+	case authentication_request:
+	{
+		JSONObject *jobj = new JSONObject(message.strData);
+		if(jobj->isValid())
+		{
+			string strToken = jobj->getString("TOKEN");
+			string strId = jobj->getString("ID");
+			if(!strToken.empty() && !strId.empty())
+			{
+				AMX_CTRL_AUTH ctrlAuth;
+				ctrlAuth.strId = strId;
+				ctrlAuth.strToken = strToken;
+				mapCtrlAuth[message.arg[0]] = ctrlAuth;
+				serverAuth->auth(strToken.c_str(), strId.c_str());
+			}
+		}
+		jobj->release();
+		delete jobj;
+	}
+		break;
 	case amx_control_request: // From CMP Server
-		if(!serverAuth->auth(strToken, strId))
+		if(!serverAuth->isValid())
 			serverAMX->requestAMX(message.strData.c_str());
+		else
+		{
+			map<int, AMX_CTRL_AUTH>::const_iterator it;
+			it = mapCtrlAuth.find(message.arg[0]);
+			if(mapCtrlAuth.end() == it)
+			{
+				serverAMX->requestAMX(message.strData.c_str());
+			}
+			else
+			{
+				AMX_CTRL_AUTH ctrlAuth;
+				ctrlAuth.strId = it->second.strId;
+				ctrlAuth.strToken = it->second.strToken;
+				ctrlAuth.strCommand = message.strData;
+				mapCtrlAuth[message.arg[0]] = ctrlAuth;
+			}
+		}
 		break;
 	case amx_status_request: // From CMP Server
 		serverAMX->requestAMX(message.strData.c_str());
+		//=================== broadcast volum dummy ==================//
+		serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
+		//=================== dummy end ==============================//
 		break;
 	case amx_status_response: // From AMX Box
 		serverCMP->broadcastAMXStatus(message.strData.c_str());
 		break;
 	case authentication_response:
+	{
+		string strId = message.strData;
+		string strCommand;
+		int nId = -1;
+		map<int, AMX_CTRL_AUTH>::const_iterator it;
+		for(it = mapCtrlAuth.begin(); mapCtrlAuth.end() != it; ++it)
+		{
+			if(0 == strId.compare(it->second.strId))
+			{
+				nId = it->first;
+				strCommand = it->second.strCommand;
+				break;
+			}
+		}
+
+		if(-1 != nId)
+		{
+			if(1 == message.arg[0] && !strCommand.empty())
+			{
+				serverAMX->requestAMX(strCommand.c_str());
+			}
+			mapCtrlAuth.erase(nId);
+		}
+	}
 		break;
 	default:
 		_log("[CController] onHandleMessage Unknow what: %d", message.what);

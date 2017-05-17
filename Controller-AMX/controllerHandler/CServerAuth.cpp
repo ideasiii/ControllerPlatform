@@ -39,15 +39,18 @@ int CServerAuth::onUnbind(int nSocket, int nCommand, int nSequence, const void *
 	return TRUE;
 }
 
+int CServerAuth::isValid()
+{
+	return mAuthServer;
+}
+
 int CServerAuth::auth(const char *szToken, const char *szID)
 {
 	string strBody;
 
-	strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szID);
-
-	if(mAuthServer)
+	if(mAuthServer && szToken && szID)
 	{
-		mapAuth[szID] = 0;
+		strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szID);
 		request(mAuthServer, authentication_request, STATUS_ROK, getSequence(), strBody.c_str());
 	}
 	else
@@ -62,24 +65,28 @@ int CServerAuth::onResponse(int nSocket, int nCommand, int nStatus, int nSequenc
 {
 	string strBody;
 	string strId;
+	string strAuth;
+	int nAuth;
 
-	if((authentication_request == (0x000000FF & nCommand)) && szBody)
+	if((authentication_request == (0xFF & nCommand)) && szBody)
 	{
 		strBody = reinterpret_cast<const char*>(szBody);
 		JSONObject *jobj = new JSONObject(strBody);
 		if(jobj->isValid())
 		{
 			strId = jobj->getString("ID");
+			strAuth = jobj->getString("AUTH");
+			if(!strAuth.empty() && 0 == strAuth.compare("y"))
+				nAuth = 1;
+			else
+				nAuth = 0;
 			if(!strId.empty())
 			{
-				if(mapAuth.end() != mapAuth.find(strId))
-				{
-					mapAuth[strId] = 1;
-					Message message;
-					message.what = authentication_response;
-					message.strData = strId;
-					mpController->sendMessage(message);
-				}
+				Message message;
+				message.what = authentication_response;
+				message.arg[0] = nAuth;
+				message.strData = strId;
+				mpController->sendMessage(message);
 			}
 		}
 		jobj->release();

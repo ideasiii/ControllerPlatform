@@ -21,10 +21,14 @@ CServerAMX::~CServerAMX()
 
 int CServerAMX::onAmxStatus(unsigned long int nSocketFD, const char *szStatus)
 {
-	Message message;
-	message.what = amx_status_response;
-	message.strData = szStatus;
-	return mpController->sendMessage(message);
+	if(szStatus)
+	{
+		Message message;
+		message.what = amx_status_response;
+		message.strData = szStatus;
+		return mpController->sendMessage(message);
+	}
+	return FALSE;
 }
 
 void CServerAMX::onClientConnect(unsigned long int nSocketFD)

@@ -11,6 +11,7 @@
 #include "common.h"
 #include "packet.h"
 #include "JSONObject.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -54,12 +55,15 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 
 	nStatus = STATUS_RINVJSON;
 
+	_log("[CServerCMP] onAmxControl Body: %s", strBody.c_str());
+
 	if(!strBody.empty())
 	{
 		JSONObject *jobj = new JSONObject(strBody);
 		if(jobj->isValid())
 		{
 			Message message;
+			int nId = getSequence();
 
 			amxCommand.nFunction = jobj->getInt("function");
 			amxCommand.nDevice = jobj->getInt("device");
@@ -70,10 +74,14 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 			//========= auth token ==================//
 			if(amxCommand.strToken.empty() || amxCommand.strId.empty())
 			{
-
+				_log("[CServerCMP] onAmxControl Invalid Auth data");
+				return response(nSocket, nCommand, nStatus, nSequence, 0);
 			}
 
 			message.what = authentication_request;
+			message.arg[0] = nId;
+			message.strData = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", amxCommand.strToken, amxCommand.strId);
+			mpController->sendMessage(message);
 
 			//========= send control command ========//
 			strCommand = getAMXControlRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nControl);
@@ -81,8 +89,8 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 			{
 				_log("[CServerCMP] onAmxControl Command: %s", strCommand.c_str());
 				nStatus = STATUS_ROK;
-
 				message.what = amx_control_request;
+				message.arg[0] = nId;
 				message.strData = strCommand;
 				mpController->sendMessage(message);
 			}
@@ -104,6 +112,8 @@ int CServerCMP::onAmxStatus(int nSocket, int nCommand, int nSequence, const void
 	strBody = reinterpret_cast<const char*>(szBody);
 
 	nStatus = STATUS_RINVJSON;
+
+	_log("[CServerCMP] onAmxStatus Body: %s", strBody.c_str());
 
 	if(!strBody.empty())
 	{
@@ -133,12 +143,27 @@ int CServerCMP::onAmxStatus(int nSocket, int nCommand, int nSequence, const void
 
 void CServerCMP::broadcastAMXStatus(const char *szStatus)
 {
+	if(0 == szStatus)
+		return;
+
+	int nLevel;
+	unsigned int nIndex;
+	string strStatus = szStatus;
+	nIndex = strStatus.find("_VOL_");
+	if(string::npos != nIndex)
+	{
+		string strLevel = strStatus.substr((nIndex + 5));
+		_log("[CServerCMP] broadcastAMXStatus Volumn Level: %s", strLevel.c_str());
+	}
+
 	int nId = getAMXStatusResponse(szStatus);
 	if(10000 > nId)
 	{
 		_log("[CServerCMP] broadcastAMXStatus Invalid status: %s , code:%d", szStatus, nId);
 		return;
 	}
+
+	_log("[CServerCMP] broadcastAMXStatus : %s", szStatus);
 
 	JSONObject jobjStatus;
 	jobjStatus.put("function", nId / 10000);
