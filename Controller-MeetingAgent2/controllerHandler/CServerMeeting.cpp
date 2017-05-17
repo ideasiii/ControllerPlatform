@@ -79,7 +79,7 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 
 	if (nRet <= 0)
 	{
-		mapClient.erase(mapClient.begin());
+		//mapClient.erase(mapClient.begin());
 	}
 	_log("[CServerMeeting]SendCommand nRet %d");
 	return nRet;
@@ -88,7 +88,8 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void *pData)
 {
 
-	mapClient.push_back(nSocket);
+	addClient(nSocket);
+
 	_log("[CServerMeeting] Socket Controller-Meeting Client FD:%d Binded", nSocket);
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
@@ -103,8 +104,14 @@ int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const voi
 	return TRUE;
 }
 
+
+
+
+
+
 void CServerMeeting::addClient(const int nSocketFD)
 {
+	mapClient.push_back(nSocketFD);
 	_log("[CServerMeeting] Socket Client FD:%d Connected", nSocketFD);
 }
 
