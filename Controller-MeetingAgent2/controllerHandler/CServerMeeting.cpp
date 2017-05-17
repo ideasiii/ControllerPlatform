@@ -40,6 +40,10 @@ int CServerMeeting::onResponse(int nSocket, int nCommand, int nStatus, int nSequ
 
 }
 
+void CServerMeeting::onClientDisconnect(unsigned long int nSocketFD)
+{
+	deleteClient(nSocketFD);
+}
 
 int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 {
@@ -76,6 +80,12 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 	{
 		_log("[CServerMeeting] ERROR to find Controller-Meeting Socket ID!");
 	}
+
+	if (nRet <= 0)
+	{
+		mapClient.erase(mapClient.begin());
+	}
+	_log("[CServerMeeting]SendCommand nRet %d");
 	return nRet;
 }
 
@@ -142,7 +152,7 @@ void CServerMeeting::runEnquireLinkRequest()
 
 	while (1)
 	{
-		tdEnquireLink->threadSleep(600);
+		tdEnquireLink->threadSleep(10);
 
 		for (size_t i = 0; i < mapClient.size(); i++)
 		{

@@ -30,6 +30,9 @@ public:
 	void runEnquireLinkRequest();
 	int controllerCallBack(int nSocketFD, int nDataLen, const void *pData);
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
+
+protected:
+	void onClientDisconnect(unsigned long int nSocketFD);
 private:
 
 	int onBind(int nSocket, int nCommand, int nSequence, const void *szBody);
