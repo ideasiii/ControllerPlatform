@@ -136,10 +136,13 @@ protected:
 		return 0;
 	}
 	;
+
+protected:
+	virtual std::string taskName();
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);
 	std::map<int, MemFn> mapFunc;
 	int sendPacket(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
 	CONF_CMP_SERVER *confCmpServer;
-
+	std::string strTaskName;
 };

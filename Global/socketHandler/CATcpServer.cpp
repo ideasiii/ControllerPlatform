@@ -318,7 +318,6 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch(nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
-		_TRACE("");
 		mapClient[nId].ulReceiveThreadID = createThread(threadTcpReceive, this);
 		if(0 >= mapClient[nId].ulReceiveThreadID)
 		{

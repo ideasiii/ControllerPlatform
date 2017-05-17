@@ -12,6 +12,7 @@
 #include "packet.h"
 #include "event.h"
 #include "CMessageHandler.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ CCmpServer::CCmpServer() :
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();
+	strTaskName = taskName();
 }
 
 CCmpServer::~CCmpServer()
@@ -183,6 +185,7 @@ void CCmpServer::idleTimeout(bool bRun, int nIdleTime)
 
 int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 {
+	strTaskName = taskName();
 //======= Receive CMP Header ==========//
 	int result;
 	CMP_HEADER cmpHeader;
@@ -280,12 +283,14 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 			//================== Check CMP Response ===================//
 			if( generic_nack == (generic_nack & nCommand))
 			{
-				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
+				printPacket(nCommand, nStatus, nSequence, nTotalLen,
+						format("[CCmpServer] %s onReceive Response ", strTaskName.c_str()).c_str(), nSocketFD);
 				onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
 			}
 			else
 			{
-				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Request ", nSocketFD);
+				printPacket(nCommand, nStatus, nSequence, nTotalLen,
+						format("[CCmpServer] %s onReceive request ", strTaskName.c_str()).c_str(), nSocketFD);
 				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
 			}
 		}
@@ -297,4 +302,9 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 	}
 
 	return result;
+}
+
+string CCmpServer::taskName()
+{
+	return "CCmpServer";
 }
