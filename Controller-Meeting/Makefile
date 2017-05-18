@@ -41,15 +41,17 @@ endef
 .IGNORE: clean cleanAll
 
 all: checkdirs bin/$(TARGET)
+	# use symbolic link to make sure change is synchronized between 2 locations
 	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
-	@ln -s $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+	@ln -s ../$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
 
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
 init: package-u checkdirs bin/$(TARGET)
+	# use symbolic link to make sure change is synchronized between 2 locations
 	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
-	@ln -s $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+	@ln -s $(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
 
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"

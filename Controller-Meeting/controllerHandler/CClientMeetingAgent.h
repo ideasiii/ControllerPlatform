@@ -13,7 +13,7 @@ class CClientAmxController;
 class CCmpHandler;
 class CConfig;
 class CSocketClient;
-class UserAppVersionHandler;
+class AppVersionHandler;
 
 class CClientMeetingAgent: public CSocketClient
 {
@@ -54,9 +54,7 @@ private:
 	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 	
-	int initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
-
 	DoorAccessHandler doorAccessHandler;
-	unique_ptr<UserAppVersionHandler> userAppVersionHandler;
+	unique_ptr<AppVersionHandler> appVersionHandler;
 	unique_ptr<CClientAmxController> amxControllerClient;
 };

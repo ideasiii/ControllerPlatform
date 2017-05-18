@@ -13,11 +13,9 @@
 #include "IReceiver.h"
 #include "JSONObject.h"
 #include "TestStringsDefinition.h"
-#include "UserAppVersionHandler/UserAppVersionHandler.h"
-#include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
-#include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandlerFactory.h"
 
-#define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG WATCHER"
 #define CONF_BLOCK_AMX_CONTROLLER "CLIENT AMX CONTROLLER"
 
 CClientMeetingAgent::CClientMeetingAgent() :
@@ -39,10 +37,14 @@ CClientMeetingAgent::~CClientMeetingAgent()
 
 int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 {
-	if (initUserAppVersionHandler(config) == FALSE)
+	auto appVerHandlerRet = AppVersionHandlerFactory::createFromConfig(config);
+	if (appVerHandlerRet == nullptr)
 	{
+		_log("[CController] onInitial(): AppVersionHandler cannot be instantiated");
 		return FALSE;
 	}
+	
+	appVersionHandler.reset(appVerHandlerRet);
 
 	string strAmxControllerIp = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "server_ip");
 	string strAmxControllerUserControlPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "user_port");
@@ -62,40 +64,6 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 		amxControllerUserControlPort, amxControllerValidationPort));
 
 	return doorAccessHandler.initMember(config);
-}
-
-// 根據 config 檔有甚麼可以用的就初始化其中一種 UserAppVersionHandler
-int CClientMeetingAgent::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
-{
-	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
-	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
-	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
-	string strDownloadLinkBase = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "download_link_base");
-
-	if (!strAaptPath.empty() && !strApkDir.empty()
-		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
-	{
-		_log("[CController] onInitial(): init UserApkPeekingAppVersionHandler");
-		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
-		userAppVersionHandler.reset(new UserApkPeekingAppVersionHandler(
-			apkQuierer, strPkgName, strApkDir, strDownloadLinkBase));
-		return TRUE;
-	}
-
-	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
-	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
-
-	if (!strAppDownloadLinkConfigDir.empty()
-		&& !strAppDownloadLinkConfigName.empty())
-	{
-		_log("[CController] onInitial(): init UserConfigFileAppVersionHandler");
-		userAppVersionHandler.reset(new UserConfigFileAppVersionHandler(
-			strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName));
-		return TRUE;
-	}
-
-	_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
-	return FALSE;
 }
 
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
@@ -136,9 +104,9 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 		this->cmpBindRequest();
 	}
 
-	if (userAppVersionHandler != nullptr)
+	if (appVersionHandler != nullptr)
 	{
-		userAppVersionHandler->start();
+		appVersionHandler->start();
 	}
 
 	return TRUE;
@@ -193,9 +161,9 @@ void CClientMeetingAgent::stopClient()
 	cmpUnbindRequest();
 	stop();
 
-	if (this->userAppVersionHandler != nullptr)
+	if (this->appVersionHandler != nullptr)
 	{
-		userAppVersionHandler->stop();
+		appVersionHandler->stop();
 	}
 
 	if (amxControllerClient != nullptr)
@@ -358,7 +326,7 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	_DBG("[CClientMeetingAgent] cmpAPPVersion");
 	string bodyData;
 
-	if (this->userAppVersionHandler == nullptr)
+	if (this->appVersionHandler == nullptr)
 	{
 		bodyData =
 			R"({"VERSION": "0.0.0", "VERSION_CODE": 0, "APP_DOWNLOAD_URL": ""})";
@@ -366,9 +334,9 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	else
 	{
 		bodyData =
-			"{\"VERSION\": \"" + userAppVersionHandler->getVersionName()
-			+ "\", \"VERSION_CODE\": " + std::to_string(userAppVersionHandler->getVersionCode())
-			+ ", \"APP_DOWNLOAD_URL\": \"" + userAppVersionHandler->getDownloadLink() + "\"}";
+			"{\"VERSION\": \"" + appVersionHandler->getVersionName()
+			+ "\", \"VERSION_CODE\": " + std::to_string(appVersionHandler->getVersionCode())
+			+ ", \"APP_DOWNLOAD_URL\": \"" + appVersionHandler->getDownloadLink() + "\"}";
 	}
 
 	sendCommand(generic_nack | nCommand, nSequence, bodyData);

@@ -48,7 +48,7 @@ validation_port = 2311
 # app 版本 handler 的相關設定. 當客戶端要求回傳最新的 app 版本時
 # controller-meeting 會給出最新的 app 版本以及下載位址
 #
-# 本區塊的設定都是要餵給 UserAppVersionHandler 的某個子類別, 每個子類別分別對應到一種監控方案
+# 本區塊的設定都是要餵給 AppVersionHandler 的某個子類別, 每個子類別分別對應到一種監控方案
 # 這些類別透過持續監控某個資料夾是否有更新內容, 及時更新要回傳的 app 版本以及下載網址
 #
 # 若以下各種方案的參數皆有設定, 優先使用方案 2, 否則使用方案 1
@@ -57,7 +57,7 @@ validation_port = 2311
 
 # 方案 1: 監控一個資料夾下的 json 檔案, json 檔寫有 app 版本以及下載網址.
 # 若發布新版本, 先把新版 apk 放在下載伺服器, 再修改 config_dir 下的 config_name 的內容,
-# 就能在不重啟 controller 的情況下更新 UserAppVersionHandler 傳回給客戶端的最新 app 版本以及下載網址
+# 就能在不重啟 controller 的情況下更新 AppVersionHandler 傳回給客戶端的最新 app 版本以及下載網址
 # 而 config_name 指向的檔案的內容格式可以參考 app_version_handler_config.sample.json
 # config_dir = /you/can/put/json/file/in/the/dir/where/controller-meeting/resides
 # config_name = app_version_handler_config.json
@@ -67,7 +67,7 @@ validation_port = 2311
 # package_name 是 app 的 package name, 作為過濾非相關 apk 之用
 # download_link_base 是下載網址前綴，結尾不加上 '/'
 # 若發布新版本, 先把新版 apk 放在下載伺服器, 再把新版 apk 放在 apk_dir
-# 就能在不重啟 controller 的情況下更新 UserAppVersionHandler 傳回給客戶端的最新 app 版本
+# 就能在不重啟 controller 的情況下更新 AppVersionHandler 傳回給客戶端的最新 app 版本
 # 下載網址為 [download_link_base]/[新版apk名稱], 故放在伺服器上的 apk 名稱要跟放在 apk_dir 內的 apk 名稱相同
 aapt_path = /full/path/of/android-sdk/build-tools/aapt
 apk_dir = /dir/where/apk/is/in

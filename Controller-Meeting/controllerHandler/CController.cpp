@@ -15,9 +15,7 @@
 #include "HiddenUtility.hpp"
 #include "ICallback.h"
 #include "JSONObject.h"
-#include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
-#include "UserAppVersionHandler/UserAppVersionHandler.h"
-#include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandler.h"
 
 using namespace std;
 
@@ -154,6 +152,11 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 void CController::onHandleMessage(Message &message)
 {
 	_log("[CController] onHandleMessage(): Message will not be processed");
+}
+
+std::string CController::taskName()
+{
+	return "CController";
 }
 
 int CController::startClientMeetingAgent(string strIP, const int nPort, const int nMsqId)

@@ -5,7 +5,7 @@
 
 export MODULES=controllerHandler \
 controllerHandler/DoorAccessControl \
-controllerHandler/UserAppVersionHandler \
+controllerHandler/AppVersionHandler \
 ../Global/application \
 ../Global/aesCryptoHandler \
 ../Global/androidPackageInfoQuerier \

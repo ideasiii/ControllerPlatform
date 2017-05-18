@@ -22,16 +22,19 @@ public:
 
 protected:
 	// return message queue key here
-	int onCreated(void* nMsqKey);
+	int onCreated(void* nMsqKey) override;
 
 	// allocate resources here
-	int onInitial(void* szConfPath);
+	int onInitial(void* szConfPath) override;
 
 	// release resources here
-	int onFinish(void* nMsqKey);
+	int onFinish(void* nMsqKey) override;
 
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-	virtual void onHandleMessage(Message &message);
+	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) override;
+	void onHandleMessage(Message &message) override;
+
+	std::string taskName() override;
+
 private:
 	int mnMsqKey; 
 	std::unique_ptr<CClientMeetingAgent> mCClientMeetingAgent;

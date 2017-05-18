@@ -5,11 +5,11 @@
 #include <sys/inotify.h>
 #include "CObject.h"
 
-// 處理使用者裝置 app 版本更新檢查要求的類別 
-class UserAppVersionHandler : CObject
+// 處理使用者裝置 app 版本更新檢查要求的類別
+class AppVersionHandler : CObject
 {
 public:
-	virtual ~UserAppVersionHandler();
+	virtual ~AppVersionHandler();
 
 	// 啟動 watcher thread
 	void start();
@@ -21,6 +21,7 @@ public:
 	virtual int getVersionCode() = 0;
 	virtual std::string getVersionName() = 0;
 	virtual std::string getDownloadLink() = 0;
+	virtual std::string taskName() override;
 
 protected:
 	std::string watchDir;
@@ -40,11 +41,11 @@ protected:
 	// apk info 最後更新時間
 	int64_t lastUpdated;
 
-	explicit UserAppVersionHandler(std::string watchDirectory, int inotifyMask);
+	explicit AppVersionHandler(std::string watchDirectory, int inotifyMask);
 
 	// 這個類別不使用 message queue 傳遞訊息
-	virtual void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
-		const void* pData);
+	void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
+		const void* pData) override;
 
 	// 刷新類別內的變數
 	virtual void reload() = 0;
@@ -53,10 +54,11 @@ private:
 	const int inotifyEventMask; 
 	pthread_t watcherThreadId;
 	bool doLoop;
-	
+	std::string strTaskName;
+
 	// 在目前的執行緒執行 watcher
 	// 沒事不要用，應該呼叫 start()
 	virtual void runWatcher();
 
-	friend void *threadStartRoutine_UserAppVersionHandler_runWatcher(void *);
+	friend void *threadStartRoutine_AppVersionHandler_runWatcher(void *);
 };
