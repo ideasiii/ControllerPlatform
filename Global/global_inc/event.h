@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define EVENT_FILTER								2000
+#define EVENT_FILTER								90000
 #define EVENT_COMMAND								3000
 #define EVENT_MSQ_KEY								4000
 
@@ -110,7 +110,6 @@ enum _EVENT_COMMAND
 #define EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_TRACKER						(EVENT_COMMAND + SOCKET_CLIENT_DISCONNECT_TRACKER)
 #define EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE								(EVENT_COMMAND + SOCKET_TCP_CONNECT_ALIVE)
 #define EVENT_COMMAND_HANDLE_MESSAGE										(EVENT_COMMAND + HANDLE_MESSAGE)
-
 
 #define EVENT_COMMAND_SOCKET_SERVER_COLSE									(EVENT_COMMAND + SOCKET_SERVER_CLOSE)
 //===================================================================================//

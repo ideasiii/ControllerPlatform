@@ -72,7 +72,16 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 	return mapAlbums.size();
 }
 
-int CSpotify::getSong(const char *szAlbumId, std::set<std::string> &setSong)
+/*
+ * "href": "https://api.spotify.com/v1/tracks/6Y2XecuoGvqs5iHhkxQ1OU",
+ "id": "6Y2XecuoGvqs5iHhkxQ1OU",
+ "name": "千言萬語",
+ "popularity": 33,
+ "preview_url": "https://p.scdn.co/mp3-preview/972d630c82c37aca213def7115946e23756e9e43?cid=null",
+ "track_number": 1,
+ "type": "track",
+ "uri": "spotify:track:6Y2XecuoGvqs5iHhkxQ1OU"*/
+int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong)
 {
 	if(0 == szAlbumId)
 		return 0;
@@ -93,9 +102,15 @@ int CSpotify::getSong(const char *szAlbumId, std::set<std::string> &setSong)
 			JSONObject *jTrack = new JSONObject(jItems->getJsonObject(i));
 			if(0 == jTrack->getString("type").compare("track"))
 			{
-				strSong = jTrack->getString("name");
-				if(!strSong.empty())
-					setSong.insert(strSong);
+				TRACK track;
+				track.href = jTrack->getString("href");
+				track.id = jTrack->getString("id");
+				track.name = jTrack->getString("name");
+				track.popularity = jTrack->getInt("popularity");
+				track.preview_url = jTrack->getString("preview_url");
+				track.track_number = jTrack->getInt("track_number");
+				track.uri = jTrack->getString("uri");
+				mapSong[jTrack->getInt("track_number")] = track;
 			}
 			jTrack->release();
 			delete jTrack;
@@ -107,6 +122,6 @@ int CSpotify::getSong(const char *szAlbumId, std::set<std::string> &setSong)
 		delete jroot;
 	}
 
-	return setSong.size();
+	return mapSong.size();
 }
 

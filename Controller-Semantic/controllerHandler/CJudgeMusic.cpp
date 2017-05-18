@@ -33,6 +33,9 @@ CJudgeMusic::~CJudgeMusic()
 int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 {
 	string strArtist;
+	string strAlbum;
+	string strTrack;
+	string strTrackUri;
 
 	strArtist = getArtistTaiwan(szInput);
 	if(strArtist.empty())
@@ -50,16 +53,28 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 			for(it = mapAlbums.begin(); mapAlbums.end() != it; ++it)
 			{
 				_log("[CJudgeMusic] word get %s - %s -- %s", strArtist.c_str(), it->first.c_str(), it->second.c_str());
+				map<int, TRACK> mapSong;
+				spotify.getTrack(it->second.c_str(), mapSong);
+				for(map<int, TRACK>::const_iterator cit = mapSong.begin(); mapSong.end() != cit; ++cit)
+				{
+					_log("			 %s - %s", it->first.c_str(), cit->second.name.c_str());
+					if(strTrack.empty())
+					{
+						strAlbum = it->first;
+						strTrack = cit->second.name;
+						strTrackUri = cit->second.uri;
+					}
+				}
 			}
 		}
 	}
 
 	JSONObject jsonSpotify;
 	jsonSpotify.put("source", 2);
-	jsonSpotify.put("album", "");
+	jsonSpotify.put("album", strAlbum);
 	jsonSpotify.put("artist", strArtist);
-	jsonSpotify.put("song", "");
-	jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
+	jsonSpotify.put("song", strTrack);
+	jsonSpotify.put("id", strTrackUri);
 	jsonResp->put("type", TYPE_RESP_MUSIC);
 	jsonResp->put("music", jsonSpotify);
 	return TRUE;
