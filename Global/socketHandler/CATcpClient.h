@@ -25,7 +25,7 @@ class CATcpClient: public CSocket, public CObject
 	} SOCKET_SERVER;
 
 public:
-	int start(const char* cszAddr, short nPort, int nMsqKey);
+	int connect(const char* cszAddr, short nPort, int nMsqKey);
 	void stop();
 	void closeServer();
 	void runMessageReceive();
@@ -42,6 +42,12 @@ protected:
 	 * Overload function
 	 */
 protected:
+	virtual bool callbackReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen,
+			const void* pData)
+	{
+		return false;
+	}
+	;
 	virtual void onTimer(int nId)
 	{
 	}
@@ -58,8 +64,17 @@ protected:
 	 */
 	virtual int onTcpReceive(unsigned long int nSocketFD);
 
+	virtual void onServerConnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+	virtual void onServerDisconnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+
 private:
-	int IDLE_TIMEOUT ; // secons
+	int IDLE_TIMEOUT; // secons
 
 	int mnExtMsqKey;
 	void checkIdle();
@@ -68,7 +83,7 @@ private:
 	int mnMsqKey; // Message queue key and filter ID.
 	unsigned long munRunThreadId; // Message queue run thread ID.
 
-	SOCKET_SERVER mSocketServer ;
+	SOCKET_SERVER mSocketServer;
 };
 
 #endif /* GLOBAL_SOCKETHANDLER_CATCPCLIENT_H_ */

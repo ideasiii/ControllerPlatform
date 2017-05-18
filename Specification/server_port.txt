@@ -1,0 +1,23 @@
+[SERVER MONGODB]
+port = 27027
+
+[SERVER DISPATCHER]
+port   = 6607
+
+[SERVER SIGNIN]
+port   = 2306
+
+[SERVER TRACKER]
+port   = 2307	
+
+[SERVER AMX]
+port   = 2308
+
+[SERVER DEVICE]
+port   = 2309
+
+[SERVER WORD]
+port = 2310
+
+[SERVER AUTHENTICATION]
+port = 2311

@@ -1,19 +1,18 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <map>
 #include <memory>
-#include "CApplication.h"
+#include <string>
+#include <vector>
 #include "common.h"
 #include "packet.h"
+#include "CApplication.h"
 
 using namespace std;
 
 class CClientMeetingAgent;
 class CConfig;
 class CThreadHandler;
-class UserAppVersionHandler;
 
 class CController: public CApplication
 {
@@ -23,24 +22,29 @@ public:
 
 protected:
 	// return message queue key here
-	int onCreated(void* nMsqKey);
+	int onCreated(void* nMsqKey) override;
 
 	// allocate resources here
-	int onInitial(void* szConfPath);
+	int onInitial(void* szConfPath) override;
 
 	// release resources here
-	int onFinish(void* nMsqKey);
+	int onFinish(void* nMsqKey) override;
 
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-	virtual void onHandleMessage(Message &message);
+	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData) override;
+	void onHandleMessage(Message &message) override;
+
+	std::string taskName() override;
+
 private:
 	int mnMsqKey; 
-	CClientMeetingAgent *mCClientMeetingAgent;
+	std::unique_ptr<CClientMeetingAgent> mCClientMeetingAgent;
 
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
+	std::unique_ptr<CThreadHandler> tdEnquireLink;
+	std::unique_ptr<CThreadHandler> tdExportLog;
 	std::vector<int> vEnquireLink;
 
-	UserAppVersionHandler *initUserAppVersionHandler(std::unique_ptr<CConfig> &config);
+	pthread_t tdEnquireLinkTid;
+
 	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);
+	friend void *threadStartRoutine_CController_enquireLink(void *args);
 };

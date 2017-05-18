@@ -11,40 +11,35 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "CObject.h"
+#include "CApplication.h"
 
-class CCmpHandler;
-class CThreadHandler;
-class CJsonHandler;
 class CServerAMX;
-class CServerDevice;
-class CSocket;
+class CServerCMP;
+class CServerAuth;
 
-class CController: public CObject
+class CController: public CApplication
 {
+	typedef struct _AMX_CTRL_AUTH
+	{
+		std::string strToken;
+		std::string strId;
+		std::string strCommand;
+	} AMX_CTRL_AUTH;
+
 public:
+	explicit CController();
 	virtual ~CController();
-	static CController* getInstance();
-	int startServerAMX(std::string strIP, const int nPort, const int nMsqId);
-	int startServerDevice(std::string strIP, const int nPort, const int nMsqId);
-	void stopServer();
-	void onAMXCommand(std::string strCommand);
-	void onAMXResponseStatus(std::string strStatus);
-	void setAMXBusyTimer(int nSec);
 
 protected:
-	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int onCreated(void* nMsqKey);
+	int onInitial(void* szConfPath);
+	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 private:
-	explicit CController();
-
-public:
-	CCmpHandler *cmpParser;
-
-private:
+	int mnMsqKey;
 	CServerAMX *serverAMX;
-	CServerDevice *serverDevice;
-	CThreadHandler *tdEnquireLink;
-	CThreadHandler *tdExportLog;
-	std::vector<int> vEnquireLink;
+	CServerCMP *serverCMP;
+	CServerAuth *serverAuth;
+	std::map<int, AMX_CTRL_AUTH> mapCtrlAuth;
 };

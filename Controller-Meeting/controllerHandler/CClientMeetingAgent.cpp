@@ -1,18 +1,25 @@
-#include "IReceiver.h"
-#include "event.h"
-#include "common.h"
 #include "CClientMeetingAgent.h"
-#include "CCmpHandler.h"
-#include "CDataHandler.cpp"
-#include "TestStringsDefinition.h"
-#include "JSONObject.h"
-#include "ICallback.h"
-#include "packet.h"
-#include "UserAppVersionHandler/UserAppVersionHandler.h"
-#include "CThreadHandler.h"
 
-CClientMeetingAgent::CClientMeetingAgent(UserAppVersionHandler *appVerHandler) :
-	CSocketClient(), cmpParser(CCmpHandler::getInstance()), userAppVersionHandler(appVerHandler)
+#include "common.h"
+#include "event.h"
+#include "packet.h"
+#include "AndroidPackageInfoQuierer.hpp"
+#include "CClientAmxController.h"
+#include "CCmpHandler.h"
+#include "CConfig.h"
+#include "CDataHandler.cpp"
+#include "CThreadHandler.h"
+#include "ICallback.h"
+#include "IReceiver.h"
+#include "JSONObject.h"
+#include "TestStringsDefinition.h"
+#include "AppVersionHandler/AppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandlerFactory.h"
+
+#define CONF_BLOCK_AMX_CONTROLLER "CLIENT AMX CONTROLLER"
+
+CClientMeetingAgent::CClientMeetingAgent() :
+	CSocketClient(), cmpParser(CCmpHandler::getInstance())
 {
 	mapFunc[bind_response] = &CClientMeetingAgent::cmpBindResponse;
 	mapFunc[unbind_response] = &CClientMeetingAgent::cmpUnbindResponse;
@@ -25,12 +32,38 @@ CClientMeetingAgent::CClientMeetingAgent(UserAppVersionHandler *appVerHandler) :
 
 CClientMeetingAgent::~CClientMeetingAgent()
 {
-	stop();
+	stopClient();
+}
 
-	if (this->userAppVersionHandler != nullptr)
+int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
+{
+	auto appVerHandlerRet = AppVersionHandlerFactory::createFromConfig(config);
+	if (appVerHandlerRet == nullptr)
 	{
-		userAppVersionHandler->stop();
+		_log("[CController] onInitial(): AppVersionHandler cannot be instantiated");
+		return FALSE;
 	}
+	
+	appVersionHandler.reset(appVerHandlerRet);
+
+	string strAmxControllerIp = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "server_ip");
+	string strAmxControllerUserControlPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "user_port");
+	string strAmxControllerValidationPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "validation_port");
+	if (strAmxControllerIp.empty() || strAmxControllerUserControlPort.empty()
+		|| strAmxControllerValidationPort.empty())
+	{
+		_log("[CController] onInitial(): AMX controller client config 404");
+		return FALSE;
+	}
+
+	int amxControllerUserControlPort;
+	int amxControllerValidationPort;
+	convertFromString(amxControllerUserControlPort, strAmxControllerUserControlPort);
+	convertFromString(amxControllerValidationPort, strAmxControllerValidationPort);
+	amxControllerClient.reset(new CClientAmxController(strAmxControllerIp,
+		amxControllerUserControlPort, amxControllerValidationPort));
+
+	return doorAccessHandler.initMember(config);
 }
 
 int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nMsqId)
@@ -71,21 +104,10 @@ int CClientMeetingAgent::startClient(string strIP, const int nPort, const int nM
 		this->cmpBindRequest();
 	}
 
-	if (userAppVersionHandler != nullptr)
+	if (appVersionHandler != nullptr)
 	{
-		userAppVersionHandler->start();
+		appVersionHandler->start();
 	}
-
-	CThreadHandler *ct = new CThreadHandler();
-	ct->createThread([](void* args) -> void*
-	{
-		sleep(10);
-		_log("[YOOOOOOOOOOOOOOOOOO] Thread timeout reached, call stop() to stop UserAppVersionHandler watcher");
-		UserAppVersionHandler *uavh = (reinterpret_cast<UserAppVersionHandler*>(args));
-		_log("[YOOOOOOOOOOOOOOOOOO] got uavh, stop it"); 
-		uavh->stop();
-		return NULL;
-	}, (void *) userAppVersionHandler.get());
 
 	return TRUE;
 }
@@ -107,7 +129,7 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 	{
 		if (bodyData.size() > 0)
 		{
-			_log("[CServerMeeting] command %d, seqNum is %d, data: %s\n", commandID, seqNum, bodyData.c_str());
+			_log("[CServerMeeting] command %s, seqNum is %d, data: %s\n", numberToHex(commandID).c_str(), seqNum, bodyData.c_str());
 			if (bodyData.size() > MAX_SIZE - 17)
 			{
 				nRet = sendPacket(dynamic_cast<CSocket*>(this), nSocket, commandID, STATUS_ROK, seqNum,
@@ -121,7 +143,7 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 		}
 		else
 		{
-			_log("[CServerMeeting] command %d, seqNum is %d\n", commandID, seqNum);
+			_log("[CServerMeeting] command %s, seqNum is %d\n", numberToHex(commandID).c_str(), seqNum);
 			nRet = sendPacket(dynamic_cast<CSocket*>(this), nSocket, commandID, STATUS_ROK, seqNum, 0);
 		}
 	}
@@ -134,7 +156,21 @@ int CClientMeetingAgent::sendCommand(int commandID, int seqNum, string bodyData)
 
 void CClientMeetingAgent::stopClient()
 {
+	_log("[CClientMeetingAgent] stopClient() step in");
+
+	cmpUnbindRequest();
 	stop();
+
+	if (this->appVersionHandler != nullptr)
+	{
+		appVersionHandler->stop();
+	}
+
+	if (amxControllerClient != nullptr)
+	{
+		//amxControllerClient->stop();
+	}
+
 }
 
 void CClientMeetingAgent::onReceive(const int nSocketFD, const void *pData)
@@ -290,7 +326,7 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	_DBG("[CClientMeetingAgent] cmpAPPVersion");
 	string bodyData;
 
-	if (this->userAppVersionHandler == nullptr)
+	if (this->appVersionHandler == nullptr)
 	{
 		bodyData =
 			R"({"VERSION": "0.0.0", "VERSION_CODE": 0, "APP_DOWNLOAD_URL": ""})";
@@ -298,9 +334,9 @@ int CClientMeetingAgent::cmpAPPVersion(int nSocket, int nCommand, int nSequence,
 	else
 	{
 		bodyData =
-			"{\"VERSION\": \"" + userAppVersionHandler->getVersionName()
-			+ "\", \"VERSION_CODE\": " + std::to_string(userAppVersionHandler->getVersionCode())
-			+ ", \"APP_DOWNLOAD_URL\": \"" + userAppVersionHandler->getDownloadLink() + "\"}";
+			"{\"VERSION\": \"" + appVersionHandler->getVersionName()
+			+ "\", \"VERSION_CODE\": " + std::to_string(appVersionHandler->getVersionCode())
+			+ ", \"APP_DOWNLOAD_URL\": \"" + appVersionHandler->getDownloadLink() + "\"}";
 	}
 
 	sendCommand(generic_nack | nCommand, nSequence, bodyData);
@@ -343,32 +379,40 @@ int CClientMeetingAgent::cmpGetMeetingData(int nSocket, int nCommand, int nSeque
 
 int CClientMeetingAgent::cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData)
 {
-	_DBG("[CClientMeetingAgent]cmpAMXControlAcess");
 	const CMP_PACKET * cmpPacket = reinterpret_cast<const CMP_PACKET *>(pData);
 	_log("[ClientMeetingAgent] In CMPAMXControlAccess get body: %s", cmpPacket->cmpBody.cmpdata);
 
 	if (htonl(cmpPacket->cmpHeader.command_length) > 16)
 	{
-		_log("[ClientMeetingAgent] In CMPQRcodeToken get body:%s", cmpPacket->cmpBody.cmpdata);
+		_log("[ClientMeetingAgent] In CMPQRcodeToken get body: %s", cmpPacket->cmpBody.cmpdata);
 		string strRequestBodyData = string(cmpPacket->cmpBody.cmpdata);
 		string strResponseBodyData = "";
 
-		if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos
+		std::stringstream ss;
+
+		if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
 			&& strRequestBodyData.find("ITES_101") != string::npos)
 		{
 			//OK can control AMX
-			strResponseBodyData =
-				"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"54.199.198.94\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
-				//"{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\",\"RESULT\": true,\"ROOM_IP\": \"175.98.119.121\",\"ROOM_PORT\": 2309,\"ROOM_TOKEN\": \"28084ca1-7386-4fa6-b174-098ee2784a5d\"}";
-
+			ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
+				<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerClient->getServerIp()
+				<< "\", \"ROOM_PORT\": " << amxControllerClient->getUserPort()
+				<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
+			strResponseBodyData = ss.str();
 		}
 		else
 		{
 			//NO can not control AMX
-			strResponseBodyData = "{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\",\"RESULT\": false}";
+			ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
+				<< "\", \"RESULT\": false}";
+			strResponseBodyData = ss.str();
 		}
 
 		sendCommand(generic_nack | nCommand, nSequence, strResponseBodyData);
+	}
+	else 
+	{
+		// pdu bad size, send reject
 	}
 
 	return TRUE;
@@ -405,11 +449,12 @@ void CClientMeetingAgent::cmpUnbindRequest()
 {
 	if (this->isValidSocketFD())
 	{
+		_log("[CClientMeetingAgent] cmpUnbindRequest() send command!");
 		sendCommand(unbind_request, getSequence(), "");
 	}
 	else
 	{
-		_log("[CClientMeetingAgent] ERROR while send unBind Request!");
+		_log("[CClientMeetingAgent] cmpUnbindRequest() ERROR while send unBind Request!");
 	}
 
 }

@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <sstream>
 #include <string.h>
-
 #include "AesCrypto.h"
 #include "FakeCmpClient.h"
 #include "JSONObject.h"
@@ -14,12 +13,11 @@
 int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t *oBuf, int bufSize);
 std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu);
 
-Ites1fDacClient::Ites1fDacClient(const char *ip, int port, const uint8_t *key):
+Ites1fDacClient::Ites1fDacClient(const std::string ip, int port, const uint8_t *key):
 	serverIp(ip), serverPort(port)
 {
-	// ITES_1F_DOOR_CONTROL_AES_KEY is defined in CryptoKey.h like this:
-	// #define ITES_1F_DOOR_CONTROL_AES_KEY "a string with 32 characters....."
-	
+	_log("[Ites1fDacClient] construct with server ip %s, port %d. key not shown.", ip.c_str(), port);
+
 	memcpy(aesKey, key, AesCrypto::KeyLength);
 }
 
@@ -30,7 +28,7 @@ Ites1fDacClient::~Ites1fDacClient()
 bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUuid,
 	std::string readerId, std::string token, int64_t validFrom, int64_t goodThrough)
 {
-	_log("[Ites1F_DAClient] Enter doorOpen()");
+	_log("[Ites1F_DAClient] doorOpen() step in");
 	CMP_PACKET reqPdu, respPdu;
 
 	std::stringstream ss;
@@ -42,7 +40,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		<< "}";
 
 	const std::string& reqBody = ss.str();
-	_log("[Ites1F_DAClient] reqBody.size() = %d", reqBody.size());
+	_log("[Ites1F_DAClient] doorOpen() reqBody.size() = %d", reqBody.size());
 
 #ifdef ENCRYPT_REQUEST_PDU_BODY
 	AesCrypto crypto(aesKey);
@@ -69,7 +67,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		return false;
 	}
 
-	_log("[Ites1F_DAClient] reqPduSize = %d", reqPduSize);
+	_log("[Ites1F_DAClient] doorOpen() reqPduSize = %d", reqPduSize);
 
 	FakeCmpClient client(this->serverIp.data(), this->serverPort);
 	int respPduSize = client.sendOnlyOneRequest(&reqPdu, reqPduSize, &respPdu);
@@ -88,13 +86,13 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 
 	if (respBodyStr.length() < 2)
 	{
-		_log("[Ites1F_DAClient] decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
+		_log("[Ites1F_DAClient] doorOpen() decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
 		errorDescription.assign("Reading server response failed");
 		return false;
 	}
 	else
 	{
-		_log("[Ites1F_DAClient] response body decrypt ok: `%s`\n", respBodyStr.c_str());
+		_log("[Ites1F_DAClient] doorOpen() response body decrypt ok: `%s`\n", respBodyStr.c_str());
 	}
 #else
 	std::string respBodyStr(respPdu.cmpBody.cmpdata);
@@ -104,7 +102,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	JSONObject respJson(respBodyStr);
 	if (!respJson.isValid())
 	{
-		_log("[Ites1F_DAClient] respJson.isValid() = false");
+		_log("[Ites1F_DAClient] doorOpen() respJson.isValid() = false");
 		errorDescription.assign("Reading server response failed");
 		return false;
 	}
@@ -115,7 +113,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		bool granted = respJson.getBoolean("granted");
 		std::string message = respJson.getString("message");
 
-		_log("[Ites1F_DAClient] Request failed (granted: %s): `%s`\n",
+		_log("[Ites1F_DAClient] doorOpen() request failed (granted: %s): `%s`\n",
 			granted ? "true" : "false", message.c_str());
 		
 		if(granted)
@@ -130,7 +128,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		return false;
 	}
 	
-	_log("[Ites1F_DAClient] Request successful\n");
+	_log("[Ites1F_DAClient] doorOpen() request successful\n");
 	return true;
 }
 

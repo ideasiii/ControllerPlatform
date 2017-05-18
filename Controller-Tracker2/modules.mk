@@ -1,12 +1,12 @@
                                                                                                                                                                                                                                                                                                                                                                           #####################################
-# ControllerMeetingAgent module file
-# Created on: 2017-02-13
+# Controller-Tracker module file
+# Created on: 2017-05-10
 # Author: Joe
-# Project: Smart Building
+# Project: Tracker
 #####################################
 
-export MODULES=main \
-controllerHandler \
+export MODULES=controllerHandler \
+../Global/application \
 ../Global/cmpHandler	\
 ../Global/global_inc \
 ../Global/configHandler	\

@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <errno.h>
@@ -149,4 +150,15 @@ __attribute__ ((unused)) static long int nowSecond()
 	time_t tnow;
 	time(&tnow);
 	return tnow;
+}
+
+// 將 i 的數值轉換為 16 進位表示法的字串
+template<typename T>
+__attribute__ ((unused)) static std::string numberToHex(T i)
+{
+	std::stringstream stream;
+	stream << "0x"
+		<< std::setfill('0') << std::setw(sizeof(T) * 2)
+		<< std::hex << i;
+	return stream.str();
 }

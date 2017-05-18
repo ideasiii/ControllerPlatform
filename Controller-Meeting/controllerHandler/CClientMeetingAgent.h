@@ -4,24 +4,31 @@
 #include <map>
 #include <memory>
 
-#include "CSocketClient.h"
-#include "ICallback.h"
 #include "CMPData.h"
+#include "CSocketClient.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
+#include "ICallback.h"
 
+class CClientAmxController;
 class CCmpHandler;
+class CConfig;
 class CSocketClient;
-class UserAppVersionHandler;
+class AppVersionHandler;
 
 class CClientMeetingAgent: public CSocketClient
 {
 public:
 	void onReceive(const int nSocketFD, const void *pData);
 public:
-	// ownership of appLinkHandler will be transfered!
-	explicit CClientMeetingAgent(UserAppVersionHandler *appVerHandler);
-
+	// Ownership of appLinkHandler will be transfered!
+	// Do not use appVerHandler outside CClientMeetingAgent later on
+	explicit CClientMeetingAgent();
 	virtual ~CClientMeetingAgent();
+
+	// Intializes members that needs parameters in config.
+	// Returns FALSE if anything bad happens
+	int initMember(std::unique_ptr<CConfig> &config);
+
 	int startClient(string strIP, const int nPort, const int nMsqId);
 	void stopClient();
 	int sendCommand(int commandID, int seqNum, string bodyData);
@@ -41,7 +48,6 @@ private:
 	int cmpBindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpUnbindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 
-
 	//MeetingAgent Request for SmartBuilding
 	int cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
@@ -49,5 +55,6 @@ private:
 	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
 	
 	DoorAccessHandler doorAccessHandler;
-	unique_ptr<UserAppVersionHandler> userAppVersionHandler;
+	unique_ptr<AppVersionHandler> appVersionHandler;
+	unique_ptr<CClientAmxController> amxControllerClient;
 };

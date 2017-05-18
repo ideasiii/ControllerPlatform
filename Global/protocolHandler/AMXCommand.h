@@ -184,14 +184,32 @@ static map<string, string> AMX_STATUS_TO_CMD = create_amx_map<string, string>("S
 
 inline static string getAMXControlRequest(const int nFunction, const int nDevice, const int nControl)
 {
+	string strCommand;
 	int nId = (10000 * nFunction) + (100 * nDevice) + nControl;
-	return AMX_CONTROL_REQUEST[nId];
+	map<int, string>::const_iterator it = AMX_CONTROL_REQUEST.find(nId);
+	if(AMX_CONTROL_REQUEST.end() != it)
+		strCommand = AMX_CONTROL_REQUEST[nId];
+	return strCommand;
 }
 
 inline static string getAMXStatusRequest(const int nFunction, const int nDevice, const int nControl)
 {
+	string strCommand;
 	int nId = (10000 * nFunction) + (100 * nDevice) + nControl;
-	return AMX_STATUS_REQUEST[nId];
+	map<int, string>::const_iterator it = AMX_STATUS_REQUEST.find(nId);
+	if(AMX_STATUS_REQUEST.end() != it)
+		strCommand = AMX_STATUS_REQUEST[nId];
+	return strCommand;
+}
+
+inline static int getAMXStatusResponse(const char * szCommand)
+{
+	int nStatus = -1;
+	map<string, int>::const_iterator it;
+	it = AMX_STATUS_RESP.find(szCommand);
+	if(AMX_STATUS_RESP.end() != it)
+		nStatus = AMX_STATUS_RESP[szCommand];
+	return nStatus;
 }
 
 //================================================================================================================================

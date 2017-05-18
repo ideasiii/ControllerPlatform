@@ -15,7 +15,7 @@ BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
-CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++14 $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++14 -fno-limit-debug-info $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -41,12 +41,18 @@ endef
 .IGNORE: clean cleanAll
 
 all: checkdirs bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	# use symbolic link to make sure change is synchronized between 2 locations
+	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@ln -s ../$(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
 init: package-u checkdirs bin/$(TARGET)
-	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	# use symbolic link to make sure change is synchronized between 2 locations
+	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@ln -s $(TARGET).conf $(DIR_APP_ROOT)bin/$(TARGET).conf
+
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 

@@ -7,10 +7,11 @@
 
 #include "CMPData.h"
 
-CMPData::CMPData()
+CMPData::CMPData():nFD(-1),nSequence(-1), nCommand(-1)
 {
 
 }
+
 
 CMPData::CMPData(CMPData * mCMPData)
 {

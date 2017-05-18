@@ -5,223 +5,199 @@
  *      Author: Jugo
  */
 
-#include <list>
-#include <ctime>
-
-#include "CSocket.h"
-#include "CSocketServer.h"
-#include "CSocketClient.h"
-#include "event.h"
-#include "utility.h"
-#include "CCmpHandler.h"
 #include "CController.h"
-#include "CDataHandler.cpp"
-#include "CThreadHandler.h"
+#include "common.h"
+#include "CConfig.h"
 #include "CServerAMX.h"
-#include "CServerDevice.h"
-#include "AMXCommand.h"
-#include "iCommand.h"
-#include "JSONObject.h"
+#include "CServerCMP.h"
+#include "CServerAuth.h"
+#include "utility.h"
+#include "event.h"
 #include "packet.h"
+#include "JSONObject.h"
 
 using namespace std;
 
-static CController * controller = 0;
-
-/** Callback Function AMX Request from Mobile **/
-void IonAMXCommandControl(void* param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void IonAMXCommandStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXCommand(strParam);
-}
-
-void CController::onAMXCommand(string strCommand)
-{
-	serverAMX->sendCommand(strCommand);
-}
-
-/** Callback Function AMX Response from AMX **/
-void IonAMXResponseStatus(void *param)
-{
-	string strParam = reinterpret_cast<const char*>(param);
-	controller->onAMXResponseStatus(strParam);
-}
-
-void CController::onAMXResponseStatus(string strStatus)
-{
-	serverDevice->broadcastAMXStatus(strStatus);
-}
-
-/**
- * Define Socket Client ReceiveFunction
- */
-int ClientReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	//controlcenter->receiveCMP(nSocketFD, nDataLen, pData);
-	return 0;
-}
-
-/**
- *  Define Socket Server Receive Function
- */
-int ServerReceive(int nSocketFD, int nDataLen, const void *pData)
-{
-	//controlcenter->receiveClientCMP(nSocketFD, nDataLen, pData);
-	return 0;
-}
-
-/**
- *  Define extern function.
- */
-int sendCommand(int nSocket, int nCommand, int nStatus, int nSequence, bool isResp, CSocket *socket)
-{
-	if(NULL == socket)
-	{
-		_log("[Controller] Send Command Fail, Socket invalid");
-		return -1;
-	}
-	int nRet = -1;
-	int nCommandSend;
-	CMP_HEADER cmpHeader;
-	void *pHeader = &cmpHeader;
-
-	memset(&cmpHeader, 0, sizeof(CMP_HEADER));
-	nCommandSend = nCommand;
-
-	if(isResp)
-	{
-		nCommandSend = generic_nack | nCommand;
-	}
-
-	controller->cmpParser->formatHeader(nCommandSend, nStatus, nSequence, &pHeader);
-	nRet = socket->socketSend(nSocket, &cmpHeader, sizeof(CMP_HEADER));
-	printPacket(nCommandSend, nStatus, nSequence, nRet, "[Controller] Send", nSocket);
-	return nRet;
-}
-
-int cmpSend(CSocket *socket, const int nSocket, const int nCommandId, const int nSequence, const char * szData)
-{
-	int nRet = -1;
-	int nBody_len = 0;
-	int nTotal_len = 0;
-
-	CMP_PACKET packet;
-	void *pHeader = &packet.cmpHeader;
-	char *pIndex = packet.cmpBody.cmpdata;
-
-	memset(&packet, 0, sizeof(CMP_PACKET));
-
-	controller->cmpParser->formatHeader(nCommandId, STATUS_ROK, nSequence, &pHeader);
-	if(0 != szData)
-	{
-		memcpy(pIndex, szData, strlen(szData));
-		pIndex += strlen(szData);
-		nBody_len += strlen(szData);
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-	}
-
-	nTotal_len = sizeof(CMP_HEADER) + nBody_len;
-	packet.cmpHeader.command_length = htonl(nTotal_len);
-	nRet = socket->socketSend(nSocket, &packet, nTotal_len);
-	printPacket(nCommandId, STATUS_ROK, nSequence, nRet, "[Controller] Send", nSocket);
-
-	string strLog;
-	if(0 >= nRet)
-	{
-		_log("[Controller] CMP Send Fail socket: %d", nSocket);
-	}
-
-	return nRet;
-}
-
 CController::CController() :
-		CObject(), cmpParser(CCmpHandler::getInstance()), serverAMX(CServerAMX::getInstance()), serverDevice(
-				CServerDevice::getInstance()), tdEnquireLink(new CThreadHandler), tdExportLog(new CThreadHandler)
+		mnMsqKey(-1), serverAMX(0), serverCMP(0), serverAuth(0)
 {
 
 }
 
 CController::~CController()
 {
-	delete cmpParser;
+
 }
 
-CController* CController::getInstance()
+int CController::onCreated(void* nMsqKey)
 {
-	if(0 == controller)
+	serverAMX = new CServerAMX(this);
+	serverCMP = new CServerCMP(this);
+	serverAuth = new CServerAuth(this);
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_AMX;
+	return mnMsqKey;
+}
+
+int CController::onInitial(void* szConfPath)
+{
+	int nSecond;
+	int nRet;
+	int nPort;
+	string strPort;
+	CConfig *config;
+	string strConfPath;
+
+	nRet = FALSE;
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
+	if(strConfPath.empty())
+		return nRet;
+
+	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
+
+	config = new CConfig();
+	if(config->loadConfig(strConfPath))
 	{
-		controller = new CController();
+		strPort = config->getValue("SERVER AMX", "port");
+		if(!strPort.empty())
+		{
+			convertFromString(nPort, strPort);
+			if(serverAMX->start(0, nPort, mnMsqKey))
+			{
+				strPort = config->getValue("SERVER DEVICE", "port");
+				if(!strPort.empty())
+				{
+					convertFromString(nPort, strPort);
+					if(serverCMP->start(0, nPort, mnMsqKey))
+					{
+						_log("[CController] onInitial CMP Server Start! Port: %d", nPort);
+						strPort = config->getValue("SERVER AUTHENTICATION", "port");
+						if(!strPort.empty())
+						{
+							convertFromString(nPort, strPort);
+							if(serverAuth->start(0, nPort, mnMsqKey))
+							{
+								_log("[CController] onInitial Auth Server Start! Port: %d", nPort);
+								nRet = TRUE;
+							}
+						}
+					}
+				}
+			}
+		}
+
 	}
-	return controller;
+	delete config;
+	return nRet;
 }
 
-void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
-{
-	switch(nCommand)
-	{
-	case EVENT_COMMAND_SOCKET_TCP_AMX_RECEIVE:
-		serverAMX->onReceive(nId, static_cast<char*>(const_cast<void*>(pData)));
-		break;
-	case EVENT_COMMAND_SOCKET_TCP_DEVICE_RECEIVE:
-		serverDevice->onReceive(nId, pData);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_AMX:
-		serverAMX->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_CONNECT_DEVICE:
-		serverDevice->addClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_AMX:
-		serverAMX->deleteClient(nId);
-		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_DISCONNECT_DEVICE:
-		serverDevice->deleteClient(nId);
-		break;
-	default:
-		_log("[Controller] Unknow message command: %d", nCommand);
-		break;
-	}
-}
-
-int CController::startServerAMX(string strIP, const int nPort, const int nMsqId)
-{
-	serverAMX->setCallback(CB_AMX_COMMAND_STATUS, IonAMXResponseStatus);
-	return serverAMX->startServer(strIP, nPort, nMsqId);
-}
-
-int CController::startServerDevice(string strIP, const int nPort, const int nMsqId)
-{
-	serverDevice->setCallback(CB_AMX_COMMAND_CONTROL, IonAMXCommandControl);
-	serverDevice->setCallback(CB_AMX_COMMAND_STATUS, IonAMXCommandStatus);
-	return serverDevice->startServer(strIP, nPort, nMsqId);
-}
-
-void CController::stopServer()
+int CController::onFinish(void* nMsqKey)
 {
 	if(serverAMX)
 	{
-		serverAMX->stopServer();
+		serverAMX->stop();
 		delete serverAMX;
 		serverAMX = 0;
 	}
 
-	if(serverDevice)
+	if(serverCMP)
 	{
-		serverDevice->stopServer();
-		delete serverDevice;
-		serverDevice = 0;
+		serverCMP->stop();
+		delete serverCMP;
+		serverCMP = 0;
 	}
+
+	if(serverAuth)
+	{
+		serverAuth->stop();
+		delete serverAuth;
+		serverAuth = 0;
+	}
+	return TRUE;
 }
 
-void CController::setAMXBusyTimer(int nSec)
+void CController::onHandleMessage(Message &message)
 {
-	serverDevice->setAmxBusyTimeout(nSec);
+
+	switch(message.what)
+	{
+	case authentication_request:
+	{
+		JSONObject *jobj = new JSONObject(message.strData);
+		if(jobj->isValid())
+		{
+			string strToken = jobj->getString("TOKEN");
+			string strId = jobj->getString("ID");
+			if(!strToken.empty() && !strId.empty())
+			{
+				AMX_CTRL_AUTH ctrlAuth;
+				ctrlAuth.strId = strId;
+				ctrlAuth.strToken = strToken;
+				mapCtrlAuth[message.arg[0]] = ctrlAuth;
+				serverAuth->auth(strToken.c_str(), strId.c_str());
+			}
+		}
+		jobj->release();
+		delete jobj;
+	}
+		break;
+	case amx_control_request: // From CMP Server
+		if(!serverAuth->isValid())
+			serverAMX->requestAMX(message.strData.c_str());
+		else
+		{
+			map<int, AMX_CTRL_AUTH>::const_iterator it;
+			it = mapCtrlAuth.find(message.arg[0]);
+			if(mapCtrlAuth.end() == it)
+			{
+				serverAMX->requestAMX(message.strData.c_str());
+			}
+			else
+			{
+				AMX_CTRL_AUTH ctrlAuth;
+				ctrlAuth.strId = it->second.strId;
+				ctrlAuth.strToken = it->second.strToken;
+				ctrlAuth.strCommand = message.strData;
+				mapCtrlAuth[message.arg[0]] = ctrlAuth;
+			}
+		}
+		break;
+	case amx_status_request: // From CMP Server
+		serverAMX->requestAMX(message.strData.c_str());
+		//=================== broadcast volum dummy ==================//
+		serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
+		//=================== dummy end ==============================//
+		break;
+	case amx_status_response: // From AMX Box
+		serverCMP->broadcastAMXStatus(message.strData.c_str());
+		break;
+	case authentication_response:
+	{
+		string strId = message.strData;
+		string strCommand;
+		int nId = -1;
+		map<int, AMX_CTRL_AUTH>::const_iterator it;
+		for(it = mapCtrlAuth.begin(); mapCtrlAuth.end() != it; ++it)
+		{
+			if(0 == strId.compare(it->second.strId))
+			{
+				nId = it->first;
+				strCommand = it->second.strCommand;
+				break;
+			}
+		}
+
+		if(-1 != nId)
+		{
+			if(1 == message.arg[0] && !strCommand.empty())
+			{
+				serverAMX->requestAMX(strCommand.c_str());
+			}
+			mapCtrlAuth.erase(nId);
+		}
+	}
+		break;
+	default:
+		_log("[CController] onHandleMessage Unknow what: %d", message.what);
+		break;
+	}
 }

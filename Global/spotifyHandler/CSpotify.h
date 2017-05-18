@@ -10,11 +10,23 @@
 #include <set>
 #include <map>
 
+typedef struct _TRACK
+{
+	int track_number;
+	int popularity;
+	std::string href;
+	std::string id;
+	std::string name;
+	std::string preview_url;
+	std::string uri;
+} TRACK;
+
 class CSpotify
 {
+
 public:
 	CSpotify();
 	virtual ~CSpotify();
 	int getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums);
-	int getSong(const char *szAlbumId, std::set<std::string> &setSong);
+	int getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong);
 };

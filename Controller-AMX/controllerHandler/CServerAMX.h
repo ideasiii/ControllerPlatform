@@ -7,32 +7,23 @@
 
 #pragma once
 
-#include "CSocketServer.h"
-#include <string>
-#include <map>
+#include "CAMXServer.h"
 
-#include "iCommand.h"
-#include "ICallback.h"
-
-class CServerAMX: public CSocketServer
+class CServerAMX: public CAMXServer
 {
 public:
-	static CServerAMX * getInstance();
+	explicit CServerAMX(CObject *object);
 	virtual ~CServerAMX();
-	int startServer(std::string strIP, const int nPort, const int nMsqId);
-	void stopServer();
-	int sendCommand(std::string strCommand);
-	int sendCommand(const int nSocketFD, std::string strCommand);
-	void bind(const int nSocketFD);
-	void unbind(const int nSocketFD);
-	bool onReceive(const int nSocketFD, std::string strCommand);
-	void addClient(const int nSocketFD);
-	void deleteClient(const int nSocketFD);
-	void setCallback(const int nId, CBFun cbfun);
+	int requestAMX(const char *szCommand);
+
+protected:
+	void onClientConnect(unsigned long int nSocketFD);
+	void onClientDisconnect(unsigned long int nSocketFD);
+	int onAmxStatus(unsigned long int nSocketFD, const char *szStatus);
+	std::string taskName();
 
 private:
-	CServerAMX();
-	std::map<int, int> mapClient;
-	std::map<int, CBFun> mapCallback;
+	CObject *mpController;
+	unsigned long int mAmxBox;
 
 };

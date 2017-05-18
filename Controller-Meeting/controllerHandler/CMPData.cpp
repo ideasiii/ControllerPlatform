@@ -16,16 +16,16 @@ CMPData::CMPData(CMPData * mCMPData)
 {
 	this->nFD = mCMPData->nFD;
 	this->nCommand = mCMPData->nCommand;
-	this->bodyData = string(mCMPData->bodyData);
+	this->bodyData = std::string(mCMPData->bodyData);
 	this->nSequence = mCMPData->nSequence;
 }
 
-CMPData::CMPData(int nFD, int nCommand, int nSequence, string bodyData)
+CMPData::CMPData(int nFD, int nCommand, int nSequence, std::string bodyData)
 {
 	this->nFD = nFD;
 	this->nCommand = nCommand;
 	this->nSequence = nSequence;
-	this->bodyData = string(bodyData);
+	this->bodyData = std::string(bodyData);
 
 }
 

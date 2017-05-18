@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-#include "CSocketClient.h"
+#include "CCmpClient.h"
 #include <string>
 #include "CThreadHandler.h"
 using namespace std;
@@ -12,29 +12,24 @@ class CCmpHandler;
 class CSocketClient;
 class DynamicField;
 
-class CClientControllerMongoDB: public CSocketClient
+class CClientControllerMongoDB: public CCmpClient
 {
 public:
-	void onReceive(const int nSocketFD, const void *pData);
-public:
-	static CClientControllerMongoDB * getInstance();
+	CClientControllerMongoDB(CObject * object);
 	virtual ~CClientControllerMongoDB();
-	int startClient(string strIP, const int nPort, const int nMsqId);
-	void stopClient();
 	int sendCommand(const void * param);
 	int sendCommand(int commandID, int seqNum);
 
 private:
-	CClientControllerMongoDB();
+
 	int cmpAccessLogRequest(string strType, string strLog);
-	int cmpAccessLogResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 	int cmpEnquireLinkRequest(const int nSocketFD);
-	int cmpEnquireLinkResponse(int nSocket, int nCommand, int nSequence, const void *pData);
 
-	CCmpHandler *cmpParser;
+	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 
-	typedef int (CClientControllerMongoDB::*MemFn)(int, int, int, const void *);
-	map<int, MemFn> mapFunc;
 	DynamicField * dynamicField;
+	CObject *mpController;
+
+
 
 };

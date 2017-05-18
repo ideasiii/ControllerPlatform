@@ -59,6 +59,7 @@ void _log(const char* format, ...)
 
 	writeLog(strLog.length(), strLog.c_str());
 
+	//cout << strLog << endl;
 	printf("%s\n", strLog.c_str());
 
 }

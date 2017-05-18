@@ -25,7 +25,7 @@ public:
 	int start(const char* cszAddr, short nPort, int nMsqKey = -1);
 	void stop();
 	void closeClient(int nClientFD);
-	int getEventId();
+	int getEventFilter();
 
 	/**
 	 * Below function is called by thread
@@ -47,6 +47,12 @@ protected:
 	 * Overload function
 	 */
 protected:
+	virtual bool callbackReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen,
+			const void* pData)
+	{
+		return false;
+	}
+	;
 	virtual void onTimer(int nId)
 	{
 	}
@@ -63,6 +69,16 @@ protected:
 	 */
 	virtual int onTcpReceive(unsigned long int nSocketFD);
 
+	virtual void onClientConnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+	virtual void onClientDisconnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+
+	virtual std::string taskName();
 private:
 	void checkIdle();
 	void eraseClient(unsigned long int ulSocketFD);
@@ -74,5 +90,7 @@ private:
 	unsigned long int getClientThreadID(unsigned long int unSocketFD);
 	void updateClientAlive(unsigned long int ulSocketFD);
 	std::map<unsigned long int, SOCKET_CLIENT> mapClient;
+	int CATCP_MSQ_EVENT_FILTER;
+	std::string strTaskName;
 };
 

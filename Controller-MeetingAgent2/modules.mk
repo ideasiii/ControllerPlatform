@@ -1,3 +1,10 @@
+######################################                                                                                                                                                                                                                                                                                                                                                                         #####################################
+# Controller-MeetingAgent module file#   
+# Created on: 2017-05-10			 #
+# Author: Joe						 #
+# Project: MeetingAgent				 #	
+######################################
+
 export MODULES=controllerHandler \
 ../Global/application \
 ../Global/global_inc \
@@ -10,7 +17,6 @@ export MODULES=controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/mysqlHandler \
 ../Global/protocolHandler
 			 
 #export EXT_MODULES=extInclude

@@ -1,6 +1,7 @@
 /**
  * Holds info of an Android package (apk) file
- * This class relys on an external application, AAPT
+ * This class relys on an external tool, AAPT
+ * Compiler must support C++11 features
  */
 
 #include <cstdio>
@@ -13,21 +14,19 @@
 #include "LogHandler.h"
 #include "utility.h"
 
-#define PKG_NAME_VER_PATTERN R"_(package: name='(([A-Za-z]{1}[A-Za-z\d_]*\.)*[A-Za-z][A-Za-z\d_]*)' versionCode='(\d+)' versionName='([^\']+)')_"
+// aapt d badge 指令返回的結果中，與 apk 版本有關的 regex pattern
+#define PKG_NAME_VER_PATTERN R"(package: name='(([A-Za-z]{1}[A-Za-z\d_]*\.)*[A-Za-z][A-Za-z\d_]*)' versionCode='(\d+)' versionName='([^\']+)')"
 
 class AndroidPackageInfoQuierer
 {
 public:
-	AndroidPackageInfoQuierer(std::string aaptPath, std::string pkgName)
+	AndroidPackageInfoQuierer(std::string aaptPath, std::string pkgName) :
+		aaptPath(aaptPath), packageName(pkgName), versionCode(-1)
 	{
-		this->aaptPath = aaptPath;
-		this->packageName = pkgName;
-		this->versionCode = -1;
 	}
 
 	~AndroidPackageInfoQuierer()
 	{
-
 	}
 	
 	bool extractVersionFromApk(std::string apkPath)
@@ -37,9 +36,9 @@ public:
 
 		cmd += aaptPath + " d badging " + apkPath;
 		_log("[AndroidPackageInfoQuierer] extractVersionFromApk() cmd = `%s`", cmd.c_str());
-		FILE *pipe = popen(cmd.c_str(), "r");
+		FILE *hFile = popen(cmd.c_str(), "r");
 		
-		if (!pipe)
+		if (!hFile)
 		{
 			_log("[AndroidPackageInfoQuierer] extractVersionFromApk() popen() failed!");
 			return false;
@@ -47,20 +46,20 @@ public:
 		
 		try
 		{
-			while (!feof(pipe))
+			while (!feof(hFile))
 			{
-				if (fgets(buffer, sizeof(buffer), pipe) != NULL)
+				if (fgets(buffer, sizeof(buffer), hFile) != NULL)
 					result += buffer;
 			}
 		}
 		catch (const bad_alloc &e)
 		{
 			_log("[AndroidPackageInfoQuierer] extractVersionFromApk() bad_alloc occured");
-			pclose(pipe);
+			pclose(hFile);
 			return false;
 		}
 
-		int ret = pclose(pipe);
+		int ret = pclose(hFile);
 		if (ret != 0)
 		{
 			_log("[AndroidPackageInfoQuierer] extractVersionFromApk() execution of aapt failed (%d)", ret);
@@ -89,20 +88,20 @@ public:
 			return false;
 		}
 
-		convertFromString(this->versionCode, extractedVersionCode);
-		this->versionName = extractedVersionName;
+		convertFromString(versionCode, extractedVersionCode);
+		versionName = extractedVersionName;
 
 		return true;
 	}
 
 	int getVersionCode()
 	{
-		return this->versionCode;
+		return versionCode;
 	}
 
 	std::string getVersionName()
 	{
-		return this->versionName;
+		return versionName;
 	}
 
 private:

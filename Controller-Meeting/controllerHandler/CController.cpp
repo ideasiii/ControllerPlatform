@@ -1,8 +1,8 @@
 #include <list>
 #include <memory>
+#include <limits.h>
 #include "event.h"
 #include "utility.h"
-#include "AndroidPackageInfoQuierer.hpp"
 #include "CClientMeetingAgent.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
@@ -12,16 +12,32 @@
 #include "CSocketClient.h"
 #include "CSocketServer.h"
 #include "CThreadHandler.h"
+#include "HiddenUtility.hpp"
 #include "ICallback.h"
 #include "JSONObject.h"
-#include "UserAppVersionHandler/UserApkPeekingAppVersionHandler.h"
-#include "UserAppVersionHandler/UserAppVersionHandler.h"
-#include "UserAppVersionHandler/UserConfigFileAppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandler.h"
 
 using namespace std;
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
-#define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG"
+
+void *threadStartRoutine_CController_enquireLink(void *args)
+{
+	auto ctlr = reinterpret_cast<CController*>(args);
+	ctlr->tdEnquireLinkTid = pthread_self();
+
+	while (true)
+	{
+		sleep(10);
+		if (!ctlr->mCClientMeetingAgent->isValidSocketFD())
+		{
+			_log("[CController] !ctlr->mCClientMeetingAgent->isValidSocketFD()");
+			continue;
+		}
+		
+		ctlr->mCClientMeetingAgent->sendCommand(enquire_link_request, getSequence(), "");
+	}
+}
 
 CController::CController() :
 		mnMsqKey(-1), mCClientMeetingAgent(nullptr),
@@ -48,16 +64,16 @@ int CController::onCreated(void* nMsqKey)
 
 int CController::onInitial(void* szConfPath)
 {
-	string strConfPath = reinterpret_cast<const char*>(szConfPath);
-	_log("[CController] onInitial() Config path = %s", strConfPath.c_str());
+	// We use the config lies under the same directory with process image
+	//string strConfPath = reinterpret_cast<const char*>(szConfPath);
+	
+	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
+	_log("[CController] onInitial() Config path = `%s`", strConfPath.c_str());
 	
 	if(strConfPath.empty())
 	{
 		return FALSE;
 	}
-	
-	tdEnquireLink = new CThreadHandler();
-	tdExportLog = new CThreadHandler();
 	
 	std::unique_ptr<CConfig> config = make_unique<CConfig>();
 	int nRet = config->loadConfig(strConfPath);
@@ -68,7 +84,7 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 
-	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "ip");
+	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "server_ip");
 	string strPort = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "port");
 	
 	if (strServerIp.empty() || strPort.empty())
@@ -80,54 +96,31 @@ int CController::onInitial(void* szConfPath)
 	int nPort;
 	convertFromString(nPort, strPort);
 
-	auto userAppVersionHandler = initUserAppVersionHandler(config);
-	if (userAppVersionHandler == nullptr)
+	mCClientMeetingAgent.reset(new CClientMeetingAgent());
+	nRet = mCClientMeetingAgent->initMember(config);
+	if (nRet == FALSE)
 	{
+		_log("[CController] onInitial() mCClientMeetingAgent->configMember() failed");
 		return FALSE;
 	}
 
-	mCClientMeetingAgent = new CClientMeetingAgent(userAppVersionHandler);
 	nRet = startClientMeetingAgent(strServerIp, nPort, mnMsqKey);
-	
-	if (!nRet)
+	if (nRet == FALSE)
 	{
 		_log("[CController] onInitial() Start CClientMeetingAgent Failed. Port: %d, MsqKey: %d", nPort, mnMsqKey);
+		return FALSE;
 	}
 	else
 	{
 		_log("[CController] onInitial() Start CClientMeetingAgent Success. Port: %d, MsqKey: %d", nPort, mnMsqKey);
 	}
 
+	tdEnquireLink.reset(new CThreadHandler());
+	tdExportLog.reset(new CThreadHandler());
+
+	tdEnquireLink->createThread(threadStartRoutine_CController_enquireLink, this);
+
 	return nRet;
-}
-
-UserAppVersionHandler *CController::initUserAppVersionHandler(std::unique_ptr<CConfig> &config)
-{
-	string strAaptPath = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "aapt_path");
-	string strApkDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "apk_dir");
-	string strPkgName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "package_name");
-	string strDownloadLinkBase = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "download_link_base");
-	
-	if (!strAaptPath.empty()  && !strApkDir.empty()
-		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
-	{
-		_log("[CController] onInitial(): get UserApkPeekingAppVersionHandler");
-		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
-		return new UserApkPeekingAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
-	} 
-
-	string strAppDownloadLinkConfigDir = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_dir");
-	string strAppDownloadLinkConfigName = config->getValue(CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG, "config_name");
-	
-	if (!strAppDownloadLinkConfigDir.empty() 
-		&& !strAppDownloadLinkConfigName.empty())
-	{
-		_log("[CController] onInitial(): get UserConfigFileAppVersionHandler");
-		return new UserConfigFileAppVersionHandler(strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
-	}
-
-	_log("[CController] onInitial(): init AppVersionHandler cannot be instantiated");
-	return nullptr;
 }
 
 int CController::onFinish(void* nMsqKey)
@@ -135,15 +128,13 @@ int CController::onFinish(void* nMsqKey)
 	if (mCClientMeetingAgent != nullptr)
 	{
 		mCClientMeetingAgent->stopClient();
-		delete mCClientMeetingAgent;
 		mCClientMeetingAgent = nullptr;
 	}
 
 	if (tdEnquireLink != nullptr)
 	{
-		// TODO how to turn off?
-		//tdEnquireLink->thread?????????
-		delete tdEnquireLink;
+		tdEnquireLink->threadCancel(tdEnquireLinkTid);
+		tdEnquireLink->threadJoin(tdEnquireLinkTid);
 		tdEnquireLink = nullptr;
 	}
 
@@ -151,7 +142,6 @@ int CController::onFinish(void* nMsqKey)
 	{
 		// TODO how to turn off?
 		//tdExportLog->thread?????????
-		delete tdExportLog;
 		tdExportLog = nullptr;
 	}
 
@@ -183,6 +173,11 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 void CController::onHandleMessage(Message &message)
 {
 	_log("[CController] onHandleMessage(): Message will not be processed");
+}
+
+std::string CController::taskName()
+{
+	return "CController";
 }
 
 int CController::startClientMeetingAgent(string strIP, const int nPort, const int nMsqId)

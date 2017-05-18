@@ -12,6 +12,7 @@
 #include "packet.h"
 #include "event.h"
 #include "CMessageHandler.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -30,9 +31,14 @@ CCmpServer::CCmpServer() :
 	mapFunc[smart_building_amx_control_access_request] = &CCmpServer::onAMXControlAccess;
 	mapFunc[smart_building_wireless_power_charge_request] = &CCmpServer::onWirelessPowerCharge;
 	mapFunc[enquire_link_request] = &CCmpServer::onEnquireLink;
+	mapFunc[bind_request] = &CCmpServer::onBind;
+	mapFunc[unbind_request] = &CCmpServer::onUnbind;
+	mapFunc[amx_control_request] = &CCmpServer::onAmxControl;
+	mapFunc[amx_status_request] = &CCmpServer::onAmxStatus;
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();
+	strTaskName = taskName();
 }
 
 CCmpServer::~CCmpServer()
@@ -108,13 +114,13 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 
 }
 
-int CCmpServer::request(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
+int CCmpServer::request(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData)
 {
-	return sendPacket(nSocket, nCommand, nStatus, nSequence, szData);
+	return sendPacket(nSocketFD, nCommand, nStatus, nSequence, szData);
 }
-int CCmpServer::response(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
+int CCmpServer::response(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData)
 {
-	return sendPacket(nSocket, nCommand | generic_nack, nStatus, nSequence, szData);
+	return sendPacket(nSocketFD, nCommand | generic_nack, nStatus, nSequence, szData);
 }
 
 int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData)
@@ -167,7 +173,7 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
 	}
 	else
-		sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
+		sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
 
 	return nResult;
 }
@@ -179,6 +185,7 @@ void CCmpServer::idleTimeout(bool bRun, int nIdleTime)
 
 int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 {
+	strTaskName = taskName();
 //======= Receive CMP Header ==========//
 	int result;
 	CMP_HEADER cmpHeader;
@@ -219,7 +226,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		map<int, MemFn>::iterator iter;
 		iter = mapFunc.find(nCommand);
 
-		if(mapFunc.end() == iter && (generic_nack != (generic_nack & cmpHeader.command_id)))
+		if(mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
 		{
 			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
 		}
@@ -245,7 +252,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		{
 			if(DATA_LEN < nBodyLen) // large data
 			{
-				if( generic_nack == (generic_nack & cmpHeader.command_id))
+				if( generic_nack == (generic_nack & nCommand))
 				{
 					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
 					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
@@ -268,21 +275,22 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
 				}
-				sendMessage(EVENT_FILTER_SOCKET_SERVER, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
-						pBuf);
+				sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen, pBuf);
 			}
 		}
 		else
 		{
 			//================== Check CMP Response ===================//
-			if( generic_nack == (generic_nack & cmpHeader.command_id))
+			if( generic_nack == (generic_nack & nCommand))
 			{
-				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
+				printPacket(nCommand, nStatus, nSequence, nTotalLen,
+						format("[CCmpServer] %s onReceive Response ", strTaskName.c_str()).c_str(), nSocketFD);
 				onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
 			}
 			else
 			{
-				printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Request ", nSocketFD);
+				printPacket(nCommand, nStatus, nSequence, nTotalLen,
+						format("[CCmpServer] %s onReceive request ", strTaskName.c_str()).c_str(), nSocketFD);
 				(this->*this->mapFunc[nCommand])(nSocketFD, nCommand, nSequence, pBody);
 			}
 		}
@@ -294,4 +302,9 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 	}
 
 	return result;
+}
+
+string CCmpServer::taskName()
+{
+	return "CCmpServer";
 }

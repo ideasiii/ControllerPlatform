@@ -218,7 +218,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			"{\"account\":\"akado\",\"password\":\"akado\",\"id\":\"000c29d0013c\",\"device\":0,\"gcmid\":\"xxxxxxxxxxxxoooooooooooooo############\",\"model\":\"MH2LTU84P\"}";
 	string strLogout = "{\"id\":\"000c29d0013c\"}";
 	string strSemantic = "{\"type\":0\"local\":0\"text\":\"Ivy Hello\"}";
-	string strAMXControl = "{\"function\":4,\"device\":1,\"control\":2}";
+	string strAMXControl = "{\"function\":4,\"device\":1,\"control\":2,\"TOKEN\":\"i_am_廢才\",\"ID\":\"you_are_廢才_too\"}";
 	string strAMXStatus = "{\"function\":4,\"device\":1,\"request-status\":1}";
 	string strAMXStatus2 = "{\"function\":4,\"device\":1,\"request-status\":2}";
 

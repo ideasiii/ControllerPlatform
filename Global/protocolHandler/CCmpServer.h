@@ -24,8 +24,8 @@ class CCmpServer: public CATcpServer
 public:
 	CCmpServer();
 	virtual ~CCmpServer();
-	int request(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
-	int response(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
+	int request(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData);
+	int response(const int nSocketFD, int nCommand, int nStatus, int nSequence, const char *szData);
 	void idleTimeout(bool bRun, int nIdleTime);
 	void setUseQueueReceive(bool bEnable);
 
@@ -44,6 +44,16 @@ protected:
 	 */
 protected:
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+	virtual int onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;
 	}
@@ -113,10 +123,26 @@ protected:
 	}
 	;
 
+	//=============== AMX Service ======================//
+	virtual int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		printf("[CCmpServer] onAmxControl Command: %d Body: %s\n", nCommand, reinterpret_cast<const char*>(szBody));
+		return 0;
+	}
+	;
+	virtual int onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		printf("[CCmpServer] onAmxStatus Command: %d Body: %s\n", nCommand, reinterpret_cast<const char*>(szBody));
+		return 0;
+	}
+	;
+
+protected:
+	virtual std::string taskName();
 private:
 	typedef int (CCmpServer::*MemFn)(int, int, int, const void *);
 	std::map<int, MemFn> mapFunc;
 	int sendPacket(int nSocket, int nCommand, int nStatus, int nSequence, const char *szData);
 	CONF_CMP_SERVER *confCmpServer;
-
+	std::string strTaskName;
 };

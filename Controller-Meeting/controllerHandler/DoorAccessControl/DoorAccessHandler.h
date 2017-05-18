@@ -1,8 +1,11 @@
 #pragma once
 
-#include <string>
 #include <map>
+#include <memory>
+#include <string>
 #include "Ites1fDacClient.h"
+
+class CConfig;
 
 /**
  * 處理門禁相關事務
@@ -13,6 +16,10 @@ public:
 	DoorAccessHandler();
 	~DoorAccessHandler();
 	
+	// Intializes members that needs parameters in config.
+	// Returns FALSE if anything bad happens
+	int initMember(std::unique_ptr<CConfig> &config);
+
 	// 處理 (測試 QR code) 的要求
 	std::string doRequestDummy(std::string uuid, std::string meetingRoom);
 
@@ -20,7 +27,7 @@ public:
 	std::string doRequest(std::string uuid, std::string meetingRoom);
 
 private:
-	Ites1fDacClient ites1fDoor;
+	std::unique_ptr<Ites1fDacClient> ites1fDoor;
 
 	/**
 	 * returns Unix timestamp in milliseconds
