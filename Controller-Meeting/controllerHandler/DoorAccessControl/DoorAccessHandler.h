@@ -3,9 +3,9 @@
 #include <map>
 #include <memory>
 #include <string>
-#include "Ites1fDacClient.h"
 
 class CConfig;
+class Ites1fDacClient;
 
 /**
  * 處理門禁相關事務

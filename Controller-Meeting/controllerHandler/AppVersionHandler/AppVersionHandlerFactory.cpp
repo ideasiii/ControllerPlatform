@@ -4,6 +4,7 @@
 #include "AndroidPackageInfoQuierer.hpp"
 #include "ApkPeekingAppVersionHandler.h"
 #include "AppVersionHandler.h"
+#include "CConfig.h"
 #include "ConfigFileAppVersionHandler.h"
 #include "LogHandler.h"
 

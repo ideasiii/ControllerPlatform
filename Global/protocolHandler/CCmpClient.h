@@ -34,13 +34,49 @@ protected:
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
 	int onTcpReceive(unsigned long int nSocketFD);
 
+	/**
+	* Controller Message Protocol (CMP) Callback.
+	* Parameters:
+	* 				nSocket: Client Socket File Description
+	* 				nCommand: Command ID
+	* 				nSequence: CMP Packet Sequence
+	* 				szBody: CMP Body Data
+	*/
 protected:
-
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
 		return 0;
 	}
-	;
+
+	virtual int onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+
+	virtual int onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+
+	virtual int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+
+	virtual int onSmartBuildingAppVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+
+	virtual int onSmartBuildingMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+
+	virtual int onSmartBuildingAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
 
 private:
 	typedef int (CCmpClient::*MemFn)(int, int, int, const void *);

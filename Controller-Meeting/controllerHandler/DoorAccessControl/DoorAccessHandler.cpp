@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "../TestStringsDefinition.h"
 #include "CConfig.h"
+#include "Ites1fDacClient.h"
 
 #define CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER "CLIENT ITES 1F DOOR CONTROLLER"
 

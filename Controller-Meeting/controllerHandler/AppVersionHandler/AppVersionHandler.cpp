@@ -38,6 +38,8 @@ AppVersionHandler::~AppVersionHandler()
 
 void AppVersionHandler::start()
 {
+	strTaskName = taskName();
+
 	createThread(threadStartRoutine_AppVersionHandler_runWatcher, 
 		this, "AppVersionHandler Watcher Thread");
 }

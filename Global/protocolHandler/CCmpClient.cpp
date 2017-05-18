@@ -16,6 +16,13 @@
 CCmpClient::CCmpClient() :
 		confCmpClient(0)
 {
+	mapFunc[bind_response] = &CCmpClient::onBindResponse;
+	mapFunc[unbind_response] = &CCmpClient::onUnbindResponse;
+
+	mapFunc[smart_building_qrcode_tokn_request] = &CCmpClient::onSmartBuildingQrCodeToken;
+	mapFunc[smart_building_appversion_request] = &CCmpClient::onSmartBuildingAppVersion;
+	mapFunc[smart_building_getmeetingdata_request] = &CCmpClient::onSmartBuildingMeetingData;
+	mapFunc[smart_building_amx_control_access_request] = &CCmpClient::onSmartBuildingAMXControlAccess;
 
 	confCmpClient = new CONF_CMP_CLIENT;
 	confCmpClient->init();

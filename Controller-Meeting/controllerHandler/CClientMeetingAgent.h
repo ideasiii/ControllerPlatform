@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "CMPData.h"
-#include "CSocketClient.h"
+#include "CCmpClient.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
 #include "ICallback.h"
 
@@ -15,46 +15,41 @@ class CConfig;
 class CSocketClient;
 class AppVersionHandler;
 
-class CClientMeetingAgent: public CSocketClient
+class CClientMeetingAgent: public CCmpClient
 {
 public:
-	void onReceive(const int nSocketFD, const void *pData);
-public:
-	// Ownership of appLinkHandler will be transfered!
-	// Do not use appVerHandler outside CClientMeetingAgent later on
-	explicit CClientMeetingAgent();
+	explicit CClientMeetingAgent(CObject *controller);
 	virtual ~CClientMeetingAgent();
 
 	// Intializes members that needs parameters in config.
 	// Returns FALSE if anything bad happens
 	int initMember(std::unique_ptr<CConfig> &config);
 
-	int startClient(string strIP, const int nPort, const int nMsqId);
+	int startClient();
 	void stopClient();
-	int sendCommand(int commandID, int seqNum, string bodyData);
 
-private:
-	CMPData parseCMPData(int nSocket, int nCommand, int nSequence, const void *pData, bool isBodyExist);
-	
-	CCmpHandler *cmpParser;
-	typedef int (CClientMeetingAgent::*MemFn)(int, int, int, const void *);
-	map<int, MemFn> mapFunc;
-
-	//MeetingAgent Request for bind and unbind
-	void cmpBindRequest();
-	void cmpUnbindRequest();
+protected:
+	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody) override;
 	
 	//MeetingAgent Response for bind and unbind
-	int cmpBindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpUnbindResponse(int nSocket, int nCommand, int nSequence, const void *pData);
-
-	//MeetingAgent Request for SmartBuilding
-	int cmpQRCodeToken(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpAPPVersion(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpGetMeetingData(int nSocket, int nCommand, int nSequence, const void *pData);
-	int cmpAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *pData);
+	int onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody) override;
+	int onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody) override;
 	
+	//MeetingAgent Request for SmartBuilding
+	int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody) override;
+	int onSmartBuildingAppVersion(int nSocket, int nCommand, int nSequence, const void *szBody) override;
+	int onSmartBuildingMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody) override;
+	int onSmartBuildingAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody) override;
+
+private:
+	int initMeetingAgentServerParams(std::unique_ptr<CConfig> &config);
+
+	std::string agentIp;
+	int agentPort;
+
 	DoorAccessHandler doorAccessHandler;
 	unique_ptr<AppVersionHandler> appVersionHandler;
 	unique_ptr<CClientAmxController> amxControllerClient;
+
+	CObject *mpController;
 };

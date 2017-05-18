@@ -1,46 +1,54 @@
+#include "CController.h"
+
 #include <list>
-#include <memory>
 #include <limits.h>
+#include "common.h"
 #include "event.h"
+#include "packet.h"
 #include "utility.h"
 #include "CClientMeetingAgent.h"
-#include "CCmpHandler.h"
 #include "CConfig.h"
-#include "CController.h"
-#include "CDataHandler.cpp"
-#include "CSocket.h"
-#include "CSocketClient.h"
-#include "CSocketServer.h"
 #include "CThreadHandler.h"
 #include "HiddenUtility.hpp"
-#include "ICallback.h"
 #include "JSONObject.h"
 #include "AppVersionHandler/AppVersionHandler.h"
 
 using namespace std;
 
-#define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
+#define ENQUIRE_LINK_INTERVAL 10 // second
 
 void *threadStartRoutine_CController_enquireLink(void *args)
 {
+	_log("[CController] threadStartRoutine_CController_enquireLink() step in");
 	auto ctlr = reinterpret_cast<CController*>(args);
 	ctlr->tdEnquireLinkTid = pthread_self();
 
 	while (true)
 	{
-		sleep(10);
-		if (!ctlr->mCClientMeetingAgent->isValidSocketFD())
+		auto& clientMeetingAgent = ctlr->clientAgent;
+		if (clientMeetingAgent != nullptr)
 		{
-			_log("[CController] !ctlr->mCClientMeetingAgent->isValidSocketFD()");
-			continue;
+			if (!clientMeetingAgent->isValidSocketFD())
+			{
+				_log("[CController] threadStartRoutine_CController_enquireLink() invalid fd");
+			}
+			else
+			{
+				clientMeetingAgent->request(clientMeetingAgent->getSocketfd(),
+					enquire_link_request, STATUS_ROK, getSequence(), NULL);
+			}
 		}
-		
-		ctlr->mCClientMeetingAgent->sendCommand(enquire_link_request, getSequence(), "");
+
+		sleep(ENQUIRE_LINK_INTERVAL);
 	}
+
+	_log("[CController] threadStartRoutine_CController_enquireLink() step out");
+
+	return NULL;
 }
 
 CController::CController() :
-		mnMsqKey(-1), mCClientMeetingAgent(nullptr),
+		mnMsqKey(-1), clientAgent(nullptr),
 		tdEnquireLink(nullptr), tdExportLog(nullptr)
 {
 	// allocate resources in onInitial() instead
@@ -77,42 +85,27 @@ int CController::onInitial(void* szConfPath)
 	
 	std::unique_ptr<CConfig> config = make_unique<CConfig>();
 	int nRet = config->loadConfig(strConfPath);
-	
 	if(!nRet)
 	{
 		_log("[CController] onInitial() config->loadConfig() failed");
 		return FALSE;
 	}
 
-	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "server_ip");
-	string strPort = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "port");
-	
-	if (strServerIp.empty() || strPort.empty())
-	{
-		_log("[CController] onInitial() agent server config 404");
-		return FALSE;
-	}
-
-	int nPort;
-	convertFromString(nPort, strPort);
-
-	mCClientMeetingAgent.reset(new CClientMeetingAgent());
-	nRet = mCClientMeetingAgent->initMember(config);
+	clientAgent.reset(new CClientMeetingAgent(this));
+	nRet = clientAgent->initMember(config);
 	if (nRet == FALSE)
 	{
-		_log("[CController] onInitial() mCClientMeetingAgent->configMember() failed");
+		_log("[CController] onInitial() clientAgent->configMember() failed");
 		return FALSE;
 	}
 
-	nRet = startClientMeetingAgent(strServerIp, nPort, mnMsqKey);
-	if (nRet == FALSE)
+move client AMX controller to CController
+
+	_log("[CController] Connecting to MeetingAgent %s:%d", serverMeetingAgentIp.c_str(), serverMeetingAgentPort);
+	nRet = clientAgent->startClient(mnMsqKey);
+	if (nRet < 0)
 	{
-		_log("[CController] onInitial() Start CClientMeetingAgent Failed. Port: %d, MsqKey: %d", nPort, mnMsqKey);
 		return FALSE;
-	}
-	else
-	{
-		_log("[CController] onInitial() Start CClientMeetingAgent Success. Port: %d, MsqKey: %d", nPort, mnMsqKey);
 	}
 
 	tdEnquireLink.reset(new CThreadHandler());
@@ -125,10 +118,10 @@ int CController::onInitial(void* szConfPath)
 
 int CController::onFinish(void* nMsqKey)
 {
-	if (mCClientMeetingAgent != nullptr)
+	if (clientAgent != nullptr)
 	{
-		mCClientMeetingAgent->stopClient();
-		mCClientMeetingAgent = nullptr;
+		clientAgent->stopClient();
+		clientAgent = nullptr;
 	}
 
 	if (tdEnquireLink != nullptr)
@@ -136,13 +129,6 @@ int CController::onFinish(void* nMsqKey)
 		tdEnquireLink->threadCancel(tdEnquireLinkTid);
 		tdEnquireLink->threadJoin(tdEnquireLinkTid);
 		tdEnquireLink = nullptr;
-	}
-
-	if (tdExportLog != nullptr)
-	{
-		// TODO how to turn off?
-		//tdExportLog->thread?????????
-		tdExportLog = nullptr;
 	}
 
 	return TRUE;
@@ -154,7 +140,8 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	{
 	case EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE:
 		_log("[CController] EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE");
-		mCClientMeetingAgent->onReceive(nId, pData);
+		_log("[CController] HOW TO RECEIVE????");
+		//clientAgent->onReceive(nId, pData);
 		break;
 
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
@@ -165,7 +152,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 
 	default:
-		_log("[CController] Unknown message command: %d", nCommand);
+		_log("[CController] Unknown message command: %s", numberToHex(nCommand).c_str());
 		break;
 	}
 }
@@ -178,10 +165,4 @@ void CController::onHandleMessage(Message &message)
 std::string CController::taskName()
 {
 	return "CController";
-}
-
-int CController::startClientMeetingAgent(string strIP, const int nPort, const int nMsqId)
-{
-	_log("[CController] Connecting to Meeting-Agent server, IP: %s, port: %d", strIP.c_str(), nPort);
-	return mCClientMeetingAgent->startClient(strIP, nPort, nMsqId);
 }

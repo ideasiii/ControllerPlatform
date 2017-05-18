@@ -10,6 +10,7 @@ controllerHandler/AppVersionHandler \
 ../Global/aesCryptoHandler \
 ../Global/androidPackageInfoQuerier \
 ../Global/cmpHandler \
+../Global/protocolHandler \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler \

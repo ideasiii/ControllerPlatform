@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include "CConfig.h"
 
 class AppVersionHandler;
+class CConfig;
 
 class AppVersionHandlerFactory
 {

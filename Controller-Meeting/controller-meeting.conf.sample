@@ -68,7 +68,7 @@ validation_port = 2311
 # download_link_base 是下載網址前綴，結尾不加上 '/'
 # 若發布新版本, 先把新版 apk 放在下載伺服器, 再把新版 apk 放在 apk_dir
 # 就能在不重啟 controller 的情況下更新 AppVersionHandler 傳回給客戶端的最新 app 版本
-# 下載網址為 [download_link_base]/[新版apk名稱], 故放在伺服器上的 apk 名稱要跟放在 apk_dir 內的 apk 名稱相同
+# 下載網址為 [download_link_base]/[新版apk檔案名稱], 故放在伺服器上的 apk 名稱要跟放在 apk_dir 內的 apk 名稱相同
 aapt_path = /full/path/of/android-sdk/build-tools/aapt
 apk_dir = /dir/where/apk/is/in
 package_name = packname.name.of.app

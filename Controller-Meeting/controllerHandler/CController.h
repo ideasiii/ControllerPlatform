@@ -4,11 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "common.h"
-#include "packet.h"
 #include "CApplication.h"
-
-using namespace std;
 
 class CClientMeetingAgent;
 class CConfig;
@@ -36,15 +32,12 @@ protected:
 	std::string taskName() override;
 
 private:
-	int mnMsqKey; 
-	std::unique_ptr<CClientMeetingAgent> mCClientMeetingAgent;
+	int mnMsqKey;
+	std::unique_ptr<CClientMeetingAgent> clientAgent;
 
 	std::unique_ptr<CThreadHandler> tdEnquireLink;
-	std::unique_ptr<CThreadHandler> tdExportLog;
-	std::vector<int> vEnquireLink;
 
 	pthread_t tdEnquireLinkTid;
 
-	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);
 	friend void *threadStartRoutine_CController_enquireLink(void *args);
 };
