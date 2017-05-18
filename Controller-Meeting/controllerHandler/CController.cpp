@@ -21,6 +21,24 @@ using namespace std;
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
 
+void *threadStartRoutine_CController_enquireLink(void *args)
+{
+	auto ctlr = reinterpret_cast<CController*>(args);
+	ctlr->tdEnquireLinkTid = pthread_self();
+
+	while (true)
+	{
+		sleep(10);
+		if (!ctlr->mCClientMeetingAgent->isValidSocketFD())
+		{
+			_log("[CController] !ctlr->mCClientMeetingAgent->isValidSocketFD()");
+			continue;
+		}
+		
+		ctlr->mCClientMeetingAgent->sendCommand(enquire_link_request, getSequence(), "");
+	}
+}
+
 CController::CController() :
 		mnMsqKey(-1), mCClientMeetingAgent(nullptr),
 		tdEnquireLink(nullptr), tdExportLog(nullptr)
@@ -90,6 +108,7 @@ int CController::onInitial(void* szConfPath)
 	if (nRet == FALSE)
 	{
 		_log("[CController] onInitial() Start CClientMeetingAgent Failed. Port: %d, MsqKey: %d", nPort, mnMsqKey);
+		return FALSE;
 	}
 	else
 	{
@@ -98,6 +117,8 @@ int CController::onInitial(void* szConfPath)
 
 	tdEnquireLink.reset(new CThreadHandler());
 	tdExportLog.reset(new CThreadHandler());
+
+	tdEnquireLink->createThread(threadStartRoutine_CController_enquireLink, this);
 
 	return nRet;
 }
@@ -112,8 +133,8 @@ int CController::onFinish(void* nMsqKey)
 
 	if (tdEnquireLink != nullptr)
 	{
-		// TODO how to turn off?
-		//tdEnquireLink->thread?????????
+		tdEnquireLink->threadCancel(tdEnquireLinkTid);
+		tdEnquireLink->threadJoin(tdEnquireLinkTid);
 		tdEnquireLink = nullptr;
 	}
 

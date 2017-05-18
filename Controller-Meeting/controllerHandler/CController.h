@@ -43,5 +43,8 @@ private:
 	std::unique_ptr<CThreadHandler> tdExportLog;
 	std::vector<int> vEnquireLink;
 
+	pthread_t tdEnquireLinkTid;
+
 	int startClientMeetingAgent(string strIP, const int nPort, const int nMsqKey);
+	friend void *threadStartRoutine_CController_enquireLink(void *args);
 };
