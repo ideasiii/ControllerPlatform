@@ -29,6 +29,7 @@ void CAMXServer::onTimer(int nId)
 
 int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 {
+	_TRACE("onTcpReceive");
 	int result;
 	char pBuf[BUF_SIZE];
 	void* pvBuf = pBuf;
@@ -40,7 +41,7 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 		return 0;
 
 	strCommand = pBuf;
-
+	_TRACE("onTcpReceive");
 	if(!strCommand.empty())
 	{
 		strCommand = trim(strCommand);
@@ -53,7 +54,7 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 		{
 			unbind(nSocketFD);
 		}
-
+		_TRACE("onTcpReceive");
 		if(0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
 			// Get Status Response
@@ -61,7 +62,7 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 			{
 				onAmxStatus(nSocketFD, strCommand.c_str());
 			}
-
+			_TRACE("onTcpReceive");
 			// Update AMX_STATUS_CURRENT Hashmap
 			if(AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
 			{
@@ -76,7 +77,7 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 		response(nSocketFD, CTL_ERROR);
 		_log("[CAMXServer] Error Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
 	}
-
+	_TRACE("onTcpReceive");
 	return result;
 }
 
