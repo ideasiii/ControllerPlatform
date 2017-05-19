@@ -43,6 +43,14 @@ protected:
 	 * 				szBody: CMP Body Data
 	 */
 protected:
+	virtual void onClientConnect(unsigned long int nSocketFD)
+	{
+	}
+	;
+	virtual void onClientDisconnect(unsigned long int nSocketFD)
+	{
+	}
+	;
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
 		return 0;

@@ -28,7 +28,7 @@ CServerCMP::~CServerCMP()
 int CServerCMP::onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
-	mapClient[nSocket] = nSocket;
+	mapClient.insert(nSocket);
 	_log("[CServerCMP] Socket Client FD:%d Binded", nSocket);
 	return TRUE;
 }
@@ -42,6 +42,20 @@ int CServerCMP::onUnbind(int nSocket, int nCommand, int nSequence, const void *s
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocket);
 	}
 	return TRUE;
+}
+
+void CServerCMP::onClientConnect(unsigned long int nSocketFD)
+{
+
+}
+
+void CServerCMP::onClientDisconnect(unsigned long int nSocketFD)
+{
+	if (mapClient.end() != mapClient.find(nSocketFD))
+	{
+		mapClient.erase(nSocketFD);
+		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocketFD);
+	}
 }
 
 int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
@@ -159,7 +173,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	strStatus = szStatus;
 	nIndex = strStatus.find("_VOL_");
 
-	if (string::npos != nIndex)
+	if ((int) string::npos != nIndex)
 	{
 		//====== 這是一個聲音狀態 =======//
 		bVol = true;
@@ -191,11 +205,11 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	jobjStatus.release();
 
 	int nRet = 0;
-	map<int, int>::iterator it;
+	set<int>::iterator it;
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
-		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), it->first);
-		request(it->first, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
+		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
+		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
 		if (0 >= nRet)
 			break;
 	}

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <map>
+#include <set>
 
 #include "CCmpServer.h"
 
@@ -35,9 +35,11 @@ protected:
 	int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onAmxStatus(int nSocket, int nCommand, int nSequence, const void *szBody);
 	std::string taskName();
+	void onClientConnect(unsigned long int nSocketFD);
+	void onClientDisconnect(unsigned long int nSocketFD);
 
 private:
-	std::map<int, int> mapClient;
+	std::set<int> mapClient;
 	CObject *mpController;
 
 };
