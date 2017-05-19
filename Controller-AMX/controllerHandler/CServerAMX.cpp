@@ -7,6 +7,7 @@
 
 #include "CServerAMX.h"
 #include "packet.h"
+#include "utility.h"
 
 CServerAMX::CServerAMX(CObject *object) :
 		mAmxBox(0)
