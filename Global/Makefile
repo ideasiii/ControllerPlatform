@@ -62,7 +62,7 @@ all: checkdirs lib bin/$(TARGET)
 bin/$(TARGET): $(OBJ)
 	@echo -ne '\n###### Start Build $(TARGET) ######\n'
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
-	strip -s $@
+#	strip -s $@
 	@echo "\n"
 
 lib:
