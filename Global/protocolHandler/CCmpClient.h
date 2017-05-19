@@ -43,21 +43,12 @@ protected:
 	* 				szBody: CMP Body Data
 	*/
 protected:
+	// all response PDU goes here
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
 		return 0;
 	}
-
-	virtual int onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-	{
-		return 0;
-	}
-
-	virtual int onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-	{
-		return 0;
-	}
-
+	
 	virtual int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;
