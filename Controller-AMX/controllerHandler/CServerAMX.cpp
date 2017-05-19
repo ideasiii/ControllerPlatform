@@ -51,7 +51,8 @@ int CServerAMX::requestAMX(const char *szCommand)
 		_log("[CServerAMX] requestAMX Error!! AMX not Connected");
 		return -1;
 	}
-	string strAmxCmd = format("%s\n", szCommand);
+	string strAmxCmd = szCommand;
+	strAmxCmd.append("\n");
 	return request(mAmxBox, strAmxCmd.c_str());
 }
 
