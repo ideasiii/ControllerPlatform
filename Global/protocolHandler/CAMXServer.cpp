@@ -86,7 +86,7 @@ int CAMXServer::request(const int nSocketFD, const char *szData)
 	if (0 < nSocketFD)
 	{
 		nResult = sendPacket(nSocketFD, szData);
-		_log("[CAMXServer] Send request Data:%s", szData);
+		_log("[CAMXServer] Send request Data:%s Length: %d Socket[%d]", szData, nResult, nSocketFD);
 	}
 	return nResult;
 }
@@ -97,7 +97,7 @@ int CAMXServer::response(const int nSocketFD, const char *szData)
 	if (0 < nSocketFD)
 	{
 		nResult = sendPacket(nSocketFD, szData);
-		_log("[CAMXServer] Send Response Data:%s", szData);
+		_log("[CAMXServer] Send response Data:%s Length: %d Socket[%d]", szData, nResult, nSocketFD);
 	}
 	return nResult;
 }
@@ -111,7 +111,7 @@ int CAMXServer::sendPacket(const int nSocketFD, const char *szData)
 	{
 		//nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
 		nResult = socketSend(nSocketFD, szData, strCommand.length());
-		_log("[CAMXServer] sendPacket, length:%d Data:%s", nResult, szData);
+		//_log("[CAMXServer] sendPacket, length:%d Data:%s", nResult, szData);
 	}
 	return nResult;
 }
