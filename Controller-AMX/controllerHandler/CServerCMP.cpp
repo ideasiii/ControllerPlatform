@@ -157,9 +157,8 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	nLevel = 0;
 	bVol = false;
 	strStatus = szStatus;
-	//_DBG("strStatus: %s  ############################", strStatus.c_str());
 	nIndex = strStatus.find("_VOL_");
-	//_DBG("nIndex: %d  ############################", nIndex);
+
 	if (string::npos != nIndex)
 	{
 		//====== 這是一個聲音狀態 =======//
