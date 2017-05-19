@@ -143,32 +143,48 @@ int CServerCMP::onAmxStatus(int nSocket, int nCommand, int nSequence, const void
 
 void CServerCMP::broadcastAMXStatus(const char *szStatus)
 {
+	bool bVol;
+	int nLevel;
+	unsigned int nIndex;
+	string strStatus;
+	string strLevel;
+
 	if(0 == szStatus)
 		return;
 
-	int nLevel;
-	unsigned int nIndex;
-	string strStatus = szStatus;
+	_log("[CServerCMP] broadcastAMXStatus : %s", szStatus);
+
+	nLevel = 0;
+	bVol = false;
+	strStatus = szStatus;
 	nIndex = strStatus.find("_VOL_");
 	if(string::npos != nIndex)
 	{
-		string strLevel = strStatus.substr((nIndex + 5));
-		_log("[CServerCMP] broadcastAMXStatus Volumn Level: %s", strLevel.c_str());
+		//====== 這是一個聲音狀態 =======//
+		bVol = true;
+		strLevel = strStatus.substr(nIndex + 5);
+		strStatus = strStatus.substr(0, nIndex + 4);
+		convertFromString(nLevel, strLevel);
+		_log("[CServerCMP] broadcastAMXStatus %s Volumn Level: %d", strStatus.c_str(), nLevel);
 	}
 
-	int nId = getAMXStatusResponse(szStatus);
+	int nId = getAMXStatusResponse(strStatus.c_str());
 	if(10000 > nId)
 	{
 		_log("[CServerCMP] broadcastAMXStatus Invalid status: %s , code:%d", szStatus, nId);
 		return;
 	}
 
-	_log("[CServerCMP] broadcastAMXStatus : %s", szStatus);
-
 	JSONObject jobjStatus;
 	jobjStatus.put("function", nId / 10000);
 	jobjStatus.put("device", (nId % 10000) / 100);
-	jobjStatus.put("status", (nId % 10000) % 100);
+	if(bVol && !strLevel.empty())
+	{
+
+		jobjStatus.put("level", nLevel);
+	}
+	else
+		jobjStatus.put("status", (nId % 10000) % 100);
 
 	string strJSON = jobjStatus.toString();
 	jobjStatus.release();

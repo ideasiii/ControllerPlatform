@@ -164,7 +164,7 @@ void CController::onHandleMessage(Message &message)
 	case amx_status_request: // From CMP Server
 		serverAMX->requestAMX(message.strData.c_str());
 		//=================== broadcast volum dummy ==================//
-		serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
+		//serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
 		//=================== dummy end ==============================//
 		break;
 	case amx_status_response: // From AMX Box
