@@ -97,7 +97,7 @@ int CAMXServer::response(const int nSocketFD, const char *szData)
 	if (0 < nSocketFD)
 	{
 		nResult = sendPacket(nSocketFD, szData);
-		_log("[CAMXServer] Send Response Data:%s", nResult, szData);
+		_log("[CAMXServer] Send Response Data:%s", szData);
 	}
 	return nResult;
 }
