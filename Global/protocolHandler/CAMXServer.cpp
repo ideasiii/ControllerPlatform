@@ -109,7 +109,7 @@ int CAMXServer::sendPacket(const int nSocketFD, const char *szData)
 
 	if (0 < nSocketFD)
 	{
-		nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
+		nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length() + 1);
 		_log("[CAMXServer] sendPacket, length:%d Data:%s", nResult, strCommand.c_str());
 	}
 	return nResult;
