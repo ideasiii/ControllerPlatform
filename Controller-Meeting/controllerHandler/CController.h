@@ -6,6 +6,7 @@
 #include <vector>
 #include "CApplication.h"
 
+class CClientAmxController;
 class CClientMeetingAgent;
 class CConfig;
 class CThreadHandler;
@@ -33,7 +34,8 @@ protected:
 
 private:
 	int mnMsqKey;
-	std::unique_ptr<CClientMeetingAgent> clientAgent;
+	std::unique_ptr<CClientMeetingAgent> agentClient;
+	std::unique_ptr<CClientAmxController> amxControllerClient;
 
 	std::unique_ptr<CThreadHandler> tdEnquireLink;
 

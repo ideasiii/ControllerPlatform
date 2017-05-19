@@ -1,5 +1,8 @@
 #include "EnquireLinkYo.h"
 
+#include "../controllerHandler/iCommand.h"
+#include "event.h"
+#include "packet.h"
 #include "CCmpClient.h"
 #include "LogHandler.h"
 
@@ -12,7 +15,6 @@ void *threadStartRoutine_EnquireLinkYo_run(void *argv)
 	_log("[EnquireLinkYo] %s threadStartRoutine_EnquireLinkYo_run() step in", ely->strTaskName.c_str());
 
 	ely->loopThreadId = pthread_self();
-	ely->isRunning = true;
 	ely->run();
 	ely->stop();
 
@@ -20,10 +22,10 @@ void *threadStartRoutine_EnquireLinkYo_run(void *argv)
 	return 0;
 }
 
-EnquireLinkYo::EnquireLinkYo(std::string taskName, CCmpClient *client) :
-	strTaskName(taskName), client(client), loopThreadId(0), balance(0), loopThreadId(0), 
-	isRunning(false), requestInterval(DEFAULT_REQUEST_INTERVAL), 
-	maxBalance(DEFAULT_MAX_BALANCE), sockFd(-1)
+EnquireLinkYo::EnquireLinkYo(std::string taskName, CCmpClient *client, int messageWhat, CObject *controller) :
+	strTaskName(taskName), client(client), mpController(controller),
+	messageWhat(messageWhat), loopThreadId(0), isRunning(false),
+	requestInterval(DEFAULT_REQUEST_INTERVAL), maxBalance(DEFAULT_MAX_BALANCE), balance(0)
 {
 }
 
@@ -83,37 +85,62 @@ void EnquireLinkYo::stop()
 
 	if (loopThreadId > 0)
 	{
-		_log("[EnquireLinkYo] %s stop() cancelling thread", ely->strTaskName.c_str());
+		_log("[EnquireLinkYo] %s stop() cancelling thread", strTaskName.c_str());
 		threadCancel(loopThreadId);
 		threadJoin(loopThreadId);
 		loopThreadId = 0;
 	}
 	else
 	{
-		_log("[EnquireLinkYo] %s stop() skip cancelling thread", ely->strTaskName.c_str());
+		_log("[EnquireLinkYo] %s stop() skip cancelling thread", strTaskName.c_str());
 	}
+}
+
+void EnquireLinkYo::zeroBalance()
+{
+	balance = 0;
 }
 
 void EnquireLinkYo::run()
 {
 	_DBG("[EnquireLinkYo] %s run() step in", strTaskName.c_str());
 
+	isRunning = true;
+	balance = 0;
+	
 	while (true)
 	{
-		threadSleep(requestInterval);
+		sleep(requestInterval);
 		
+		if (!client->isValidSocketFD())
+		{
+			Message message;
+			message.what = messageWhat;
+			message.arg[0] = -1;
+			mpController->sendMessage(message);
+
+			_log("[EnquireLinkYo] %s run() client socket not valid, return", strTaskName.c_str());
+			// sockFd 掛了，只能退出迴圈
+			break;
+		}
+
 		if (balance >= maxBalance)
 		{
 			// Enquire Link Failed
 			// TODO 怎麼通過 message queue 通知外面 socket 爛了?
-			// sockFd 掛了，只能退出迴圈
+			Message message;
+			message.what = MESSAGE_EVENT_CLIENT_MEETING_AGENT;
+			message.arg[0] = -1;
+			mpController->sendMessage(message);
+
 			_log("[EnquireLinkYo] %s run() reached maxBalance %d, assume broken pipe", strTaskName.c_str(), maxBalance);
+			// sockFd 掛了，只能退出迴圈
 			break;
 		}
 
 		_log("[EnquireLinkYo] %s run() Sending enquire link request", strTaskName.c_str());
 
-		int nRet = client->request(client->getSocketFd(), enquire_link_request, STATUS_ROK, getSequence(), NULL);
+		int nRet = client->request(client->getSocketfd(), enquire_link_request, STATUS_ROK, getSequence(), NULL);
 
 		if (nRet > 0)
 		{
@@ -125,11 +152,30 @@ void EnquireLinkYo::run()
 		{
 			//Enquire Link Failed
 			// TODO 怎麼通過 message queue 通知外面 socket 爛了?
+			Message message;
+			message.what = MESSAGE_EVENT_CLIENT_MEETING_AGENT;
+			message.arg[0] = -1;
+			mpController->sendMessage(message);
 			_log("[EnquireLinkYo] %s run() Send enquire link failed, result = %d\n", strTaskName.c_str(), nRet);
 			// sockFd 掛了，只能退出迴圈
 			break;
 		}
 	}
 
-	log("[EnquireLinkYo] %s run() step out", strTaskName.c_str());
+	_log("[EnquireLinkYo] %s run() step out", strTaskName.c_str());
+}
+
+void EnquireLinkYo::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
+	const void* pData)
+{
+	_log("[EnquireLinkYo] onReceiveMessage()");
+}
+void EnquireLinkYo::onHandleMessage(Message &message)
+{
+	_log("[EnquireLinkYo] onHandleMessage()");
+}
+
+std::string EnquireLinkYo::taskName()
+{
+	return "EnquireLinkYo";
 }

@@ -4,8 +4,10 @@
 #####################################
 
 export MODULES=controllerHandler \
+controllerHandler/ClientAmxController \
 controllerHandler/DoorAccessControl \
 controllerHandler/AppVersionHandler \
+enquireLinkYo \
 ../Global/application \
 ../Global/aesCryptoHandler \
 ../Global/androidPackageInfoQuerier \

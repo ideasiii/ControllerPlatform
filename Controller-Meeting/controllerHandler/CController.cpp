@@ -4,11 +4,14 @@
 #include <limits.h>
 #include "common.h"
 #include "event.h"
+#include "iCommand.h"
 #include "packet.h"
 #include "utility.h"
 #include "CClientMeetingAgent.h"
 #include "CConfig.h"
 #include "CThreadHandler.h"
+#include "ClientAmxController/CClientAmxController.h"
+#include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "HiddenUtility.hpp"
 #include "JSONObject.h"
 #include "AppVersionHandler/AppVersionHandler.h"
@@ -19,13 +22,17 @@ using namespace std;
 
 void *threadStartRoutine_CController_enquireLink(void *args)
 {
+	return 0;
+
+
+
 	_log("[CController] threadStartRoutine_CController_enquireLink() step in");
 	auto ctlr = reinterpret_cast<CController*>(args);
 	ctlr->tdEnquireLinkTid = pthread_self();
 
 	while (true)
 	{
-		auto& clientMeetingAgent = ctlr->clientAgent;
+		auto& clientMeetingAgent = ctlr->agentClient;
 		if (clientMeetingAgent != nullptr)
 		{
 			if (!clientMeetingAgent->isValidSocketFD())
@@ -48,8 +55,8 @@ void *threadStartRoutine_CController_enquireLink(void *args)
 }
 
 CController::CController() :
-		mnMsqKey(-1), clientAgent(nullptr),
-		tdEnquireLink(nullptr), tdExportLog(nullptr)
+		mnMsqKey(-1), agentClient(nullptr),
+		tdEnquireLink(nullptr)
 {
 	// allocate resources in onInitial() instead
 }
@@ -91,26 +98,31 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 
-	clientAgent.reset(new CClientMeetingAgent(this));
-	nRet = clientAgent->initMember(config);
+	agentClient.reset(new CClientMeetingAgent(this));
+	nRet = agentClient->initMember(config);
 	if (nRet == FALSE)
 	{
-		_log("[CController] onInitial() clientAgent->configMember() failed");
+		_log("[CController] onInitial() agentClient->configMember() failed");
 		return FALSE;
 	}
 
-move client AMX controller to CController
+	auto clientAmxControllerRet = CClientAmxControllerFactory::createFromConfig(config);
+	if (clientAmxControllerRet == nullptr)
+	{
+		_log("[CController] onInitial(): CClientAmxController cannot be instantiated");
+		return FALSE;
+	}
+	amxControllerClient.reset(clientAmxControllerRet);
 
-	_log("[CController] Connecting to MeetingAgent %s:%d", serverMeetingAgentIp.c_str(), serverMeetingAgentPort);
-	nRet = clientAgent->startClient(mnMsqKey);
+	nRet = agentClient->startClient(mnMsqKey);
 	if (nRet < 0)
 	{
 		return FALSE;
 	}
 
-	tdEnquireLink.reset(new CThreadHandler());
-	tdExportLog.reset(new CThreadHandler());
+	//amxControllerClient->start();
 
+	tdEnquireLink.reset(new CThreadHandler());
 	tdEnquireLink->createThread(threadStartRoutine_CController_enquireLink, this);
 
 	return nRet;
@@ -118,17 +130,23 @@ move client AMX controller to CController
 
 int CController::onFinish(void* nMsqKey)
 {
-	if (clientAgent != nullptr)
-	{
-		clientAgent->stopClient();
-		clientAgent = nullptr;
-	}
-
 	if (tdEnquireLink != nullptr)
 	{
 		tdEnquireLink->threadCancel(tdEnquireLinkTid);
 		tdEnquireLink->threadJoin(tdEnquireLinkTid);
 		tdEnquireLink = nullptr;
+	}
+
+	if (amxControllerClient != nullptr)
+	{
+		// amxControllerClient->stopClient();
+		amxControllerClient = nullptr;
+	}
+
+	if (agentClient != nullptr)
+	{
+		agentClient->stopClient();
+		agentClient = nullptr;
 	}
 
 	return TRUE;
@@ -140,8 +158,6 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	{
 	case EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE:
 		_log("[CController] EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE");
-		_log("[CController] HOW TO RECEIVE????");
-		//clientAgent->onReceive(nId, pData);
 		break;
 
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
@@ -152,14 +168,31 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		break;
 
 	default:
-		_log("[CController] Unknown message command: %s", numberToHex(nCommand).c_str());
+		_log("[CController] Unknown message command %s", numberToHex(nCommand).c_str());
 		break;
 	}
 }
 
 void CController::onHandleMessage(Message &message)
 {
-	_log("[CController] onHandleMessage(): Message will not be processed");
+	int nRet;
+
+	switch (message.what)
+	{
+	case MESSAGE_EVENT_CLIENT_MEETING_AGENT:
+		_log("[CController] onHandleMessage(): MESSAGE_EVENT_CLIENT_MEETING_AGENT");
+		if (message.arg[0] == -1)
+		{
+			_log("[CController] connection to agent is broken!@$#%^&*(*^%$#Q@#%%&^*&%$^%#");
+		}
+		break;
+	case MESSAGE_EVENT_CLIENT_AMX_CONTROLLER:
+		_log("[CController] onHandleMessage(): MESSAGE_EVENT_CLIENT_AMX_CONTROLLER");
+		break;
+	default:
+		_log("[CController] onHandleMessage(): Message will not be processed");
+		break;
+	}
 }
 
 std::string CController::taskName()

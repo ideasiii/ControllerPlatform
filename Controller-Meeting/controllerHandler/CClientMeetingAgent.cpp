@@ -1,9 +1,12 @@
 #include "CClientMeetingAgent.h"
 
+#include "../enquireLinkYo/EnquireLinkYo.h"
 #include "common.h"
 #include "event.h"
+#include "iCommand.h"
+#include "packet.h"
 #include "AndroidPackageInfoQuierer.hpp"
-#include "ClientAmxController/CClientAmxController.h"
+#include "ClientAmxController/AmxControllerInfo.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
@@ -38,20 +41,21 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 		_log("[CController] onInitial(): AppVersionHandler cannot be instantiated");
 		return FALSE;
 	}
-	
-	auto clientAmxControllerRet = CClientAmxControllerFactory::createFromConfig(config);
-	if (appVerHandlerRet == nullptr)
+
+	auto amxControllerInfoRet = CClientAmxControllerFactory::getServerInfoFromConfig(config);
+	if (amxControllerInfoRet == nullptr)
 	{
-		_log("[CController] onInitial(): CClientAmxController cannot be instantiated");
+		_log("[CController] onInitial(): AmxControllerInfo cannot be instantiated");
 		return FALSE;
 	}
-
+	
 	appVersionHandler.reset(appVerHandlerRet);
-	amxControllerClient.reset(clientAmxControllerRet);
-
+	amxControllerInfo.reset(amxControllerInfoRet);
+	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent", this, 
+		MESSAGE_EVENT_CLIENT_MEETING_AGENT, this->mpController));
+	
 	appVersionHandler->start();
-	//amxControllerClient->start();
-
+	
 	return doorAccessHandler.initMember(config);
 }
 
@@ -70,11 +74,15 @@ int CClientMeetingAgent::initMeetingAgentServerParams(std::unique_ptr<CConfig> &
 	convertFromString(nPort, strPort);
 	agentIp = strServerIp;
 	agentPort = nPort;
+
+	return TRUE;
 }
 
 int CClientMeetingAgent::startClient(int msqKey)
 {
-	int nRet = connect(agentIp, agentPort, msqKey);
+	_log("[CController] Connecting to MeetingAgent %s:%d", agentIp.c_str(), agentPort);
+
+	int nRet = connect(agentIp.c_str(), agentPort, msqKey);
 	if (nRet < 0)
 	{
 		_log("[CController] startClient() Connecting to agent FAILED");
@@ -88,7 +96,6 @@ int CClientMeetingAgent::startClient(int msqKey)
 		return FALSE;
 	}
 
-	_log("[CController] startClient() Connected and bind to agent OK");
 	return TRUE;
 }
 
@@ -105,6 +112,7 @@ void CClientMeetingAgent::stopClient()
 		}
 
 		_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent OK.");
+		_log("[CClientMeetingAgent] stopClient() Disconnected from %s:%d.", agentIp.c_str(), agentPort);
 	}
 
 	stop();
@@ -114,27 +122,36 @@ void CClientMeetingAgent::stopClient()
 		appVersionHandler->stop();
 	}
 
-	if (amxControllerClient != nullptr)
+	if (enquireLinkYo != nullptr)
 	{
-		//amxControllerClient->stop();
+		enquireLinkYo->stop();
 	}
 }
 
+// 當收到 server 的 response PDU 時
 int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
 	_DBG("[CClientMeetingAgent] onResponse()");
-	return TRUE;
-}
 
-int CClientMeetingAgent::onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	_DBG("[CClientMeetingAgent] onBindResponse()");
-	return TRUE;
-}
-
-int CClientMeetingAgent::onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	_DBG("[CClientMeetingAgent] onUnbindResponse()");
+	switch ((unsigned int)nCommand)
+	{
+	case enquire_link_response:
+		_log("[CClientMeetingAgent] onResponse() enquire_link_response");
+		enquireLinkYo->zeroBalance();
+		break;
+	case bind_response:
+		_log("[CClientMeetingAgent] onResponse() bind_response");
+		_log("[CClientMeetingAgent] onResponse() bind ok, start EnquireLinkYo");
+		enquireLinkYo->start();
+		break;
+	case unbind_response:
+		_log("[CClientMeetingAgent] onResponse() unbind_response");
+		break;
+	default:
+		_log("[CClientMeetingAgent] onResponse() unhandled nCommand %s", numberToHex(nCommand).c_str());
+		break;
+	}
+	
 	return TRUE;
 }
 
@@ -304,8 +321,8 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccess(int nSocket, int nComma
 	{
 		//OK can control AMX
 		ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
-			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerClient->getServerIp()
-			<< "\", \"ROOM_PORT\": " << amxControllerClient->getUserPort()
+			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerInfo->serverIp
+			<< "\", \"ROOM_PORT\": " << amxControllerInfo->devicePort
 			<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
 		strResponseBodyData = ss.str();
 	}

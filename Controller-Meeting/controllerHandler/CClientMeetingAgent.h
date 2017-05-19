@@ -9,11 +9,12 @@
 #include "DoorAccessControl/DoorAccessHandler.h"
 #include "ICallback.h"
 
-class CClientAmxController;
+class AmxControllerInfo;
+class AppVersionHandler; 
 class CCmpHandler;
 class CConfig;
 class CSocketClient;
-class AppVersionHandler;
+class EnquireLinkYo;
 
 class CClientMeetingAgent: public CCmpClient
 {
@@ -25,15 +26,11 @@ public:
 	// Returns FALSE if anything bad happens
 	int initMember(std::unique_ptr<CConfig> &config);
 
-	int startClient();
+	int startClient(int msqKey); 
 	void stopClient();
 
 protected:
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody) override;
-	
-	//MeetingAgent Response for bind and unbind
-	int onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody) override;
-	int onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody) override;
 	
 	//MeetingAgent Request for SmartBuilding
 	int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody) override;
@@ -48,8 +45,8 @@ private:
 	int agentPort;
 
 	DoorAccessHandler doorAccessHandler;
-	unique_ptr<AppVersionHandler> appVersionHandler;
-	unique_ptr<CClientAmxController> amxControllerClient;
-
+	std::unique_ptr<AppVersionHandler> appVersionHandler;
+	std::unique_ptr<AmxControllerInfo> amxControllerInfo;
+	std::unique_ptr<EnquireLinkYo> enquireLinkYo;
 	CObject *mpController;
 };

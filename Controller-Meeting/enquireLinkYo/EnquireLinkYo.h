@@ -10,7 +10,7 @@ class CCmpClient;
 class EnquireLinkYo : public CObject
 {
 public:
-	EnquireLinkYo(std::string taskName, CCmpClient *client);
+	EnquireLinkYo(std::string taskName, CCmpClient *client, int messageWhat, CObject *controller);
 	~EnquireLinkYo();
 
 	// 設定發送 enquire link 的間隔
@@ -24,12 +24,19 @@ public:
 	void start();
 	void stop();
 
-	// 將沒收到的 enquire link response 的計數器減 1
-	void decreaseBalance();
-	
+	// 將沒收到的 enquire link response 的計數器歸零
+	void zeroBalance();
+
+protected:
+	void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData) override;
+	void onHandleMessage(Message &message) override;
+	std::string taskName() override;
+
 private:
-	std::string strTaskName;
-	CCmpClient *client;
+	const std::string strTaskName;
+	CCmpClient * const client;
+	CObject * const mpController;
+	const int messageWhat;
 	pthread_t loopThreadId;
 	std::atomic_bool isRunning;
 
