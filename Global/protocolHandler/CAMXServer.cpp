@@ -29,7 +29,6 @@ void CAMXServer::onTimer(int nId)
 
 int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 {
-	_TRACE("onTcpReceive");
 	int result;
 	char pBuf[BUF_SIZE];
 	void* pvBuf = pBuf;
@@ -37,34 +36,34 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 
 	memset(pBuf, 0, sizeof(pBuf));
 	result = socketrecv(nSocketFD, BUF_SIZE, &pvBuf);
-	if(0 >= result)
+	if (0 >= result)
 		return 0;
 
 	strCommand = pBuf;
-	_TRACE("onTcpReceive");
-	if(!strCommand.empty())
+
+	if (!strCommand.empty())
 	{
 		strCommand = trim(strCommand);
-		if(0 == strCommand.substr(0, 4).compare("bind"))
+		if (0 == strCommand.substr(0, 4).compare("bind"))
 		{
 			bind(nSocketFD);
 		}
 
-		if(0 == strCommand.substr(0, 6).compare("unbind"))
+		if (0 == strCommand.substr(0, 6).compare("unbind"))
 		{
 			unbind(nSocketFD);
 		}
-		_TRACE("onTcpReceive");
-		if(0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
+
+		if (0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
 			// Get Status Response
-			if(AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
+			if (AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
 			{
 				onAmxStatus(nSocketFD, strCommand.c_str());
 			}
-			_TRACE("onTcpReceive");
+
 			// Update AMX_STATUS_CURRENT Hashmap
-			if(AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
+			if (AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
 			{
 				string strDevice = AMX_STATUS_TO_CMD[strCommand];
 				AMX_STATUS_CURRENT[strDevice] = strCommand;
@@ -77,17 +76,17 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 		response(nSocketFD, CTL_ERROR);
 		_log("[CAMXServer] Error Receive AMX Command: %s From Socket: %d", strCommand.c_str(), nSocketFD);
 	}
-	_TRACE("onTcpReceive");
+
 	return result;
 }
 
 int CAMXServer::request(const int nSocketFD, const char *szData)
 {
 	int nResult = FALSE;
-	if(0 < nSocketFD)
+	if (0 < nSocketFD)
 	{
 		nResult = sendPacket(nSocketFD, szData);
-		_log("[CAMXServer] Send request Data:%s", nResult, szData);
+		_log("[CAMXServer] Send request Data:%s", szData);
 	}
 	return nResult;
 }
@@ -95,7 +94,7 @@ int CAMXServer::request(const int nSocketFD, const char *szData)
 int CAMXServer::response(const int nSocketFD, const char *szData)
 {
 	int nResult = FALSE;
-	if(0 < nSocketFD)
+	if (0 < nSocketFD)
 	{
 		nResult = sendPacket(nSocketFD, szData);
 		_log("[CAMXServer] Send Response Data:%s", nResult, szData);
@@ -108,7 +107,7 @@ int CAMXServer::sendPacket(const int nSocketFD, const char *szData)
 	int nResult = FALSE;
 	string strCommand = szData;
 
-	if(0 < nSocketFD)
+	if (0 < nSocketFD)
 	{
 		nResult = socketSend(nSocketFD, strCommand.c_str(), strCommand.length());
 		_log("[CAMXServer] sendPacket, length:%d Data:%s", nResult, strCommand.c_str());
