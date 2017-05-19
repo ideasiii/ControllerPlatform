@@ -145,7 +145,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 {
 	bool bVol;
 	int nLevel;
-	unsigned int nIndex;
+	int nIndex;
 	string strStatus;
 	string strLevel;
 
@@ -160,7 +160,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	//_DBG("strStatus: %s  ############################", strStatus.c_str());
 	nIndex = strStatus.find("_VOL_");
 	//_DBG("nIndex: %d  ############################", nIndex);
-	if (-1 != nIndex)
+	if (string::npos != nIndex)
 	{
 		//====== 這是一個聲音狀態 =======//
 		bVol = true;
