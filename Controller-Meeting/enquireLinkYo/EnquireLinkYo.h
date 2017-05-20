@@ -6,7 +6,7 @@
 
 class CCmpClient;
 
-// 我只是想幫忙：協助處理 enquire link 發送以及狀況處理的類別
+// 我只是想幫忙：協助處理 enquire link 發送以及對 Controller 發送斷線事件的類別
 class EnquireLinkYo : public CObject
 {
 public:
@@ -45,6 +45,9 @@ private:
 	std::atomic_int balance;
 	
 	void run();
+
+	// 通知外面 enquire link 失敗
+	void informEnquireLinkFailure();
 
 	friend void *threadStartRoutine_EnquireLinkYo_run(void *argv);
 };

@@ -52,10 +52,8 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 	appVersionHandler.reset(appVerHandlerRet);
 	amxControllerInfo.reset(amxControllerInfoRet);
 	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent", this, 
-		MESSAGE_EVENT_CLIENT_MEETING_AGENT, this->mpController));
-	
-	appVersionHandler->start();
-	
+		MESSAGE_WHAT_CLIENT_MEETING_AGENT, this->mpController));
+		
 	return doorAccessHandler.initMember(config);
 }
 
@@ -96,6 +94,9 @@ int CClientMeetingAgent::startClient(int msqKey)
 		return FALSE;
 	}
 
+	appVersionHandler->start();
+	// enquireLinkYo starts in onResponse(), when binding response is received
+	
 	return TRUE;
 }
 
@@ -103,35 +104,39 @@ void CClientMeetingAgent::stopClient()
 {
 	_DBG("[CClientMeetingAgent] stopClient() step in");
 
-	if (isValidSocketFD())
+	if (enquireLinkYo != nullptr)
 	{
-		int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
-		if (nRet < 0)
-		{
-			_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent FAILED.");
-		}
-
-		_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent OK.");
-		_log("[CClientMeetingAgent] stopClient() Disconnected from %s:%d.", agentIp.c_str(), agentPort);
+		enquireLinkYo->stop();
 	}
-
-	stop();
 
 	if (appVersionHandler != nullptr)
 	{
 		appVersionHandler->stop();
 	}
 
-	if (enquireLinkYo != nullptr)
+	if (!isValidSocketFD())
 	{
-		enquireLinkYo->stop();
+		_log("[CClientMeetingAgent] stopClient() socket fd is not valid, quit stopping");
+		return;
 	}
+
+	int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
+	if (nRet < 0)
+	{
+		_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent FAILED.");
+	}
+
+	_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent OK.");
+	_log("[CClientMeetingAgent] stopClient() Disconnected from %s:%d.", agentIp.c_str(), agentPort);
+
+	stop();
+
+	_DBG("[CClientMeetingAgent] stopClient() step out");
 }
 
-// 當收到 server 的 response PDU 時
 int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_DBG("[CClientMeetingAgent] onResponse()");
+	_DBG("[CClientMeetingAgent] onResponse() step in");
 
 	switch ((unsigned int)nCommand)
 	{
@@ -337,4 +342,11 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccess(int nSocket, int nComma
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 
 	return TRUE;
+}
+
+void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
+{
+	_DBG("[ClientMeetingAgent] onServerDisconnect() step in");
+	stopClient();
+	_DBG("[ClientMeetingAgent] onServerDisconnect() step out");
 }

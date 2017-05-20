@@ -105,36 +105,47 @@ void EnquireLinkYo::run()
 {
 	_DBG("[EnquireLinkYo] %s run() step in", strTaskName.c_str());
 
+	if (isRunning)
+	{
+		_log("[EnquireLinkYo] %s run() isRunning == true, quit before looping", strTaskName.c_str());
+		return;
+	}
+
 	isRunning = true;
 	balance = 0;
 	
+	if (!client->isValidSocketFD())
+	{
+		_log("[EnquireLinkYo] %s run() sock fd is not valid, quit before looping", strTaskName.c_str());
+		isRunning = false;
+		return;
+	}
+
 	while (true)
 	{
 		sleep(requestInterval);
 		
+		/*
+		// isValidSocketFD() 只是檢查內部的 sock fd 是不是 -1
+		// 不是檢查 sock fd 是否可以送封包
+		// 所以如果 CCmpClient 在確定連到 server 之後才啟動這個 function 的話
+		// 這個檢查並沒有用
 		if (!client->isValidSocketFD())
 		{
-			Message message;
-			message.what = messageWhat;
-			message.arg[0] = -1;
-			mpController->sendMessage(message);
+			informEnquireLinkFailure();
 
 			_log("[EnquireLinkYo] %s run() client socket not valid, return", strTaskName.c_str());
-			// sockFd 掛了，只能退出迴圈
+			// socket 壞了，只能退出迴圈
 			break;
-		}
+		}*/
 
 		if (balance >= maxBalance)
 		{
 			// Enquire Link Failed
-			// TODO 怎麼通過 message queue 通知外面 socket 爛了?
-			Message message;
-			message.what = MESSAGE_EVENT_CLIENT_MEETING_AGENT;
-			message.arg[0] = -1;
-			mpController->sendMessage(message);
+			informEnquireLinkFailure();
 
 			_log("[EnquireLinkYo] %s run() reached maxBalance %d, assume broken pipe", strTaskName.c_str(), maxBalance);
-			// sockFd 掛了，只能退出迴圈
+			// socket 壞了，只能退出迴圈
 			break;
 		}
 
@@ -151,13 +162,10 @@ void EnquireLinkYo::run()
 		else
 		{
 			//Enquire Link Failed
-			// TODO 怎麼通過 message queue 通知外面 socket 爛了?
-			Message message;
-			message.what = MESSAGE_EVENT_CLIENT_MEETING_AGENT;
-			message.arg[0] = -1;
-			mpController->sendMessage(message);
+			informEnquireLinkFailure();
 			_log("[EnquireLinkYo] %s run() Send enquire link failed, result = %d\n", strTaskName.c_str(), nRet);
-			// sockFd 掛了，只能退出迴圈
+			
+			// socket 壞了，只能退出迴圈
 			break;
 		}
 	}
@@ -165,14 +173,26 @@ void EnquireLinkYo::run()
 	_log("[EnquireLinkYo] %s run() step out", strTaskName.c_str());
 }
 
+void EnquireLinkYo::informEnquireLinkFailure()
+{
+	//Enquire Link Failed
+			Message message;
+			message.what = MESSAGE_EVENT_CLIENT_MEETING_AGENT;
+			message.arg[0] = -1;
+			mpController->sendMessage(message);
+}
+
+// this class does not receive events from message queue
 void EnquireLinkYo::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
 	const void* pData)
 {
-	_log("[EnquireLinkYo] onReceiveMessage()");
+	_log("[EnquireLinkYo] onReceiveMessage() what the hell?");
 }
+
+// this class does not receive events from message queue
 void EnquireLinkYo::onHandleMessage(Message &message)
 {
-	_log("[EnquireLinkYo] onHandleMessage()");
+	_log("[EnquireLinkYo] onHandleMessage() what the hell?");
 }
 
 std::string EnquireLinkYo::taskName()

@@ -18,42 +18,6 @@
 
 using namespace std;
 
-#define ENQUIRE_LINK_INTERVAL 10 // second
-
-void *threadStartRoutine_CController_enquireLink(void *args)
-{
-	return 0;
-
-
-
-	_log("[CController] threadStartRoutine_CController_enquireLink() step in");
-	auto ctlr = reinterpret_cast<CController*>(args);
-	ctlr->tdEnquireLinkTid = pthread_self();
-
-	while (true)
-	{
-		auto& clientMeetingAgent = ctlr->agentClient;
-		if (clientMeetingAgent != nullptr)
-		{
-			if (!clientMeetingAgent->isValidSocketFD())
-			{
-				_log("[CController] threadStartRoutine_CController_enquireLink() invalid fd");
-			}
-			else
-			{
-				clientMeetingAgent->request(clientMeetingAgent->getSocketfd(),
-					enquire_link_request, STATUS_ROK, getSequence(), NULL);
-			}
-		}
-
-		sleep(ENQUIRE_LINK_INTERVAL);
-	}
-
-	_log("[CController] threadStartRoutine_CController_enquireLink() step out");
-
-	return NULL;
-}
-
 CController::CController() :
 		mnMsqKey(-1), agentClient(nullptr),
 		tdEnquireLink(nullptr)
@@ -121,9 +85,6 @@ int CController::onInitial(void* szConfPath)
 	}
 
 	//amxControllerClient->start();
-
-	tdEnquireLink.reset(new CThreadHandler());
-	tdEnquireLink->createThread(threadStartRoutine_CController_enquireLink, this);
 
 	return nRet;
 }

@@ -36,10 +36,4 @@ private:
 	int mnMsqKey;
 	std::unique_ptr<CClientMeetingAgent> agentClient;
 	std::unique_ptr<CClientAmxController> amxControllerClient;
-
-	std::unique_ptr<CThreadHandler> tdEnquireLink;
-
-	pthread_t tdEnquireLinkTid;
-
-	friend void *threadStartRoutine_CController_enquireLink(void *args);
 };
