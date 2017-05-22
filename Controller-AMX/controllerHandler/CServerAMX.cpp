@@ -53,7 +53,7 @@ int CServerAMX::requestAMX(const char *szCommand)
 		return -1;
 	}
 	string strAmxCmd = szCommand;
-	strAmxCmd.append("\n");
+	//strAmxCmd.append("\n");
 	return request(mAmxBox, strAmxCmd.c_str());
 }
 

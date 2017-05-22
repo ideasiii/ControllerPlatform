@@ -29,6 +29,7 @@ void CAMXServer::onTimer(int nId)
 
 int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 {
+	int nIndex;
 	int result;
 	char pBuf[BUF_SIZE];
 	void* pvBuf = pBuf;
@@ -58,6 +59,11 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 		if(0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
 			// Get Status Response
+			nIndex = strCommand.find("_VOL_");
+			if((int) string::npos != nIndex)
+			{
+				strCommand = strCommand.substr(0, nIndex + 4);
+			}
 			if(AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
 			{
 				onAmxStatus(nSocketFD, strCommand.c_str());
