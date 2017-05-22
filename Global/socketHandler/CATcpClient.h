@@ -30,6 +30,7 @@ public:
 	void closeServer();
 	void runMessageReceive();
 	void runTcpReceive();
+	int getEventFilter();
 	/**
 	 * Be called by message queue run
 	 */
@@ -72,6 +73,7 @@ protected:
 	{
 	}
 	;
+	virtual std::string taskName();
 
 private:
 	int IDLE_TIMEOUT; // secons
@@ -84,6 +86,8 @@ private:
 	unsigned long munRunThreadId; // Message queue run thread ID.
 
 	SOCKET_SERVER mSocketServer;
+	std::string strTaskName;
+	int CATCP_MSQ_EVENT_FILTER;
 };
 
 #endif /* GLOBAL_SOCKETHANDLER_CATCPCLIENT_H_ */
