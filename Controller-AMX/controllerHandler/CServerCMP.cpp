@@ -205,11 +205,12 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	string strJSON = jobjStatus.toString();
 	jobjStatus.release();
 
+	_log("[CServerCMP] broadcastAMXStatus AMX Status: %s", strJSON.c_str());
+
 	int nRet = 0;
 	set<int>::iterator it;
 	for(it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
-		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
 		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
 		if(0 >= nRet)
 			break;
