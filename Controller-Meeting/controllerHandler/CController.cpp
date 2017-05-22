@@ -61,8 +61,7 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 
-	agentClient.reset(new CClientMeetingAgent(this));
-	nRet = agentClient->initMember(config);
+	nRet = initAgentClient(config);
 	if (nRet == FALSE)
 	{
 		_log("[CController] onInitial() agentClient->configMember() failed");
@@ -105,6 +104,31 @@ int CController::onFinish(void* nMsqKey)
 	return TRUE;
 }
 
+int CController::initAgentClient()
+{
+	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
+	std::unique_ptr<CConfig> config = make_unique<CConfig>();
+	int nRet = config->loadConfig(strConfPath);
+	if (!nRet)
+	{
+		_log("[CController] initAgentClient() config->loadConfig() failed");
+		return FALSE;
+	}
+
+	return initAgentClient(config);
+}
+
+int CController::initAgentClient(std::unique_ptr<CConfig>& config)
+{
+	if (agentClient != nullptr)
+	{
+		agentClient.release();
+	}
+
+	agentClient.reset(new CClientMeetingAgent(this));
+	return agentClient->initMember(config);
+}
+
 void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	switch (nCommand)
@@ -119,9 +143,18 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 		sleep(3);
 		_log("[CController] Reconnecting to agent");
-		agentClient->startClient(mnMsqKey);
+		int nRet = initAgentClient();
+		if (nRet == TRUE)
+		{
+			_log("[CController] Reconnecting to agent OK");
+			agentClient->startClient(mnMsqKey);
+		}
+		else
+		{
+			_log("[CController] Reconnecting to agent FAILED");
+		}
+
 		// TODO 重新連線
-		// TODO startClientMeetingAgent()?????????????
 		break;
 	default:
 		_log("[CController] Unknown message command %s", numberToHex(nCommand).c_str());

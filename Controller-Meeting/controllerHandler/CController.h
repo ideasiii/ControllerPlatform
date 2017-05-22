@@ -36,4 +36,7 @@ private:
 	int mnMsqKey;
 	std::unique_ptr<CClientMeetingAgent> agentClient;
 	std::unique_ptr<CClientAmxController> amxControllerClient;
+
+	int initAgentClient();
+	int initAgentClient(std::unique_ptr<CConfig>& config);
 };
