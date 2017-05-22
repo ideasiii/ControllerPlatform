@@ -9,6 +9,8 @@
 #define GLOBAL_PROTOCOLHANDLER_CCMPCLIENT_H_
 #include <map>
 #include "CATcpClient.h"
+#include "LogHandler.h"
+
 class CCmpClient: public CATcpClient
 {
 
@@ -37,35 +39,40 @@ protected:
 	/**
 	* Controller Message Protocol (CMP) Callback.
 	* Parameters:
-	* 				nSocket: Client Socket File Description
+	* 				nSocket: Client socket file descriptor
 	* 				nCommand: Command ID
-	* 				nSequence: CMP Packet Sequence
-	* 				szBody: CMP Body Data
+	* 				nSequence: CMP packet sequence
+	* 				szBody: CMP body
 	*/
 protected:
 	// all response PDU goes here
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
+		_log("[CCmpclient] onResponse() unhandled");
 		return 0;
 	}
 	
 	virtual int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		_log("[CCmpclient] onSmartBuildingQrCodeToken() unhandled");
 		return 0;
 	}
 
 	virtual int onSmartBuildingAppVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		_log("[CCmpclient] onSmartBuildingAppVersion() unhandled");
 		return 0;
 	}
 
 	virtual int onSmartBuildingMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		_log("[CCmpclient] onSmartBuildingMeetingData() unhandled");
 		return 0;
 	}
 
 	virtual int onSmartBuildingAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
+		_log("[CCmpclient] onSmartBuildingAMXControlAccess() unhandled");
 		return 0;
 	}
 

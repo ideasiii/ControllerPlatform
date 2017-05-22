@@ -19,6 +19,7 @@ class EnquireLinkYo;
 class CClientMeetingAgent: public CCmpClient
 {
 public:
+	// Instantiate this class, and use controller to send message to queue
 	explicit CClientMeetingAgent(CObject *controller);
 	virtual ~CClientMeetingAgent();
 
@@ -26,7 +27,12 @@ public:
 	// Returns FALSE if anything bad happens
 	int initMember(std::unique_ptr<CConfig> &config);
 
+	// Establish connection to agent, start enquire link thread,
+	// start message receiving loop with message queue ID 'msqKey'.
 	int startClient(int msqKey); 
+
+	// Stop enquire link thread, stop message receiving loop,
+	// disconnect from agent.
 	void stopClient();
 
 protected:

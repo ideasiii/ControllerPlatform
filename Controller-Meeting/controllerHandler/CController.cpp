@@ -19,8 +19,7 @@
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), agentClient(nullptr),
-		tdEnquireLink(nullptr)
+		mnMsqKey(-1), agentClient(nullptr)
 {
 	// allocate resources in onInitial() instead
 }
@@ -91,13 +90,6 @@ int CController::onInitial(void* szConfPath)
 
 int CController::onFinish(void* nMsqKey)
 {
-	if (tdEnquireLink != nullptr)
-	{
-		tdEnquireLink->threadCancel(tdEnquireLinkTid);
-		tdEnquireLink->threadJoin(tdEnquireLinkTid);
-		tdEnquireLink = nullptr;
-	}
-
 	if (amxControllerClient != nullptr)
 	{
 		// amxControllerClient->stopClient();
@@ -140,15 +132,15 @@ void CController::onHandleMessage(Message &message)
 
 	switch (message.what)
 	{
-	case MESSAGE_EVENT_CLIENT_MEETING_AGENT:
-		_log("[CController] onHandleMessage(): MESSAGE_EVENT_CLIENT_MEETING_AGENT");
+	case MESSAGE_WHAT_CLIENT_MEETING_AGENT:
+		_log("[CController] onHandleMessage(): MESSAGE_WHAT_CLIENT_MEETING_AGENT");
 		if (message.arg[0] == -1)
 		{
-			_log("[CController] connection to agent is broken!@$#%^&*(*^%$#Q@#%%&^*&%$^%#");
+			_log("[CController] connection to agent is broken!@$#%^&*(*^%$#Q@#%%dcfvgbjhujniklhguytr5e4aw3&^*&%$^%#");
 		}
 		break;
-	case MESSAGE_EVENT_CLIENT_AMX_CONTROLLER:
-		_log("[CController] onHandleMessage(): MESSAGE_EVENT_CLIENT_AMX_CONTROLLER");
+	case MESSAGE_WHAT_CLIENT_AMX_CONTROLLER:
+		_log("[CController] onHandleMessage(): MESSAGE_WHAT_CLIENT_AMX_CONTROLLER");
 		break;
 	default:
 		_log("[CController] onHandleMessage(): Message will not be processed");

@@ -179,11 +179,13 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 
 	delete pBuf;
 
+	_log("CMessageHandler::sendMessage step outoutoutout, nRet = %d\n", nRet);
 	return nRet;
 }
 
 int CMessageHandler::recvMessage(void **pbuf)
 {
+	_log("[CMessageHandler] recvMessage() step in");
 	ssize_t recvSize = 0;
 
 	if( NULL == *pbuf)
@@ -196,7 +198,7 @@ int CMessageHandler::recvMessage(void **pbuf)
 	}
 
 	recvSize = msgrcv(getMsqid(), *pbuf, getBufLength(), getRecvEvent(), 0);
-
+	_log("[CMessageHandler] recvMessage() recvSize = %d", recvSize);
 	if(0 > recvSize)
 	{
 		if( errno == EINTR)

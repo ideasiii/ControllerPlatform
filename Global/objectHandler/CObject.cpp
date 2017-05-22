@@ -102,8 +102,11 @@ int CObject::run(int lFilter, const char * szDescript)
 		nRecv = messageHandler->recvMessage(&pdata);
 		if(0 < nRecv)
 		{
+			_log("[CObject] %s run() 0 < nRecv", taskName().c_str());
+
 			if(EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
 			{
+				_log("[CObject] %s run() EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand", taskName().c_str());
 				Message message;
 				message.what = msgbuf->what;
 				for(int i = 0; i < ARG_LEN; ++i)
@@ -121,10 +124,12 @@ int CObject::run(int lFilter, const char * szDescript)
 			/**
 			 * get SIGINT
 			 */
+			_log("[CObject] %s run() get SIGINT", taskName().c_str());
 			break;
 		}
 		else
 		{
+			_log("[CObject] %s run() sleep 5??", taskName().c_str());
 			sleep(5);
 		}
 	}

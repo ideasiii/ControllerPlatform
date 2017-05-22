@@ -21,7 +21,7 @@ public:
 	void setMaxBalance(int value);
 
 	// 開始對 sockFd 發送 enquire link request
-	void start();
+	void start(CObject *mightyController);
 	void stop();
 
 	// 將沒收到的 enquire link response 的計數器歸零
@@ -30,12 +30,17 @@ public:
 protected:
 	void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData) override;
 	void onHandleMessage(Message &message) override;
+
+	// 因為這個 class 是使用 composition 的方式被 CCmpClient 使用的，無法 override taskName
+	// 所以只好再用一個 strTaskName，在建構的時候指定 task name
 	std::string taskName() override;
 
 private:
 	const std::string strTaskName;
-	CCmpClient * const client;
-	CObject * const mpController;
+	CCmpClient * client;
+	CObject * mpController;
+
+	// Value to be filled in Message.what when informing outside
 	const int messageWhat;
 	pthread_t loopThreadId;
 	std::atomic_bool isRunning;
