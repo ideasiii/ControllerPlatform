@@ -52,7 +52,7 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 	appVersionHandler.reset(appVerHandlerRet);
 	amxControllerInfo.reset(amxControllerInfoRet);
 	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent.ely", this, 
-		MESSAGE_WHAT_CLIENT_MEETING_AGENT, mpController));
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController));
 		
 	return doorAccessHandler.initMember(config);
 }
@@ -145,10 +145,8 @@ int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int 
 		enquireLinkYo->zeroBalance();
 		break;
 	case bind_response:
-		_log("[CClientMeetingAgent] onResponse() bind_response");
-		_log("[CClientMeetingAgent] onResponse() bind ok, start EnquireLinkYo");
-
-		enquireLinkYo->start(this->mpController);
+		_log("[CClientMeetingAgent] onResponse() bind_response; bind ok, start EnquireLinkYo");
+		enquireLinkYo->start();
 		break;
 	case unbind_response:
 		_log("[CClientMeetingAgent] onResponse() unbind_response");

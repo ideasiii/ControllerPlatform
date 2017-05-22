@@ -112,14 +112,17 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	case EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE:
 		_log("[CController] EVENT_COMMAND_SOCKET_TCP_MEETING_AGENT_RECEIVE");
 		break;
-
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
 		_log("[CController] EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT");
+		_log("[CController] connection to agent is broken!@$#%^&*(*^%$#Q@#%%dcfvgbjhujniklhguytr5e4aw3&^*&%$^%#");
+		agentClient->stopClient();
+
+		sleep(3);
+		_log("[CController] Reconnecting to agent");
+		agentClient->startClient(mnMsqKey);
 		// TODO 重新連線
 		// TODO startClientMeetingAgent()?????????????
-		// TODO 用 enquire link 
 		break;
-
 	default:
 		_log("[CController] Unknown message command %s", numberToHex(nCommand).c_str());
 		break;

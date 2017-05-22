@@ -165,7 +165,7 @@ void AppVersionHandler::runWatcher()
 		}
 	}
 
-	_log("[AppVersionHandler] %s runWatcher() exit");
+	_log("[AppVersionHandler] %s runWatcher() exit", strTaskName.c_str());
 }
 
 void AppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,

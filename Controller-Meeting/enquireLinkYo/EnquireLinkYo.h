@@ -10,7 +10,7 @@ class CCmpClient;
 class EnquireLinkYo : public CObject
 {
 public:
-	EnquireLinkYo(std::string taskName, CCmpClient *client, int messageWhat, CObject *controller);
+	EnquireLinkYo(std::string whoUsedMe, CCmpClient *client, int nCommandOnDisconnect, CObject *controller);
 	~EnquireLinkYo();
 
 	// 設定發送 enquire link 的間隔
@@ -21,7 +21,7 @@ public:
 	void setMaxBalance(int value);
 
 	// 開始對 sockFd 發送 enquire link request
-	void start(CObject *mightyController);
+	void start();
 	void stop();
 
 	// 將沒收到的 enquire link response 的計數器歸零
@@ -36,12 +36,13 @@ protected:
 	std::string taskName() override;
 
 private:
-	const std::string strTaskName;
+	const std::string whoUsedMe;
 	CCmpClient * client;
 	CObject * mpController;
 
 	// Value to be filled in Message.what when informing outside
-	const int messageWhat;
+	const int commandOnDisconnect;
+
 	pthread_t loopThreadId;
 	std::atomic_bool isRunning;
 

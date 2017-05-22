@@ -100,16 +100,17 @@ int CObject::run(int lFilter, const char * szDescript)
 		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
 
 		nRecv = messageHandler->recvMessage(&pdata);
-		if(0 < nRecv)
+		if (0 < nRecv)
 		{
-			_log("[CObject] %s run() 0 < nRecv", taskName().c_str());
+			//_log("[CObject] %s run() 0 < nRecv", taskName().c_str());
 
-			if(EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
+			if (EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
 			{
-				_log("[CObject] %s run() EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand", taskName().c_str());
+				//_log("[CObject] %s run() EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand", taskName().c_str());
+
 				Message message;
 				message.what = msgbuf->what;
-				for(int i = 0; i < ARG_LEN; ++i)
+				for (int i = 0; i < ARG_LEN; ++i)
 				{
 					message.arg[i] = msgbuf->arg[i];
 				}
@@ -117,19 +118,26 @@ int CObject::run(int lFilter, const char * szDescript)
 				onHandleMessage(message);
 			}
 			else
+			{
+				/*if (msgbuf->nDataLen > 0)
+				{
+					_log("[CObject] %s msgbuf->nDataLen > 0, print data: `%s`", taskName().c_str(), msgbuf->cData);
+				}*/
+
 				onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
+			}
 		}
 		else if(-2 == nRecv)
 		{
 			/**
 			 * get SIGINT
 			 */
-			_log("[CObject] %s run() get SIGINT", taskName().c_str());
+			//_log("[CObject] %s run() get SIGINT", taskName().c_str());
 			break;
 		}
 		else
 		{
-			_log("[CObject] %s run() sleep 5??", taskName().c_str());
+			//_log("[CObject] %s run() sleep 5??", taskName().c_str());
 			sleep(5);
 		}
 	}
