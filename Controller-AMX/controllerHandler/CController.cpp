@@ -162,12 +162,16 @@ void CController::onHandleMessage(Message &message)
 		}
 		break;
 	case amx_status_request: // From CMP Server
+		_log("[CController] onHandleMessage amx_status_request from socket: %d data: %s", message.arg[0],
+						message.strData.c_str());
 		serverAMX->requestAMX(message.strData.c_str());
 		//=================== broadcast volum dummy ==================//
 		//serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
 		//=================== dummy end ==============================//
 		break;
 	case amx_status_response: // From AMX Box
+		_log("[CController] onHandleMessage amx_status_response from socket: %d data: %s", message.arg[0],
+				message.strData.c_str());
 		serverCMP->broadcastAMXStatus(message.strData.c_str());
 		break;
 	case authentication_response:

@@ -36,7 +36,7 @@ int CServerCMP::onBind(int nSocket, int nCommand, int nSequence, const void *szB
 int CServerCMP::onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
-	if (mapClient.end() != mapClient.find(nSocket))
+	if(mapClient.end() != mapClient.find(nSocket))
 	{
 		mapClient.erase(nSocket);
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocket);
@@ -51,7 +51,7 @@ void CServerCMP::onClientConnect(unsigned long int nSocketFD)
 
 void CServerCMP::onClientDisconnect(unsigned long int nSocketFD)
 {
-	if (mapClient.end() != mapClient.find(nSocketFD))
+	if(mapClient.end() != mapClient.find(nSocketFD))
 	{
 		mapClient.erase(nSocketFD);
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocketFD);
@@ -71,10 +71,10 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 
 	_log("[CServerCMP] onAmxControl Body: %s", strBody.c_str());
 
-	if (!strBody.empty())
+	if(!strBody.empty())
 	{
 		JSONObject *jobj = new JSONObject(strBody);
-		if (jobj->isValid())
+		if(jobj->isValid())
 		{
 			Message message;
 			int nId = getSequence();
@@ -86,7 +86,7 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 			amxCommand.strId = jobj->getString("ID");
 
 			//========= auth token ==================//
-			if (amxCommand.strToken.empty() || amxCommand.strId.empty())
+			if(amxCommand.strToken.empty() || amxCommand.strId.empty())
 			{
 				_log("[CServerCMP] onAmxControl Invalid Auth data");
 				return response(nSocket, nCommand, nStatus, nSequence, 0);
@@ -99,7 +99,7 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 
 			//========= send control command ========//
 			strCommand = getAMXControlRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nControl);
-			if (!strCommand.empty())
+			if(!strCommand.empty())
 			{
 				_log("[CServerCMP] onAmxControl Command: %s", strCommand.c_str());
 				nStatus = STATUS_ROK;
@@ -129,21 +129,22 @@ int CServerCMP::onAmxStatus(int nSocket, int nCommand, int nSequence, const void
 
 	_log("[CServerCMP] onAmxStatus Body: %s", strBody.c_str());
 
-	if (!strBody.empty())
+	if(!strBody.empty())
 	{
 		JSONObject *jobj = new JSONObject(strBody);
-		if (jobj->isValid())
+		if(jobj->isValid())
 		{
 			amxCommand.nFunction = jobj->getInt("function");
 			amxCommand.nDevice = jobj->getInt("device");
 			amxCommand.nStatus = jobj->getInt("request-status");
 			strCommand = getAMXStatusRequest(amxCommand.nFunction, amxCommand.nDevice, amxCommand.nStatus);
-			if (!strCommand.empty())
+			if(!strCommand.empty())
 			{
 				_log("[CServerCMP] onAmxStatus Command: %s", strCommand.c_str());
 				nStatus = STATUS_ROK;
 				Message message;
 				message.what = amx_status_request;
+				message.arg[0] = nSocket;
 				message.strData = strCommand;
 				mpController->sendMessage(message);
 			}
@@ -163,7 +164,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	string strStatus;
 	string strLevel;
 
-	if (0 == szStatus)
+	if(0 == szStatus)
 		return;
 
 	_log("[CServerCMP] broadcastAMXStatus : %s", szStatus);
@@ -173,7 +174,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	strStatus = szStatus;
 	nIndex = strStatus.find("_VOL_");
 
-	if ((int) string::npos != nIndex)
+	if((int) string::npos != nIndex)
 	{
 		//====== 這是一個聲音狀態 =======//
 		bVol = true;
@@ -184,7 +185,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	}
 
 	int nId = getAMXStatusResponse(strStatus.c_str());
-	if (10000 > nId)
+	if(10000 > nId)
 	{
 		_log("[CServerCMP] broadcastAMXStatus Invalid status: %s , code:%d", szStatus, nId);
 		return;
@@ -193,7 +194,7 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	JSONObject jobjStatus;
 	jobjStatus.put("function", nId / 10000);
 	jobjStatus.put("device", (nId % 10000) / 100);
-	if (bVol && !strLevel.empty())
+	if(bVol && !strLevel.empty())
 	{
 
 		jobjStatus.put("level", nLevel);
@@ -206,11 +207,11 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 
 	int nRet = 0;
 	set<int>::iterator it;
-	for (it = mapClient.begin(); it != mapClient.end(); ++it)
+	for(it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
 		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
 		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
-		if (0 >= nRet)
+		if(0 >= nRet)
 			break;
 	}
 }
