@@ -212,15 +212,11 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 
 	int nRet = 0;
 	set<int>::iterator it;
-<<<<<<< HEAD
+
 	_error("BC client count: %d", mapClient.size());
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
 		_error("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
-=======
-	for(it = mapClient.begin(); it != mapClient.end(); ++it)
-	{
->>>>>>> d0fdf33c69f33ab3c759ed79f32cf3be078d3300
 		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
 		if(0 >= nRet)
 			break;
