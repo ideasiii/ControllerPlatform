@@ -36,11 +36,14 @@ protected:
 	std::string taskName() override;
 
 private:
+	// string return in taskName()
 	const std::string whoUsedMe;
-	CCmpClient * client;
-	CObject * mpController;
+	// do not delete this or this class will die with it
+	CCmpClient * const client;
+	// do not delete this or the whole world will collapse
+	CObject * const mpController;
 
-	// Value to be filled in Message.what when informing outside
+	// Command to be filled by mpController when informing broken pipe
 	const int commandOnDisconnect;
 
 	pthread_t loopThreadId;
@@ -50,9 +53,10 @@ private:
 	int maxBalance;
 	std::atomic_int balance;
 	
+	// main loops used to send and monitor enquire link requests
 	void run();
 
-	// 通知外面 enquire link 失敗
+	// 通知 mpController enquire link 失敗
 	void informEnquireLinkFailure();
 
 	friend void *threadStartRoutine_EnquireLinkYo_run(void *argv);

@@ -10,19 +10,20 @@
 #include "../HiddenUtility.hpp"
 #include "LogHandler.h"
 
+#define LOG_TAG "[AppVersionHandler]"
 #define INOTIFY_EVENT_SIZE  (sizeof (struct inotify_event))
 #define INOTIFY_BUF_LEN     (1024 * (INOTIFY_EVENT_SIZE + 16))
 
 void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 {
 	auto uadlh = reinterpret_cast<AppVersionHandler*>(argv); 
-	_log("[AppVersionHandler] %s threadStartRoutine_AppVersionHandler_runWatcher() step in", uadlh->strTaskName.c_str());
+	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", uadlh->strTaskName.c_str());
 
 	uadlh->watcherThreadId = pthread_self();
 	uadlh->doLoop = true;
 	uadlh->runWatcher();			
 	
-	_log("[AppVersionHandler] %s threadStartRoutine_AppVersionHandler_runWatcher() step out", uadlh->strTaskName.c_str());
+	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step out", uadlh->strTaskName.c_str());
 	return 0;
 }
 
@@ -48,7 +49,7 @@ void AppVersionHandler::stop()
 {
 	if (0 == watcherThreadId)
 	{
-		_log("[AppVersionHandler] %s stop() 0 == watcherThreadId", strTaskName.c_str());
+		_log(LOG_TAG" %s stop() 0 == watcherThreadId", strTaskName.c_str());
 		return;
 	}
 
@@ -63,7 +64,7 @@ void AppVersionHandler::runWatcher()
 {
 	strTaskName = taskName();
 
-	_log("[AppVersionHandler] %s runWatcher() Initializing members once before going into watch loop", strTaskName.c_str());
+	_log(LOG_TAG" %s runWatcher() Initializing members once before going into watch loop", strTaskName.c_str());
 	reload();
 
 	while(doLoop)
@@ -75,7 +76,7 @@ void AppVersionHandler::runWatcher()
 				&inotifyFd, &inotifyWd, watchDir.c_str(), inotifyEventMask);
 			if (ret == 0)
 			{
-				_log("[AppVersionHandler] %s runWatcher() watch created, break creating loop", strTaskName.c_str());
+				_log(LOG_TAG" %s runWatcher() watch created, break creating loop", strTaskName.c_str());
 				break;
 			}	
 			
@@ -84,7 +85,7 @@ void AppVersionHandler::runWatcher()
 		} while(doLoop);
 		
 		int maxFd = inotifyFd + 1;
-		_log("[AppVersionHandler] %s runWatcher() watching changes in %s", strTaskName.c_str(), watchDir.c_str());
+		_log(LOG_TAG" %s runWatcher() watching changes in %s", strTaskName.c_str(), watchDir.c_str());
 		
 		while(doLoop)
 		{
@@ -97,16 +98,16 @@ void AppVersionHandler::runWatcher()
 			timeout.tv_sec = 1;
 			timeout.tv_usec = 0;
 
-			//_log("[AppVersionHandler] %s select() step in");
+			//_log(LOG_TAG" %s select() step in");
 			int ret = select(maxFd, &readFdSet, NULL, NULL, &timeout);
-			//_log("[AppVersionHandler] %s select() stepped out, ret = %d", ret);
+			//_log(LOG_TAG" %s select() stepped out, ret = %d", ret);
 
 			if (ret == 0)
 			{
 				// timeout
 				if (!doLoop)
 				{
-					_log("[AppVersionHandler] %s runWatcher() doLoop = false, break loop", strTaskName.c_str());
+					_log(LOG_TAG" %s runWatcher() doLoop = false, break loop", strTaskName.c_str());
 					break;
 				}
 				else
@@ -118,11 +119,11 @@ void AppVersionHandler::runWatcher()
 			{
 				if (errno != EINTR)
 				{
-					_log("[AppVersionHandler] %s runWatcher() select() returned with EINTR, try again", strTaskName.c_str());
+					_log(LOG_TAG" %s runWatcher() select() returned with EINTR, try again", strTaskName.c_str());
 					continue;
 				}
 
-				_log("[AppVersionHandler] %s runWatcher() select() failed: %s", strTaskName.c_str(), strerror(errno));
+				_log(LOG_TAG" %s runWatcher() select() failed: %s", strTaskName.c_str(), strerror(errno));
 				break;
 			}
 			
@@ -131,11 +132,11 @@ void AppVersionHandler::runWatcher()
 			
 			if (len < 1)
 			{
-				_log("[AppVersionHandler] %s runWatcher() read() failed: %s", strTaskName.c_str(), strerror(errno));
+				_log(LOG_TAG" %s runWatcher() read() failed: %s", strTaskName.c_str(), strerror(errno));
 				break;
 			}
 
-			_log("[AppVersionHandler] %s runWatcher() detected dir change, len = %d", strTaskName.c_str(), len);
+			_log(LOG_TAG" %s runWatcher() detected dir change, len = %d", strTaskName.c_str(), len);
 			
 			int i = 0;
 			while (i < len) 
@@ -160,18 +161,18 @@ void AppVersionHandler::runWatcher()
 		
 		if (doLoop)
 		{
-			_log("[AppVersionHandler] %s runWatcher() sleep before next watch loop", strTaskName.c_str());
+			_log(LOG_TAG" %s runWatcher() sleep before next watch loop", strTaskName.c_str());
 			sleep(10);
 		}
 	}
 
-	_log("[AppVersionHandler] %s runWatcher() exit", strTaskName.c_str());
+	_log(LOG_TAG" %s runWatcher() exit", strTaskName.c_str());
 }
 
 void AppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
 	const void* pData)
 {
-	_log("[AppVersionHandler] %s Ignore everything passed to onReceiveMessage()", strTaskName.c_str());
+	_log(LOG_TAG" %s Ignore everything passed to onReceiveMessage()", strTaskName.c_str());
 }
 
 std::string AppVersionHandler::taskName()

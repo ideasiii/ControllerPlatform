@@ -10,6 +10,7 @@
 #include "AndroidPackageInfoQuierer.hpp"
 #include "LogHandler.h"
 
+#define LOG_TAG "[ApkPeekingAppVersionHandler]"
 #define INOTIFY_WATCH_EVENT IN_CLOSE_WRITE
 
 ApkPeekingAppVersionHandler::ApkPeekingAppVersionHandler
@@ -30,7 +31,7 @@ bool ApkPeekingAppVersionHandler::onInotifyEvent(struct inotify_event *event)
 		&& HiddenUtility::strEndsWith((char*)event->name, ".apk")
 		&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
 	{
-		_log("[ApkPeekingAppVersionHandler] APK created, reloading");
+		_log(LOG_TAG" APK created, reloading");
 		reload();
 		return false;
 	}
@@ -40,7 +41,7 @@ bool ApkPeekingAppVersionHandler::onInotifyEvent(struct inotify_event *event)
 
 void ApkPeekingAppVersionHandler::reload()
 {
-	_log("[ApkPeekingAppVersionHandler] reload() get version of apks in `%s`", watchDir.c_str());
+	_log(LOG_TAG" reload() get version of apks in `%s`", watchDir.c_str());
 
 	int largestVersionCode = -1;
 	std::string newestApkName;
@@ -48,7 +49,7 @@ void ApkPeekingAppVersionHandler::reload()
 	DIR* dirp = opendir(watchDir.c_str());
 	if (dirp == NULL)
 	{
-		_log("[ApkPeekingAppVersionHandler] reload() opendir() failed: %s", strerror(errno));
+		_log(LOG_TAG" reload() opendir() failed: %s", strerror(errno));
 		return;
 	}
 
@@ -83,12 +84,12 @@ void ApkPeekingAppVersionHandler::reload()
 		downloadLink = downloadLinkBasePath + "/" + newestApkName;
 		lastUpdated = HiddenUtility::unixTimeMilli();
 
-		_log("[ApkPeekingAppVersionHandler] reload() ok, packageName = %s, versionCode = %d, versionName = %s, downloadLink = %s",
+		_log(LOG_TAG" reload() ok, packageName = %s, versionCode = %d, versionName = %s, downloadLink = %s",
 		packageName.c_str(), versionCode, versionName.c_str(), downloadLink.c_str());
 	}
 	else
 	{
-		_log("[ApkPeekingAppVersionHandler] reload() failed");
+		_log(LOG_TAG" reload() failed");
 	}
 }
 

@@ -48,31 +48,36 @@ protected:
 	// all response PDU goes here
 	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 	{
-		_log("[CCmpclient] onResponse() unhandled");
+		_log("[CCmpclient] onResponse() not handled");
 		return 0;
 	}
 	
-	virtual int onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
+	virtual int onAuthenticationRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
-		_log("[CCmpclient] onSmartBuildingQrCodeToken() unhandled");
+		_log("[CCmpclient] onAuthenticationRequest() not handled");
+		return 0;
+	}
+	virtual int onSmartBuildingQrCodeTokenRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		_log("[CCmpclient] onSmartBuildingQrCodeToken() not handled");
 		return 0;
 	}
 
-	virtual int onSmartBuildingAppVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
+	virtual int onSmartBuildingAppVersionRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
-		_log("[CCmpclient] onSmartBuildingAppVersion() unhandled");
+		_log("[CCmpclient] onSmartBuildingAppVersion() not handled");
 		return 0;
 	}
 
-	virtual int onSmartBuildingMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
+	virtual int onSmartBuildingMeetingDataRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
-		_log("[CCmpclient] onSmartBuildingMeetingData() unhandled");
+		_log("[CCmpclient] onSmartBuildingMeetingData() not handled");
 		return 0;
 	}
 
-	virtual int onSmartBuildingAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
+	virtual int onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
-		_log("[CCmpclient] onSmartBuildingAMXControlAccess() unhandled");
+		_log("[CCmpclient] onSmartBuildingAMXControlAccess() not handled");
 		return 0;
 	}
 
