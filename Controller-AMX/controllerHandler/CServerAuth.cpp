@@ -28,6 +28,7 @@ CServerAuth::~CServerAuth()
 int CServerAuth::onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	closeClient(mAuthServer);
 	mAuthServer = nSocket;
 	_log("[CServerAuth] onBind Socket: %d", nSocket);
 	return TRUE;
