@@ -30,6 +30,7 @@ int CServerCMP::onBind(int nSocket, int nCommand, int nSequence, const void *szB
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	mapClient.insert(nSocket);
 	_log("[CServerCMP] Socket Client FD:%d Binded", nSocket);
+	_error("CServerCMP::onBind socket: %d", nSocket);
 	return TRUE;
 }
 
@@ -40,13 +41,14 @@ int CServerCMP::onUnbind(int nSocket, int nCommand, int nSequence, const void *s
 	{
 		mapClient.erase(nSocket);
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocket);
+		_error("CServerCMP::onUnbind socket: %d", nSocket);
 	}
 	return TRUE;
 }
 
 void CServerCMP::onClientConnect(unsigned long int nSocketFD)
 {
-
+	_error("CServerCMP::onClientConnect socket: %d", nSocketFD);
 }
 
 void CServerCMP::onClientDisconnect(unsigned long int nSocketFD)
@@ -55,6 +57,7 @@ void CServerCMP::onClientDisconnect(unsigned long int nSocketFD)
 	{
 		mapClient.erase(nSocketFD);
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocketFD);
+		_error("CServerCMP::onClientDisconnect socket: %d", nSocketFD);
 	}
 }
 
@@ -206,9 +209,10 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 
 	int nRet = 0;
 	set<int>::iterator it;
+	_error("BC client count: %d", mapClient.size());
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
-		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
+		_error("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
 		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
 		if (0 >= nRet)
 			break;
