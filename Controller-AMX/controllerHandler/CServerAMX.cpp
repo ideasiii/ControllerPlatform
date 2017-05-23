@@ -22,10 +22,11 @@ CServerAMX::~CServerAMX()
 
 int CServerAMX::onAmxStatus(unsigned long int nSocketFD, const char *szStatus)
 {
-	if (szStatus)
+	if(szStatus)
 	{
 		Message message;
 		message.what = amx_status_response;
+		message.arg[0] = nSocketFD;
 		message.strData = szStatus;
 		return mpController->sendMessage(message);
 	}
@@ -46,13 +47,13 @@ void CServerAMX::onClientDisconnect(unsigned long int nSocketFD)
 
 int CServerAMX::requestAMX(const char *szCommand)
 {
-	if (!mAmxBox)
+	if(!mAmxBox)
 	{
 		_log("[CServerAMX] requestAMX Error!! AMX not Connected");
 		return -1;
 	}
 	string strAmxCmd = szCommand;
-	strAmxCmd.append("\n");
+	//strAmxCmd.append("\n");
 	return request(mAmxBox, strAmxCmd.c_str());
 }
 

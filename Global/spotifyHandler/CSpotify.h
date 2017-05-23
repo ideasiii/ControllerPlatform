@@ -27,6 +27,7 @@ class CSpotify
 public:
 	CSpotify();
 	virtual ~CSpotify();
-	int getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums);
-	int getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong);
+	int getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
+			const char *szAvailableMarket = 0);
+	int getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket = 0);
 };

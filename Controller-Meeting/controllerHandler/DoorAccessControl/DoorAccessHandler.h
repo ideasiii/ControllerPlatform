@@ -37,5 +37,5 @@ private:
 	/**
 	 * 紀錄門最後成功被打開的時間
 	 */
-	std::map<string, int64_t> lastOpenedTime;
+	std::map<std::string, int64_t> lastOpenedTime;
 };

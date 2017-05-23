@@ -29,7 +29,8 @@ CSpotify::~CSpotify()
 
 }
 
-int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums)
+int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
+		const char *szAvailableMarket)
 {
 
 	if(0 == szArtist)
@@ -51,12 +52,32 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 		for(int i = 0; i < jItems->size(); ++i)
 		{
 			JSONObject *jAlbum = new JSONObject(jItems->getJsonObject(i));
-			if(0 == jAlbum->getString("type").compare("album"))
+			JSONArray *jarrAM = new JSONArray(jAlbum->getJsonArray("available_markets"));
+			if(szAvailableMarket)
 			{
-				strAlbum = jAlbum->getString("name");
-				strAlbumId = jAlbum->getString("id");
-				if(!strAlbum.empty() && !strAlbumId.empty())
-					mapAlbums[strAlbum] = strAlbumId;
+				for(int i = 0; i < jarrAM->size(); ++i)
+				{
+					if(!jarrAM->getString(i).compare(szAvailableMarket))
+					{
+						if(0 == jAlbum->getString("type").compare("album"))
+						{
+							strAlbum = jAlbum->getString("name");
+							strAlbumId = jAlbum->getString("id");
+							if(!strAlbum.empty() && !strAlbumId.empty())
+								mapAlbums[strAlbum] = strAlbumId;
+						}
+					}
+				}
+			}
+			else
+			{
+				if(0 == jAlbum->getString("type").compare("album"))
+				{
+					strAlbum = jAlbum->getString("name");
+					strAlbumId = jAlbum->getString("id");
+					if(!strAlbum.empty() && !strAlbumId.empty())
+						mapAlbums[strAlbum] = strAlbumId;
+				}
 			}
 			jAlbum->release();
 			delete jAlbum;
@@ -81,7 +102,7 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
  "track_number": 1,
  "type": "track",
  "uri": "spotify:track:6Y2XecuoGvqs5iHhkxQ1OU"*/
-int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong)
+int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket)
 {
 	if(0 == szAlbumId)
 		return 0;
@@ -103,14 +124,37 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong)
 			if(0 == jTrack->getString("type").compare("track"))
 			{
 				TRACK track;
-				track.href = jTrack->getString("href");
-				track.id = jTrack->getString("id");
-				track.name = jTrack->getString("name");
-				track.popularity = jTrack->getInt("popularity");
-				track.preview_url = jTrack->getString("preview_url");
-				track.track_number = jTrack->getInt("track_number");
-				track.uri = jTrack->getString("uri");
-				mapSong[jTrack->getInt("track_number")] = track;
+				if(szAvailableMarket)
+				{
+					JSONArray *jarrAM = new JSONArray(jTrack->getJsonArray("available_markets"));
+					for(int i = 0; i < jarrAM->size(); ++i)
+					{
+						if(!jarrAM->getString(i).compare(szAvailableMarket))
+						{
+							track.href = jTrack->getString("href");
+							track.id = jTrack->getString("id");
+							track.name = jTrack->getString("name");
+							track.popularity = jTrack->getInt("popularity");
+							track.preview_url = jTrack->getString("preview_url");
+							track.track_number = jTrack->getInt("track_number");
+							track.uri = jTrack->getString("uri");
+							mapSong[jTrack->getInt("track_number")] = track;
+						}
+					}
+					jarrAM->release();
+					delete jarrAM;
+				}
+				else
+				{
+					track.href = jTrack->getString("href");
+					track.id = jTrack->getString("id");
+					track.name = jTrack->getString("name");
+					track.popularity = jTrack->getInt("popularity");
+					track.preview_url = jTrack->getString("preview_url");
+					track.track_number = jTrack->getInt("track_number");
+					track.uri = jTrack->getString("uri");
+					mapSong[jTrack->getInt("track_number")] = track;
+				}
 			}
 			jTrack->release();
 			delete jTrack;

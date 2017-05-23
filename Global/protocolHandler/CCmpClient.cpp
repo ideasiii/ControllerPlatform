@@ -16,14 +16,12 @@
 CCmpClient::CCmpClient() :
 		confCmpClient(0)
 {
-	mapFunc[bind_response] = &CCmpClient::onBindResponse;
-	mapFunc[unbind_response] = &CCmpClient::onUnbindResponse;
-
-	mapFunc[smart_building_qrcode_tokn_request] = &CCmpClient::onSmartBuildingQrCodeToken;
-	mapFunc[smart_building_appversion_request] = &CCmpClient::onSmartBuildingAppVersion;
-	mapFunc[smart_building_getmeetingdata_request] = &CCmpClient::onSmartBuildingMeetingData;
-	mapFunc[smart_building_amx_control_access_request] = &CCmpClient::onSmartBuildingAMXControlAccess;
-
+	mapFunc[authentication_request] = &CCmpClient::onAuthenticationRequest;
+	mapFunc[smart_building_qrcode_tokn_request] = &CCmpClient::onSmartBuildingQrCodeTokenRequest;
+	mapFunc[smart_building_appversion_request] = &CCmpClient::onSmartBuildingAppVersionRequest;
+	mapFunc[smart_building_getmeetingdata_request] = &CCmpClient::onSmartBuildingMeetingDataRequest;
+	mapFunc[smart_building_amx_control_access_request] = &CCmpClient::onSmartBuildingAMXControlAccessRequest;
+	
 	confCmpClient = new CONF_CMP_CLIENT;
 	confCmpClient->init();
 }
@@ -61,11 +59,11 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	cmpHeader.command_status = ntohl(pHeader->command_status);
 	cmpHeader.sequence_number = ntohl(pHeader->sequence_number);
 
-	_log("[CCmpClient]onReceive %u", cmpHeader.command_id);
+	_log("[CCmpClient] %s onReceive %u", taskName().c_str(), cmpHeader.command_id);
 
 	if (0 >= cmpHeader.command_length || MAX_SOCKET_READ < cmpHeader.command_length)
 	{
-		_log("[CCmpClient] onTcpReceive receive invaild packet");
+		_log("[CCmpClient] %s onTcpReceive receive invaild packet", taskName().c_str());
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDLEN, cmpHeader.sequence_number, 0);
 		return;
 	}
@@ -80,7 +78,7 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	}
 	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
-		_log("[CCmpClient] onReceive Response");
+		_log("[CCmpClient] %s onReceive Response", taskName().c_str());
 
 		// This is response package.
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
@@ -90,7 +88,7 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	}
 	else
 	{
-		_log("[CCmpClient] onReceive Request");
+		_log("[CCmpClient] %s onReceive Request", taskName().c_str());
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 				"[CCmpClient] onReceive Request ", nSocketFD);
 	}
@@ -159,16 +157,16 @@ int CCmpClient::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	{
 		pIndex = buffer;
 		pIndex += sizeof(CMP_HEADER);
-		_log("[CCmpClient] sendPacket Body: %s", pIndex);
+		_log("[CCmpClient] %s sendPacket Body: %s", taskName().c_str(), pIndex);
 	}
 
 	if (0 >= nResult)
 	{
-		_log("[CCmpClient] CMP response Fail socket: %d", nSocket);
+		_log("[CCmpClient] %s CMP response Fail socket: %d", taskName().c_str(), nSocket);
 	}
 	else
 	{
-		sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
+		sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
 	}
 	return nResult;
 }
@@ -204,7 +202,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 
 		if (0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
 		{
-			_log("[CCmpClient] onTcpReceive receive invaild packet");
+			_log("[CCmpClient] %s onTcpReceive receive invaild packet", taskName().c_str());
 			return 0;
 		}
 
@@ -212,7 +210,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 		nSequence = ntohl(cmpHeader.sequence_number);
 		nStatus = ntohl(cmpHeader.command_status);
 
-		if ( enquire_link_request == nCommand)
+		if (	enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
@@ -241,8 +239,8 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 			if (result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
-				_log("[CCmpClient] onTcpReceive System Error, Body Length: %d Receive: %d data: %s", nBodyLen, result,
-						pBody);
+				_log("[CCmpClient] %s onTcpReceive System Error, Body Length: %d Receive: %d data: %s", 
+					taskName().c_str(), nBodyLen, result, pBody);
 				return 0;
 			}
 		}
@@ -253,13 +251,13 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 			{
 				if ( generic_nack == (generic_nack & nCommand))
 				{
-					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTCPReceive Response ",
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTcpReceive Response ",
 							nSocketFD);
 					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
 				}
 				else
 				{
-					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTCPReceive Request ",
+					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpClient] onTcpReceive Request ",
 							nSocketFD);
 					if (mapFunc.end() != iter)
 					{
@@ -283,7 +281,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
 				}
-				sendMessage(EVENT_FILTER_SOCKET_CLIENT, EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
+				sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_SERVER_RECEIVE, nSocketFD, nTotalLen,
 						pBuf);
 			}
 		}

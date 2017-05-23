@@ -10,6 +10,7 @@
 #include "LogHandler.h"
 #include "JSONObject.h"
 
+#define LOG_TAG "[ConfigFileAppVersionHandler]"
 #define INOTIFY_WATCH_EVENT IN_CLOSE_WRITE
 
 ConfigFileAppVersionHandler::ConfigFileAppVersionHandler(
@@ -28,7 +29,7 @@ bool ConfigFileAppVersionHandler::onInotifyEvent(struct inotify_event *event)
 		&& strcmp(configName.c_str(), (char*)event->name) == 0
 		&& HiddenUtility::unixTimeMilli() - lastUpdated > 1000)
 	{
-		_log("[ConfigFileAppVersionHandler] Config changed, reloading");
+		_log(LOG_TAG" Config changed, reloading");
 		reload();
 		return false;
 	}
@@ -51,7 +52,7 @@ void ConfigFileAppVersionHandler::reload()
 	JSONObject configJson(content);
 	if (!configJson.isValid())
 	{
-		_log("[ConfigFileAppVersionHandler] reload() bad content");
+		_log(LOG_TAG" reload() bad content");
 		return;
 	}
 
@@ -62,7 +63,7 @@ void ConfigFileAppVersionHandler::reload()
 
 	if (packageName.empty() || versionCode < 0 || versionName.empty() || downloadLink.empty())
 	{
-		_log("[ConfigFileAppVersionHandler] reload() json parsing failed");
+		_log(LOG_TAG" reload() json parsing failed");
 		return;
 	}
 
@@ -72,7 +73,7 @@ void ConfigFileAppVersionHandler::reload()
 	this->downloadLink = downloadLink;
 	this->lastUpdated = HiddenUtility::unixTimeMilli();
 
-	_log("[ConfigFileAppVersionHandler] reload() ok, packageName = %s, versionCode = %d, versionName = %s, downloadLink = %s",
+	_log(LOG_TAG" reload() ok, packageName = %s, versionCode = %d, versionName = %s, downloadLink = %s",
 		packageName.c_str(), versionCode, versionName.c_str(), downloadLink.c_str());
 }
 

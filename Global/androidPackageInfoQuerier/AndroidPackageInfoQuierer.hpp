@@ -35,7 +35,7 @@ public:
 		std::string cmd, result;
 
 		cmd += aaptPath + " d badging " + apkPath;
-		_log("[AndroidPackageInfoQuierer] extractVersionFromApk() cmd = `%s`", cmd.c_str());
+		//_log("[AndroidPackageInfoQuierer] extractVersionFromApk() cmd = `%s`", cmd.c_str());
 		FILE *hFile = popen(cmd.c_str(), "r");
 		
 		if (!hFile)

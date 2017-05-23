@@ -95,7 +95,7 @@ static map<int, string> AMX_STATUS_REQUEST =
 				"STATUS_INPUT9_MUTE")(50903, "STATUS_INPUT10_MUTE")(51003, "STATUS_OUTPUT1_MUTE")(51103,
 				"STATUS_OUTPUT2_MUTE")(51203, "STATUS_OUTPUT3_MUTE")(51303, "STATUS_OUTPUT6_MUTE")(70101,
 				"STATUS_LIGHT1")(70201, "STATUS_LIGHT2")(70301, "STATUS_LIGHT3")(70401, "STATUS_LIGHT4")(70501,
-				"STATUS_LIGHT5")(70601, "STATUS_LIGHT6")(70701, "STATUS_LIGHT7")(80001, "STATUS_BD_POWER")(50105,
+				"STATUS_LIGHT5")(70601, "STATUS_LIGHT6")(70701, "STATUS_LIGHT7")(80001, "STATUS_BD_POWER")(50101,
 				"STATUS_INPUT1_VOL")(50205, "STATUS_INPUT2_VOL")(50305, "STATUS_INPUT3_VOL")(50405, "STATUS_INPUT4_VOL")(
 				50505, "STATUS_INPUT5_VOL")(50605, "STATUS_INPUT6_VOL")(50705, "STATUS_INPUT7_VOL")(50805,
 				"STATUS_INPUT9_VOL")(50905, "STATUS_INPUT10_VOL")(51005, "STATUS_OUTPUT1_VOL")(51105,
@@ -184,32 +184,14 @@ static map<string, string> AMX_STATUS_TO_CMD = create_amx_map<string, string>("S
 
 inline static string getAMXControlRequest(const int nFunction, const int nDevice, const int nControl)
 {
-	string strCommand;
 	int nId = (10000 * nFunction) + (100 * nDevice) + nControl;
-	map<int, string>::const_iterator it = AMX_CONTROL_REQUEST.find(nId);
-	if(AMX_CONTROL_REQUEST.end() != it)
-		strCommand = AMX_CONTROL_REQUEST[nId];
-	return strCommand;
+	return AMX_CONTROL_REQUEST[nId];
 }
 
 inline static string getAMXStatusRequest(const int nFunction, const int nDevice, const int nControl)
 {
-	string strCommand;
 	int nId = (10000 * nFunction) + (100 * nDevice) + nControl;
-	map<int, string>::const_iterator it = AMX_STATUS_REQUEST.find(nId);
-	if(AMX_STATUS_REQUEST.end() != it)
-		strCommand = AMX_STATUS_REQUEST[nId];
-	return strCommand;
-}
-
-inline static int getAMXStatusResponse(const char * szCommand)
-{
-	int nStatus = -1;
-	map<string, int>::const_iterator it;
-	it = AMX_STATUS_RESP.find(szCommand);
-	if(AMX_STATUS_RESP.end() != it)
-		nStatus = AMX_STATUS_RESP[szCommand];
-	return nStatus;
+	return AMX_STATUS_REQUEST[nId];
 }
 
 //================================================================================================================================

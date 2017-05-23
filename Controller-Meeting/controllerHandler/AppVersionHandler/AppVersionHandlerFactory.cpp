@@ -8,6 +8,7 @@
 #include "ConfigFileAppVersionHandler.h"
 #include "LogHandler.h"
 
+#define LOG_TAG "[AppVersionHandlerFactory]"
 #define CONF_BLOCK_APP_DOWNLOAD_INFO_CONFIG "APP DOWNLOAD INFO CONFIG WATCHER"
 
 AppVersionHandler* AppVersionHandlerFactory::createFromConfig(std::unique_ptr<CConfig> &config)
@@ -20,7 +21,7 @@ AppVersionHandler* AppVersionHandlerFactory::createFromConfig(std::unique_ptr<CC
 	if (!strAaptPath.empty() && !strApkDir.empty()
 		&& !strPkgName.empty() && !strDownloadLinkBase.empty())
 	{
-		_log("[AppVersionHandlerFactory] init ApkPeekingAppVersionHandler");
+		_log(LOG_TAG" init ApkPeekingAppVersionHandler");
 		auto apkQuierer = new AndroidPackageInfoQuierer(strAaptPath, strPkgName);
 		return new ApkPeekingAppVersionHandler(apkQuierer, strPkgName, strApkDir, strDownloadLinkBase);
 	}
@@ -31,12 +32,12 @@ AppVersionHandler* AppVersionHandlerFactory::createFromConfig(std::unique_ptr<CC
 	if (!strAppDownloadLinkConfigDir.empty()
 		&& !strAppDownloadLinkConfigName.empty())
 	{
-		_log("[AppVersionHandlerFactory] init ConfigFileAppVersionHandler");
+		_log(LOG_TAG" init ConfigFileAppVersionHandler");
 		return new ConfigFileAppVersionHandler(
 			strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
 	}
 
-	_log("[AppVersionHandlerFactory] init AppVersionHandler cannot be instantiated");
+	_log(LOG_TAG" init AppVersionHandler cannot be instantiated");
 	return nullptr;
 }
 

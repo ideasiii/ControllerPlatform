@@ -1,9 +1,12 @@
 #include "CClientMeetingAgent.h"
 
+#include "../enquireLinkYo/EnquireLinkYo.h"
 #include "common.h"
 #include "event.h"
+#include "iCommand.h"
+#include "packet.h"
 #include "AndroidPackageInfoQuierer.hpp"
-#include "ClientAmxController/CClientAmxController.h"
+#include "ClientAmxController/AmxControllerInfo.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
@@ -12,6 +15,9 @@
 #include "TestStringsDefinition.h"
 #include "AppVersionHandler/AppVersionHandler.h"
 #include "AppVersionHandler/AppVersionHandlerFactory.h"
+
+#define LOG_TAG "[CClientMeetingAgent]"
+#define LOG_TAG_COLORED "[\033[1;31mCClientMeetingAgent\033[0m]"
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
 
@@ -35,23 +41,22 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 	auto appVerHandlerRet = AppVersionHandlerFactory::createFromConfig(config);
 	if (appVerHandlerRet == nullptr)
 	{
-		_log("[CController] onInitial(): AppVersionHandler cannot be instantiated");
+		_log(LOG_TAG" onInitial(): AppVersionHandler cannot be instantiated");
+		return FALSE;
+	}
+
+	auto amxControllerInfoRet = CClientAmxControllerFactory::getServerInfoFromConfig(config);
+	if (amxControllerInfoRet == nullptr)
+	{
+		_log(LOG_TAG" onInitial(): AmxControllerInfo cannot be instantiated");
 		return FALSE;
 	}
 	
-	auto clientAmxControllerRet = CClientAmxControllerFactory::createFromConfig(config);
-	if (appVerHandlerRet == nullptr)
-	{
-		_log("[CController] onInitial(): CClientAmxController cannot be instantiated");
-		return FALSE;
-	}
-
 	appVersionHandler.reset(appVerHandlerRet);
-	amxControllerClient.reset(clientAmxControllerRet);
-
-	appVersionHandler->start();
-	//amxControllerClient->start();
-
+	amxControllerInfo.reset(amxControllerInfoRet);
+	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent.ely", this, 
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController));
+		
 	return doorAccessHandler.initMember(config);
 }
 
@@ -62,7 +67,7 @@ int CClientMeetingAgent::initMeetingAgentServerParams(std::unique_ptr<CConfig> &
 	
 	if (strServerIp.empty() || strPort.empty())
 	{
-		_log("[CClientMeetingAgent] initMeetingAgentServerParams() 404");
+		_log(LOG_TAG" initMeetingAgentServerParams() 404");
 		return FALSE;
 	}
 
@@ -70,81 +75,101 @@ int CClientMeetingAgent::initMeetingAgentServerParams(std::unique_ptr<CConfig> &
 	convertFromString(nPort, strPort);
 	agentIp = strServerIp;
 	agentPort = nPort;
+
+	return TRUE;
 }
 
 int CClientMeetingAgent::startClient(int msqKey)
 {
-	int nRet = connect(agentIp, agentPort, msqKey);
+	_log(LOG_TAG" Connecting to MeetingAgent %s:%d", agentIp.c_str(), agentPort);
+
+	int nRet = connect(agentIp.c_str(), agentPort, msqKey);
 	if (nRet < 0)
 	{
-		_log("[CController] startClient() Connecting to agent FAILED");
+		_log(LOG_TAG" startClient() Connecting to agent FAILED");
 		return FALSE;
 	}
 
 	nRet = request(getSocketfd(), bind_request, STATUS_ROK, getSequence(), NULL);
 	if (nRet < 0)
 	{
-		_log("[CController] startClient() Binding to agent FAILED");
+		_log(LOG_TAG" startClient() Binding to agent FAILED");
 		return FALSE;
 	}
 
-	_log("[CController] startClient() Connected and bind to agent OK");
+	appVersionHandler->start();
+	// enquireLinkYo starts in onResponse(), when binding response is received
+	
 	return TRUE;
 }
 
 void CClientMeetingAgent::stopClient()
 {
-	_DBG("[CClientMeetingAgent] stopClient() step in");
+	_DBG(LOG_TAG" stopClient() step in");
 
-	if (isValidSocketFD())
+	if (enquireLinkYo != nullptr)
 	{
-		int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
-		if (nRet < 0)
-		{
-			_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent FAILED.");
-		}
-
-		_log("[CClientMeetingAgent] stopClient() Unbinding from MeetingAgent OK.");
+		enquireLinkYo->stop();
 	}
-
-	stop();
 
 	if (appVersionHandler != nullptr)
 	{
 		appVersionHandler->stop();
 	}
 
-	if (amxControllerClient != nullptr)
+	if (!isValidSocketFD())
 	{
-		//amxControllerClient->stop();
+		_log(LOG_TAG" stopClient() socket fd is not valid, quit stopping");
+		return;
 	}
+
+	int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
+	if (nRet < 0)
+	{
+		_log(LOG_TAG" stopClient() Unbinding from MeetingAgent FAILED.");
+	}
+	else
+	{
+		_log(LOG_TAG" stopClient() Unbinding from MeetingAgent OK.");
+	}
+	
+	stop();
+
+	_DBG(LOG_TAG" stopClient() step out");
 }
 
 int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_DBG("[CClientMeetingAgent] onResponse()");
+	_DBG(LOG_TAG" onResponse() step in");
+
+	switch ((unsigned int)nCommand)
+	{
+	case enquire_link_response:
+		_log(LOG_TAG_COLORED" onResponse() enquire_link_response");
+		enquireLinkYo->zeroBalance();
+		break;
+	case bind_response:
+		_log(LOG_TAG_COLORED" onResponse() bind_response; bind ok, start EnquireLinkYo");
+		enquireLinkYo->start();
+		break;
+	case unbind_response:
+		_log(LOG_TAG_COLORED" onResponse() unbind_response");
+		break;
+	default:
+		_log(LOG_TAG" onResponse() unhandled nCommand %s", numberToHex(nCommand).c_str());
+		break;
+	}
+	
 	return TRUE;
 }
 
-int CClientMeetingAgent::onBindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
+int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG("[CClientMeetingAgent] onBindResponse()");
-	return TRUE;
-}
-
-int CClientMeetingAgent::onUnbindResponse(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	_DBG("[CClientMeetingAgent] onUnbindResponse()");
-	return TRUE;
-}
-
-int CClientMeetingAgent::onSmartBuildingQrCodeToken(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	_DBG("[CClientMeetingAgent] onSmartBuildingQrCodeToken() step in");
+	_DBG(LOG_TAG" onSmartBuildingQrCodeToken() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
 	string strResponseBodyData = "";
-	_log("[ClientMeetingAgent] onSmartBuildingQrCodeToken() body: %s", strRequestBodyData.c_str());
+	_log(LOG_TAG" onSmartBuildingQrCodeToken() body: %s", strRequestBodyData.c_str());
 
 	if (strRequestBodyData.find(
 		"U9oKcId0/8PgoYnXpNaKq3/juvgr4C8HlIk82lF/FazsezL3D54oD3ioZtYtS6PRMwcShS+nvXrtREn4gqfKLw==")
@@ -238,7 +263,7 @@ int CClientMeetingAgent::onSmartBuildingQrCodeToken(int nSocket, int nCommand, i
 	return TRUE;
 }
 
-int CClientMeetingAgent::onSmartBuildingAppVersion(int nSocket, int nCommand, int nSequence, const void *szBody)
+int CClientMeetingAgent::onSmartBuildingAppVersionRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CClientMeetingAgent] onSmartBuildingAppVersion() step in");
 	string bodyData;
@@ -260,7 +285,7 @@ int CClientMeetingAgent::onSmartBuildingAppVersion(int nSocket, int nCommand, in
 	return TRUE;
 }
 
-int CClientMeetingAgent::onSmartBuildingMeetingData(int nSocket, int nCommand, int nSequence, const void *szBody)
+int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	_DBG("[CClientMeetingAgent] onSmartBuildingMeetingData() step in");
 	
@@ -289,23 +314,23 @@ int CClientMeetingAgent::onSmartBuildingMeetingData(int nSocket, int nCommand, i
 	return TRUE;
 }
 
-int CClientMeetingAgent::onSmartBuildingAMXControlAccess(int nSocket, int nCommand, int nSequence, const void *szBody)
+int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG("[ClientMeetingAgent] onSmartBuildingAMXControlAccess() step in");
+	_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
 	string strResponseBodyData = "";
 	std::stringstream ss;
 	
-	_log("[ClientMeetingAgent] onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
+	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
 	
 	if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
 		&& strRequestBodyData.find("ITES_101") != string::npos)
 	{
 		//OK can control AMX
 		ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
-			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerClient->getServerIp()
-			<< "\", \"ROOM_PORT\": " << amxControllerClient->getUserPort()
+			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerInfo->serverIp
+			<< "\", \"ROOM_PORT\": " << amxControllerInfo->devicePort
 			<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
 		strResponseBodyData = ss.str();
 	}
@@ -320,4 +345,16 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccess(int nSocket, int nComma
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 
 	return TRUE;
+}
+
+void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
+{
+	_DBG(LOG_TAG" onServerDisconnect() step in");
+	stopClient();
+	_DBG(LOG_TAG" onServerDisconnect() step out");
+}
+
+std::string CClientMeetingAgent::taskName()
+{
+	return "ClientAgent";
 }
