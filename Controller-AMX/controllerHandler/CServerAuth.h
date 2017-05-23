@@ -23,6 +23,8 @@ protected:
 	int onBind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	std::string taskName();
+	void onClientConnect(unsigned long int nSocketFD);
+	void onClientDisconnect(unsigned long int nSocketFD);
 
 private:
 	CObject *mpController;
