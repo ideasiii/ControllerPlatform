@@ -12,8 +12,7 @@
 /** Enquire link function declare for enquire link thread **/
 void *threadEnquireLinkRequest(void *argv);
 
-CServerMeeting::CServerMeeting(CObject *object) :
-		tdEnquireLink(new CThreadHandler), equireLinkThreadStart(false)
+CServerMeeting::CServerMeeting(CObject *object)
 {
 
 	mpController = object;
@@ -27,10 +26,7 @@ CServerMeeting::~CServerMeeting()
 int CServerMeeting::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
 
-	if(nCommand == enquire_link_response)
-	{
-		return TRUE;
-	}
+
 	CMPData mCMPData = parseCMPData(nSocket, nCommand, nSequence, szBody);
 	if (mCMPData.isVaild())
 	{
@@ -98,16 +94,6 @@ int CServerMeeting::onBind(int nSocket, int nCommand, int nSequence, const void 
 	_log("[CServerMeeting] Socket Controller-Meeting Client FD:%d Binded", nSocket);
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
-	if (equireLinkThreadStart == false)
-	{
-		equireLinkThreadStart = true;
-		tdEnquireLink->createThread(threadEnquireLinkRequest, this);
-	}
-	else
-	{
-		_log("[CServerMeeting] equireLinkThread already start");
-	}
-
 	return TRUE;
 }
 
@@ -121,6 +107,11 @@ int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const voi
 
 void CServerMeeting::addClient(const int nSocketFD)
 {
+	//clean old client socket
+	if(mapClient.size() > 0)
+	{
+		mapClient.clear();
+	}
 	mapClient.push_back(nSocketFD);
 	_log("[CServerMeeting] Socket Client FD:%d Connected", nSocketFD);
 }
@@ -157,44 +148,4 @@ void CServerMeeting::setCallback(const int nId, CBFun cbfun)
 	mapCallback[nId] = cbfun;
 }
 
-void CServerMeeting::runEnquireLinkRequest()
-{
-	int nSocketFD = -1;
-
-	while (1)
-	{
-		tdEnquireLink->threadSleep(10);
-		_log("[CServerMeeting] Start to run EnquireLink!");
-
-		for (size_t i = 0; i < mapClient.size(); i++)
-		{
-			nSocketFD = mapClient[i];
-			int nRet = cmpEnquireLinkRequest(nSocketFD);
-
-			if (nRet > 0)
-			{
-				//Enquire Link Success
-			}
-			else
-			{
-				//Enquire Link Failed
-				_log("[CServerMeeting] Send Enquire Link Failed result = %d\n", nRet);
-			}
-		}
-
-	}
-}
-
-int CServerMeeting::cmpEnquireLinkRequest(const int nSocketFD)
-{
-	return sendCommand(enquire_link_request, getSequence(), "");
-}
-
-/************************************* thread function **************************************/
-void *threadEnquireLinkRequest(void *argv)
-{
-	CServerMeeting* ss = reinterpret_cast<CServerMeeting*>(argv);
-	ss->runEnquireLinkRequest();
-	return NULL;
-}
 
