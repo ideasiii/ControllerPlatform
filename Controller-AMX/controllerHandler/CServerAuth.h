@@ -30,6 +30,7 @@ protected:
 private:
 	CObject *mpController;
 	unsigned long int mAuthServer;
+	int mnEnquuireSeq;
 };
 
 //=========================封包說明=========================================//
