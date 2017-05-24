@@ -163,7 +163,7 @@ void CController::onHandleMessage(Message &message)
 		break;
 	case amx_status_request: // From CMP Server
 		_log("[CController] onHandleMessage amx_status_request from socket: %d data: %s", message.arg[0],
-						message.strData.c_str());
+				message.strData.c_str());
 		serverAMX->requestAMX(message.strData.c_str());
 		//=================== broadcast volum dummy ==================//
 		//serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
@@ -199,6 +199,9 @@ void CController::onHandleMessage(Message &message)
 			mapCtrlAuth.erase(nId);
 		}
 	}
+		break;
+	case reboot_request:
+		mapCtrlAuth.clear();
 		break;
 	default:
 		_log("[CController] onHandleMessage Unknow what: %d", message.what);

@@ -122,11 +122,14 @@ void CServerAuth::onTimer(int nId)
 	_DBG("[CServerAuth] onTimer id: %d", nId);
 	if(-1 != mnEnquuireSeq)
 	{
+		Message message;
+		message.what = reboot_request;
+		mpController->sendMessage(message);
+		_log("[CServerAuth] onTimer Socket: %d Invalid Connected", mAuthServer);
 		closeClient(mAuthServer);
 		mAuthServer = 0;
 		mnEnquuireSeq = -1;
 		killTimer(ID_TIMER_ENQUIRELINK);
-		_log("[CServerAuth] onTimer Socket: %d Invalid Connected", mAuthServer);
 	}
 	else
 	{
