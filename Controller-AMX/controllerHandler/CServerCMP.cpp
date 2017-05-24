@@ -30,7 +30,6 @@ int CServerCMP::onBind(int nSocket, int nCommand, int nSequence, const void *szB
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	mapClient.insert(nSocket);
 	_log("[CServerCMP] Socket Client FD:%d Binded", nSocket);
-	_error("CServerCMP::onBind socket: %d", nSocket);
 	return TRUE;
 }
 
@@ -41,23 +40,22 @@ int CServerCMP::onUnbind(int nSocket, int nCommand, int nSequence, const void *s
 	{
 		mapClient.erase(nSocket);
 		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocket);
-		_error("CServerCMP::onUnbind socket: %d", nSocket);
 	}
 	return TRUE;
 }
 
 void CServerCMP::onClientConnect(unsigned long int nSocketFD)
 {
-	_error("CServerCMP::onClientConnect socket: %d", nSocketFD);
+	_log("CServerCMP::onClientConnect socket: %d", nSocketFD);
 }
 
 void CServerCMP::onClientDisconnect(unsigned long int nSocketFD)
 {
-	_error("CServerCMP::onClientDisconnect socket: %d", nSocketFD);
+	_log("CServerCMP::onClientDisconnect socket: %d", nSocketFD);
 	if (mapClient.end() != mapClient.find(nSocketFD))
 	{
 		mapClient.erase(nSocketFD);
-		_error("[CServerCMP] Socket Client FD:%d Unbinded", nSocketFD);
+		_log("[CServerCMP] Socket Client FD:%d Unbinded", nSocketFD);
 	}
 }
 
@@ -97,7 +95,8 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 
 			message.what = authentication_request;
 			message.arg[0] = nId;
-			message.strData = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", amxCommand.strToken, amxCommand.strId);
+			message.strData = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", amxCommand.strToken.c_str(),
+					amxCommand.strId.c_str());
 			mpController->sendMessage(message);
 
 			//========= send control command ========//
@@ -199,7 +198,6 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 	jobjStatus.put("device", (nId % 10000) / 100);
 	if (bVol && !strLevel.empty())
 	{
-
 		jobjStatus.put("level", nLevel);
 	}
 	else
@@ -212,10 +210,9 @@ void CServerCMP::broadcastAMXStatus(const char *szStatus)
 
 	set<int>::iterator it;
 
-	_error("BC client count: %d", mapClient.size());
 	for (it = mapClient.begin(); it != mapClient.end(); ++it)
 	{
-		_error("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
+		_log("[CServerCMP] broadcastAMXStatus AMX Status: %s to Socket:%d", strJSON.c_str(), *it);
 		request(*it, amx_broadcast_status_request, STATUS_ROK, getSequence(), strJSON.c_str());
 	}
 }

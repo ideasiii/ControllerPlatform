@@ -27,6 +27,8 @@ CServerAuth::~CServerAuth()
 
 int CServerAuth::onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	closeClient(mAuthServer);
 	mAuthServer = nSocket;
 	_log("[CServerAuth] onBind Socket: %d", nSocket);
 	setTimer(666, 1, 3);
@@ -35,6 +37,7 @@ int CServerAuth::onBind(int nSocket, int nCommand, int nSequence, const void *sz
 
 int CServerAuth::onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	mAuthServer = 0;
 	_log("[CServerAuth] onUnbind Socket: %d", nSocket);
 	return TRUE;
@@ -49,9 +52,10 @@ int CServerAuth::auth(const char *szToken, const char *szID)
 {
 	string strBody;
 
-	if(mAuthServer && szToken && szID)
+	if (mAuthServer && szToken && szID)
 	{
 		strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szID);
+		_log("[CServerAuth] auth Body: %s", strBody.c_str());
 		request(mAuthServer, authentication_request, STATUS_ROK, getSequence(), strBody.c_str());
 	}
 	else
@@ -69,19 +73,19 @@ int CServerAuth::onResponse(int nSocket, int nCommand, int nStatus, int nSequenc
 	string strAuth;
 	int nAuth;
 
-	if((authentication_request == (0xFF & nCommand)) && szBody)
+	if ((authentication_request == (0xFF & nCommand)) && szBody)
 	{
 		strBody = reinterpret_cast<const char*>(szBody);
 		JSONObject *jobj = new JSONObject(strBody);
-		if(jobj->isValid())
+		if (jobj->isValid())
 		{
 			strId = jobj->getString("ID");
 			strAuth = jobj->getString("AUTH");
-			if(!strAuth.empty() && 0 == strAuth.compare("y"))
+			if (!strAuth.empty() && 0 == strAuth.compare("y"))
 				nAuth = 1;
 			else
 				nAuth = 0;
-			if(!strId.empty())
+			if (!strId.empty())
 			{
 				Message message;
 				message.what = authentication_response;
@@ -101,8 +105,20 @@ string CServerAuth::taskName()
 	return "CServerAuth";
 }
 
+<<<<<<< HEAD
 void CServerAuth::onTimer(int nId)
 {
 	_DBG("[CServerAuth] onTimer id: %d", nId);
+=======
+void CServerAuth::onClientConnect(unsigned long int nSocketFD)
+{
+	_log("[CServerAuth] onClientConnect Socket: %d", nSocketFD);
+}
+
+void CServerAuth::onClientDisconnect(unsigned long int nSocketFD)
+{
+	mAuthServer = 0;
+	_log("[CServerAuth] onClientDisconnect Socket: %d Unbind", nSocketFD);
+>>>>>>> d63bdac7b46f0f21e9c48316e3e6c6bd9ec165c8
 }
 

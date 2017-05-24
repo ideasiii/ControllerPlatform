@@ -27,7 +27,6 @@ public:
 	void deleteClient(const int nSocketFD);
 	int sendCommand(int commandID, int seqNum, string bodyData);
 	void setCallback(const int nId, CBFun cbfun);
-	void runEnquireLinkRequest();
 	int controllerCallBack(int nSocketFD, int nDataLen, const void *pData);
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 
@@ -48,7 +47,5 @@ private:
 
 	vector<int> mapClient;
 	map<int, CBFun> mapCallback;
-	CThreadHandler *tdEnquireLink;
 	CObject * mpController;
-	bool equireLinkThreadStart;
 };
