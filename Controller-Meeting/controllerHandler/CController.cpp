@@ -2,6 +2,8 @@
 
 #include <list>
 #include <limits.h>
+#include <random>
+#include <sys/prctl.h>
 #include "common.h"
 #include "event.h"
 #include "iCommand.h"
@@ -20,10 +22,15 @@ using namespace std;
 
 #define LOG_TAG "[CController]"
 #define LOG_TAG_COLORED "[\033[1;31mCControllerr\033[0m]"
+#define RECONNECT_INTERVAL 8
+
+void *threadStartRoutine_CController_reconnectToAgent(void *argv);
+void *threadStartRoutine_CController_reconnectToAmx(void *argv);
 
 CController::CController() :
-		mnMsqKey(-1), agentClient(nullptr),
-		amxControllerClient(nullptr)
+	mnMsqKey(-1), 
+	agentClient(nullptr), amxControllerClient(nullptr),
+	agentReconnectThreadId(0), amxReconnectThreadId(0)
 {
 	// allocate resources in onInitial() instead
 }
@@ -108,7 +115,8 @@ int CController::onFinish(void* nMsqKey)
 	return TRUE;
 }
 
-// 初始化 CClientMeetingAgent，用在斷線後要重新連線的時候用
+// 初始化 CClientMeetingAgent。
+// 在斷線後要重新連線的時候也會重新初始化一個 CClientMeetingAgent
 int CController::initAgentClient()
 {
 	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
@@ -139,28 +147,29 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
 		_log(LOG_TAG" EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT");
 		_log(LOG_TAG" connection to agent is broken!@$#%^&*(*^%$#Q@#%%dcfvgtr5e3&^*&%$^%#");
+		
 		agentClient->stopClient();
-
 		sleep(3);
-		_log(LOG_TAG" Reconnecting to agent");
-		if (initAgentClient() == TRUE)
+		
+		if (agentReconnectThreadId < 1)
 		{
-			_log(LOG_TAG" Reconnecting to agent OK");
-			agentClient->startClient(mnMsqKey);
+			_log(LOG_TAG" Reconnecting to agent");
+			createThread(threadStartRoutine_CController_reconnectToAgent, this, "agentReconnect");
 		}
-		else
-		{
-			_log(LOG_TAG" Reconnecting to agent FAILED");
-		}
-
-		// TODO 重新連線
+				
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX:
 		_log(LOG_TAG" EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX");
 		_log(LOG_TAG" connection to AMX controller is broken! JKSKALXUH@OUW)233333333333");
 		amxControllerClient->stopClient();
+		sleep(3);
 
-		// TODO agent 的重新連線 ok 之後拿過來用
+		if (amxReconnectThreadId < 1)
+		{
+			_log(LOG_TAG" Reconnecting to AMX");
+			this->createThread(threadStartRoutine_CController_reconnectToAmx, this, "amxReconnect");
+		}
+
 		break;
 	default:
 		_log(LOG_TAG" Unknown message command %s", numberToHex(nCommand).c_str());
@@ -189,4 +198,72 @@ void CController::onHandleMessage(Message &message)
 std::string CController::taskName()
 {
 	return "CController";
+}
+
+void *threadStartRoutine_CController_reconnectToAgent(void *argv)
+{
+	_log(LOG_TAG"threadStartRoutine_CController_reconnectToAgent() step in");
+	auto ctlr = reinterpret_cast<CController*>(argv); 
+	ctlr->agentReconnectThreadId = pthread_self();
+	prctl(PR_SET_NAME, (unsigned long)"agentReconnect");
+
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<> dist(0, 6);
+
+	while (true)
+	{
+		auto client = ctlr->amxControllerClient.get();
+		if (client == nullptr)
+		{
+			break;
+		}
+
+		if (client->startClient(ctlr->mnMsqKey) == TRUE)
+		{
+			break;
+		}
+
+		int reconnectInterval = RECONNECT_INTERVAL + (int)dist(mt);
+		_log("[CController] agentReconnect wait %ds before next reconnection", reconnectInterval);
+		sleep(reconnectInterval);
+	}
+
+	ctlr->agentReconnectThreadId = 0;
+	_log(LOG_TAG" %s threadStartRoutine_CController_reconnectToAgent() step out");
+	return 0;
+}
+
+void *threadStartRoutine_CController_reconnectToAmx(void *argv)
+{
+	_log(LOG_TAG"threadStartRoutine_CController_reconnectToAmx() step in");
+	auto ctlr = reinterpret_cast<CController*>(argv);
+	ctlr->amxReconnectThreadId = pthread_self();
+	prctl(PR_SET_NAME, (unsigned long)"amxReconnect");
+
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<> dist(0, 6);
+
+	while (true)
+	{
+		auto client = ctlr->amxControllerClient.get();
+		if (client == nullptr)
+		{
+			break;
+		}
+
+		if (client->startClient(ctlr->mnMsqKey) == TRUE)
+		{
+			break;
+		}
+
+		int reconnectInterval = RECONNECT_INTERVAL + (int)dist(mt);
+		_log("[CController] amxReconnect wait %ds before next reconnection", reconnectInterval);
+		sleep(reconnectInterval);
+	}
+
+	ctlr->amxReconnectThreadId = 0; 
+	_log(LOG_TAG" %s threadStartRoutine_CController_reconnectToAmx() step out");
+	return 0;
 }

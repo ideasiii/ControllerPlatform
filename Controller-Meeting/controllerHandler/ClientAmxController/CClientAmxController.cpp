@@ -14,8 +14,10 @@
 CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp, int userPort, int validationPort) :
 	serverIp(serverIp), userPort(userPort), validationPort(validationPort), mpController(controller)
 {
+	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
 }
-	
+
 CClientAmxController::~CClientAmxController()
 {
 }
@@ -39,17 +41,14 @@ int CClientAmxController::startClient(int msqKey)
 		return FALSE;
 	}
 
-	// server does not send bind_response, so start EnquireLinkYo upon startClient()
-	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
-		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
-	enquireLinkYo->start();
+	// enquireLinkYo starts in onResponse(), when binding response is received
 
 	return TRUE;
 }
 
 void CClientAmxController::stopClient()
 {
-	_DBG(LOG_TAG" stopClient() step in");
+	//_DBG(LOG_TAG" stopClient() step in"); 
 
 	if (enquireLinkYo != nullptr)
 	{
@@ -74,12 +73,12 @@ void CClientAmxController::stopClient()
 
 	stop();
 
-	_DBG(LOG_TAG" stopClient() step out");
+	//_DBG(LOG_TAG" stopClient() step out");
 }
 
 int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_DBG(LOG_TAG" onResponse() step in");
+	//_DBG(LOG_TAG" onResponse() step in");
 
 	switch ((unsigned int)nCommand)
 	{
@@ -89,7 +88,7 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 		break;
 	case bind_response:
 		_log(LOG_TAG_COLORED" onResponse() bind_response; bind ok, start EnquireLinkYo");
-		// server does not send bind_response, so start EnquireLinkYo upon startClient()
+		enquireLinkYo->start();
 		break;
 	case unbind_response:
 		_log(LOG_TAG_COLORED" onResponse() unbind_response");
@@ -114,6 +113,7 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 
 	std::string reqToken = reqJson.getString("TOKEN", "");
 	std::string reqId = reqJson.getString("ID", "");
+	reqJson.release();
 
 	if (reqToken.empty() || reqId.empty())
 	{
