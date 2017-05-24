@@ -169,6 +169,12 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 		_log("[CCmpServer] sendPacket Body: %s", pIndex);
 	}
 
+	//================ Check Socket Connect ======================//
+	char buf;
+	int length = recv(nSocket, &buf, 0, 0);
+	_log("socket recv : %d ##############################################", length);
+
+	//===========================================================================//
 	if (0 >= nResult)
 	{
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
