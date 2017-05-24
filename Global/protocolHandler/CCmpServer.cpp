@@ -73,21 +73,21 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	cmpHeader.command_status = ntohl(pHeader->command_status);
 	cmpHeader.sequence_number = ntohl(pHeader->sequence_number);
 
-	if(0 >= cmpHeader.command_length || MAX_SOCKET_READ < cmpHeader.command_length)
+	if (0 >= cmpHeader.command_length || MAX_SOCKET_READ < cmpHeader.command_length)
 	{
 		_log("[CCmpServer] onTcpReceive receive invaild packet");
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDLEN, cmpHeader.sequence_number, 0);
 		return;
 	}
 
-	if(nHeaderSize < cmpHeader.command_length)
+	if (nHeaderSize < cmpHeader.command_length)
 	{
 		pBody = (char*) ((char *) const_cast<void*>(pData) + nHeaderSize);
 	}
 	else
 		pBody = 0;
 
-	if( generic_nack == (generic_nack & cmpHeader.command_id))
+	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
 		// This is response package.
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
@@ -104,7 +104,7 @@ void CCmpServer::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	map<int, MemFn>::iterator iter;
 	iter = mapFunc.find(cmpHeader.command_id);
 
-	if(mapFunc.end() == iter)
+	if (mapFunc.end() == iter)
 	{
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDID, cmpHeader.sequence_number, 0);
 		return;
@@ -131,9 +131,10 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	CMP_HEADER *pHeader;
 	char *pIndex;
 
-	if(szData)
+	if (szData)
 	{
 		nDataLen = strlen(szData) + 1;
+		_log("[CCmpServer] sendPacket will send Body: %s Length: %d", szData, nDataLen);
 	}
 
 	char buffer[sizeof(CMP_HEADER) + nDataLen];
@@ -146,7 +147,7 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	pHeader->command_status = htonl(nStatus);
 	pHeader->sequence_number = htonl(nSequence);
 
-	if(nDataLen)
+	if (nDataLen)
 	{
 		pIndex += sizeof(CMP_HEADER);
 		memcpy(pIndex, szData, strlen(szData));
@@ -161,14 +162,14 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	nResult = socketSend(nSocket, buffer, sizeof(buffer));
 	printPacket(nCommand, nStatus, nSequence, nResult, "[CCmpServer] sendPacket", nSocket);
 
-	if(nDataLen)
+	if (nDataLen)
 	{
 		pIndex = buffer;
 		pIndex += sizeof(CMP_HEADER);
 		_log("[CCmpServer] sendPacket Body: %s", pIndex);
 	}
 
-	if(0 >= nResult)
+	if (0 >= nResult)
 	{
 		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
 	}
@@ -202,13 +203,13 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
-	if(0 >= result)
+	if (0 >= result)
 		return 0;
-	if(nHeaderSize == result)
+	if (nHeaderSize == result)
 	{
 		nTotalLen = ntohl(cmpHeader.command_length);
 
-		if(0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
+		if (0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
 		{
 			_log("[CCmpServer] onTcpReceive receive invaild packet");
 			return 0;
@@ -218,7 +219,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		nSequence = ntohl(cmpHeader.sequence_number);
 		nStatus = ntohl(cmpHeader.command_status);
 
-		if( enquire_link_request == nCommand)
+		if ( enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
@@ -226,7 +227,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		map<int, MemFn>::iterator iter;
 		iter = mapFunc.find(nCommand);
 
-		if(mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
+		if (mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
 		{
 			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);
 		}
@@ -234,12 +235,12 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		//=================== Get CMP Body ===================//
 		nBodyLen = nTotalLen - nHeaderSize;
 		char buffer[nBodyLen];
-		if(0 < nBodyLen)
+		if (0 < nBodyLen)
 		{
 			pBody = buffer;
 			memset(buffer, 0, sizeof(buffer));
 			result = socketrecv(nSocketFD, nBodyLen, &pBody);
-			if(result != nBodyLen)
+			if (result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
 				_log("[CCmpServer] onTcpReceive System Error, Body Length: %d Receive: %d data: %s", nBodyLen, result,
@@ -248,11 +249,11 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 			}
 		}
 
-		if(confCmpServer->bUseQueueReceive)
+		if (confCmpServer->bUseQueueReceive)
 		{
-			if(DATA_LEN < nBodyLen) // large data
+			if (DATA_LEN < nBodyLen) // large data
 			{
-				if( generic_nack == (generic_nack & nCommand))
+				if ( generic_nack == (generic_nack & nCommand))
 				{
 					printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onReceive Response ", nSocketFD);
 					onResponse(nSocketFD, nCommand, nStatus, nSequence, pBody);
@@ -270,7 +271,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 				memset(pBuf, 0, sizeof(pBuf));
 				memcpy(pvBuf, pHeader, nHeaderSize);
-				if(nBodyLen)
+				if (nBodyLen)
 				{
 					pvBuf += nHeaderSize;
 					memcpy(pvBuf, pBody, nBodyLen);
@@ -281,7 +282,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 		else
 		{
 			//================== Check CMP Response ===================//
-			if( generic_nack == (generic_nack & nCommand))
+			if ( generic_nack == (generic_nack & nCommand))
 			{
 				printPacket(nCommand, nStatus, nSequence, nTotalLen,
 						format("[CCmpServer] %s onReceive Response ", strTaskName.c_str()).c_str(), nSocketFD);

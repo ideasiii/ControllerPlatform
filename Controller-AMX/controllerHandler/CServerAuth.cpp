@@ -54,6 +54,7 @@ int CServerAuth::auth(const char *szToken, const char *szID)
 	if (mAuthServer && szToken && szID)
 	{
 		strBody = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", szToken, szID);
+		_log("[CServerAuth] auth Body: %s", strBody.c_str());
 		request(mAuthServer, authentication_request, STATUS_ROK, getSequence(), strBody.c_str());
 	}
 	else
