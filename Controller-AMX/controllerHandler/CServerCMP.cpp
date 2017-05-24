@@ -97,7 +97,8 @@ int CServerCMP::onAmxControl(int nSocket, int nCommand, int nSequence, const voi
 
 			message.what = authentication_request;
 			message.arg[0] = nId;
-			message.strData = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", amxCommand.strToken, amxCommand.strId);
+			message.strData = format("{\"TOKEN\":\"%s\",\"ID\":\"%s\"}", amxCommand.strToken.c_str(),
+					amxCommand.strId.c_str());
 			mpController->sendMessage(message);
 
 			//========= send control command ========//
