@@ -134,7 +134,6 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	if (szData)
 	{
 		nDataLen = strlen(szData) + 1;
-		_log("[CCmpServer] sendPacket will send Body: %s Length: %d", szData, nDataLen);
 	}
 
 	char buffer[sizeof(CMP_HEADER) + nDataLen];
@@ -160,6 +159,13 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 
 	pHeader->command_length = htonl(sizeof(buffer));
 	nResult = socketSend(nSocket, buffer, sizeof(buffer));
+	if (0 >= nResult)
+	{
+		_log("[CCmpServer] sendPacket Fail socket: %d", nSocket);
+		closeClient(nSocket);
+	}
+	else
+		sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
 	printPacket(nCommand, nStatus, nSequence, nResult, "[CCmpServer] sendPacket", nSocket);
 
 	if (nDataLen)
@@ -168,20 +174,6 @@ int CCmpServer::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 		pIndex += sizeof(CMP_HEADER);
 		_log("[CCmpServer] sendPacket Body: %s", pIndex);
 	}
-
-	//================ Check Socket Connect ======================//
-//	char buf;
-//	int length = recv(nSocket, &buf, 0, 0);
-//	_log("socket recv : %d ##############################################", length);
-
-	//===========================================================================//
-
-	if (0 >= nResult)
-	{
-		_log("[CCmpServer] CMP response Fail socket: %d", nSocket);
-	}
-	else
-		sendMessage(getEventFilter(), EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE, nSocket, 0, 0);
 
 	return nResult;
 }

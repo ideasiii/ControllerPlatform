@@ -338,6 +338,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log("[CATcpServer] %s Socket Client Disconnect FD: %lu", strTaskName.c_str(), nId);
 		break;
 	case EVENT_COMMAND_SOCKET_CLIENT_COLSE: // Server close Client
+		onClientDisconnect(nId);
 		ulThreadID = getClientThreadID(nId);
 		if(ulThreadID)
 		{
