@@ -165,9 +165,6 @@ void CController::onHandleMessage(Message &message)
 		_log("[CController] onHandleMessage amx_status_request from socket: %d data: %s", message.arg[0],
 				message.strData.c_str());
 		serverAMX->requestAMX(message.strData.c_str());
-		//=================== broadcast volum dummy ==================//
-		//serverCMP->broadcastAMXStatus("STATUS_INPUT5_VOL_-13");
-		//=================== dummy end ==============================//
 		break;
 	case amx_status_response: // From AMX Box
 		_log("[CController] onHandleMessage amx_status_response from socket: %d data: %s", message.arg[0],
@@ -200,7 +197,7 @@ void CController::onHandleMessage(Message &message)
 		}
 	}
 		break;
-	case reboot_request:
+	case reboot_request:  // Auth server drop connect
 		mapCtrlAuth.clear();
 		break;
 	default:
