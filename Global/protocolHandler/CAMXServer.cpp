@@ -58,24 +58,7 @@ int CAMXServer::onTcpReceive(unsigned long int nSocketFD)
 
 		if(0 != strCommand.substr(0, 6).compare(CTL_OK) && 0 != strCommand.substr(0, 9).compare(CTL_ERROR))
 		{
-			// Get Status Response
-//			nIndex = strCommand.find("_VOL_");
-//			if((int) string::npos != nIndex)
-//			{
-//				strCommand = strCommand.substr(0, nIndex + 4);
-//			}
-//			if(AMX_STATUS_RESP.find(strCommand) != AMX_STATUS_RESP.end())
-//			{
 			onAmxStatus(nSocketFD, strCommand.c_str());
-//			}
-
-// Update AMX_STATUS_CURRENT Hashmap
-//			if(AMX_STATUS_TO_CMD.find(strCommand) != AMX_STATUS_TO_CMD.end())
-//			{
-//				string strDevice = AMX_STATUS_TO_CMD[strCommand];
-//				AMX_STATUS_CURRENT[strDevice] = strCommand;
-//				_log("[CAMXServer] Update AMX %s Current Status: %s", strDevice.c_str(), strCommand.c_str());
-//			}
 		}
 	}
 	else

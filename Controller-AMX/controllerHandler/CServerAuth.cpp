@@ -29,6 +29,7 @@ int CServerAuth::onBind(int nSocket, int nCommand, int nSequence, const void *sz
 {
 	mAuthServer = nSocket;
 	_log("[CServerAuth] onBind Socket: %d", nSocket);
+	setTimer(666, 1, 3);
 	return TRUE;
 }
 
@@ -98,5 +99,10 @@ int CServerAuth::onResponse(int nSocket, int nCommand, int nStatus, int nSequenc
 string CServerAuth::taskName()
 {
 	return "CServerAuth";
+}
+
+void CServerAuth::onTimer(int nId)
+{
+	_DBG("[CServerAuth] onTimer id: %d", nId);
 }
 

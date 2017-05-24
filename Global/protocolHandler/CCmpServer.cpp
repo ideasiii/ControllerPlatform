@@ -308,3 +308,16 @@ string CCmpServer::taskName()
 {
 	return "CCmpServer";
 }
+
+void CCmpServer::onClientConnect(unsigned long int nSocketFD)
+{
+}
+
+void CCmpServer::onClientDisconnect(unsigned long int nSocketFD)
+{
+}
+
+int CCmpServer::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
+{
+	return 0;
+}

@@ -30,7 +30,6 @@ public:
 	void setUseQueueReceive(bool bEnable);
 
 protected:
-	void onTimer(int nId);
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
 	int onTcpReceive(unsigned long int nSocketFD);
 
@@ -43,19 +42,10 @@ protected:
 	 * 				szBody: CMP Body Data
 	 */
 protected:
-	virtual void onClientConnect(unsigned long int nSocketFD)
-	{
-	}
-	;
-	virtual void onClientDisconnect(unsigned long int nSocketFD)
-	{
-	}
-	;
-	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
-	{
-		return 0;
-	}
-	;
+	virtual void onTimer(int nId);
+	virtual void onClientConnect(unsigned long int nSocketFD);
+	virtual void onClientDisconnect(unsigned long int nSocketFD);
+	virtual int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 	virtual int onBind(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;

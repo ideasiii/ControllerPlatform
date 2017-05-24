@@ -19,6 +19,7 @@ public:
 	int isValid();
 
 protected:
+	void onTimer(int nId);
 	int onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody);
 	int onBind(int nSocket, int nCommand, int nSequence, const void *szBody);
 	int onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody);
