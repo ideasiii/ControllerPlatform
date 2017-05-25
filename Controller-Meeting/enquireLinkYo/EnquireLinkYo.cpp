@@ -13,10 +13,12 @@
 
 void *threadStartRoutine_EnquireLinkYo_run(void *argv)
 {
+	pthread_detach(pthread_self());
+
 	auto ely = reinterpret_cast<EnquireLinkYo*>(argv); 
 	_log(LOG_TAG" %s threadStartRoutine_EnquireLinkYo_run() step in", ely->whoUsedMe.c_str());
-
 	prctl(PR_SET_NAME, (unsigned long)ely->whoUsedMe.c_str());
+	
 	ely->loopThreadId = pthread_self();
 	ely->run();
 
@@ -89,9 +91,6 @@ void EnquireLinkYo::stop()
 	{
 		_log(LOG_TAG" %s stop() cancelling thread", whoUsedMe.c_str());
 		threadCancel(loopThreadId);
-		pthread_detach(loopThreadId);
-		//threadJoin(loopThreadId);
-
 		loopThreadId = 0;
 	}
 	else
