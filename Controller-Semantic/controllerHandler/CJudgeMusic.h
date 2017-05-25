@@ -20,7 +20,12 @@ public:
 	int evaluate(const char *szWord);
 
 private:
+	typedef std::string (CJudgeMusic::*pFnGetArtist)(const char *);
+	std::set<pFnGetArtist> setpFnGetArtist;
+	std::string getArtist(const char *szWord);
 	std::string getArtistTaiwan(const char *szWord);
 	std::string getArtistEnglish(const char *szWord);
+	std::string getArtistEnglishFemale(const char *szWord);
+	std::string getArtistEnglishMale(const char *szWord);
 
 };

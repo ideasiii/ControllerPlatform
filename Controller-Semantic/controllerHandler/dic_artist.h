@@ -94,4 +94,18 @@ static set<string> setArtistEnglish =
 				"the black eyed peas")("the everly brothers")("the jacksons")("the miracles")("the pointer sisters")(
 				"the rolling stones")("the supremes")("the temptations")("three dog night")("tlc")(
 				"tony orlando & dawn")("usher")("whitney houston")("metallica")("x japan")("seikima")("megadeth")(
-				"slayer")("iron maiden");
+				"slayer")("iron maiden")("emperor")("The Chainsmokers")("Justin Bieber")("Taylor Swift")("Bruno Mars")(
+				"Coldplay")("Maroon 5")("Adele")("Ed Sheeran")("The Chainsmokers")("Wiz Khalifa")("Charlie Puth")(
+				"Olivia Ong")("Alan Walker")("Celine Dion")("Various Artists")("Jessie J")("SING")("Avril Lavigne")(
+				"Westlife")("One Direction")("Jason Mraz")("The Carpenters")("Various Artists")("Josh Groban")(
+				"Kenny Loggins")("The Beatles")("Super Simple Learning")("Linkin Park")("Carly Rae Jepsen")(
+				"Volor Flex")("Bee Gees")("Michael Jackson")("Mariah Carey")("Bret Michaels")("Bon Jovi")("OneRepublic")(
+				"Lady Gaga")("Eminem")("ABBA")("Beyonce")("Hayley Westenra")("Wynton Marsalis")("Arcade Fire")("Lenka")(
+				"Idina Menzel")("Elton John")("FKJ")("Young Thug")("Elvis Presley")("DJ Mixmasters")("Grateful Dead")(
+				"UNISON SQUARE GARDEN")("Bob Marley")("Vlad")("Digital Summer")("Young Scooter")("Bassnectar")(
+				"Wyclef Jean")("Britney Spears")("Katy Perry")("Boulevard Des Airs")("Eagles")("Frank Sinatra")(
+				"Air Supply")("Wynonna")("Sarah Brightman")("Kelly Clarkson")("Whitney Houston")("Aerosmith")(
+				"Colbie Caillat")("George Michael")("Wynter Gordon")("Don McLean")("Daniel Powter")("Young Dolph")(
+				"Backstreet Boys")("Queen")("Barbra Streisand")("Vitamin String Quartet")("Nat King Cole")(
+				"Fleetwood Mac");
+

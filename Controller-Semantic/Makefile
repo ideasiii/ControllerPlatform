@@ -34,7 +34,8 @@ vpath %.cpp $(SRC_DIR) ../Global
 define make-goal
 $1/%.o: %.cpp
 	$(CC) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
-	@echo -ne '###### $1 Object Build Done. ######\n'
+	@echo -ne '|==================== $1 Object Build Done. ====================|  '
+	@echo `date`
 	@echo "\n"
 endef
 
@@ -44,16 +45,19 @@ endef
 
 all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
-	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo -ne '|==================== All Application Build Done. ====================|  '
+	@echo `date`
 	@echo "\n"
 
 init: package-u checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
-	@echo -ne '\n###### All Application Build Done. ######\n'
+	@echo -ne '|==================== All Application Build Done. ====================|  '
+	@echo `date`
 	@echo "\n"
 	
 bin/$(TARGET): $(OBJ)
-	@echo -ne '\n###### Start Build $(TARGET) ######\n'
+	@echo -ne '|==================== Start Build $(TARGET) ====================|  '
+	@echo `date`
 	$(LD) $^ -o $@ $(CXXFLAGS) $(LDLIBS)
 	strip -s $@
 	@echo "\n"
@@ -62,7 +66,8 @@ lib:
 	@for libName in ${LIB_NAMES} ; do \
 		$(MAKE) V=99 -C $$libName static; \
 	done
-	@echo -ne '\n###### All Library Build Done. ######\n'
+	@echo -ne '|==================== All Library Build Done. ====================|  '
+	@echo `date`
 	@echo "\n"
 		
 checkdirs:
@@ -103,7 +108,8 @@ package-s:
 	yum -y install sqlite-devel.x86_64
 	yum -y install boost boost-devel
 	yum -y install gcc-c++
-	@echo -ne '\n###### Package for CentSO install completed. ######\n'
+	@echo -ne '|==================== Package for CentSO install completed. ====================|  '
+	@echo `date`
 	@echo "\n"
 	
 package-u:
@@ -112,7 +118,8 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	apt-get -y install libmysqld-dev
-	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
+	@echo -ne '|==================== Package for Ubuntu install completed. ====================|  '
+	@echo `date`
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))
