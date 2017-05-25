@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,6 +38,12 @@ private:
 	std::unique_ptr<CClientMeetingAgent> agentClient;
 	std::unique_ptr<CClientAmxController> amxControllerClient;
 
+	std::atomic<pthread_t> agentReconnectThreadId;
+	std::atomic<pthread_t> amxReconnectThreadId;
+
 	int initAgentClient();
 	int initAgentClient(std::unique_ptr<CConfig>& config);
+
+	friend void *threadStartRoutine_CController_reconnectToAgent(void *argv);
+	friend void *threadStartRoutine_CController_reconnectToAmx(void *argv);
 };

@@ -105,7 +105,7 @@ int CClientMeetingAgent::startClient(int msqKey)
 
 void CClientMeetingAgent::stopClient()
 {
-	_DBG(LOG_TAG" stopClient() step in");
+	//_DBG(LOG_TAG" stopClient() step in");
 
 	if (enquireLinkYo != nullptr)
 	{
@@ -135,12 +135,12 @@ void CClientMeetingAgent::stopClient()
 	
 	stop();
 
-	_DBG(LOG_TAG" stopClient() step out");
+	//_DBG(LOG_TAG" stopClient() step out");
 }
 
 int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_DBG(LOG_TAG" onResponse() step in");
+	//_DBG(LOG_TAG" onResponse() step in");
 
 	switch ((unsigned int)nCommand)
 	{

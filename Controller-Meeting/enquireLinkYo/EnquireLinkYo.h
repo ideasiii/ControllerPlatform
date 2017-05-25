@@ -37,6 +37,7 @@ protected:
 
 private:
 	// string return in taskName()
+	// 最好不要超過 15 字元 (PR_SET_NAME 限制)
 	const std::string whoUsedMe;
 	// do not delete this or this class will die with it
 	CCmpClient * const client;

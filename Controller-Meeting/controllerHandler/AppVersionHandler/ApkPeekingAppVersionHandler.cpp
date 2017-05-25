@@ -116,5 +116,5 @@ std::string ApkPeekingAppVersionHandler::getDownloadLink()
 
 std::string ApkPeekingAppVersionHandler::taskName()
 {
-	return "ApkPeeking";
+	return "ApkVerPeek";
 }

@@ -41,5 +41,7 @@ private:
 	std::unique_ptr<EnquireLinkYo> enquireLinkYo;
 
 	// do not delete this or the whole world will collapse
-	CObject *mpController;
+	CObject * const mpController;
+
+	bool validateToken(const std::string& reqId, const std::string& reqToken, int64_t when);
 };

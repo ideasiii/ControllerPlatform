@@ -1,20 +1,24 @@
 #include "EnquireLinkYo.h"
 
+#include <sys/prctl.h>
 #include "event.h"
 #include "packet.h"
 #include "CCmpClient.h"
 #include "LogHandler.h"
 
 #define DEFAULT_REQUEST_INTERVAL 10 // seconds
-#define DEFAULT_MAX_BALANCE 1
+#define DEFAULT_MAX_BALANCE 3
 
 #define LOG_TAG "[EnquireLinkYo]"
 
 void *threadStartRoutine_EnquireLinkYo_run(void *argv)
 {
+	pthread_detach(pthread_self());
+
 	auto ely = reinterpret_cast<EnquireLinkYo*>(argv); 
 	_log(LOG_TAG" %s threadStartRoutine_EnquireLinkYo_run() step in", ely->whoUsedMe.c_str());
-
+	prctl(PR_SET_NAME, (unsigned long)ely->whoUsedMe.c_str());
+	
 	ely->loopThreadId = pthread_self();
 	ely->run();
 
@@ -87,9 +91,6 @@ void EnquireLinkYo::stop()
 	{
 		_log(LOG_TAG" %s stop() cancelling thread", whoUsedMe.c_str());
 		threadCancel(loopThreadId);
-		pthread_detach(loopThreadId);
-		//threadJoin(loopThreadId);
-
 		loopThreadId = 0;
 	}
 	else
@@ -168,7 +169,7 @@ void EnquireLinkYo::run()
 			break;
 		}
 
-		_log(LOG_TAG" %s run() Sending enquire link request", whoUsedMe.c_str());
+		//_log(LOG_TAG" %s run() Sending enquire link request", whoUsedMe.c_str());
 
 		int nRet = client->request(client->getSocketfd(), enquire_link_request, STATUS_ROK, getSequence(), NULL);
 		if (!isRunning)

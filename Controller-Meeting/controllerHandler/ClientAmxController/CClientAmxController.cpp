@@ -5,6 +5,8 @@
 #include "event.h"
 #include "utility.h"
 #include "../../enquireLinkYo/EnquireLinkYo.h"
+#include "../HiddenUtility.hpp"
+#include "../TestStringsDefinition.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
 
@@ -14,8 +16,10 @@
 CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp, int userPort, int validationPort) :
 	serverIp(serverIp), userPort(userPort), validationPort(validationPort), mpController(controller)
 {
+	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
 }
-	
+
 CClientAmxController::~CClientAmxController()
 {
 }
@@ -39,17 +43,14 @@ int CClientAmxController::startClient(int msqKey)
 		return FALSE;
 	}
 
-	// server does not send bind_response, so start EnquireLinkYo upon startClient()
-	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
-		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
-	enquireLinkYo->start();
+	// enquireLinkYo starts in onResponse(), when binding response is received
 
 	return TRUE;
 }
 
 void CClientAmxController::stopClient()
 {
-	_DBG(LOG_TAG" stopClient() step in");
+	//_DBG(LOG_TAG" stopClient() step in"); 
 
 	if (enquireLinkYo != nullptr)
 	{
@@ -74,12 +75,12 @@ void CClientAmxController::stopClient()
 
 	stop();
 
-	_DBG(LOG_TAG" stopClient() step out");
+	//_DBG(LOG_TAG" stopClient() step out");
 }
 
 int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	_DBG(LOG_TAG" onResponse() step in");
+	//_DBG(LOG_TAG" onResponse() step in");
 
 	switch ((unsigned int)nCommand)
 	{
@@ -89,7 +90,7 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 		break;
 	case bind_response:
 		_log(LOG_TAG_COLORED" onResponse() bind_response; bind ok, start EnquireLinkYo");
-		// server does not send bind_response, so start EnquireLinkYo upon startClient()
+		enquireLinkYo->start();
 		break;
 	case unbind_response:
 		_log(LOG_TAG_COLORED" onResponse() unbind_response");
@@ -114,6 +115,7 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 
 	std::string reqToken = reqJson.getString("TOKEN", "");
 	std::string reqId = reqJson.getString("ID", "");
+	reqJson.release();
 
 	if (reqToken.empty() || reqId.empty())
 	{
@@ -122,12 +124,13 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 		return TRUE;
 	}
 
-	bool passedValidation = true;
+	int64_t now = HiddenUtility::unixTimeMilli();
+	bool authOk = validateToken(reqId, reqToken, now);
 
 	std::stringstream ss;
 	ss << "{\"ID\": \"" << reqId << "\", \"AUTH\": \"";
 
-	if (passedValidation)
+	if (authOk)
 	{
 		_log(LOG_TAG_COLORED" onAuthenticationRequest() `%s` w/ token `%s` PASSED on validation",
 			reqId.c_str(), reqToken.c_str());
@@ -146,6 +149,23 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, respBody.c_str());
 
 	return TRUE;
+}
+
+// Check given 'reqToken' sent by 'reqId' is valid at 'when'.
+// 'when' is the point we received the validation request, in unix epoch (milliseconds, UTC)
+bool CClientAmxController::validateToken(const std::string& reqId, const std::string& reqToken, const int64_t when)
+{
+	// check retrieved result is not empty
+	if (reqId.compare(TEST_USER_HAS_MEETING_IN_001) != 0 || reqToken.compare(TEST_AMX_TOKEN) != 0)
+	{
+		return false;
+	}
+
+	int64_t tokenValidFrom = when - (10 * 1000);
+	int64_t tokanGoodThrough = when + (10 * 1000);
+
+	// check token is valid at time given
+	return when >= tokenValidFrom && when <= tokanGoodThrough;
 }
 
 std::string CClientAmxController::getServerIp()

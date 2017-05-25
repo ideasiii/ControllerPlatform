@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <string.h>
+#include <sys/prctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -19,9 +20,10 @@ void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 	auto uadlh = reinterpret_cast<AppVersionHandler*>(argv); 
 	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", uadlh->strTaskName.c_str());
 
+	prctl(PR_SET_NAME, (unsigned long)uadlh->taskName().c_str());
 	uadlh->watcherThreadId = pthread_self();
 	uadlh->doLoop = true;
-	uadlh->runWatcher();			
+	uadlh->runWatcher();
 	
 	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step out", uadlh->strTaskName.c_str());
 	return 0;
@@ -177,5 +179,5 @@ void AppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned lon
 
 std::string AppVersionHandler::taskName()
 {
-	return "AppVersionHandler";
+	return "AppVerHandler";
 }

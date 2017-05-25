@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <map>
 #include <memory>
@@ -67,5 +68,5 @@ private:
 	std::unique_ptr<EnquireLinkYo> enquireLinkYo;
 
 	// do not delete this or the whole world will collapse
-	CObject *mpController;
+	CObject * const mpController;
 };
