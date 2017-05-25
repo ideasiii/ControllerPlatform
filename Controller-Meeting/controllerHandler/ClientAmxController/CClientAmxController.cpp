@@ -5,6 +5,8 @@
 #include "event.h"
 #include "utility.h"
 #include "../../enquireLinkYo/EnquireLinkYo.h"
+#include "../HiddenUtility.hpp"
+#include "../TestStringsDefinition.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
 
@@ -122,12 +124,13 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 		return TRUE;
 	}
 
-	bool passedValidation = true;
+	int64_t now = HiddenUtility::unixTimeMilli();
+	bool authOk = validateToken(reqId, reqToken, now);
 
 	std::stringstream ss;
 	ss << "{\"ID\": \"" << reqId << "\", \"AUTH\": \"";
 
-	if (passedValidation)
+	if (authOk)
 	{
 		_log(LOG_TAG_COLORED" onAuthenticationRequest() `%s` w/ token `%s` PASSED on validation",
 			reqId.c_str(), reqToken.c_str());
@@ -146,6 +149,23 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, respBody.c_str());
 
 	return TRUE;
+}
+
+// Check given 'reqToken' sent by 'reqId' is valid at 'when'.
+// 'when' is the point we received the validation request, in unix epoch (milliseconds, UTC)
+bool CClientAmxController::validateToken(const std::string& reqId, const std::string& reqToken, const int64_t when)
+{
+	// check retrieved result is not empty
+	if (reqId.compare(TEST_USER_HAS_MEETING_IN_001) != 0 || reqToken.compare(TEST_AMX_TOKEN) != 0)
+	{
+		return false;
+	}
+
+	int64_t tokenValidFrom = when - (10 * 1000);
+	int64_t tokanGoodThrough = when + (10 * 1000);
+
+	// check token is valid at time given
+	return when >= tokenValidFrom && when <= tokanGoodThrough;
 }
 
 std::string CClientAmxController::getServerIp()

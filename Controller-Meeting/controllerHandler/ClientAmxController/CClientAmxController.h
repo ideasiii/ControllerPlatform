@@ -42,4 +42,6 @@ private:
 
 	// do not delete this or the whole world will collapse
 	CObject * const mpController;
+
+	bool validateToken(const std::string& reqId, const std::string& reqToken, int64_t when);
 };
