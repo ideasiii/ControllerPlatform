@@ -24,6 +24,8 @@
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller)
 {
+	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent.ely", this, 
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController));
 }
 
 CClientMeetingAgent::~CClientMeetingAgent()
@@ -54,8 +56,6 @@ int CClientMeetingAgent::initMember(std::unique_ptr<CConfig>& config)
 	
 	appVersionHandler.reset(appVerHandlerRet);
 	amxControllerInfo.reset(amxControllerInfoRet);
-	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent.ely", this, 
-		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController));
 		
 	return doorAccessHandler.initMember(config);
 }
@@ -123,16 +123,7 @@ void CClientMeetingAgent::stopClient()
 		return;
 	}
 
-	int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
-	if (nRet < 0)
-	{
-		_log(LOG_TAG" stopClient() Unbinding from MeetingAgent FAILED.");
-	}
-	else
-	{
-		_log(LOG_TAG" stopClient() Unbinding from MeetingAgent OK.");
-	}
-	
+	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);	
 	stop();
 
 	//_DBG(LOG_TAG" stopClient() step out");
@@ -165,7 +156,7 @@ int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int 
 
 int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG(LOG_TAG" onSmartBuildingQrCodeToken() step in");
+	//_DBG(LOG_TAG" onSmartBuildingQrCodeToken() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
 	string strResponseBodyData = "";
@@ -265,7 +256,7 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 
 int CClientMeetingAgent::onSmartBuildingAppVersionRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG("[CClientMeetingAgent] onSmartBuildingAppVersion() step in");
+	//_DBG("[CClientMeetingAgent] onSmartBuildingAppVersion() step in");
 	string bodyData;
 
 	if (appVersionHandler == nullptr)
@@ -287,19 +278,19 @@ int CClientMeetingAgent::onSmartBuildingAppVersionRequest(int nSocket, int nComm
 
 int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG("[CClientMeetingAgent] onSmartBuildingMeetingData() step in");
+	//_DBG("[CClientMeetingAgent] onSmartBuildingMeetingData() step in");
 	
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
 	string strResponseBodyData = "";
 	_log("[ClientMeetingAgent] onSmartBuildingMeetingData() body: %s", strRequestBodyData.c_str());
 
-	if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
+	if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos)
 	{
 		strResponseBodyData =
 			"{\"USER_ID\":\"00000000-ffff-0000-ffff-ffffffffffff\",\"USER_NAME\":\"李二二\",\"USER_EMAIL\":\"qwwwew@gmail.com\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2016-06-30 09:30:00\",\"END_TIME\":\"2016-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1afd78\",\"SUPJECT\":\"促進XXX發展計畫\",\"START_TIME\":\"2016-07-30 09:30:00\",\"END_TIME\":\"2016-07-30 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一二\",\"OWNER_EMAIL\":\"qoiu1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2016-08-30 09:30:00\",\"END_TIME\":\"2016-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass71\",\"SUPJECT\":\"促進WWWW發展計畫\",\"START_TIME\":\"2016-08-31 09:30:00\",\"END_TIME\":\"2016-08-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一四\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass72\",\"SUPJECT\":\"促進YYY發展計畫\",\"START_TIME\":\"2016-09-30 09:30:00\",\"END_TIME\":\"2016-09-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一五\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46c0-b0c0-00eede1ass73\",\"SUPJECT\":\"XXXx公司會議\",\"START_TIME\":\"2016-10-30 09:30:00\",\"END_TIME\":\"2016-10-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一六\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-43b0-b0c0-00eede1ass74\",\"SUPJECT\":\"促進YXXY發展計畫\",\"START_TIME\":\"2016-11-28 09:30:00\",\"END_TIME\":\"2016-11-28 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一七\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass75\",\"SUPJECT\":\"促進WWXY發展計畫\",\"START_TIME\":\"2016-11-29 09:30:00\",\"END_TIME\":\"2016-11-29 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一八\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass76\",\"SUPJECT\":\"促進WWY發展計畫\",\"START_TIME\":\"2016-11-30 09:30:00\",\"END_TIME\":\"2016-11-30 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一九\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass18\",\"SUPJECT\":\"促進YYYX發展計畫\",\"START_TIME\":\"2016-12-30 09:30:00\",\"END_TIME\":\"2016-12-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一十\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass28\",\"SUPJECT\":\"促進YYYW發展計畫\",\"START_TIME\":\"2016-12-31 09:30:00\",\"END_TIME\":\"2016-12-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王二一\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
 
 	}
-	else if (strRequestBodyData.find("ffffffff-ffff-0000-0000-ffffffffffff") != string::npos)
+	else if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_002) != string::npos)
 	{
 		strResponseBodyData =
 			"{\"USER_ID\":\"ffffffff-ffff-0000-0000-ffffffffffff\",\"USER_NAME\":\"王二二\",\"USER_EMAIL\":\"qqdsdw@iii.org.tw\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2017-06-30 09:30:00\",\"END_TIME\":\"2017-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2017-08-30 09:30:00\",\"END_TIME\":\"2017-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
@@ -316,7 +307,7 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 
 int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
+	//_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
 	string strResponseBodyData = "";
@@ -347,12 +338,12 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	return TRUE;
 }
 
-void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
+/*void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
 {
 	_DBG(LOG_TAG" onServerDisconnect() step in");
 	stopClient();
 	_DBG(LOG_TAG" onServerDisconnect() step out");
-}
+}*/
 
 std::string CClientMeetingAgent::taskName()
 {

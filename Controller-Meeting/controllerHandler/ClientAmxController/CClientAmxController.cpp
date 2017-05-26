@@ -22,6 +22,7 @@ CClientAmxController::CClientAmxController(CObject *controller, const std::strin
 
 CClientAmxController::~CClientAmxController()
 {
+	stopClient();
 }
 
 int CClientAmxController::startClient(int msqKey)
@@ -63,16 +64,7 @@ void CClientAmxController::stopClient()
 		return;
 	}
 
-	int nRet = request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
-	if (nRet < 0)
-	{
-		_log(LOG_TAG" stopClient() Unbinding from AMX Controller FAILED.");
-	}
-	else
-	{
-		_log(LOG_TAG" stopClient() Unbinding from AMX Controller OK.");
-	}
-
+	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
 	stop();
 
 	//_DBG(LOG_TAG" stopClient() step out");

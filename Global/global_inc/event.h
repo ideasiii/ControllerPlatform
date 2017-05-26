@@ -113,7 +113,7 @@ enum _EVENT_COMMAND
 #define EVENT_COMMAND_SOCKET_TCP_CONNECT_ALIVE								(EVENT_COMMAND + SOCKET_TCP_CONNECT_ALIVE)
 #define EVENT_COMMAND_HANDLE_MESSAGE										(EVENT_COMMAND + HANDLE_MESSAGE)
 
-#define EVENT_COMMAND_SOCKET_SERVER_COLSE									(EVENT_COMMAND + SOCKET_SERVER_CLOSE)
+#define EVENT_COMMAND_SOCKET_SERVER_CLOSE									(EVENT_COMMAND + SOCKET_SERVER_CLOSE)
 //===================================================================================//
 //	Message Queue ID																 //
 //																					 //

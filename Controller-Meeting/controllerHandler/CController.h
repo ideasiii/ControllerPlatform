@@ -44,6 +44,9 @@ private:
 	int initAgentClient();
 	int initAgentClient(std::unique_ptr<CConfig>& config);
 
+	void startReconnectToAgentThread();
+	void startReconnectToAmxThread();
+
 	friend void *threadStartRoutine_CController_reconnectToAgent(void *argv);
 	friend void *threadStartRoutine_CController_reconnectToAmx(void *argv);
 };
