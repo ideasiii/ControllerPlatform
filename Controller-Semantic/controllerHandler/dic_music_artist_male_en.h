@@ -10,7 +10,7 @@
 #include "container.h"
 
 static set<string> setArtistEnglishMale =
-		create_set<string>("Gregory Abbott")("Buddy Ace")("Johnny Ace")("Chad Ackerman")("Roy Acuff")("Austin Adamec")(
+		create_set<string>("Gregory Abbott");/*("Buddy Ace")("Johnny Ace")("Chad Ackerman")("Roy Acuff")("Austin Adamec")(
 				"Eric Adams")("Johnny Adams")("Tunde Adebimpe")("Jim Adkins")("Alfie Agnew")("Rikk Agnew")(
 				"Pepe Aguilar")("Jewel Akens")("Steve Alaimo")("Ken Albers")("Eddie Albert")("Jason Aldean")(
 				"Ray Alder")("Aki Aleong")("John Aler")("Alessi Brothers")("Ben Alessi")("Dean Alexander")(
@@ -43,4 +43,4 @@ static set<string> setArtistEnglishMale =
 				"Hinton Battle")("Matthew Bauer")("Peter Matthew Bauer")("Franklyn Baur")("Eric Bazilian")("Bill Beach")(
 				"Gary Beach")("Brandon Beal")("Chris Beard")("Les Beasley")("Tucker Beathard")("Nathan Beauregard")(
 				"Stan Beaver")("Jackey Beavers")("Beck")("Clark Beckham")("Gerry Beckley")("Rob Beckley")(
-				"Aaron Bedard")("Robert Levon Been")("Marc Beeson")("Harry Belafonte");
+				"Aaron Bedard")("Robert Levon Been")("Marc Beeson")("Harry Belafonte");*/

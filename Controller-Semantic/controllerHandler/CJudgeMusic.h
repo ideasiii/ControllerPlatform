@@ -21,11 +21,13 @@ public:
 
 private:
 	typedef std::string (CJudgeMusic::*pFnGetArtist)(const char *);
-	std::set<pFnGetArtist> setpFnGetArtist;
+	std::map<int, pFnGetArtist> mappFnGetArtist;
+	std::set<std::set<std::string> > setArtist;
 	std::string getArtist(const char *szWord);
-	std::string getArtistTaiwan(const char *szWord);
-	std::string getArtistEnglish(const char *szWord);
-	std::string getArtistEnglishFemale(const char *szWord);
-	std::string getArtistEnglishMale(const char *szWord);
+//	std::string getArtist(const char *szWord, std::set<std::string> &setData);
+//	std::string getArtistTaiwan(const char *szWord);
+//	std::string getArtistEnglish(const char *szWord);
+//	std::string getArtistEnglishFemale(const char *szWord);
+//	std::string getArtistEnglishMale(const char *szWord);
 
 };

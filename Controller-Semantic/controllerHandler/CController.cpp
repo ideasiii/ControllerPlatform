@@ -19,6 +19,8 @@
 #include "CSemanticRecord.h"
 #include "packet.h"
 #include "JSONObject.h"
+#include "CFileHandler.h"
+#include "dic_music_artist_female_en.h"
 
 using namespace std;
 
@@ -45,14 +47,18 @@ int CController::onCreated(void* nMsqKey)
 
 int CController::onInitial(void* szConfPath)
 {
-	string strConfPath = reinterpret_cast<const char*>(szConfPath);
+	int nCount;
+	int nPort;
+	string strConfPath;
+	string strPort;
+	CConfig *config;
+	CFileHandler fh;
+
+	strConfPath = reinterpret_cast<const char*>(szConfPath);
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
 	if(strConfPath.empty())
 		return FALSE;
 
-	int nPort;
-	string strPort;
-	CConfig *config;
 	config = new CConfig();
 	if(config->loadConfig(strConfPath))
 	{
@@ -64,6 +70,13 @@ int CController::onInitial(void* szConfPath)
 		}
 	}
 	delete config;
+
+	//============== Load Dictionary =================//
+	nCount = fh.readAllLine("dictionary/artist_female_en.txt", setArtistEnglishFemale);
+	_log("[CController] onInitial Load artist female en: %u", setArtistEnglishFemale.size());
+	if(!nCount)
+		return FALSE;
+
 	return TRUE;
 }
 

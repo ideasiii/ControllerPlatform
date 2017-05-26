@@ -127,6 +127,7 @@ int CCmpTest::sendRequest(const int nCommandId, const char *szBody)
 
 		printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
 				ntohl(pHeader->command_length), "", m_nSocketFD);
+		printf("CMP Body: %s\n", szBody);
 	}
 	else
 	{

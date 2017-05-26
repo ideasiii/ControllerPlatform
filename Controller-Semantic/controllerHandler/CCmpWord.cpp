@@ -32,6 +32,7 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 	string strBody = string(reinterpret_cast<const char*>(szBody));
 	if(!strBody.empty() && 0 < strBody.length())
 	{
+		_log("[CCmpWord] onSemanticWord Body: %s", szBody);
 		WORD_REQUEST wordRequest;
 		JSONObject *jobjRoot = new JSONObject(strBody);
 		if(jobjRoot->isValid())

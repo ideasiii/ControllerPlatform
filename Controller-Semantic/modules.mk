@@ -14,6 +14,7 @@ export MODULES=controllerHandler \
 ../Global/protocolHandler \
 ../Global/rankingHandler \
 ../Global/httpHandler \
-../Global/spotifyHandler
+../Global/spotifyHandler \
+../Global/fileHandler
 			 
 #export EXT_MODULES=extInclude

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <list>
 #include <string>
+#include "container.h"
 #include "LogHandler.h"
 
 using namespace std;
@@ -155,30 +156,6 @@ struct CMP_PACKET
 #define TYPE_TRACKER_APPLIENCE				5
 #define TYPE_TRACKER_TOY						6
 #define TYPE_TRACKER_IOT						7
-
-template<typename T, typename U>
-class create_map
-{
-private:
-	std::map<T, U> m_map;
-public:
-	create_map(const T& key, const U& val)
-	{
-		m_map[key] = val;
-	}
-
-	create_map<T, U>& operator()(const T& key, const U& val)
-	{
-		m_map[key] = val;
-		return *this;
-	}
-
-	operator std::map<T, U>()
-	{
-		return m_map;
-	}
-
-};
 
 static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack")( bind_request,
 		"bind_request")( bind_response, "bind_response")(
