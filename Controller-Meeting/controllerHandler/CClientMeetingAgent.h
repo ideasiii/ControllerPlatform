@@ -51,7 +51,7 @@ protected:
 	// 使用者要拿 AMX 裝置控制的 token
 	int onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody) override;
 	
-	void onServerDisconnect(unsigned long int nSocketFD) override;
+	//void onServerDisconnect(unsigned long int nSocketFD) override;
 
 	std::string taskName() override;
 
