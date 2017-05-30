@@ -38,15 +38,17 @@ private:
 	std::unique_ptr<CClientMeetingAgent> agentClient;
 	std::unique_ptr<CClientAmxController> amxControllerClient;
 
-	std::atomic<pthread_t> agentReconnectThreadId;
+	std::atomic<pthread_t> agentConnectingThreadId;
 	std::atomic<pthread_t> amxReconnectThreadId;
 
-	int initAgentClient();
+	//int initAgentClient();
 	int initAgentClient(std::unique_ptr<CConfig>& config);
 
-	void startReconnectToAgentThread();
-	void startReconnectToAmxThread();
+	// 啟動與伺服器連線的 thread
+	void startConnectToAgentThread();
+	void startConnectToAmxThread();
 
-	friend void *threadStartRoutine_CController_reconnectToAgent(void *argv);
-	friend void *threadStartRoutine_CController_reconnectToAmx(void *argv);
+	// 用來與伺服器連線的 thread
+	friend void *threadStartRoutine_CController_connectToAgent(void *argv);
+	friend void *threadStartRoutine_CController_connectToAmx(void *argv);
 };

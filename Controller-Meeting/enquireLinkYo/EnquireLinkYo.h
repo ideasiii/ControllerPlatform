@@ -17,14 +17,14 @@ public:
 	void setRequestInterval(int value);
 
 	// 設定最大的 enquire link 容許消失值
-	// 當沒有收到的 enquire link response 達到 value，就當作已經斷線惹
+	// 當沒收到的 response 數量達到 value，就當作已經從伺服器斷線惹
 	void setMaxBalance(int value);
 
-	// 開始對 sockFd 發送 enquire link request
+	// 開始發送 enquire link request
 	void start();
 	void stop();
 
-	// 將沒收到的 enquire link response 的計數器歸零
+	// 將沒收到的 enquire link response 計數器歸零
 	void zeroBalance();
 
 protected:
@@ -32,13 +32,14 @@ protected:
 	void onHandleMessage(Message &message) override;
 
 	// 因為這個 class 是使用 composition 的方式被 CCmpClient 使用的，無法 override taskName
-	// 所以只好再用一個 strTaskName，在建構的時候指定 task name
+	// 所以只好再用一個 yoIdentifier，在建構的時候指定 task name
 	std::string taskName() override;
 
 private:
-	// string return in taskName()
+	// string returned in taskName()
 	// 最好不要超過 15 字元 (PR_SET_NAME 限制)
-	const std::string whoUsedMe;
+	const std::string yoIdentifier;
+	
 	// do not delete this or this class will die with it
 	CCmpClient * const client;
 	// do not delete this or the whole world will collapse

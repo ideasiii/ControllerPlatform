@@ -24,13 +24,13 @@ using namespace std;
 #define LOG_TAG_COLORED "[\033[1;33mCController\033[0m]"
 #define RECONNECT_INTERVAL 8
 
-void *threadStartRoutine_CController_reconnectToAgent(void *argv);
-void *threadStartRoutine_CController_reconnectToAmx(void *argv);
+void *threadStartRoutine_CController_connectToAgent(void *argv);
+void *threadStartRoutine_CController_connectToAmx(void *argv);
 
 CController::CController() :
 	mnMsqKey(-1), 
 	agentClient(nullptr), amxControllerClient(nullptr),
-	agentReconnectThreadId(0), amxReconnectThreadId(0)
+	agentConnectingThreadId(0), amxConnectingThreadId(0)
 {
 	// allocate resources in onInitial() instead
 }
@@ -92,10 +92,10 @@ int CController::onInitial(void* szConfPath)
 	{
 		return FALSE;
 	}*/
-	startReconnectToAgentThread();
+	startConnectToAgentThread();
 
 	/*nRet = amxControllerClient->startClient(mnMsqKey);*/
-	startReconnectToAmxThread();
+	startConnectToAmxThread();
 
 	return TRUE;
 }
@@ -114,16 +114,16 @@ int CController::onFinish(void* nMsqKey)
 		agentClient = nullptr;
 	}
 
-	if (agentReconnectThreadId > 0)
+	if (agentConnectingThreadId > 0)
 	{
-		threadCancel(agentReconnectThreadId);
-		agentReconnectThreadId = 0;
+		threadCancel(agentConnectingThreadId);
+		agentConnectingThreadId = 0;
 	}
 	
-	if (amxReconnectThreadId > 0)
+	if (amxConnectingThreadId > 0)
 	{
-		threadCancel(amxReconnectThreadId);
-		amxReconnectThreadId = 0;
+		threadCancel(amxConnectingThreadId);
+		amxConnectingThreadId = 0;
 	}
 
 	return TRUE;
@@ -131,7 +131,7 @@ int CController::onFinish(void* nMsqKey)
 
 // 初始化 CClientMeetingAgent。
 // 在斷線後要重新連線的時候也會重新初始化一個 CClientMeetingAgent
-int CController::initAgentClient()
+/*int CController::initAgentClient()
 {
 	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
 	std::unique_ptr<CConfig> config = make_unique<CConfig>();
@@ -143,7 +143,7 @@ int CController::initAgentClient()
 	}
 
 	return initAgentClient(config);
-}
+}*/
 
 int CController::initAgentClient(std::unique_ptr<CConfig>& config)
 {
@@ -160,12 +160,15 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log(LOG_TAG_COLORED" Connection to agent is broken!@$#%^&*(*^%$#Q@#%%dcfvgtr5e3&^*&%$^%#");
 		
 		agentClient->stopClient();
-		sleep(3);
+		sleep(1);
 		
-		if (agentReconnectThreadId < 1)
+		if (agentConnectingThreadId < 1)
 		{
 			_log(LOG_TAG" Reconnecting to agent");
-			startReconnectToAgentThread();
+			startConnectToAgentThread();
+
+			// wait thread to be created
+			usleep(200);
 		}
 				
 		break;
@@ -174,12 +177,15 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		_log(LOG_TAG_COLORED" Connection to AMX controller is broken! JKSKALXUH@OUW)233333333333");
 
 		amxControllerClient->stopClient();
-		sleep(3);
+		sleep(1);
 
-		if (amxReconnectThreadId < 1)
+		if (amxConnectingThreadId < 1)
 		{
 			_log(LOG_TAG" Reconnecting to AMX");
-			startReconnectToAmxThread();
+			startConnectToAmxThread();
+
+			// wait thread to be created
+			usleep(200);
 		}
 
 		break;
@@ -210,23 +216,23 @@ std::string CController::taskName()
 	return "CController";
 }
 
-void CController::startReconnectToAgentThread()
+void CController::startConnectToAgentThread()
 {
-	createThread(threadStartRoutine_CController_reconnectToAgent, this, "agentReconnect");
+	createThread(threadStartRoutine_CController_connectToAgent, this, "agentConnect");
 }
-void CController::startReconnectToAmxThread()
+void CController::startConnectToAmxThread()
 {
-	createThread(threadStartRoutine_CController_reconnectToAmx, this, "amxReconnect");
+	createThread(threadStartRoutine_CController_connectToAmx, this, "amxConnect");
 }
 
-void *threadStartRoutine_CController_reconnectToAgent(void *argv)
+void *threadStartRoutine_CController_connectToAgent(void *argv)
 {
 	pthread_detach(pthread_self());
-	prctl(PR_SET_NAME, (unsigned long)"agentReconnect");
-	_log(LOG_TAG"threadStartRoutine_CController_reconnectToAgent() step in");
+	prctl(PR_SET_NAME, (unsigned long)"C_agentConnect");
+	_log(LOG_TAG" threadStartRoutine_CController_connectToAgent() step in");
 	
 	auto ctlr = reinterpret_cast<CController*>(argv); 
-	ctlr->agentReconnectThreadId = pthread_self();
+	ctlr->agentConnectingThreadId = pthread_self();
 	
 	std::random_device rd;
 	std::mt19937 mt(rd());
@@ -245,24 +251,24 @@ void *threadStartRoutine_CController_reconnectToAgent(void *argv)
 			break;
 		}
 
-		int reconnectInterval = (int)dist(mt);
-		_log("[CController] agentReconnect waits %ds for next attempt", reconnectInterval);
-		sleep(reconnectInterval);
+		int retryInterval = (int)dist(mt);
+		_log("[CController] agentReconnect waits %ds for next attempt", retryInterval);
+		sleep(retryInterval);
 	}
 
-	ctlr->agentReconnectThreadId = 0;
-	_log(LOG_TAG" threadStartRoutine_CController_reconnectToAgent() step out");
+	ctlr->agentConnectingThreadId = 0;
+	_log(LOG_TAG" threadStartRoutine_CController_connectToAgent() step out");
 	return 0;
 }
 
-void *threadStartRoutine_CController_reconnectToAmx(void *argv)
+void *threadStartRoutine_CController_connectToAmx(void *argv)
 {
 	pthread_detach(pthread_self());
-	prctl(PR_SET_NAME, (unsigned long)"amxReconnect");
-	_log(LOG_TAG"threadStartRoutine_CController_reconnectToAmx() step in");
+	prctl(PR_SET_NAME, (unsigned long)"C_amxConnect");
+	_log(LOG_TAG" threadStartRoutine_CController_connectToAmx() step in");
 
 	auto ctlr = reinterpret_cast<CController*>(argv);
-	ctlr->amxReconnectThreadId = pthread_self();
+	ctlr->amxConnectingThreadId = pthread_self();
 	
 	std::random_device rd;
 	std::mt19937 mt(rd());
@@ -281,12 +287,12 @@ void *threadStartRoutine_CController_reconnectToAmx(void *argv)
 			break;
 		}
 
-		int reconnectInterval = (int)dist(mt);
-		_log("[CController] amxReconnect waits %ds for next attempt", reconnectInterval);
-		sleep(reconnectInterval);
+		int retryInterval = (int)dist(mt);
+		_log("[CController] amxReconnect waits %ds for next attempt", retryInterval);
+		sleep(retryInterval);
 	}
 
-	ctlr->amxReconnectThreadId = 0; 
-	_log(LOG_TAG" threadStartRoutine_CController_reconnectToAmx() step out");
+	ctlr->amxConnectingThreadId = 0; 
+	_log(LOG_TAG" threadStartRoutine_CController_connectToAmx() step out");
 	return 0;
 }
