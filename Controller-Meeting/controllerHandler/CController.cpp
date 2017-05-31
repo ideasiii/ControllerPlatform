@@ -156,15 +156,14 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	switch (nCommand)
 	{
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT:
-		//_log(LOG_TAG" EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT");
 		_log(LOG_TAG_COLORED" Connection to agent is broken!@$#%^&*(*^%$#Q@#%%dcfvgtr5e3&^*&%$^%#");
-		
-		agentClient->stopClient();
-		sleep(1);
-		
+		usleep(300);
+
 		if (agentConnectingThreadId < 1)
 		{
-			_log(LOG_TAG" Reconnecting to agent");
+			_log(LOG_TAG" Reconnecting to agent");			
+			agentClient->stopClient();
+			usleep(200); 
 			startConnectToAgentThread();
 
 			// wait thread to be created
@@ -173,15 +172,14 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 				
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX:
-		//_log(LOG_TAG" EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX");
 		_log(LOG_TAG_COLORED" Connection to AMX controller is broken! JKSKALXUH@OUW)233333333333");
-
-		amxControllerClient->stopClient();
-		sleep(1);
+		usleep(300);
 
 		if (amxConnectingThreadId < 1)
 		{
 			_log(LOG_TAG" Reconnecting to AMX");
+			amxControllerClient->stopClient();
+			usleep(200);
 			startConnectToAmxThread();
 
 			// wait thread to be created
@@ -190,7 +188,7 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 		break;
 	default:
-		_log(LOG_TAG" Unknown message command %s", numberToHex(nCommand).c_str());
+		_log(LOG_TAG_COLORED" Unknown message command %s", numberToHex(nCommand).c_str());
 		break;
 	}
 }
@@ -206,7 +204,7 @@ void CController::onHandleMessage(Message &message)
 		_log(LOG_TAG" onHandleMessage(): MESSAGE_WHAT_CLIENT_AMX_CONTROLLER");
 		break;
 	default:
-		_log(LOG_TAG" onHandleMessage(): unknown message.what %d", message.what);
+		_log(LOG_TAG_COLORED" onHandleMessage(): unknown message.what %d", message.what);
 		break;
 	}
 }
@@ -227,12 +225,21 @@ void CController::startConnectToAmxThread()
 
 void *threadStartRoutine_CController_connectToAgent(void *argv)
 {
-	pthread_detach(pthread_self());
-	prctl(PR_SET_NAME, (unsigned long)"C_agentConnect");
 	_log(LOG_TAG" threadStartRoutine_CController_connectToAgent() step in");
+
+	pthread_t tid = pthread_self();
+	pthread_detach(tid);
+	auto ctlr = reinterpret_cast<CController*>(argv);
+
+	if (ctlr->agentConnectingThreadId > 0)
+	{
+		_log(LOG_TAG" C_agentConnect tid %u failed on race, quit", tid);
+		return NULL;
+	}
+
+	ctlr->agentConnectingThreadId = tid;
+	prctl(PR_SET_NAME, (unsigned long)"C_agentConnect");
 	
-	auto ctlr = reinterpret_cast<CController*>(argv); 
-	ctlr->agentConnectingThreadId = pthread_self();
 	
 	std::random_device rd;
 	std::mt19937 mt(rd());
@@ -243,7 +250,12 @@ void *threadStartRoutine_CController_connectToAgent(void *argv)
 		CClientMeetingAgent* client = ctlr->agentClient.get();
 		if (client == nullptr)
 		{
-			_log("[CController] agentReconnect cannot invoke startClient(), quit");
+			_log(LOG_TAG" C_agentConnect cannot invoke startClient(), quit");
+			break;
+		}
+		else if (client->isValidSocketFD())
+		{
+			_log(LOG_TAG" C_agentConnect assume already connected,  quit");
 			break;
 		}
 		else if(client->startClient(ctlr->mnMsqKey) == TRUE)
@@ -252,24 +264,35 @@ void *threadStartRoutine_CController_connectToAgent(void *argv)
 		}
 
 		int retryInterval = (int)dist(mt);
-		_log("[CController] agentReconnect waits %ds for next attempt", retryInterval);
+		_log(LOG_TAG" C_agentConnect wait %ds for next attempt", retryInterval);
 		sleep(retryInterval);
 	}
 
 	ctlr->agentConnectingThreadId = 0;
 	_log(LOG_TAG" threadStartRoutine_CController_connectToAgent() step out");
-	return 0;
+
+	pthread_exit(NULL);
+	return NULL;
 }
 
 void *threadStartRoutine_CController_connectToAmx(void *argv)
 {
-	pthread_detach(pthread_self());
-	prctl(PR_SET_NAME, (unsigned long)"C_amxConnect");
 	_log(LOG_TAG" threadStartRoutine_CController_connectToAmx() step in");
 
+	pthread_t tid = pthread_self();
+	pthread_detach(tid);
 	auto ctlr = reinterpret_cast<CController*>(argv);
-	ctlr->amxConnectingThreadId = pthread_self();
+
+	if (ctlr->amxConnectingThreadId > 0)
+	{
+		_log(LOG_TAG" C_amxConnect tid %u failed on race, quit", tid);
+		return NULL;
+	}
+
+	ctlr->amxConnectingThreadId = tid;
+	prctl(PR_SET_NAME, (unsigned long)"C_amxConnect");
 	
+
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<> dist(RECONNECT_INTERVAL/2, RECONNECT_INTERVAL*2);
@@ -279,7 +302,12 @@ void *threadStartRoutine_CController_connectToAmx(void *argv)
 		CClientAmxController* client = ctlr->amxControllerClient.get();
 		if (client == nullptr)
 		{
-			_log("[CController] amxReconnect cannot invoke startClient(), quit");
+			_log(LOG_TAG" C_amxConnect cannot invoke startClient(), quit");
+			break;
+		}
+		else if (client->isValidSocketFD())
+		{
+			_log(LOG_TAG" C_amxConnect assume already connected,  quit");
 			break;
 		}
 		else if (client->startClient(ctlr->mnMsqKey) == TRUE)
@@ -288,11 +316,13 @@ void *threadStartRoutine_CController_connectToAmx(void *argv)
 		}
 
 		int retryInterval = (int)dist(mt);
-		_log("[CController] amxReconnect waits %ds for next attempt", retryInterval);
+		_log(LOG_TAG" C_amxConnect wait %ds for next attempt", retryInterval);
 		sleep(retryInterval);
 	}
 
-	ctlr->amxConnectingThreadId = 0; 
+	ctlr->amxConnectingThreadId = 0;
 	_log(LOG_TAG" threadStartRoutine_CController_connectToAmx() step out");
-	return 0;
+
+	pthread_exit(NULL);
+	return NULL;
 }

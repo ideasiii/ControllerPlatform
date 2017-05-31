@@ -140,7 +140,7 @@ void AppVersionHandler::runWatcher()
 
 			_log(LOG_TAG" %s runWatcher() detected dir change, len = %d", strTaskName.c_str(), len);
 			
-			int i = 0;
+			size_t i = 0;
 			while (i < len) 
 			{
 				// TODO MOVED_FROM and MOVE_TO and IGNORE handling

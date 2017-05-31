@@ -16,6 +16,8 @@
 #include "AppVersionHandler/AppVersionHandler.h"
 #include "AppVersionHandler/AppVersionHandlerFactory.h"
 
+#define TASK_NAME "ClientAgent"
+
 #define LOG_TAG "[CClientMeetingAgent]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientMeetingAgent\033[0m]"
 
@@ -83,7 +85,26 @@ int CClientMeetingAgent::startClient(int msqKey)
 {
 	_log(LOG_TAG" Connecting to MeetingAgent %s:%d", agentIp.c_str(), agentPort);
 
-	int nRet = connect(agentIp.c_str(), agentPort, msqKey);
+	int nRet = connectWithCallback(agentIp.c_str(), agentPort, msqKey, 
+		[](CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid) -> void
+	{
+		CClientMeetingAgent *self = dynamic_cast<CClientMeetingAgent *>(caller);
+		if (self == nullptr)
+		{
+			_log(LOG_TAG" startClient() cast failed on callback");
+			return;
+		}
+
+		//_log(LOG_TAG" startClient() Set receivers thread name");
+
+		std::string msgThreadName = "AgentMsgRecv";
+		std::string pktThreadName = "AgentPktRecv";
+
+		pthread_setname_np(msgRecvTid, msgThreadName.c_str());
+		pthread_setname_np(pktRecvTid, pktThreadName.c_str());
+
+	});
+
 	if (nRet < 0)
 	{
 		_log(LOG_TAG" startClient() Connecting to agent FAILED");
@@ -123,7 +144,10 @@ void CClientMeetingAgent::stopClient()
 		return;
 	}
 
-	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);	
+	// server does response to unbind_request
+	// receive unbind_response may cause segmentation fault on client
+	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
+
 	stop();
 
 	//_DBG(LOG_TAG" stopClient() step out");
@@ -338,14 +362,20 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	return TRUE;
 }
 
-/*void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
+void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
 {
-	_DBG(LOG_TAG" onServerDisconnect() step in");
-	stopClient();
-	_DBG(LOG_TAG" onServerDisconnect() step out");
-}*/
+	//_DBG(LOG_TAG" onServerDisconnect() step in");
+	CCmpClient::onServerDisconnect(nSocketFD);
+
+	// let CController decide what to do when disconnected
+	_log(LOG_TAG" Server actively disconnected");
+	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT,
+		0, 0, NULL);
+	
+	//_DBG(LOG_TAG" onServerDisconnect() step out");
+}
 
 std::string CClientMeetingAgent::taskName()
 {
-	return "ClientAgent";
+	return TASK_NAME;
 }

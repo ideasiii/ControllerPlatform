@@ -31,6 +31,7 @@ protected:
 	// AMX controller 送來驗證 token 是否有效的請求
 	int onAuthenticationRequest(int nSocket, int nCommand, int nSequence, const void *szBody) override;
 
+	void onServerDisconnect(unsigned long int nSocketFD) override;
 	std::string taskName() override;
 
 private:

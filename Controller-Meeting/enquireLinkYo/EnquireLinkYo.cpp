@@ -185,7 +185,7 @@ void EnquireLinkYo::run()
 		}
 		else
 		{
-			_log(LOG_TAG" %s run() Send enquire link failed, result = %d\n", yoIdentifier.c_str(), nRet);
+			_log(LOG_TAG" %s run() Send enquire link failed, result = %d", yoIdentifier.c_str(), nRet);
 			informEnquireLinkFailure();
 			
 			// socket 壞了，只能退出迴圈

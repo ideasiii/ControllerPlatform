@@ -39,7 +39,7 @@ private:
 	std::unique_ptr<CClientAmxController> amxControllerClient;
 
 	std::atomic<pthread_t> agentConnectingThreadId;
-	std::atomic<pthread_t> amxReconnectThreadId;
+	std::atomic<pthread_t> amxConnectingThreadId;
 
 	//int initAgentClient();
 	int initAgentClient(std::unique_ptr<CConfig>& config);

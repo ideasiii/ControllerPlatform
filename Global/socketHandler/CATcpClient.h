@@ -26,6 +26,7 @@ class CATcpClient: public CSocket, public CObject
 
 public:
 	int connect(const char* cszAddr, short nPort, int nMsqKey);
+
 	void stop();
 	void closeServer();
 	void runMessageReceive();
@@ -39,6 +40,10 @@ protected:
 	void setIdleTimeout(int nSeconds);
 	void runIdleTimeout(bool bRun);
 
+	// 本方法給予 caller 在接收訊息的 thread 建立時有機會可以進行額外處理
+	int connectWithCallback(const char* cszAddr, short nPort, int nMsqKey,
+		void(*onReceiverThreadsCreated)(CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid));
+	
 	/**
 	 * Overload function
 	 */
@@ -76,13 +81,13 @@ protected:
 	virtual std::string taskName();
 
 private:
-	int IDLE_TIMEOUT; // secons
+	int IDLE_TIMEOUT; // seconds
 
 	int mnExtMsqKey;
 	void checkIdle();
 	void updateClientAlive();
 
-	int mnMsqKey; // Message queue key and filter ID.
+	int mnMsqKey; // Message queue key.
 	unsigned long munRunThreadId; // Message queue run thread ID.
 
 	SOCKET_SERVER mSocketServer;

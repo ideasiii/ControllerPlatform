@@ -210,19 +210,15 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 		nSequence = ntohl(cmpHeader.sequence_number);
 		nStatus = ntohl(cmpHeader.command_status);
 
-		if (	enquire_link_request == nCommand)
+		if (enquire_link_request == nCommand)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
-		/*	if ( enquire_link_response == nCommand)
-		 {
-		 return 1;
-		 }*/
-
+				
 		map<int, MemFn>::iterator iter;
 		iter = mapFunc.find(nCommand);
 
-		//if is a request && unkonown request
+		// if a request && unkonown request
 		if (mapFunc.end() == iter && (generic_nack != (generic_nack & nCommand)))
 		{
 			return response(nSocketFD, nCommand, STATUS_RINVCMDID, nSequence, 0);

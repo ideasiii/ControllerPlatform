@@ -10,6 +10,7 @@
 #include "JSONObject.h"
 #include "LogHandler.h"
 
+#define TASK_NAME "ClientAMX"
 #define LOG_TAG "[CClientAmxController]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientAmxController\033[0m]"
 
@@ -30,7 +31,26 @@ int CClientAmxController::startClient(int msqKey)
 	_log(LOG_TAG" Connecting to AMX controller validation service %s:%d",
 		serverIp.c_str(), validationPort);
 
-	int nRet = connect(serverIp.c_str(), validationPort, msqKey);
+	int nRet = connectWithCallback(serverIp.c_str(), validationPort, msqKey,
+		[](CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid) -> void
+	{
+		CClientAmxController *self = dynamic_cast<CClientAmxController *>(caller);
+		if (self == nullptr)
+		{
+			_log(LOG_TAG" startClient() cast failed on callback");
+			return;
+		}
+
+		//_log(LOG_TAG" startClient() Set receivers thread name");
+
+		std::string msgThreadName = "AmxMsgRecv";
+		std::string pktThreadName = "AmxPktRecv";
+
+		pthread_setname_np(msgRecvTid, msgThreadName.c_str());
+		pthread_setname_np(pktRecvTid, pktThreadName.c_str());
+
+	});
+
 	if (nRet < 0)
 	{
 		_log(LOG_TAG" startClient() Connecting to AMX controller FAILED");
@@ -160,6 +180,19 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 	return when >= tokenValidFrom && when <= tokanGoodThrough;
 }
 
+void CClientAmxController::onServerDisconnect(unsigned long int nSocketFD)
+{
+	//_DBG(LOG_TAG" onServerDisconnect() step in");
+	CCmpClient::onServerDisconnect(nSocketFD);
+
+	// let CController decide what to do when disconnected
+	_log(LOG_TAG" Server actively disconnected");
+	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX,
+		0, 0, NULL);
+
+	//_DBG(LOG_TAG" onServerDisconnect() step out");
+}
+
 std::string CClientAmxController::getServerIp()
 {
 	return serverIp;
@@ -177,5 +210,5 @@ int CClientAmxController::getValidationPort()
 
 std::string CClientAmxController::taskName()
 {
-	return "ClientAMX";
+	return TASK_NAME;
 }
