@@ -56,3 +56,8 @@ apt-get install mongodb-dev libmongo-client-dev
 ipcs -q
 #remove IPC
 ipcrm -q [msq_id]
+
+# vi
+%s/[A-Z]\[edit\]/\1/g
+%s/\[.*\]/\1/g
+%s/\(.*\)/\1/g

@@ -1,0 +1,24 @@
+bBusy：布林型
+cApples：專案計數
+dwLightYears：雙字（系統）
+fBusy：布林型（標記）
+nSize：整型（系統）或計數（應用程式）
+iSize：整型（系統）或索引（應用程式）
+fpPrice：浮點數
+dbPi：雙精度浮點數（系統）
+pFoo：指標
+rgStudents：陣列或範圍
+szLastName：零結束字串
+u32Identifier：無符號32位元整型（系統）
+stTime：時鐘結構
+fnFunction：函式名
+對於指標和陣列來說，它們實際上並不是資料類型，因此通常在助憶碼後面跟著實際元素的類型。
+pszOwner：指向零結束字串的指標
+rgfpBalances：浮點值的陣列
+由於匈牙利命名法可以被應用在任何程式設計語言和環境中，因此被微軟廣泛用在C語言中，特別是在Microsoft Windows裡。由此一來，許多常見的匈牙利命名法的結構都和Windows緊密相關：
+hwndFoo：窗口控制代碼
+lpszBar：指向零結束字串的長指標
+這種命名法又是在C++中被擴充功能而包含變數的作用域，由一個底線隔開：
+g_nWheels：全局命名空間的成員，整型
+m_nWheels：結構體／類別成員，整型
+

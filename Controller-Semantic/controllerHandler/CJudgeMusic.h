@@ -24,6 +24,7 @@ private:
 	std::map<int, pFnGetArtist> mappFnGetArtist;
 	std::set<std::set<std::string> > setArtist;
 	std::string getArtist(const char *szWord);
+	void loadArtistDictionary();
 //	std::string getArtist(const char *szWord, std::set<std::string> &setData);
 //	std::string getArtistTaiwan(const char *szWord);
 //	std::string getArtistEnglish(const char *szWord);

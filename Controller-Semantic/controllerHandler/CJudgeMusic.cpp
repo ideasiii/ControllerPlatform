@@ -5,8 +5,6 @@
  *      Author: root
  */
 
-#include <dic_music_artist_female_en.h>
-#include <dic_music_artist_male_en.h>
 #include <algorithm>
 #include <string>
 #include <set>
@@ -18,20 +16,13 @@
 #include "dic_semantic.h"
 #include "config.h"
 #include "CSpotify.h"
+#include "CFileHandler.h"
 
 using namespace std;
 
 CJudgeMusic::CJudgeMusic()
-
 {
-	int nIndex = 0;
-//	mappFnGetArtist[nIndex] = &CJudgeMusic::getArtistTaiwan;
-//	mappFnGetArtist[++nIndex] = &CJudgeMusic::getArtistEnglish;
-//	mappFnGetArtist[++nIndex] = &CJudgeMusic::getArtistEnglishFemale;
-//	//mappFnGetArtist[++nIndex] = &CJudgeMusic::getArtistEnglishMale;
-
-	setArtist.insert(setArtistEnglishFemale);
-	setArtist.insert(setArtistEnglishMale);
+	loadArtistDictionary();
 }
 
 CJudgeMusic::~CJudgeMusic()
@@ -47,13 +38,6 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 	string strTrackUri;
 
 	strArtist = getArtist(szInput);
-
-//	strArtist = getArtistTaiwan(szInput);
-//	if(strArtist.empty())
-//		strArtist = getArtistEnglish(szInput);
-//
-//	if(strArtist.empty())
-//		strArtist = getArtistEnglishFemale(szInput);
 
 	if(!strArtist.empty())
 	{
@@ -168,49 +152,14 @@ string CJudgeMusic::getArtist(const char *szWord)
 	return strArtist;
 }
 
-/*
- string CJudgeMusic::getArtist(const char *szWord, set<string> &setData)
- {
- string strWord;
- string strValue;
- string strArtist;
- set<string>::const_iterator it_set;
+void CJudgeMusic::loadArtistDictionary()
+{
+	CFileHandler fh;
 
- if(!strWord.empty())
- {
- transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
- for(it_set = setData.begin(); setData.end() != it_set; ++it_set)
- {
- strValue = *it_set;
- transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
- if(string::npos != strWord.find(strValue))
- {
- strArtist = strValue;
- _log("[CJudgeMusic] getArtist Find Artist: %s", strValue.c_str());
- break;
- }
- }
- }
-
- return strArtist;
- }
- */
-//string CJudgeMusic::getArtistTaiwan(const char *szWord)
-//{
-//	return getArtist(szWord, setArtistTaiwan);
-//}
-//
-//string CJudgeMusic::getArtistEnglish(const char *szWord)
-//{
-//	return getArtist(szWord, setArtistEnglish);
-//}
-//
-//string CJudgeMusic::getArtistEnglishFemale(const char *szWord)
-//{
-//	return getArtist(szWord, setArtistEnglishFemale);
-//}
-//
-//string CJudgeMusic::getArtistEnglishMale(const char *szWord)
-//{
-//	return "ss"; //getArtist(szWord, setArtistEnglishMale);
-//}
+	for(map<string, set<string> >::iterator it = mapArtistDic.begin(); mapArtistDic.end() != it; ++it)
+	{
+		fh.readAllLine(it->first.c_str(), it->second);
+		setArtist.insert(it->second);
+		_log("[CJudgeMusic] loadArtistDictionary From: %s Count: %d", it->first.c_str(), it->second.size());
+	}
+}
