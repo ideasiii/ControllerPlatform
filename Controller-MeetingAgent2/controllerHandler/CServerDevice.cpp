@@ -22,6 +22,17 @@ int CServerDevice::onFCMIdRegister(int nSocket, int nCommand, int nSequence, con
 
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
+	const char *pBody = reinterpret_cast<const char*>(szBody);
+	string szData = pBody;
+	if (!szData.empty())
+	{
+		Message message;
+		message.what = MESSAGE_EVENT_DEVICE_SERVER;
+		message.arg[0] = MESSAGE_FILITER_FCM_ID;
+		message.strData = szData.c_str();
+		mpController->sendMessage(message);
+	}
+
 	return TRUE;
 }
 
@@ -30,6 +41,17 @@ int CServerDevice::onFBToken(int nSocket, int nCommand, int nSequence, const voi
 	_DBG("[CServerDevice]cmpFBToken");
 
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+
+	const char *pBody = reinterpret_cast<const char*>(szBody);
+	string szData = pBody;
+	if (!szData.empty())
+	{
+		Message message;
+		message.what = MESSAGE_EVENT_DEVICE_SERVER;
+		message.arg[0] = MESSAGE_FILITER_FB_TOKEN;
+		message.strData = szData.c_str();
+		mpController->sendMessage(message);
+	}
 
 	return TRUE;
 }
@@ -91,12 +113,10 @@ int CServerDevice::onGetMeetingData(int nSocket, int nCommand, int nSequence, co
 	return TRUE;
 }
 
-
 void CServerDevice::sendCommand(int socketFD, int commandID, int seqNum, std::string bodyData)
 {
 
 	response(socketFD, commandID, STATUS_ROK, seqNum, bodyData.c_str());
-
 
 }
 
@@ -120,7 +140,6 @@ CMPData CServerDevice::parseCMPData(int nSocket, int nCommand, int nSequence, co
 {
 
 	const char *pBody = reinterpret_cast<const char*>(szBody);
-
 
 	if (pBody)
 	{

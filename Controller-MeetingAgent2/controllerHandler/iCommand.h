@@ -1,7 +1,9 @@
-
 #pragma once
 
 #define CB_MEETING_COMMAND			1
 #define CB_DEVCIE_COMMAND			2
 
+#define MESSAGE_EVENT_DEVICE_SERVER 3
+#define MESSAGE_FILITER_FB_TOKEN 	11
+#define MESSAGE_FILITER_FCM_ID   	12
 

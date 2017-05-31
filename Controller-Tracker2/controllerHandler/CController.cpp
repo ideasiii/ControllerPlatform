@@ -22,7 +22,7 @@
 #include "JSONObject.h"
 #include "LogHandler.h"
 
-#define ENQUIRE_LINK_TIME 60
+#define ENQUIRE_LINK_TIME 10
 
 using namespace std;
 

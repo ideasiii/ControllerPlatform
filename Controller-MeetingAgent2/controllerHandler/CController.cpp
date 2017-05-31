@@ -134,6 +134,45 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 }
 
+void CController::onHandleMessage(Message &message)
+{
+	int nRet;
+	_log("[controller] get onHandleMessage: %s", message.strData.c_str());
+
+	switch (message.what)
+	{
+	//handle device client message
+	case MESSAGE_EVENT_DEVICE_SERVER:
+
+		switch (message.arg[0])
+		{
+		case MESSAGE_FILITER_FB_TOKEN:
+			//call http client to send data to SER
+
+
+			break;
+
+		case MESSAGE_FILITER_FCM_ID:
+			//call FCM Controller to send data
+
+
+
+			break;
+		default:
+
+
+
+			break;
+
+		}
+
+		break;
+	default:
+		break;
+
+	}
+}
+
 int CController::startServerMeeting(string strIP, const int nPort, const int nMsqId)
 {
 	serverMeeting = new CServerMeeting(this);
@@ -146,7 +185,7 @@ int CController::startServerMeeting(string strIP, const int nPort, const int nMs
 	}
 	else
 	{
-		serverMeeting->start(0, nPort, nMsqId);
+		return serverMeeting->start(0, nPort, nMsqId);
 	}
 }
 

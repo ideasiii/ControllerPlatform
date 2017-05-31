@@ -56,7 +56,7 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 
 	if (mapClient.size() > 0)
 	{
-		nSocket = mapClient.front();
+		nSocket = mapClient.end();
 	}
 	int nRet = 0;
 
@@ -101,7 +101,7 @@ int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const voi
 {
 	deleteClient(nSocket);
 
-	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	//response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
 

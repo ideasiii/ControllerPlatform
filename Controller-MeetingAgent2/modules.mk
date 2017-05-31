@@ -17,6 +17,7 @@ export MODULES=controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
+../Global/httpHanndler \
 ../Global/protocolHandler
 			 
 #export EXT_MODULES=extInclude

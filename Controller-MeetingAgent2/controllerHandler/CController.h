@@ -39,6 +39,7 @@ protected:
 	 *  Main Process terminator will callback onFinish
 	 */
 	int onFinish(void* nMsqKey);
+	void onHandleMessage(Message &message);
 
 	void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 private:
