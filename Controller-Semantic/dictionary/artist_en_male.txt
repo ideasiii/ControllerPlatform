@@ -31,6 +31,7 @@ Adrian Chirtea
 Adrian Marcel
 Adrian Zmed
 A. J. Masters
+AJ McLean
 A.J. Trauth
 Aki Aleong
 Alan Dale
@@ -57,6 +58,7 @@ Alec Seward
 Alessi Brothers
 Alexander Noyes
 Alex Boye
+Alex Briley
 Alex Call
 Alex Chilton
 Alex DeLaszlo
@@ -88,6 +90,7 @@ Alvin Cash
 Alvin Slaughter
 Alvin Youngblood Hart
 Al Wilson
+AM
 Amtrac
 Anders Manga
 Anderson East
@@ -166,6 +169,7 @@ Austin Brown
 Austin Butler
 Austin Carlile
 Austin Lucas
+Austin Mahone
 Austin Roberts
 Austin Webb
 Avey Tare
@@ -202,6 +206,8 @@ Ben Bledsoe
 Ben Bridwell
 Ben Briley
 Ben Deily
+Ben E. King
+Ben Folds
 Ben Gage
 Ben Harper
 Benjamin Carr
@@ -286,6 +292,7 @@ Billy Hinsche
 Billy Hodges
 Billy Hoffman
 Billy Howerdel
+Billy Joel
 Billy Kersands
 Billy Lewis Jr
 Billy Montana
@@ -324,15 +331,18 @@ Blind John Davis
 Blind Lemon Jefferson
 Blind Willie Johnson
 Blues Boy Willie
+B.o.B
 Bob Ayala
 Bobby Bandiera
 Bobby Bare
 Bobby Bennett
 Bobby Bland
+Bobby Brown
 Bobby Clark
 Bobby Darin
 Bobby Doyle
 Bobby E. Denton
+Bobby Edner
 Bobby Fuller
 Bobby Goldsboro
 Bobby G. Rice
@@ -401,6 +411,7 @@ Bob Wills
 Bo Carter
 Booba Barnes
 Boo Boo Davis
+Booboo Stewart
 Boogie Bill Webb
 Boogie Woogie Red
 Booker Newberry III
@@ -408,6 +419,7 @@ Booker T. Jones
 Booker T. Laury
 Boots
 Bootsy Collins
+Borns
 Bo Weavil Jackson
 Bow Thayer
 Boxcar Willie
@@ -416,6 +428,7 @@ Boy Eats Drum Machine
 Brad Bell
 Brad Cotter
 Brad Hawkins
+Brad Howell
 Brad Kane
 Bradley Fish
 Bradley Gaskin
@@ -468,6 +481,7 @@ Brian Hyland
 Brian Joo
 Brian Justin Crum
 Brian Kelley
+Brian Littrell
 Brian Maes
 Brian Marquis
 Brian O'Connor (bassist)
@@ -564,6 +578,7 @@ Cas Haley
 Cash McCall
 Cat Iron
 CeCe Rogers
+CeeLo Green
 Chad Ackerman
 Chad Price
 Chance McKinney
@@ -615,11 +630,13 @@ Chris Barnes
 Chris Batstone
 Chris Beard
 Chris Blue
+Chris Brown
 Chris Caffery
 Chris Christian
 Chris Cohen
 Chris Colfer
 Chris Collins
+Chris Crocker
 Chris Crosby
 Chris D.
 Chris Daughtry
@@ -630,6 +647,7 @@ Chris Hart
 Chris Hawkes
 Chris Jamison
 Chris Janson
+Chris Kirkpatrick
 Chris Lane
 Chris Lowell
 Chris McCaughan
@@ -665,6 +683,7 @@ Chris Volpe
 Chris Volz
 Chris Walker
 Chris Walla
+Chris Wallace
 Chris Ward
 Chris Warren
 Chris Young
@@ -690,6 +709,7 @@ Claude Coleman Jr.
 Claude Jeter
 Claude King
 Claudio Sanchez
+Clay Aiken
 Clay Blaker
 Claybourne Elder
 Clay Hammond
@@ -712,12 +732,14 @@ Cole Swindell
 Cole Vosbury
 Colin Steele
 Colonel Robert Morris
+Colton Ford
 Colt Prather
 Con Hunley
 Conway Twitty
 Cooper Boone
 Cooter Brown
 Cootie Stark
+Corbin Bleu
 Cordell Reagon
 Corey Smith
 Corey Stevens
@@ -855,6 +877,7 @@ Dave Williams
 Dave Wyndorf
 Davey von Bohlen
 David Allan Coe
+David Archuleta
 David Ball
 David Batteau
 David Blue
@@ -869,9 +892,11 @@ David Fanning
 David Frizzell
 David Geddes
 David Haskell
+David Hasselhoff
 David Hernandez
 David Hidalgo
 David Hodo
+David Homyk
 David Honeyboy Edwards
 David Houston
 David Humphrey
@@ -967,6 +992,7 @@ Dijon Prioleau
 Dimitri Minakakis
 Dino
 Dion DiMucci
+Divine
 Dizzy Gillespie
 Dobie Gray
 Doc Pomus
@@ -1018,6 +1044,7 @@ Doug Stone
 Doug Yule
 Doyle Bramhall
 Doyle Lawson
+Drake Bell
 Drake White
 Dre
 Drew Carey
@@ -1025,6 +1052,7 @@ Drew Holcomb and The Neighbors
 Drew Lachey
 Driftin' Slim
 Drink Small
+Dr. Luke
 D. S. Bradford
 Duane Dee
 Duane Harden
@@ -1084,6 +1112,7 @@ Eddie St. James
 Eddie Vedder
 Eddie Vinson
 Eddy Howard
+Eddy Oh
 Edmund Sylvers
 Edsel Dope
 Edward Everett Horton
@@ -1093,6 +1122,7 @@ Edward Meeker
 Edward M. Favor
 Edward W. Clayborn
 Efrem Schulz
+EJay Day
 Elan Atias
 El DeBarge
 Elder Roma Wilson
@@ -1128,6 +1158,7 @@ Eric Kunze
 Eric Lindley
 Eric Martin
 Eric Melvin
+Eric Nam
 Eric Paslay
 Eric Redd
 Eric Sage
@@ -1189,6 +1220,7 @@ Frankie Lymon
 Frankie Negrón
 Frankie Randall
 Frank Iero
+Frankie Valli
 Frank Loverde
 Frank Luther
 Franklyn Baur
@@ -1260,6 +1292,7 @@ Gene Mayl
 Gene McDaniels
 Gene McDonald
 Gene Phillips
+Gene Pitney
 Gene Puerling
 General Crook
 Gene Summers
@@ -1313,6 +1346,7 @@ Gerry Granahan
 Gerry Hundt
 Gerry Rosenthal
 Gibby Haynes
+Gil Bernal
 Gino Washington
 Glen Campbell
 Glen Carroll
@@ -1331,6 +1365,7 @@ Glen Templeton
 Goat
 Golden Big Wheeler
 Goldroom
+Gone Thursday
 Good Rockin' Charles
 Gordon Gano
 Gordon Vaughn
@@ -1364,6 +1399,7 @@ Gregory Raposo
 Greg Otterholt
 Greg Puciato
 Greg X. Volz
+Greyson Chance
 G.Soul
 Guitar Gable
 Guitar Slim, Jr.
@@ -1402,6 +1438,7 @@ Harold Dorman
 Harout Pamboukjian
 Harry Belafonte
 Harry Benham
+Harry Connick Jr.
 Harry Crosby
 Harry Dean Stanton
 Harry Jackson (artist)
@@ -1409,6 +1446,7 @@ Harry Prime
 Harry Stewart
 Harry Tuft
 Harry von Zell
+Harry Wayne Casey
 Harve Pierre
 Hawkshaw Hawkins
 Hayden Thompson
@@ -1436,6 +1474,7 @@ Howard Fishman
 Howard Kaylan
 Howard Luedtke
 Howard McCrary
+Howie D.
 Howie Stange
 Howlin' Wolf
 How to Dress Well
@@ -1444,6 +1483,7 @@ Hubert Sumlin
 Hubert Tubbs
 Hugh Pool
 Hugo Ferreira
+Hulk Hogan
 Hunter Foster
 Ian Erix
 Ian Lloyd
@@ -1470,16 +1510,20 @@ Jack Evans
 Jackey Beavers
 Jack Grayson
 Jack Greene
+Jack Griffo
 Jack Grisham
 Jackie Jackson
 Jackie Lee (country singer)
 Jackie Payne
+Jack Jones
 Jack Lewis
 Jack Little
 Jack Owens (blues singer)
 Jack Pepper
 Jack Russell
 Jack Sheldon
+Jackson Browne
+Jack Splash
 Jack Wagner
 Jack White
 Jack Woodbridge
@@ -1496,6 +1540,7 @@ Jaime Crespo
 Jake Andrews
 Jake Busey
 Jake Childs
+Jake Davis
 Jake Hamilton
 Jake Holmes
 Jake Shears
@@ -1556,7 +1601,9 @@ Jason Aalon Butler
 Jason Aldean
 Jason Alexander
 Jason C. Miller
+Jason Derulo
 Jason Downs
+Jason Evigan
 Jason Hill
 Jason Jones (country singer)
 Jason Paige
@@ -1582,6 +1629,7 @@ Jay Osmond
 Jay Perez
 Jay Reatard
 Jay Traynor
+JC Chasez
 J.C. Jones
 J. Dash
 J.D. Stooks
@@ -1639,6 +1687,7 @@ Jerry Jeff Walker
 Jerry Keller
 Jerry Knight
 Jerry Lawson
+Jerry Lee Lewis
 Jerry Miller
 Jerry Naylor
 Jerry Reed
@@ -1691,6 +1740,7 @@ Jimmie Rodgers (pop singer)
 Jimmie Spheeris
 Jimmy Boyd
 Jimmy Bryant
+Jimmy Buffett
 Jimmy Burns
 Jimmy Charles
 Jimmy Clanton
@@ -1747,6 +1797,7 @@ J.J. Malone
 JJ Polachek
 J. Mack Slaughter Jr.
 J Metro
+JMSN
 Joaquin Berrios
 Jobriath
 Jody Stecher
@@ -1797,9 +1848,11 @@ Joe Willie Wilkins
 Joey Allcorn
 Joey Arias
 Joey Cape
+Joey Fatone
 Joey Graceffa
 Joey McIntyre
 Joey Pearson
+Joey Powers
 Joey Richter
 Joey Scarbury
 Johannes von Trapp
@@ -1881,6 +1934,7 @@ Johnny Horton
 Johnny Lee
 Johnny Legend
 Johnny Mars
+Johnny Mathis
 Johnny Minick
 Johnny O
 Johnny Pacar
@@ -1955,11 +2009,13 @@ Jonny Craig
 Jonny Martinez
 Jon Oliva
 Jon Pardi
+Jon Peter Lewis
 Jon Randall
 Jon Spencer
 Jon Wolfe
 Jordan Blilie
 Jordan Christopher
+Jordan Fisher
 Jordan Laws
 Jordan Rager
 Jose Hernández
@@ -2013,6 +2069,7 @@ Justin Guarini
 Justin McBride
 Justin Nozuka
 Justin Sane
+Justin Timberlake
 Justin Utley
 Justin Warfield
 Justin Wells
@@ -2076,9 +2133,11 @@ Kevin McHale
 Kevin Moore
 Kevin Paige
 Kevin Raleigh
+Kevin Richardson
 Kevin Roth
 Kevin Sharp
 Kevin Skinner
+Kevin Woo
 Khalil
 Kid Bailey
 Kid Beyond
@@ -2100,6 +2159,7 @@ Kix Brooks
 Klayton
 Knox Summerour
 Kouros Shahmiri
+Kris Allen
 Kris Jensen
 Kris Kristofferson
 Kris Thomas
@@ -2122,6 +2182,7 @@ Lacy Gibson
 Lajon Witherspoon
 Lâm Nhật Tiến
 Lamonte McLemore
+Lance Bass
 Lance Diamond
 Lance King
 Lane Caudell
@@ -2142,6 +2203,7 @@ Larry Kert
 Larry McCray
 Larry Ramos
 Larry Riley
+Larry Santos
 Larry Sparks
 Larry Thurston
 Larry Verne
@@ -2285,6 +2347,7 @@ Luther Johnson (Guitar Junior)
 Luther Kent
 Luther Snake Boy Johnson
 Luther Vandross
+Luxxury
 L.V. Banks
 L.V. Johnson
 Mac Davis
@@ -2406,6 +2469,7 @@ Matt Walden
 Matt White
 Matty Lewis
 Maurice Stern
+Maurice White
 Max Carl
 Max Collins
 Max Jury
@@ -2431,6 +2495,7 @@ Merle Kilgore
 Merle Travis
 Merrill Osmond
 Merton (YouTube)
+Michael Alig
 Michael Allen Harrison
 Michael Barimo
 Michael Bradley
@@ -2492,6 +2557,7 @@ Mike Bloomfield
 Mike Brewer
 Mike Burstyn
 Mike D
+Mike DelGuidice
 Mike Dirnt
 Mike Doughty
 Mike Einziger
@@ -2553,6 +2619,7 @@ Nathan Beauregard
 Nathaniel Mayer
 Nathan Leone
 Nathan Stickman
+Nat King Cole
 Neal E. Boyd
 Neal Matthews Jr.
 Neal Middleton
@@ -2561,12 +2628,15 @@ Ned Brower
 Neil Fallon
 Neil Patrick Harris
 Neil Sabatino
+Neilson Hubbard
 Nelson Sardelli
 Nersik Ispiryan
 Nervous Norvus
 Ne-Yo
 Nicco
+Nichkhun
 Nicholas David
+Nick Carter
 Nick Fowler
 Nick Fradiani
 Nick Gravenites
@@ -2645,6 +2715,7 @@ Patrick Lee Hammond
 Patrick Simmons
 Patrick Stump
 Paul Amorese
+Paul Anka
 Paul Baloff
 Paul Banks
 Paul Black
@@ -2665,6 +2736,7 @@ Paul Parker
 Paul Petersen
 Paul Shaffer
 Paul Sikes
+Paul Simon
 Paul Smith (Christian music singer)
 Paul Sykes
 Paul Thorn
@@ -2673,6 +2745,7 @@ Paul Westerberg
 Paul Williams
 Paul Wine Jones
 Peetie Wheatstraw
+Pee Wee
 Pee Wee Crayton
 Pepe Aguilar
 Pepper Keenan
@@ -2693,6 +2766,7 @@ Peter Keane
 Peter Laughner
 Peter Matthew Bauer
 Peter McCann
+Peter Pou
 Peter Rowan
 Peter Sacco
 Peter Stampfel
@@ -2701,6 +2775,7 @@ Peter Van de Graaff
 Peter Yarrow
 Pete Wentz
 Phideaux Xavier
+Phil Campos
 Phil Cook
 Phil Demmel
 Phil Driscoll
@@ -2794,6 +2869,7 @@ Ray Sawyer
 Ray Scott
 Ray Sepúlveda
 Ray Simpson
+Ray Smith
 Ray Smith (rockabilly singer)
 Ray Stevens
 Ray Vega
@@ -2810,6 +2886,7 @@ Red Perkins
 Red Sovine
 Reese Roper
 Reggie Bannister
+Reggie Sears
 Regis Philbin
 Reid Ewing
 Rene Rancourt
@@ -2831,6 +2908,7 @@ Richard Fagan
 Richard Grieco
 Richard Lloyd
 Richard Lynch
+Richard Marx
 Richard Milner (historian)
 Richard Morel
 Richard Page
@@ -2913,6 +2991,7 @@ Robert Squirrel Lester
 Robert Sterling Arnold
 Rob Evan
 Rob Frazier
+Rob Hegel
 Robin Amos
 Robin Luke
 Robin McNamara
@@ -2921,6 +3000,7 @@ Robin Zander
 Rob Mathes
 Rob Paulsen
 Rob Rock
+Rob Thomas
 Robt Ptak
 Rob Tyner
 Rocky Burnette
@@ -2948,6 +3028,7 @@ Roland Stone
 Roman GianArthur
 Romeo Johnson
 Rome Ramirez
+Ronald Isley
 Ronald Townson
 Ronald White
 Ron Anderson
@@ -3008,8 +3089,10 @@ Russ Lorenson
 Russ Savakus
 Rusty Draper
 Rusty Goodman
+Rusty Hamer
 Rusty Wier
 Ryan Avery
+Ryan Beatty
 Ryan Bingham
 Ryan Cabrera
 Ryan Clark
@@ -3038,6 +3121,7 @@ Sam Kim
 Sam Lay
 Sammee Tong
 Sammie
+Sam Milby
 Sam Moore
 Sammy Arena
 Sammy Johns
@@ -3047,6 +3131,7 @@ Sammy Turner
 Sam Outlaw
 Sam Riggs
 Sam Taylor
+Sam Tsui
 Samuel Larsen
 Sam Woolf
 Sanford Sylvan
@@ -3219,6 +3304,7 @@ Tail Dragger Jones
 Taime Downe
 Taj Mahal
 Tank
+Tanner Cohen
 Taps Miller
 Tate Stevens
 Tauren Wells
@@ -3348,6 +3434,7 @@ Tommy Page
 Tommy Puett
 Tommy Rall
 Tommy Ridgley
+Tommy Sands
 Tommy Shaw
 Tommy Tucker
 Tommy Victor
@@ -3363,6 +3450,7 @@ Tom Wopat
 Tonio K
 Tony Arata
 Tony Bellus
+Tony Bennett
 Tony Butala
 Tony Campos
 Tony De La Rosa
@@ -3379,6 +3467,7 @@ Tony Martin
 Tony Martinez (Puerto Rican-American actor)
 Tony Melendez
 Tony Middleton
+Tony Orlando
 Tony Rice
 Tony Romano
 Tony Scotti
@@ -3387,6 +3476,7 @@ Tony Toliver
 Tony Vincent
 Tony Williams
 Too Tight Henry
+Tor Miller
 Torombolo
 Torrey Salter
 Toussaint McCall
@@ -3542,6 +3632,7 @@ William Clark Green
 William Ezell
 William Franklin
 William Gardner Hewes
+William Hung
 William L. Johnson
 William Michael Morgan
 William Moore
