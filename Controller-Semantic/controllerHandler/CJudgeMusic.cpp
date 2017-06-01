@@ -17,6 +17,7 @@
 #include "config.h"
 #include "CSpotify.h"
 #include "CFileHandler.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -38,7 +39,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 	string strTrack;
 	string strTrackUri;
 
-	strArtist = getArtist(szInput);
+	strArtist = trim(getArtist(szInput));
 
 	if(!strArtist.empty())
 	{
@@ -139,22 +140,22 @@ string CJudgeMusic::getArtist(const char *szWord)
 	set<set<string> >::iterator it_set;
 	set<string>::iterator it_set2;
 
-	strWord = szWord;
+	strWord = trim(szWord);
 
 	if(!strWord.empty())
 	{
+		transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 		for(it_set = setArtist.begin(); setArtist.end() != it_set; ++it_set)
 		{
 			for(it_set2 = it_set->begin(); it_set->end() != it_set2; ++it_set2)
 			{
-				strValue = *it_set2;
+				strValue = trim(*it_set2);
 				transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-				//_log("[CJudgeMusic] getArtist word: %s artist: %s", strWord.c_str(), strValue.c_str());
+				_log("[CJudgeMusic] getArtist word: %s artist: %s", strWord.c_str(), strValue.c_str());
 				if(!strValue.empty() && 0 < strValue.length() && string::npos != strWord.find(strValue))
 				{
-					strArtist = strValue;
 					_log("[CJudgeMusic] getArtist Find Artist: %s", strValue.c_str());
-					return strArtist;
+					return strValue;
 				}
 			}
 		}
