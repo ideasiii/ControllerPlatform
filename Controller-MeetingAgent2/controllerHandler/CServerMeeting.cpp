@@ -56,7 +56,7 @@ int CServerMeeting::sendCommand(int commandID, int seqNum, string bodyData)
 
 	if (mapClient.size() > 0)
 	{
-		nSocket = mapClient.end();
+		nSocket = mapClient.back();
 	}
 	int nRet = 0;
 
