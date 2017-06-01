@@ -144,10 +144,9 @@ void CClientMeetingAgent::stopClient()
 		return;
 	}
 
-	// server does response to unbind_request
-	// receive unbind_response may cause segmentation fault on client
+	// server will not response to unbind_request
+	// receiving unbind_response while destructing class may cause segmentation fault
 	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
-
 	stop();
 
 	//_DBG(LOG_TAG" stopClient() step out");
@@ -367,7 +366,7 @@ void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
 	//_DBG(LOG_TAG" onServerDisconnect() step in");
 	CCmpClient::onServerDisconnect(nSocketFD);
 
-	// let CController decide what to do when disconnected
+	// let CController decide what to do
 	_log(LOG_TAG" Server actively disconnected");
 	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT,
 		0, 0, NULL);

@@ -131,7 +131,7 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 
 	if (reqToken.empty() || reqId.empty())
 	{
-		_log(LOG_TAG" onAuthenticationRequest() Missed something in JSON");
+		_log(LOG_TAG" onAuthenticationRequest() Miss something in JSON");
 		response(getSocketfd(), nCommand, STATUS_RINVJSON, nSequence, NULL);
 		return TRUE;
 	}
@@ -185,7 +185,7 @@ void CClientAmxController::onServerDisconnect(unsigned long int nSocketFD)
 	//_DBG(LOG_TAG" onServerDisconnect() step in");
 	CCmpClient::onServerDisconnect(nSocketFD);
 
-	// let CController decide what to do when disconnected
+	// let CController decide what to do
 	_log(LOG_TAG" Server actively disconnected");
 	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX,
 		0, 0, NULL);
