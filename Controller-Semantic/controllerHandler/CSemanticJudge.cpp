@@ -41,7 +41,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	int nScore;
 	int nIndex;
 	int nSubject;
-	string strWord;
+//	string strWord;
 	CRankingHandler<int, int> ranking;
 
 	if(0 >= szInput)
@@ -53,47 +53,31 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	_log("[CSemanticJudge] word input: %s", szInput);
 
 	nScore = 0;
-	strWord = szInput;
+//	strWord = szInput;
 
-	/**
-	 *  情境1：故事
-	 */
-	nScore = mpJudgeStory->evaluate(strWord.c_str());
+//============== 故事 ================//
+	nScore = mpJudgeStory->evaluate(szInput);
 	ranking.add(CONTENT_STORY, nScore);
 	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
 
-	//mpJudgeStory->word(strWord.c_str(), jsonResp);
-	/**
-	 *  情境2：聽歌 From Spotify
-	 */
-	nScore = mpJudgeMusic->evaluate(strWord.c_str());
+//============== Spotify ================//
+	nScore = mpJudgeMusic->evaluate(szInput);
 	ranking.add(CONTENT_MUSIC_SPOTIFY, nScore);
 	_log("[CSemanticJudge] word - Judge Music Score: %d", nScore);
 
+//============== 積分比較 ================//
 	nTop = ranking.topValueKey();
 	_log("[CSemanticJudge] word Top Key is %d", nTop);
+
 	switch(nTop)
 	{
 	case CONTENT_STORY:
-		mpJudgeStory->word(strWord.c_str(), jsonResp);
+		mpJudgeStory->word(szInput, jsonResp);
 		break;
 	case CONTENT_MUSIC_SPOTIFY:
-		mpJudgeMusic->word(strWord.c_str(), jsonResp);
+		mpJudgeMusic->word(szInput, jsonResp);
 		break;
 	}
-
-//	if(string::npos != strWord.find("歌")) // spotify
-//	{
-//		JSONObject jsonSpotify;
-//		jsonSpotify.put("source", 2);
-//		jsonSpotify.put("album", "");
-//		jsonSpotify.put("artist", "");
-//		jsonSpotify.put("song", "");
-//		jsonSpotify.put("id", "spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
-//		jsonResp->put("type", TYPE_RESP_MUSIC);
-//		jsonResp->put("music", jsonSpotify);
-//		return TRUE;
-//	}
 
 	/**
 	 *  情境3：聽有關情緒關鍵字的音樂
@@ -126,5 +110,5 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 //		jsonResp->put("music", jsonMusic);
 //		return TRUE;
 //	}
-	return FALSE;
+	return TRUE;
 }

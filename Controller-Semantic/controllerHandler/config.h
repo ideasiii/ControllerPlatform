@@ -17,6 +17,7 @@
 #define TYPE_REQ_CONTROL			0x00000001
 #define TYPE_REQ_TALK				0x00000002
 #define TYPE_REQ_RECORD				0x00000003
+#define TYPE_REQ_MAX				0x00000004
 
 //==================================== 封包 Response 內容定義 =========================================//
 #define TYPE_RESP_UNKNOW			0x00000000
@@ -33,4 +34,7 @@
 #define VERB						0x00000002		// 動詞
 #define NOUN						0x00000003		// 名詞
 #define ADJECTIVE					0x00000004		// 形容詞
+
+//==================================== Spotify ========================================//
+#define SPOTIFY_CLIENT				"MzgyOTVjMmY1ZDNjNDM3MWI4MTFkZGZiMDA3NWRlODE6MWI4OWQxN2QyNjg4NDRkZGIyNWUzMWRiZmE1NzQzZjE="
 

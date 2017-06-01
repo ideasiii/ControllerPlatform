@@ -20,13 +20,20 @@ JSONArray::JSONArray(cJSON *pcJSON) :
 		mnExtPointObj(1)
 {
 	cjsonArray = pcJSON;
-	if (cjsonArray)
+	if(cjsonArray)
 		cjsonArray->type = cJSON_Array;
 }
 
 JSONArray::~JSONArray()
 {
 
+}
+
+bool JSONArray::isValid()
+{
+	if(cjsonArray)
+		return true;
+	return false;
 }
 
 void JSONArray::add(JSONObject &jsonObject)
@@ -83,9 +90,9 @@ bool JSONArray::getBoolean(int index, bool defaultValue)
 	bool bValue = defaultValue;
 
 	cJSON *value = cJSON_GetArrayItem(cjsonArray, index);
-	if (value && cJSON_Number == value->type)
+	if(value && cJSON_Number == value->type)
 	{
-		if (0 == value->valueint)
+		if(0 == value->valueint)
 			bValue = false;
 		else
 			bValue = true;
@@ -101,7 +108,7 @@ int JSONArray::getInt(int index, int defaultValue)
 {
 	int nValue = defaultValue;
 	cJSON *value = cJSON_GetArrayItem(cjsonArray, index);
-	if (value && cJSON_Number == value->type)
+	if(value && cJSON_Number == value->type)
 	{
 		nValue = value->valueint;
 	}
@@ -122,7 +129,7 @@ string JSONArray::getString(int index, string defaultValue)
 {
 	string strValue = defaultValue;
 	cJSON *value = cJSON_GetArrayItem(cjsonArray, index);
-	if (value && cJSON_String == value->type)
+	if(value && cJSON_String == value->type)
 	{
 		strValue = value->valuestring;
 	}
@@ -132,7 +139,7 @@ string JSONArray::getString(int index, string defaultValue)
 bool JSONArray::isNull(int index)
 {
 	cJSON *value = cJSON_GetArrayItem(cjsonArray, index);
-	if (value)
+	if(value)
 		return true;
 	return false;
 }
@@ -141,11 +148,11 @@ string JSONArray::toString()
 {
 	string strOut = "[";
 
-	for (int i = 0; i < this->size(); ++i)
+	for(int i = 0; i < this->size(); ++i)
 	{
 		JSONObject jsonItem(this->getJsonObject(i));
 		strOut += jsonItem.toString();
-		if (i != this->size() - 1)
+		if(i != this->size() - 1)
 		{
 			strOut += ",";
 		}
@@ -156,9 +163,9 @@ string JSONArray::toString()
 
 void JSONArray::release()
 {
-	if (mnExtPointObj)
+	if(mnExtPointObj)
 		return;
-	if (0 != cjsonArray)
+	if(0 != cjsonArray)
 	{
 		cJSON_Delete(cjsonArray);
 		cjsonArray = 0;

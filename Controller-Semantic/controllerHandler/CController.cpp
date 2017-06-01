@@ -19,18 +19,14 @@
 #include "CSemanticRecord.h"
 #include "packet.h"
 #include "JSONObject.h"
-
+#include "config.h"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0), semanticControl(0), semanticTalk(0), semanticRecord(0)
 {
-	semanticJudge = new CSemanticJudge(_OBJ(this));
-	semanticControl = new CSemanticControl(_OBJ(this));
-	semanticTalk = new CSemanticTalk(_OBJ(this));
-	semanticRecord = new CSemanticRecord(_OBJ(this));
-	cmpword = new CCmpWord(this);
+
 }
 
 CController::~CController()
@@ -40,22 +36,29 @@ CController::~CController()
 
 int CController::onCreated(void* nMsqKey)
 {
-	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC; //*(reinterpret_cast<int*>(nMsqKey));
+	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
+	semanticJudge = new CSemanticJudge(this);
+	semanticControl = new CSemanticControl(this);
+	semanticTalk = new CSemanticTalk(this);
+	semanticRecord = new CSemanticRecord(this);
+	cmpword = new CCmpWord(this);
 	return mnMsqKey;
 }
 
 int CController::onInitial(void* szConfPath)
 {
+	int nResult;
 	int nCount;
 	int nPort;
 	string strConfPath;
 	string strPort;
 	CConfig *config;
 
+	nResult = FALSE;
 	strConfPath = reinterpret_cast<const char*>(szConfPath);
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
 	if(strConfPath.empty())
-		return FALSE;
+		return nResult;
 
 	config = new CConfig();
 	if(config->loadConfig(strConfPath))
@@ -64,12 +67,12 @@ int CController::onInitial(void* szConfPath)
 		if(!strPort.empty())
 		{
 			convertFromString(nPort, strPort);
-			startCmpWordServer(nPort, mnMsqKey);
+			nResult = cmpword->start(0, nPort, mnMsqKey);
 		}
 	}
 	delete config;
 
-	return TRUE;
+	return nResult;
 }
 
 int CController::onFinish(void* nMsqKey)
@@ -83,53 +86,40 @@ int CController::onFinish(void* nMsqKey)
 	return TRUE;
 }
 
-int CController::startCmpWordServer(int nPort, int nMsqKey)
+void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence, const int nId, const int nType,
+		const char *szWord)
 {
-	return cmpword->start(0, nPort, nMsqKey);
+	JSONObject *jsonResp = new JSONObject;
+
+	switch(nType)
+	{
+	case TYPE_REQ_NODEFINE: // 語意判斷
+		semanticJudge->word(szWord, jsonResp);
+		break;
+	case TYPE_REQ_CONTROL: // 控制
+		semanticControl->word(szWord, jsonResp);
+		break;
+	case TYPE_REQ_TALK: // 會話
+		semanticTalk->word(szWord, jsonResp);
+		break;
+	case TYPE_REQ_RECORD: // 紀錄
+		semanticRecord->word(szWord, jsonResp);
+		break;
+	default:
+		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
+		return;
+	}
+	jsonResp->put("id", nId);
+	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence, jsonResp->toString().c_str());
 }
 
 void CController::onHandleMessage(Message &message)
 {
-	int nWhat;
-	int nId;
-	int nSocket;
-	int nSequence;
-	string strWord;
-	JSONObject* jsonResp;
-
-	nSocket = message.arg[0];
-	nSequence = message.arg[1];
-	nId = message.arg[2];
-	nWhat = message.what;
-	strWord = message.strData;
-
-	if(strWord.empty())
+	switch(message.what)
 	{
-		cmpword->response(nSocket, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
-		return;
+	case semantic_word_request:
+		onSemanticWordRequest(message.arg[0], message.arg[1], message.arg[2], message.arg[3], message.strData.c_str());
+		break;
+
 	}
-
-	jsonResp = new JSONObject();
-
-	switch(nWhat)
-	{
-	case 0: // 語意判斷
-		semanticJudge->word(strWord.c_str(), jsonResp);
-		break;
-	case 1: // 控制
-		semanticControl->word(strWord.c_str(), jsonResp);
-		break;
-	case 2: // 會話
-		semanticTalk->word(strWord.c_str(), jsonResp);
-		break;
-	case 3: // 紀錄
-		semanticRecord->word(strWord.c_str(), jsonResp);
-		break;
-	default:
-		jsonResp->put("type", 0);
-		break;
-	}
-
-	jsonResp->put("id", nId);
-	cmpword->response(nSocket, semantic_word_request, STATUS_ROK, nSequence, jsonResp->toString().c_str());
 }

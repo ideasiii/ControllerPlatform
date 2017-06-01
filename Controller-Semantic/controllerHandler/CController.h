@@ -23,19 +23,13 @@ public:
 
 protected:
 	int onCreated(void* nMsqKey);
-	/**
-	 *  Main Process run will callback onInitial
-	 */
 	int onInitial(void* szConfPath);
-
-	/*
-	 *  Main Process terminator will callback onFinish
-	 */
 	int onFinish(void* nMsqKey);
 	void onHandleMessage(Message &message);
 
 private:
-	int startCmpWordServer(int nPort, int nMsqKey);
+	void onSemanticWordRequest(const int nSocketFD, const int nSequence, const int nId, const int nType,
+			const char *szWord);
 
 private:
 	int mnMsqKey;

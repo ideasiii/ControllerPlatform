@@ -39,6 +39,7 @@ public:
 	bool isNull(int index);
 	string toString();
 	void release();
+	bool isValid();
 
 private:
 	cJSON * cjsonArray;

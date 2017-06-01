@@ -2,7 +2,7 @@
  * CCmpWord.cpp
  *
  *  Created on: 2017年4月10日
- *      Author: root
+ *      Author: Jugo
  */
 
 #include <string>
@@ -46,34 +46,19 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 		jobjRoot->release();
 		delete jobjRoot;
 
-		if(0 > wordRequest.nId)
+		if(0 > wordRequest.nId || 0 > wordRequest.nType || TYPE_REQ_MAX <= wordRequest.nType
+				|| wordRequest.strWord.empty())
 		{
 			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 			return FALSE;
 		}
 
 		Message message;
-		switch(wordRequest.nType)
-		{
-		case 0: // 語意判斷
-			message.what = TYPE_REQ_NODEFINE;
-			break;
-		case 1: // 控制
-			message.what = TYPE_REQ_CONTROL;
-			break;
-		case 2: // 會話
-			message.what = TYPE_REQ_TALK;
-			break;
-		case 3: // 紀錄
-			message.what = TYPE_REQ_RECORD;
-			break;
-		default:
-			response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
-			return FALSE;
-		}
+		message.what = semantic_word_request;
 		message.arg[0] = nSocket;
 		message.arg[1] = nSequence;
 		message.arg[2] = wordRequest.nId;
+		message.arg[3] = wordRequest.nType;
 		message.strData = wordRequest.strWord;
 		mpController->sendMessage(message);
 	}

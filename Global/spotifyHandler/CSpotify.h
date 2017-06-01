@@ -2,7 +2,7 @@
  * CSpotify.h
  *
  *  Created on: 2017年4月24日
- *      Author: root
+ *      Author: Jugo
  */
 
 #pragma once
@@ -30,4 +30,8 @@ public:
 	int getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
 			const char *szAvailableMarket = 0);
 	int getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket = 0);
+	void authorization(const char* szClient);
+
+private:
+	std::string mstrAccessToken;
 };

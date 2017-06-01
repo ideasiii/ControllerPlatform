@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include <string>
+#include <set>
 #include <curl/curl.h>
 #include "CHttpsClient.h"
 #include "LogHandler.h"
@@ -37,17 +38,28 @@ size_t writeCallback(char* buf, size_t size, size_t nmemb, void* up)
 	return size * nmemb; //tell curl how many bytes we handled
 }
 
-int CHttpsClient::GET(const char *szURL, string &strData)
+int CHttpsClient::GET(const char *szURL, string &strData, set<string> &setHead)
 {
 	CURL *curl;
 	CURLcode res;
 	data.clear();
+	struct curl_slist *chunk = NULL;
 
 	curl_global_init(CURL_GLOBAL_DEFAULT);
-
 	curl = curl_easy_init();
+
 	if(curl)
 	{
+		if(setHead.size())
+		{
+			for(set<string>::const_iterator it = setHead.begin(); setHead.end() != it; ++it)
+			{
+				chunk = curl_slist_append(chunk, it->c_str());
+			}
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+		}
+
+		_log("[CHttpsClient] GET URL: %s", szURL);
 		curl_easy_setopt(curl, CURLOPT_URL, szURL);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
@@ -62,6 +74,70 @@ int CHttpsClient::GET(const char *szURL, string &strData)
 		strData = data;
 	}
 	return 1;
+}
+
+int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::string> &setHead,
+		std::set<std::string> &setParameter)
+{
+	string strParameter;
+	CURL *curl;
+	CURLcode res;
+	data.clear();
+	struct curl_slist *chunk = NULL;
+	set<string>::const_iterator it;
+
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+
+	if(curl)
+	{
+		if(setHead.size())
+		{
+			for(it = setHead.begin(); setHead.end() != it; ++it)
+			{
+				chunk = curl_slist_append(chunk, it->c_str());
+			}
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+		}
+
+		if(setParameter.size())
+		{
+			for(it = setParameter.begin(); setParameter.end() != it; ++it)
+			{
+				if(setParameter.begin() == it)
+				{
+					strParameter = *it;
+				}
+				else
+				{
+					strParameter += "&";
+					strParameter += *it;
+				}
+			}
+		}
+		_log("[CHttpsClient] GET URL: %s", szURL);
+		/* First set the URL that is about to receive our POST. This URL can
+		 just as well be a https:// URL if that is what should receive the
+		 data. */
+		//curl_easy_setopt(curl, CURLOPT_URL, "http://postit.example.com/moo.cgi");
+		/* Now specify the POST data */
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, strParameter.c_str());
+		curl_easy_setopt(curl, CURLOPT_URL, szURL);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
+
+		/* Perform the request, res will get the return code */
+		res = curl_easy_perform(curl);
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+		strData = data;
+	}
+	curl_global_cleanup();
+	return 0;
 }
 
 string urlEncode(const char *szStr)
@@ -79,31 +155,3 @@ string urlEncode(const char *szStr)
 	}
 	return strResult;
 }
-
-/*
- string url_encode(const string &value)
- {
- ostringstream escaped;
- escaped.fill('0');
- escaped << hex;
-
- for(string::const_iterator i = value.begin(), n = value.end(); i != n; ++i)
- {
- string::value_type c = (*i);
-
- // Keep alphanumeric and other accepted characters intact
- if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
- {
- escaped << c;
- continue;
- }
-
- // Any other characters are percent-encoded
- escaped << uppercase;
- escaped << '%' << setw(2) << int((unsigned char) c);
- escaped << nouppercase;
- }
-
- return escaped.str();
- }
- */

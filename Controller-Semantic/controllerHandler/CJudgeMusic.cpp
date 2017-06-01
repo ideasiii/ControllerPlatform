@@ -32,6 +32,7 @@ CJudgeMusic::~CJudgeMusic()
 
 int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 {
+	int nResult;
 	string strArtist;
 	string strAlbum;
 	string strTrack;
@@ -44,13 +45,21 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 		CSpotify spotify;
 		map<string, string> mapAlbums;
 		map<string, string>::const_iterator it;
-		if(spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW"))
+		nResult = spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW");
+		if(-1 == nResult)
+		{
+			spotify.authorization(SPOTIFY_CLIENT);
+		}
+		if(0 < spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW"))
 		{
 			for(it = mapAlbums.begin(); mapAlbums.end() != it; ++it)
 			{
 				_log("[CJudgeMusic] word get %s - %s -- %s", strArtist.c_str(), it->first.c_str(), it->second.c_str());
 				map<int, TRACK> mapSong;
-				spotify.getTrack(it->second.c_str(), mapSong, "TW");
+				if(-1 == spotify.getTrack(it->second.c_str(), mapSong, "TW"))
+				{
+					break;
+				}
 				for(map<int, TRACK>::const_iterator cit = mapSong.begin(); mapSong.end() != cit; ++cit)
 				{
 					_log("			 %s - %s", it->first.c_str(), cit->second.name.c_str());
@@ -104,7 +113,7 @@ int CJudgeMusic::evaluate(const char *szWord)
 	}
 
 //======== 評估歌手 ===========//
-	strArtist = getArtist(szWord);
+	strArtist = getArtist(strWord.c_str());
 	if(!strArtist.empty())
 		++nScore;
 
@@ -130,20 +139,22 @@ string CJudgeMusic::getArtist(const char *szWord)
 	set<set<string> >::iterator it_set;
 	set<string>::iterator it_set2;
 
+	strWord = szWord;
+
 	if(!strWord.empty())
 	{
-		transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 		for(it_set = setArtist.begin(); setArtist.end() != it_set; ++it_set)
 		{
 			for(it_set2 = it_set->begin(); it_set->end() != it_set2; ++it_set2)
 			{
 				strValue = *it_set2;
 				transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-				if(string::npos != strWord.find(strValue))
+				//_log("[CJudgeMusic] getArtist word: %s artist: %s", strWord.c_str(), strValue.c_str());
+				if(!strValue.empty() && 0 < strValue.length() && string::npos != strWord.find(strValue))
 				{
 					strArtist = strValue;
 					_log("[CJudgeMusic] getArtist Find Artist: %s", strValue.c_str());
-					break;
+					return strArtist;
 				}
 			}
 		}
