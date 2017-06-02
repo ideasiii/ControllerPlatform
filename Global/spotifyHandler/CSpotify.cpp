@@ -5,6 +5,8 @@
  *      Author: root
  */
 
+#include <set>
+#include <map>
 #include <string>
 #include "CSpotify.h"
 #include "CHttpsClient.h"
@@ -34,16 +36,24 @@ CSpotify::~CSpotify()
 int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
 		const char *szAvailableMarket)
 {
-	string strToken;
+	int nError;
 	set<string> setHead;
 	CHttpsClient *httpsClient;
+	string strToken;
 	string strData;
 	string strURL;
+	string strAlbum;
+	string strAlbumId;
+	JSONObject *jroot;
+	JSONObject *jAlbums;
+	JSONObject *jAlbum;
+	JSONArray *jItems;
+	JSONArray *jarrAM;
 
 	if(!szArtist)
-		return 0;
+		return ERROR_STATUS_ERROR;
 	if(mstrAccessToken.empty())
-		return -1;
+		return ERROR_STATUS_NO_TOKEN;
 
 	httpsClient = new CHttpsClient;
 	strURL = format(QUERY_ALBUM, urlEncode(szArtist).c_str());
@@ -54,24 +64,34 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 
 	if(!strData.empty())
 	{
-		string strAlbum;
-		string strAlbumId;
-		JSONObject *jroot = new JSONObject(strData);
-		JSONObject *jAlbums = new JSONObject(jroot->getJsonObject("albums"));
+		nError = checkError(strData.c_str());
+		if(ERROR_STATUS_SUCCESS != nError)
+			return nError;
+
+		jroot = new JSONObject(strData);
+		if(!jroot->isValid())
+		{
+			jroot->release();
+			delete jroot;
+			_log("[CSpotify] getAlbum Invalid JSON Response: %s", strData.c_str());
+			return ERROR_STATUS_ERROR;
+		}
+
+		jAlbums = new JSONObject(jroot->getJsonObject("albums"));
 		if(!jAlbums->isValid())
 		{
-			_log("[CSpotify] getAlbum Error: %s", strData.c_str());
+			_log("[CSpotify] getAlbum Invalid JSON albums: %s", strData.c_str());
 			jAlbums->release();
 			jroot->release();
 			delete jAlbums;
 			delete jroot;
-			return -1;
+			return ERROR_STATUS_ERROR;
 		}
-		JSONArray *jItems = new JSONArray(jAlbums->getJsonArray("items"));
+		jItems = new JSONArray(jAlbums->getJsonArray("items"));
 		for(int i = 0; i < jItems->size(); ++i)
 		{
-			JSONObject *jAlbum = new JSONObject(jItems->getJsonObject(i));
-			JSONArray *jarrAM = new JSONArray(jAlbum->getJsonArray("available_markets"));
+			jAlbum = new JSONObject(jItems->getJsonObject(i));
+			jarrAM = new JSONArray(jAlbum->getJsonArray("available_markets"));
 			if(szAvailableMarket)
 			{
 				for(int i = 0; i < jarrAM->size(); ++i)
@@ -84,9 +104,14 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 							strAlbumId = jAlbum->getString("id");
 							if(!strAlbum.empty() && !strAlbumId.empty())
 								mapAlbums[strAlbum] = strAlbumId;
+							break;
 						}
 					}
+					_log("[CSpotify] getAlbum Album: %s not support: %s", jAlbum->getString("name").c_str(),
+							szAvailableMarket);
 				}
+				jarrAM->release();
+				delete jarrAM;
 			}
 			else
 			{
@@ -114,44 +139,64 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 
 int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket)
 {
+	int nError;
 	CHttpsClient *httpsClient;
 	string strData;
 	string strURL;
+	string strSong;
 	set<string> setHead;
+	JSONObject *jroot;
+	JSONArray *jItems;
+	JSONArray *jarrAM;
+	JSONObject *jTrack;
+	TRACK track;
 
-	if(0 == szAlbumId)
-		return 0;
+	if(!szAlbumId)
+		return ERROR_STATUS_ERROR;
 	if(mstrAccessToken.empty())
-		return -1;
+		return ERROR_STATUS_NO_TOKEN;
 
 	httpsClient = new CHttpsClient;
 	strURL = format(QUERY_TRACK_ALBUM, szAlbumId);
-
 	setHead.insert(mstrAccessToken);
 	httpsClient->GET(strURL.c_str(), strData, setHead);
 	delete httpsClient;
 
 	if(!strData.empty())
 	{
-		string strSong;
-		JSONObject *jroot = new JSONObject(strData);
-		JSONArray *jItems = new JSONArray(jroot->getJsonArray("items"));
-		if(!jItems->isValid())
+		nError = checkError(strData.c_str());
+		if(ERROR_STATUS_SUCCESS != nError)
+			return nError;
+
+		jroot = new JSONObject(strData);
+		if(!jroot->isValid())
 		{
-			_log("[CSpotify] getTrack Error: %s", strData.c_str());
 			jroot->release();
 			delete jroot;
-			return -1;
+			_log("[CSpotify] getTrack Invalid JSON Response: %s", strData.c_str());
+			return ERROR_STATUS_ERROR;
 		}
+
+		jItems = new JSONArray(jroot->getJsonArray("items"));
+		if(!jItems->isValid())
+		{
+			_log("[CSpotify] getTrack Invalid JSON items: %s", strData.c_str());
+			jItems->release();
+			jroot->release();
+			delete jItems;
+			delete jroot;
+			return ERROR_STATUS_ERROR;
+		}
+
 		for(int i = 0; i < jItems->size(); ++i)
 		{
-			JSONObject *jTrack = new JSONObject(jItems->getJsonObject(i));
+			jTrack = new JSONObject(jItems->getJsonObject(i));
 			if(0 == jTrack->getString("type").compare("track"))
 			{
-				TRACK track;
+				track.clear();
 				if(szAvailableMarket)
 				{
-					JSONArray *jarrAM = new JSONArray(jTrack->getJsonArray("available_markets"));
+					jarrAM = new JSONArray(jTrack->getJsonArray("available_markets"));
 					for(int i = 0; i < jarrAM->size(); ++i)
 					{
 						if(!jarrAM->getString(i).compare(szAvailableMarket))
@@ -165,9 +210,13 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 							track.uri = jTrack->getString("uri");
 							mapSong[jTrack->getInt("track_number")] = track;
 						}
+
 					}
 					jarrAM->release();
 					delete jarrAM;
+					if(track.uri.empty())
+						_log("[CSpotify] getTrack track: %s not support: %s", jTrack->getString("name").c_str(),
+								szAvailableMarket);
 				}
 				else
 				{
@@ -184,8 +233,8 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 			jTrack->release();
 			delete jTrack;
 		}
-		jItems->release();
 
+		jItems->release();
 		jroot->release();
 		delete jItems;
 		delete jroot;
@@ -242,5 +291,45 @@ void CSpotify::authorization(const char* szClient)
 //============= Error ==================//
 // {"error":"invalid_client","error_description":"Invalid client"}
 
+}
+
+/**
+ * {
+ "error": {
+ "status": 401,
+ "message": "No token provided"
+ }
+ }
+ */
+int CSpotify::checkError(const char *szJSONResp)
+{
+	JSONObject *jroot;
+	JSONObject *jerror;
+	int nStatus;
+	string strMessage;
+
+	if(!szJSONResp)
+	{
+		_log("[CSpotify] checkError parameter invalid");
+		return ERROR_STATUS_ERROR;
+	}
+	nStatus = ERROR_STATUS_SUCCESS;
+
+	jroot = new JSONObject(szJSONResp);
+	if(jroot->isValid())
+	{
+		jerror = new JSONObject(jroot->getJsonObject("error"));
+		if(jerror->isValid())
+		{
+			nStatus = jerror->getInt("status");
+			strMessage = jerror->getString("message");
+			_log("[CSpotify] checkError status: %d message: %s", nStatus, strMessage.c_str());
+		}
+		jerror->release();
+		delete jerror;
+	}
+	jroot->release();
+	delete jroot;
+	return nStatus;
 }
 

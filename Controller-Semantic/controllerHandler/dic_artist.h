@@ -20,3 +20,5 @@ static map<string, set<string> > mapArtistDic = create_map<string, set<string> >
 		setArtistEnglishMale)("dictionary/artist_en_female.txt", setArtistEnglishFemale)("dictionary/artist_tw.txt",
 		setArtistTaiwan)("dictionary/artist_en_hard_rock.txt", setArtistHardRock)("dictionary/artist_hk.txt",
 		setArtistHongKong)("dictionary/artist_en_guitarist.txt", setArtistGuitarist);
+
+static set<string> setMark = create_set<string>("(Remastered)")("(Live)")("(Deluxe Remaster)")("(Deluxe)");

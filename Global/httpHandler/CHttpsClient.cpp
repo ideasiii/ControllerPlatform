@@ -57,9 +57,11 @@ int CHttpsClient::GET(const char *szURL, string &strData, set<string> &setHead)
 				chunk = curl_slist_append(chunk, it->c_str());
 			}
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+			_log("[CHttpsClient] GET HEADER: %s", chunk->data);
 		}
 
 		_log("[CHttpsClient] GET URL: %s", szURL);
+
 		curl_easy_setopt(curl, CURLOPT_URL, szURL);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &writeCallback);
@@ -98,6 +100,7 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 				chunk = curl_slist_append(chunk, it->c_str());
 			}
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+			_log("[CHttpsClient] POST HEADER: %s", chunk->data);
 		}
 
 		if(setParameter.size())
@@ -114,6 +117,7 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 					strParameter += *it;
 				}
 			}
+			_log("[CHttpsClient] POST Parameter: %s", strParameter.c_str());
 		}
 		_log("[CHttpsClient] GET URL: %s", szURL);
 		/* First set the URL that is about to receive our POST. This URL can

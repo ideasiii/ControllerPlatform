@@ -34,11 +34,14 @@ CJudgeMusic::~CJudgeMusic()
 int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 {
 	int nResult;
+	int nIndex;
 	string strArtist;
 	string strAlbum;
 	string strTrack;
 	string strTrackUri;
 	string strWord;
+	JSONObject jsonSpotify;
+	set<string>::const_iterator iter;
 
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
@@ -51,7 +54,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 		map<string, string> mapAlbums;
 		map<string, string>::const_iterator it;
 		nResult = spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW");
-		if(-1 == nResult)
+		if(ERROR_STATUS_NO_TOKEN == nResult)
 		{
 			spotify.authorization(SPOTIFY_CLIENT);
 			nResult = spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW");
@@ -63,7 +66,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 				_log("[CJudgeMusic] word get %s - %s -- %s", strArtist.c_str(), it->first.c_str(), it->second.c_str());
 				map<int, TRACK> mapSong;
 				nResult = spotify.getTrack(it->second.c_str(), mapSong, "TW");
-				if(-1 == nResult)
+				if(ERROR_STATUS_NO_TOKEN == nResult)
 				{
 					spotify.authorization(SPOTIFY_CLIENT);
 					nResult = spotify.getTrack(it->second.c_str(), mapSong, "TW");
@@ -74,15 +77,22 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 					for(map<int, TRACK>::const_iterator cit = mapSong.begin(); mapSong.end() != cit; ++cit)
 					{
 						_log("			 %s - %s", it->first.c_str(), cit->second.name.c_str());
-						if(strTrack.empty())
+						strAlbum = it->first;
+						strTrack = cit->second.name;
+						strTrackUri = cit->second.uri;
+
+						for(iter = setMark.begin(); setMark.end() != iter; ++iter)
 						{
-							strAlbum = it->first;
-							strTrack = cit->second.name;
-							strTrackUri = cit->second.uri;
-							transform(strTrack.begin(), strTrack.end(), strTrack.begin(), ::tolower);
-							if(string::npos != strWord.find(strTrack))
+							nIndex = strTrack.find(*iter);
+							if((int) string::npos != nIndex)
+								strTrack = trim(strTrack.substr(0, nIndex));
+						}
+
+						transform(strTrack.begin(), strTrack.end(), strTrack.begin(), ::tolower);
+						if(string::npos != strWord.find(strTrack))
+						{
+							if(!strTrackUri.empty())
 							{
-								JSONObject jsonSpotify;
 								jsonSpotify.put("source", 2);
 								jsonSpotify.put("album", strAlbum);
 								jsonSpotify.put("artist", strArtist);
@@ -90,8 +100,8 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 								jsonSpotify.put("id", strTrackUri);
 								jsonResp->put("type", TYPE_RESP_MUSIC);
 								jsonResp->put("music", jsonSpotify);
-								return TRUE;
 							}
+							return TRUE;
 						}
 					}
 				}
@@ -102,7 +112,6 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 
 	if(!strTrackUri.empty())
 	{
-		JSONObject jsonSpotify;
 		jsonSpotify.put("source", 2);
 		jsonSpotify.put("album", strAlbum);
 		jsonSpotify.put("artist", strArtist);
@@ -110,6 +119,15 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 		jsonSpotify.put("id", strTrackUri);
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
+	}
+	else
+	{
+		jsonResp->put("type", TYPE_RESP_TTS);
+		if(strArtist.empty())
+			strWord = "無此歌手的樂曲";
+		else
+			strWord = format("歌手%s的歌曲因版權問題暫時無法播放", strArtist.c_str());
+		jsonResp->put("tts", strWord);
 	}
 
 	return TRUE;

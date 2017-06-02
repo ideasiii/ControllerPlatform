@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <set>
-#include <map>
+#define ERROR_STATUS_ERROR		-1
+#define ERROR_STATUS_SUCCESS	0
+#define ERROR_STATUS_NO_TOKEN	401
 
 typedef struct _TRACK
 {
@@ -19,6 +20,16 @@ typedef struct _TRACK
 	std::string name;
 	std::string preview_url;
 	std::string uri;
+	void clear()
+	{
+		track_number = -1;
+		popularity = -1;
+		href.clear();
+		id.clear();
+		name.clear();
+		preview_url.clear();
+		uri.clear();
+	}
 } TRACK;
 
 class CSpotify
@@ -33,5 +44,9 @@ public:
 	void authorization(const char* szClient);
 
 private:
+	int checkError(const char *szJSONResp);
+
+private:
 	std::string mstrAccessToken;
+
 };
