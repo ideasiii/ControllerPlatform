@@ -7,13 +7,12 @@
 
 #include <algorithm>
 #include <string>
-#include <set>
 #include <map>
+#include <set>
 #include "CJudgeMusic.h"
 #include "JSONObject.h"
 #include "common.h"
-#include "dic_artist.h"
-#include "dic_semantic.h"
+#include "dictionary.h"
 #include "config.h"
 #include "CSpotify.h"
 #include "CFileHandler.h"

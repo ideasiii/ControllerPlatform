@@ -5,11 +5,10 @@
  *      Author: Jugo
  */
 
-
 #include <string>
 #include "CSemantic.h"
 #include "config.h"
-#include "dic_semantic.h"
+#include "dictionary.h"
 
 using namespace std;
 

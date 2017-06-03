@@ -18,7 +18,7 @@ public:
 	CFileHandler(CObject *object);
 	virtual ~CFileHandler();
 	unsigned int readAllLine(const char *szFile, std::set<std::string> &setData);
-
+	unsigned int readPath(const char *szPath, std::set<std::string> &setData);
 private:
 	CObject *mpController;
 };

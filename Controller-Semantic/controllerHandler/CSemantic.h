@@ -8,6 +8,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 
 typedef struct _WORD_ATTR
 {

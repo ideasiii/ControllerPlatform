@@ -5,9 +5,6 @@
  *      Author: Jugo
  */
 
-#include <dic_music_mood.h>
-#include <dic_semantic.h>
-#include <dic_story.h>
 #include <map>
 #include <string>
 #include "CSemanticJudge.h"

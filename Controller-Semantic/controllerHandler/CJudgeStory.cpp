@@ -5,20 +5,21 @@
  *      Author: Jugo
  */
 
+#include <set>
 #include <map>
 #include <string>
 #include "CJudgeStory.h"
 #include "JSONObject.h"
 #include "config.h"
-#include "dic_story.h"
-#include "dic_semantic.h"
+#include "dictionary.h"
 #include "common.h"
+#include "CFileHandler.h"
 
 using namespace std;
 
 CJudgeStory::CJudgeStory()
 {
-
+	loadStoryDictionary();
 }
 
 CJudgeStory::~CJudgeStory()
@@ -97,5 +98,48 @@ int CJudgeStory::evaluate(const char *szWord)
 	}
 
 	return nScore;
+}
+
+void CJudgeStory::loadStoryDictionary()
+{
+	int nIndex;
+	CFileHandler fh;
+	set<string> setData;
+	set<string>::const_iterator iter;
+	string strFileType;
+	string strWord;
+	string strFile;
+
+	fh.readPath(STORY_PATH, setData);
+
+	for(iter = setData.begin(); setData.end() != iter; ++iter)
+	{
+		nIndex = iter->rfind(".");
+		if((int) string::npos != nIndex)
+		{
+			strFileType = iter->substr(nIndex + 1);
+			if(!strFileType.compare("mp3") || !strFileType.compare("MP3"))
+			{
+				mapStory[iter->substr(0, nIndex)] = iter->c_str();
+			}
+		}
+	}
+
+	setData.clear();
+	fh.readAllLine("dictionary/story.txt", setData);
+	for(iter = setData.begin(); setData.end() != iter; ++iter)
+	{
+		if(!iter->empty())
+		{
+			nIndex = iter->find(",");
+			strWord = iter->substr(0, nIndex);
+			strFile = iter->substr(nIndex + 1);
+			mapStory[strWord] = strFile;
+		}
+	}
+
+//	for(map<string, string>::const_iterator it = mapStory.begin(); mapStory.end() != it; ++it)
+//		_log("%s - %s", it->first.c_str(), it->second.c_str());
+
 }
 

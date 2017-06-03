@@ -57,7 +57,10 @@ ipcs -q
 #remove IPC
 ipcrm -q [msq_id]
 
-# vi
+# vi replace word
 %s/[A-Z]\[edit\]/\1/g
 %s/\[.*\]/\1/g
 %s/\(.*\)/\1/g
+
+# Download Youtube
+youtube-dl --extract-audio --audio-format mp3 'https://www.youtube.com/watch?v=DdskNY5ayfc'

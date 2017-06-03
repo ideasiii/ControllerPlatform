@@ -25,6 +25,7 @@
 #define TYPE_RESP_STORY				0x00000002
 #define TYPE_RESP_TTS				0x00000003
 
+#define STORY_PATH					"/data/opt/tomcat/webapps/story"
 #define STORY_HOST					"https://iiideasmartbuilding.sytes.net/story/"
 #define MUSIC_LOCAL_HOST			"https://iiideasmartbuilding.sytes.net/music/local/"
 

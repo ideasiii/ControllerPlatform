@@ -18,4 +18,6 @@ public:
 	int word(const char *szInput, JSONObject* jsonResp);
 	int evaluate(const char *szWord);
 
+private:
+	void loadStoryDictionary();
 };
