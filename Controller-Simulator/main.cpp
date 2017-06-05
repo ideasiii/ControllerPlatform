@@ -142,7 +142,11 @@ int main(int argc, char* argv[])
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);
-				cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
+				while(1)
+				{
+					cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
+					sleep(3);
+				}
 				jsonWord.release();
 			}
 			else

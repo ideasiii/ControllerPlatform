@@ -9,10 +9,16 @@
 #include "CSemantic.h"
 #include "config.h"
 #include "dictionary.h"
+#include "JSONObject.h"
 
 using namespace std;
 
 #define MAX_WORD_ATTR		7
+
+CSemantic::~CSemantic()
+{
+
+}
 
 int CSemantic::getVerb(const char *szWord, WORD_ATTR &wordAttr)
 {
@@ -81,5 +87,35 @@ int CSemantic::getAttribute(const char *szWord, WORD_BODY &wordBody)
 		}
 	}
 	return 0;
+}
+
+int CSemantic::_word(const char *szInput, JSONObject* jsonResp)
+{
+	return word(szInput, jsonResp);
+}
+
+int CSemantic::word(const char *szInput, JSONObject* jsonResp)
+{
+	return 0;
+}
+
+int CSemantic::_evaluate(const char *szWord)
+{
+	return evaluate(szWord);
+}
+
+int CSemantic::evaluate(const char *szWord)
+{
+	return 0;
+}
+
+string CSemantic::_toString()
+{
+	return toString();
+}
+
+string CSemantic::toString()
+{
+	return "CSemantic";
 }
 

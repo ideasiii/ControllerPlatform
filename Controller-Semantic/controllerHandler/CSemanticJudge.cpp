@@ -16,6 +16,7 @@
 #include "CJudgeStory.h"
 #include "CJudgeMusic.h"
 #include "CRankingHandler.cpp"
+#include "CSemantic.h"
 
 using namespace std;
 
@@ -24,10 +25,14 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mpController = object;
 	mpJudgeStory = new CJudgeStory;
 	mpJudgeMusic = new CJudgeMusic;
+
+	mapSemanticObject[CONTENT_STORY] = mpJudgeStory;
+	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = mpJudgeMusic;
 }
 
 CSemanticJudge::~CSemanticJudge()
 {
+	mapSemanticObject.clear();
 	delete mpJudgeStory;
 	delete mpJudgeMusic;
 }
@@ -38,7 +43,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	int nScore;
 	int nIndex;
 	int nSubject;
-//	string strWord;
+	map<int, CSemantic*>::const_iterator iter;
 	CRankingHandler<int, int> ranking;
 
 	if(0 >= szInput)
@@ -50,17 +55,23 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	_log("[CSemanticJudge] word input: %s", szInput);
 
 	nScore = 0;
-//	strWord = szInput;
+
+	for(iter = mapSemanticObject.begin(); mapSemanticObject.end() != iter; ++iter)
+	{
+		nScore = iter->second->_evaluate(szInput);
+		ranking.add(iter->first, nScore);
+		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
+	}
 
 //============== 故事 ================//
-	nScore = mpJudgeStory->evaluate(szInput);
-	ranking.add(CONTENT_STORY, nScore);
-	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
+//	nScore = mpJudgeStory->_evaluate(szInput);
+//	ranking.add(CONTENT_STORY, nScore);
+//	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
 
 //============== Spotify ================//
-	nScore = mpJudgeMusic->evaluate(szInput);
-	ranking.add(CONTENT_MUSIC_SPOTIFY, nScore);
-	_log("[CSemanticJudge] word - Judge Music Score: %d", nScore);
+//	nScore = mpJudgeMusic->_evaluate(szInput);
+//	ranking.add(CONTENT_MUSIC_SPOTIFY, nScore);
+//	_log("[CSemanticJudge] word - Judge Music Score: %d", nScore);
 
 //============== 積分比較 ================//
 	nTop = ranking.topValueKey();
@@ -69,10 +80,12 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	switch(nTop)
 	{
 	case CONTENT_STORY:
-		mpJudgeStory->word(szInput, jsonResp);
+		mpJudgeStory->_word(szInput, jsonResp);
 		break;
 	case CONTENT_MUSIC_SPOTIFY:
-		mpJudgeMusic->word(szInput, jsonResp);
+		mpJudgeMusic->_word(szInput, jsonResp);
+		break;
+	case CONTENT_MUSIC_MOOD:
 		break;
 	}
 

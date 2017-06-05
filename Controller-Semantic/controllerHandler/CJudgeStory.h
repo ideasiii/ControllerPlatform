@@ -15,6 +15,9 @@ class CJudgeStory: public CSemantic
 public:
 	explicit CJudgeStory();
 	virtual ~CJudgeStory();
+
+protected:
+	std::string toString();
 	int word(const char *szInput, JSONObject* jsonResp);
 	int evaluate(const char *szWord);
 

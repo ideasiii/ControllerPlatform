@@ -36,6 +36,7 @@ CSpotify::~CSpotify()
 int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
 		const char *szAvailableMarket)
 {
+	bool bSupport;
 	int nError;
 	set<string> setHead;
 	CHttpsClient *httpsClient;
@@ -94,10 +95,12 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 			jarrAM = new JSONArray(jAlbum->getJsonArray("available_markets"));
 			if(szAvailableMarket)
 			{
+				bSupport = false;
 				for(int i = 0; i < jarrAM->size(); ++i)
 				{
 					if(!jarrAM->getString(i).compare(szAvailableMarket))
 					{
+						bSupport = true;
 						if(0 == jAlbum->getString("type").compare("album"))
 						{
 							strAlbum = jAlbum->getString("name");
@@ -107,9 +110,10 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 							break;
 						}
 					}
+				}
+				if(bSupport)
 					_log("[CSpotify] getAlbum Album: %s not support: %s", jAlbum->getString("name").c_str(),
 							szAvailableMarket);
-				}
 				jarrAM->release();
 				delete jarrAM;
 			}

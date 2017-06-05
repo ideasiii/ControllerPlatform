@@ -7,7 +7,6 @@
 
 #pragma once
 
-
 #include "CSemantic.h"
 
 class JSONObject;
@@ -17,6 +16,9 @@ class CJudgeMusic: public CSemantic
 public:
 	explicit CJudgeMusic();
 	virtual ~CJudgeMusic();
+
+protected:
+	std::string toString();
 	int word(const char *szInput, JSONObject* jsonResp);
 	int evaluate(const char *szWord);
 

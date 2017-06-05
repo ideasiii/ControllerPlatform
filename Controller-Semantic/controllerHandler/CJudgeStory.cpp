@@ -27,6 +27,11 @@ CJudgeStory::~CJudgeStory()
 
 }
 
+std::string CJudgeStory::toString()
+{
+	return "CJudgeStory";
+}
+
 int CJudgeStory::word(const char *szInput, JSONObject* jsonResp)
 {
 	bool bMatch = false;
