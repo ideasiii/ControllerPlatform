@@ -35,7 +35,7 @@ protected:
 	// Android apk 的版本名稱
 	std::string versionName;
 	
-	// Android apk 的 下載網址
+	// Android apk 的下載網址
 	std::string downloadLink;
 
 	// apk info 最後更新時間
@@ -50,6 +50,7 @@ protected:
 	// 刷新類別內的變數
 	virtual void reload() = 0;
 	virtual bool onInotifyEvent(struct inotify_event *event) = 0;
+
 private:
 	const int inotifyEventMask; 
 	pthread_t watcherThreadId;

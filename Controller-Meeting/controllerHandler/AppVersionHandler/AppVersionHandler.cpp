@@ -17,15 +17,16 @@
 
 void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 {
-	auto uadlh = reinterpret_cast<AppVersionHandler*>(argv); 
-	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", uadlh->strTaskName.c_str());
+	auto avh = reinterpret_cast<AppVersionHandler*>(argv); 
+	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", avh->strTaskName.c_str());
 
-	prctl(PR_SET_NAME, (unsigned long)uadlh->taskName().c_str());
-	uadlh->watcherThreadId = pthread_self();
-	uadlh->doLoop = true;
-	uadlh->runWatcher();
+	pthread_detach(pthread_self());
+	prctl(PR_SET_NAME, (unsigned long)avh->taskName().c_str());
+	avh->watcherThreadId = pthread_self();
+	avh->doLoop = true;
+	avh->runWatcher();
 	
-	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step out", uadlh->strTaskName.c_str());
+	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step out", avh->strTaskName.c_str());
 	return 0;
 }
 
@@ -51,14 +52,13 @@ void AppVersionHandler::stop()
 {
 	if (0 == watcherThreadId)
 	{
-		_log(LOG_TAG" %s stop() 0 == watcherThreadId", strTaskName.c_str());
+		_log(LOG_TAG" %s stop() 0 == watcherThreadId, quit", strTaskName.c_str());
 		return;
 	}
 
 	doLoop = false;
 
-	//pthread_detach(watcherThreadId);
-	threadJoin(watcherThreadId);
+	//threadJoin(watcherThreadId);
 	watcherThreadId = 0;
 }
 
@@ -174,7 +174,7 @@ void AppVersionHandler::runWatcher()
 void AppVersionHandler::onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen,
 	const void* pData)
 {
-	_log(LOG_TAG" %s Ignore everything passed to onReceiveMessage()", strTaskName.c_str());
+	_log(LOG_TAG" %s onReceiveMessage() not processed", strTaskName.c_str());
 }
 
 std::string AppVersionHandler::taskName()

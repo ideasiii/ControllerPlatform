@@ -14,7 +14,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql
 CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++14 -fno-limit-debug-info $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
@@ -25,6 +25,7 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lsqlite3 \
+			-lmysqlclient \
 			-lcrypto++
 					
 vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
@@ -109,7 +110,7 @@ package-u:
 	apt-get -y install \
 		 libboost-all-dev libboost-thread-dev \
 		 build-essential clang \
-		 autoconf automake libtool \
+		 autoconf automake libtool libmysqld-dev \
 		 libcrypto++-dev libcurl4-openssl-dev
 	@echo -ne '\n###### Installed build dependency on Debian-based distribution. ######\n'
 	@echo "\n"

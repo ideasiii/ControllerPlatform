@@ -2,14 +2,24 @@
 
 #include <memory>
 #include <string>
+#include "../MysqlSourceInfo.h"
 #include "CCmpClient.h"
 
 class EnquireLinkYo;
+class CMysqlHandler;
+
+struct CachedTokenInfo
+{
+	std::string userUuid;
+	int64_t validFrom;
+	int64_t goodThrough;
+};
 
 class CClientAmxController : public CCmpClient
 {
 public:
-	explicit CClientAmxController(CObject *controller, const std::string &serverIp, int userPort, int validationPort);
+	explicit CClientAmxController(CObject *controller, const std::string &serverIp, 
+		int userPort, int validationPort, MysqlSourceInfo& mysqlSrc);
 	virtual ~CClientAmxController();
 
 	// Establish connection to controller, start enquire link thread,
@@ -40,6 +50,8 @@ private:
 	const int validationPort;
 
 	std::unique_ptr<EnquireLinkYo> enquireLinkYo;
+	const MysqlSourceInfo mysqlSourceInfo;
+	std::map<std::string, CachedTokenInfo> tokenCache;
 
 	// do not delete this or the whole world will collapse
 	CObject * const mpController;

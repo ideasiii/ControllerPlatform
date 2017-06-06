@@ -16,6 +16,7 @@ enquireLinkYo \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler \
+../Global/mysqlHandler \
 ../Global/objectHandler	\
 ../Global/socketHandler	\
 ../Global/threadHandler	\
