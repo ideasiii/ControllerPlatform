@@ -40,7 +40,7 @@ LDLIBS    := $(LIB_LINK) \
 			-L/usr/local/lib \
 			-lmysqlclient \
 			-lcurl \
-			-lcryptopp
+			-lcrypto++
 					
 vpath %.cpp $(SRC_DIR)
 

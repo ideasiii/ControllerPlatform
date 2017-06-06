@@ -1,5 +1,6 @@
 #include "CClientAmxController.h"
 
+#include <regex>
 #include <sstream>
 #include "packet.h"
 #include "event.h"
@@ -7,6 +8,7 @@
 #include "../../enquireLinkYo/EnquireLinkYo.h"
 #include "../HiddenUtility.hpp"
 #include "../TestStringsDefinition.h"
+#include "CMysqlHandler.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
 
@@ -14,8 +16,14 @@
 #define LOG_TAG "[CClientAmxController]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientAmxController\033[0m]"
 
-CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp, int userPort, int validationPort) :
-	serverIp(serverIp), userPort(userPort), validationPort(validationPort), mpController(controller)
+// UUID pattern, which does not conform to strict standards
+#define UUID_PATTERN R"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
+
+
+CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp,
+	int userPort, int validationPort, MysqlSourceInfo& mysqlSrc) :
+	serverIp(serverIp), userPort(userPort), validationPort(validationPort), 
+	mysqlSourceInfo(mysqlSrc), mpController(controller)
 {
 	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
 		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
@@ -57,6 +65,7 @@ int CClientAmxController::startClient(int msqKey)
 		return FALSE;
 	}
 
+	tokenCache.clear();
 	nRet = request(getSocketfd(), bind_request, STATUS_ROK, getSequence(), NULL);
 	if (nRet < 0)
 	{
@@ -97,15 +106,16 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 	switch ((unsigned int)nCommand)
 	{
 	case enquire_link_response:
-		_log(LOG_TAG_COLORED" onResponse() enquire_link_response");
+		_log(LOG_TAG" onResponse() enquire_link_response");
 		enquireLinkYo->zeroBalance();
 		break;
 	case bind_response:
-		_log(LOG_TAG_COLORED" onResponse() bind_response; bind ok, start EnquireLinkYo");
+		_log(LOG_TAG" onResponse() bind_response; bind ok, start EnquireLinkYo");
 		enquireLinkYo->start();
+
 		break;
 	case unbind_response:
-		_log(LOG_TAG_COLORED" onResponse() unbind_response");
+		_log(LOG_TAG" onResponse() unbind_response");
 		break;
 	default:
 		_log(LOG_TAG" onResponse() unhandled nCommand %s", numberToHex(nCommand).c_str());
@@ -167,17 +177,78 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 // 'when' is the point we received the validation request, in unix epoch (milliseconds, UTC)
 bool CClientAmxController::validateToken(const std::string& reqId, const std::string& reqToken, const int64_t when)
 {
-	// check retrieved result is not empty
-	if (reqId.compare(TEST_USER_HAS_MEETING_IN_001) != 0 || reqToken.compare(TEST_AMX_TOKEN) != 0)
+	std::regex uuidRegex(UUID_PATTERN);
+
+	if (!regex_match(reqId, uuidRegex))
 	{
+		_log(LOG_TAG" validateToken() ID %s is not a valid UUID", reqId.c_str());
+		return false;
+	}
+	else if (!regex_match(reqToken, uuidRegex))
+	{
+		_log(LOG_TAG" validateToken() Token %s is not a valid UUID", reqToken.c_str());
 		return false;
 	}
 
-	int64_t tokenValidFrom = when - (10 * 1000);
-	int64_t tokanGoodThrough = when + (10 * 1000);
+	if (tokenCache.find(reqToken) != tokenCache.end())
+	{
+		_log(LOG_TAG" validateToken() Token cache hit (%s)", reqToken.c_str());
+		auto& hitRecord = tokenCache[reqToken];
+		return hitRecord.userUuid.compare(reqId) == 0
+			&& hitRecord.validFrom <= when
+			&& hitRecord.goodThrough >= when;
+	}
+
+	CMysqlHandler mysql;
+	int nRet = mysql.connect(mysqlSourceInfo.host, mysqlSourceInfo.database, mysqlSourceInfo.user,
+		mysqlSourceInfo.password);
+
+	if (FALSE == nRet)
+	{
+		_log(LOG_TAG" validateToken() Mysql Error: %s", mysql.getLastError().c_str());
+		return true;
+	}
+
+	list<map<string, string> > listRet;
+	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
+		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
+	nRet = mysql.query(strSQL, listRet);
+	string strError = mysql.getLastError();
+	mysql.close();
+
+	if (FALSE == nRet)
+	{
+		_log(LOG_TAG" validateToken() Mysql Error: %s", strError.c_str());
+		return true;
+	}
+	else if (listRet.size() < 1)
+	{
+		_log(LOG_TAG" validateToken() db no match token");
+		return false;
+	}
+	else if (listRet.size() > 1)
+	{
+		_log(LOG_TAG" validateToken() db returned more than 1 result?");
+		return true;
+	}
+	
+	auto& retRow = *listRet.begin();
+	auto& strValidFrom = retRow["time_start"];
+	auto& strGoodThrough = retRow["time_end"];
+
+	int64_t tokenValidFrom, tokenGoodThrough;
+	convertFromString(tokenValidFrom, strValidFrom);
+	convertFromString(tokenGoodThrough, strGoodThrough);
+
+	CachedTokenInfo newRecord;
+	newRecord.userUuid = reqId;
+	newRecord.validFrom = tokenValidFrom;
+	newRecord.goodThrough = tokenGoodThrough;
+
+	tokenCache[reqToken] = newRecord;
 
 	// check token is valid at time given
-	return when >= tokenValidFrom && when <= tokanGoodThrough;
+	return when >= tokenValidFrom && when <= tokenGoodThrough;
 }
 
 void CClientAmxController::onServerDisconnect(unsigned long int nSocketFD)

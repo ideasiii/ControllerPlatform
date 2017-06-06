@@ -8,7 +8,7 @@
  * 
  * This class relies on crypto++ which can be installed through apt on Debian:
  *     sudo apt-get -y install libcrypto++-dev
- * Linking option: -lcryptopp
+ * Linking option: -lcrypto++
  */
 class AesCrypto
 {
