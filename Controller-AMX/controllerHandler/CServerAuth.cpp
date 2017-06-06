@@ -40,7 +40,7 @@ int CServerAuth::onBind(int nSocket, int nCommand, int nSequence, const void *sz
 
 int CServerAuth::onUnbind(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	//response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	mAuthServer = 0;
 	_log("[CServerAuth] onUnbind Socket: %d", nSocket);
 	mnEnquuireSeq = -1;

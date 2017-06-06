@@ -101,6 +101,10 @@ int CServerMeeting::onUnbind(int nSocket, int nCommand, int nSequence, const voi
 {
 	deleteClient(nSocket);
 
+	// 當 client 將要結束時，CCmpClient 內的 mapFunc 會被銷毀，但仍然可接收封包
+	// 若這時送 unbind_response 給 client，會執行對方的 CCmpClient::onReceive()
+	// CCmpClient::onReceive() 這時又去執行 mapFunc.find()
+	// 將會導致 segmentation fault, 故不送 unbind response 給 client 
 	//response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	return TRUE;
 }
