@@ -85,18 +85,19 @@ int CController::onInitial(void* szConfPath)
 		_log(LOG_TAG" onInitial(): CClientAmxController cannot be instantiated");
 		return FALSE;
 	}
-	amxControllerClient.reset(clientAmxControllerRet);
 
-	/*nRet = agentClient->startClient(mnMsqKey);
-	if (nRet == FALSE)
+	if (clientAmxControllerRet->getValidationPort() > 0)
 	{
-		return FALSE;
-	}*/
+		amxControllerClient.reset(clientAmxControllerRet);
+		startConnectToAmxThread();
+	}
+	else
+	{
+		_log(LOG_TAG" onInitial(): CClientAmxController will not be used");
+	}
+
 	startConnectToAgentThread();
-
-	/*nRet = amxControllerClient->startClient(mnMsqKey);*/
-	startConnectToAmxThread();
-
+	
 	return TRUE;
 }
 

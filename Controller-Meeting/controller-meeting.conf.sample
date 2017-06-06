@@ -52,6 +52,7 @@ user_port = 2309
 
 # 驗證 token 用的連接埠, 本 service 會透過這個 port 連線到 AMX controller
 # 並接收來自對方的 token 驗證要求
+# 若給的數值小於等於 0，則不會連線到 AMX controller
 validation_port = 2311
 
 
