@@ -82,6 +82,7 @@ KEY CRankingHandler<KEY, VALUE>::topValueKey()
 	dst = flip_map(mapData);
 
 	typename multimap<VALUE, KEY>::const_reverse_iterator it = dst.rbegin();
+
 	return it->second;
 }
 

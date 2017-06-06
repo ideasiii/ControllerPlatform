@@ -131,7 +131,7 @@ void CJudgeStory::loadStoryDictionary()
 	}
 
 	setData.clear();
-	fh.readAllLine("dictionary/story.txt", setData);
+	fh.readAllLine("dictionary/match_file_story.txt", setData);
 	for(iter = setData.begin(); setData.end() != iter; ++iter)
 	{
 		if(!iter->empty())
@@ -143,6 +143,7 @@ void CJudgeStory::loadStoryDictionary()
 		}
 	}
 
+	_log("[CJudgeStory] loadStoryDictionary Load Story: %d", mapStory.size());
 //	for(map<string, string>::const_iterator it = mapStory.begin(); mapStory.end() != it; ++it)
 //		_log("%s - %s", it->first.c_str(), it->second.c_str());
 

@@ -10,10 +10,16 @@
 #include "container.h"
 
 //=========================== Semantic ==========================================//
+/**
+ *  主詞
+ */
 #define SUBJECT_I			1
 #define SUBJECT_YOU			2
 #define SUBJECT_HE			3
 
+/**
+ *  動詞
+ */
 #define VERB_LISTEN			1
 
 static map<string, int> mapSubject = create_map<string, int>\
@@ -24,20 +30,13 @@ static map<string, int> mapVerb = create_map<string, int>\
 ("想要聽", VERB_LISTEN)("超想聽", VERB_LISTEN)("想聽", VERB_LISTEN)(
 		"要聽", VERB_LISTEN)("聽", VERB_LISTEN)("聽聽", VERB_LISTEN);
 
+//=========================== Absolutly ==========================================//
+static map<string, string> mapAbsolutly;
+
 //=========================== Spotify Music ==========================================//
-static set<string> setArtistEnglishMale;
-static set<string> setArtistEnglishFemale;
-static set<string> setArtistTaiwan;
-static set<string> setArtistHardRock;
-static set<string> setArtistHongKong;
-static set<string> setArtistGuitarist;
-
-static map<string, set<string> > mapArtistDic = create_map<string, set<string> >("dictionary/artist_en_male.txt",
-		setArtistEnglishMale)("dictionary/artist_en_female.txt", setArtistEnglishFemale)("dictionary/artist_tw.txt",
-		setArtistTaiwan)("dictionary/artist_en_hard_rock.txt", setArtistHardRock)("dictionary/artist_hk.txt",
-		setArtistHongKong)("dictionary/artist_en_guitarist.txt", setArtistGuitarist);
-
-static set<string> setMark = create_set<string>("(Remastered)")("(Live)")("(Deluxe Remaster)")("(Deluxe)");
+static set<string> setArtist;
+static set<string> setArtistMark = create_set<string>("(Remastered)")("(Live)")("(Deluxe Remaster)")("(Deluxe)");
+static map<string, string> mapArtistMatch; // TW --> EN
 
 //=========================== Mood Music ==========================================//
 // ("歡喜" || "忿怒" || "哀傷" || "驚恐" || "愛情")

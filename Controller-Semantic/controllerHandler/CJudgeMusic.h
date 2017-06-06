@@ -23,9 +23,6 @@ protected:
 	int evaluate(const char *szWord);
 
 private:
-	typedef std::string (CJudgeMusic::*pFnGetArtist)(const char *);
-	std::map<int, pFnGetArtist> mappFnGetArtist;
-	std::set<std::set<std::string> > setArtist;
 	std::string getArtist(const char *szWord);
 	void loadArtistDictionary();
 };

@@ -13,6 +13,7 @@
 #include "common.h"
 #include "Handler.h"
 #include "CObject.h"
+#include "CJudgeAbsolutely.h"
 #include "CJudgeStory.h"
 #include "CJudgeMusic.h"
 #include "CRankingHandler.cpp"
@@ -25,9 +26,11 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mpController = object;
 	mpJudgeStory = new CJudgeStory;
 	mpJudgeMusic = new CJudgeMusic;
+	mpJudgeAbsolutely = new CJudgeAbsolutely;
 
 	mapSemanticObject[CONTENT_STORY] = mpJudgeStory;
 	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = mpJudgeMusic;
+	mapSemanticObject[CONTENT_ABSOLUTELY] = mpJudgeAbsolutely;
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -35,6 +38,7 @@ CSemanticJudge::~CSemanticJudge()
 	mapSemanticObject.clear();
 	delete mpJudgeStory;
 	delete mpJudgeMusic;
+	delete mpJudgeAbsolutely;
 }
 
 int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
@@ -43,6 +47,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	int nScore;
 	int nIndex;
 	int nSubject;
+	int nValue;
 	map<int, CSemantic*>::const_iterator iter;
 	CRankingHandler<int, int> ranking;
 
@@ -63,62 +68,19 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
 	}
 
-//============== 故事 ================//
-//	nScore = mpJudgeStory->_evaluate(szInput);
-//	ranking.add(CONTENT_STORY, nScore);
-//	_log("[CSemanticJudge] word - Judge Story Score: %d", nScore);
-
-//============== Spotify ================//
-//	nScore = mpJudgeMusic->_evaluate(szInput);
-//	ranking.add(CONTENT_MUSIC_SPOTIFY, nScore);
-//	_log("[CSemanticJudge] word - Judge Music Score: %d", nScore);
-
 //============== 積分比較 ================//
-	nTop = ranking.topValueKey();
-	_log("[CSemanticJudge] word Top Key is %d", nTop);
-
-	switch(nTop)
+	nValue = ranking.topValue();
+	if(0 < nValue)
 	{
-	case CONTENT_STORY:
-		mpJudgeStory->_word(szInput, jsonResp);
-		break;
-	case CONTENT_MUSIC_SPOTIFY:
-		mpJudgeMusic->_word(szInput, jsonResp);
-		break;
-	case CONTENT_MUSIC_MOOD:
-		break;
+		nTop = ranking.topValueKey();
+		_log("[CSemanticJudge] word Top Key is %d", nTop);
+		mapSemanticObject[nTop]->_word(szInput, jsonResp);
+	}
+	else
+	{
+		jsonResp->put("type", 3);
+		jsonResp->put("tts", WORD_UNKNOW);
 	}
 
-	/**
-	 *  情境3：聽有關情緒關鍵字的音樂
-	 *  關鍵字：("音樂") + ("歡喜" || "憤怒" || "悲傷" || "驚恐" || "愛情")
-	 */
-//	if(string::npos != strWord.find("音樂")) // Local
-//	{
-//		bool bMatch = false;
-//		JSONObject jsonMusic;
-//		jsonMusic.put("source", 1);
-//		jsonMusic.put("album", "");
-//		jsonMusic.put("artist", "");
-//		jsonMusic.put("song", "");
-//		jsonMusic.put("host", MUSIC_LOCAL_HOST);
-//		for(map<string, string>::iterator iter = mapMood.begin(); mapMood.end() != iter; ++iter)
-//		{
-//			if(string::npos != strWord.find(iter->first))
-//			{
-//				jsonMusic.put("file", iter->second);
-//				jsonMusic.put("song", iter->first);
-//				break;
-//			}
-//		}
-//		if(!bMatch)
-//		{
-//			jsonMusic.put("file", "love.mp3");
-//			jsonMusic.put("song", "愛情");
-//		}
-//		jsonResp->put("type", TYPE_RESP_MUSIC);
-//		jsonResp->put("music", jsonMusic);
-//		return TRUE;
-//	}
 	return TRUE;
 }

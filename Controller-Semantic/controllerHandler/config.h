@@ -11,6 +11,7 @@
 #define CONTENT_STORY				0x00000001
 #define CONTENT_MUSIC_SPOTIFY		0x00000002
 #define CONTENT_MUSIC_MOOD			0x00000003
+#define CONTENT_ABSOLUTELY			0x00000004
 
 //==================================== 封包 Request 內容定義 =========================================//
 #define TYPE_REQ_NODEFINE			0x00000000
@@ -39,3 +40,5 @@
 //==================================== Spotify ========================================//
 #define SPOTIFY_CLIENT				"MzgyOTVjMmY1ZDNjNDM3MWI4MTFkZGZiMDA3NWRlODE6MWI4OWQxN2QyNjg4NDRkZGIyNWUzMWRiZmE1NzQzZjE="
 
+//==================================== 固定回復 ===========================================//
+#define WORD_UNKNOW					"我不了解這句話的意思"

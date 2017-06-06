@@ -85,7 +85,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 						strTrack = cit->second.name;
 						strTrackUri = cit->second.uri;
 
-						for(iter = setMark.begin(); setMark.end() != iter; ++iter)
+						for(iter = setArtistMark.begin(); setArtistMark.end() != iter; ++iter)
 						{
 							nIndex = strTrack.find(*iter);
 							if((int) string::npos != nIndex)
@@ -184,10 +184,9 @@ int CJudgeMusic::evaluate(const char *szWord)
 string CJudgeMusic::getArtist(const char *szWord)
 {
 	string strWord;
-	string strValue;
 	string strArtist;
-	set<set<string> >::iterator it_set;
-	set<string>::iterator it_set2;
+	set<string>::iterator it_set;
+	map<string, string>::const_iterator it_map;
 
 	strWord = trim(szWord);
 
@@ -196,31 +195,68 @@ string CJudgeMusic::getArtist(const char *szWord)
 		transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 		for(it_set = setArtist.begin(); setArtist.end() != it_set; ++it_set)
 		{
-			for(it_set2 = it_set->begin(); it_set->end() != it_set2; ++it_set2)
+			strArtist = trim(*it_set);
+			transform(strArtist.begin(), strArtist.end(), strArtist.begin(), ::tolower);
+			if(!strArtist.empty() && 0 < strArtist.length() && string::npos != strWord.find(strArtist))
 			{
-				strValue = trim(*it_set2);
-				transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
-				//_log("[CJudgeMusic] getArtist word: %s artist: %s", strWord.c_str(), strValue.c_str());
-				if(!strValue.empty() && 0 < strValue.length() && string::npos != strWord.find(strValue))
-				{
-					_log("[CJudgeMusic] getArtist Find Artist: %s", strValue.c_str());
-					return strValue;
-				}
+				_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
+				return strArtist;
+			}
+		}
+
+		for(it_map = mapArtistMatch.begin(); mapArtistMatch.end() != it_map; ++it_map)
+		{
+			strArtist = trim(it_map->first);
+			transform(strArtist.begin(), strArtist.end(), strArtist.begin(), ::tolower);
+			if(!strArtist.empty() && 0 < strArtist.length() && string::npos != strWord.find(strArtist))
+			{
+				strArtist = trim(it_map->second);
+				_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
+				return strArtist;
 			}
 		}
 	}
 
+	strArtist.clear();
 	return strArtist;
 }
 
 void CJudgeMusic::loadArtistDictionary()
 {
+	string strPath;
 	CFileHandler fh;
+	set<string> setData;
+	set<string>::const_iterator iter;
+	int nIndex;
+	int nCount;
+	string strWord;
+	string strMatch;
 
-	for(map<string, set<string> >::iterator it = mapArtistDic.begin(); mapArtistDic.end() != it; ++it)
+	fh.readPath("dictionary", setData);
+
+	for(iter = setData.begin(); setData.end() != iter; ++iter)
 	{
-		fh.readAllLine(it->first.c_str(), it->second);
-		setArtist.insert(it->second);
-		_log("[CJudgeMusic] loadArtistDictionary From: %s Count: %d", it->first.c_str(), it->second.size());
+		nIndex = iter->find("artist");
+		if((int) string::npos != nIndex && 0 == nIndex)
+		{
+			strPath = format("dictionary/%s", iter->c_str());
+			nCount = fh.readAllLine(strPath.c_str(), setArtist);
+			_log("[CJudgeMusic] loadArtistDictionary read file: %s count: %d", strPath.c_str(), nCount);
+		}
 	}
+	_log("[CJudgeMusic] loadArtistDictionary Total Artist Count: %d", setArtist.size());
+
+	setData.clear();
+	fh.readAllLine("dictionary/match_tw_en_artist.txt", setData);
+	for(iter = setData.begin(); setData.end() != iter; ++iter)
+	{
+		if(!iter->empty())
+		{
+			nIndex = iter->find(",");
+			strWord = iter->substr(0, nIndex);
+			strMatch = iter->substr(nIndex + 1);
+			mapArtistMatch[strWord] = strMatch;
+		}
+	}
+	_log("[CJudgeMusic] loadArtistDictionary Total Artist Match Count: %d", mapArtistMatch.size());
 }
