@@ -126,6 +126,7 @@ void CController::onHandleMessage(Message &message)
 	switch(message.what)
 	{
 	case semantic_word_request:
+		// Lambda Expression
 		thread([=]
 		{	onSemanticWordRequest( message.arg[0], message.arg[1], message.arg[2], message.arg[3],
 					message.strData.c_str());}).detach();

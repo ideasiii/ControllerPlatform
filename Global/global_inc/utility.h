@@ -19,6 +19,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <string.h>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -157,8 +158,13 @@ template<typename T>
 __attribute__ ((unused)) static std::string numberToHex(T i)
 {
 	std::stringstream stream;
-	stream << "0x"
-		<< std::setfill('0') << std::setw(sizeof(T) * 2)
-		<< std::hex << i;
+	stream << "0x" << std::setfill('0') << std::setw(sizeof(T) * 2) << std::hex << i;
 	return stream.str();
+}
+
+__attribute__ ((unused)) static int getRand(int nMin, int nMax)
+{
+	srand(time(NULL));
+	int x = rand() % (nMax - nMin + 1) + nMin;
+	return x;
 }

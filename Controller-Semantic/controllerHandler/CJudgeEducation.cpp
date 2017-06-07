@@ -12,6 +12,7 @@
 #include "dictionary.h"
 #include "common.h"
 #include "CFileHandler.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -32,6 +33,7 @@ string CJudgeEducation::toString()
 
 int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp)
 {
+	int nRand;
 	string strWord;
 
 	strWord = szInput;
@@ -45,8 +47,29 @@ int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp)
 		if(string::npos != strWord.find(iter->first))
 		{
 			jsonResp->put("tts", iter->second);
-			break;
+			return TRUE;
 		}
+	}
+
+	for(map<string, string>::iterator iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
+	{
+		if(string::npos != strWord.find(iter->first))
+		{
+			jsonResp->put("tts", iter->second);
+			return TRUE;
+		}
+	}
+
+	if(string::npos != strWord.find("唐詩"))
+	{
+		// random
+		nRand = getRand(0, mapEducationPoetry.size() - 1);
+		map<string, string>::iterator iter = mapEducationPoetry.begin();
+		for(int i = 0; i < nRand; ++i)
+			++iter;
+
+		jsonResp->put("tts", iter->second);
+		return TRUE;
 	}
 
 	return TRUE;
@@ -77,6 +100,15 @@ int CJudgeEducation::evaluate(const char *szWord)
 		}
 	}
 
+	for(map<string, string>::iterator iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
+	{
+		if(string::npos != strWord.find(iter->first))
+		{
+			++nScore;
+			break;
+		}
+	}
+
 	//======== 評估動詞 ===========//
 	WORD_ATTR wordAttr;
 	if(0 <= getVerb(strWord.c_str(), wordAttr))
@@ -99,6 +131,7 @@ void CJudgeEducation::loadEducationDictionary()
 	set<string>::const_iterator iter;
 	string strKey;
 	string strValue;
+	string strWord;
 
 	setData.clear();
 	fh.readAllLine("dictionary/match_education.txt", setData);
@@ -112,7 +145,24 @@ void CJudgeEducation::loadEducationDictionary()
 			mapEducation[strKey] = strValue;
 		}
 	}
-
 	_log("[CJudgeEducation] loadEducationDictionary Load Education: %d", mapEducation.size());
+
+	setData.clear();
+	fh.readAllLine("dictionary/match_education_poetry.txt", setData);
+	for(iter = setData.begin(); setData.end() != iter; ++iter)
+	{
+		if(!iter->empty())
+		{
+			strWord = trim(*iter);
+			if(!strWord.empty() && strWord.length())
+			{
+				nIndex = iter->find(",");
+				strKey = iter->substr(0, nIndex);
+				strValue = iter->substr(nIndex + 1);
+				mapEducationPoetry[strKey] = strValue;
+			}
+		}
+	}
+	_log("[CJudgeEducation] loadEducationDictionary Load Education Poetry: %d", mapEducationPoetry.size());
 }
 

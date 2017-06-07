@@ -50,3 +50,4 @@ static map<string, string> mapStory;
 
 //=========================== Education ==========================================//
 static map<string, string> mapEducation;
+static map<string, string> mapEducationPoetry;
