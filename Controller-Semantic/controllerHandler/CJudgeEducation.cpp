@@ -154,7 +154,7 @@ void CJudgeEducation::loadEducationDictionary()
 		if(!iter->empty())
 		{
 			strWord = trim(*iter);
-			if(!strWord.empty() && strWord.length())
+			if(!strWord.empty() && (0 < strWord.length()))
 			{
 				nIndex = iter->find(",");
 				strKey = iter->substr(0, nIndex);
