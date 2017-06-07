@@ -139,10 +139,14 @@ void CJudgeEducation::loadEducationDictionary()
 	{
 		if(!iter->empty())
 		{
-			nIndex = iter->find(",");
-			strKey = iter->substr(0, nIndex);
-			strValue = iter->substr(nIndex + 1);
-			mapEducation[strKey] = strValue;
+			strWord = trim(*iter);
+			if(!strWord.empty() && (0 < strWord.length()))
+			{
+				nIndex = iter->find(",");
+				strKey = iter->substr(0, nIndex);
+				strValue = iter->substr(nIndex + 1);
+				mapEducation[strKey] = strValue;
+			}
 		}
 	}
 	_log("[CJudgeEducation] loadEducationDictionary Load Education: %d", mapEducation.size());
