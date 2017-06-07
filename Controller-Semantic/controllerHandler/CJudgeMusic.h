@@ -10,6 +10,7 @@
 #include "CSemantic.h"
 
 class JSONObject;
+class CSpotify;
 
 class CJudgeMusic: public CSemantic
 {
@@ -25,4 +26,5 @@ protected:
 private:
 	std::string getArtist(const char *szWord);
 	void loadArtistDictionary();
+	CSpotify *spotify;
 };

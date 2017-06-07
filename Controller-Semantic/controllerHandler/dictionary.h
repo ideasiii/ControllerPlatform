@@ -47,3 +47,6 @@ static map<string, string> mapMood = create_map<string, string>\
 
 //=========================== Story ==========================================//
 static map<string, string> mapStory;
+
+//=========================== Education ==========================================//
+static map<string, string> mapEducation;

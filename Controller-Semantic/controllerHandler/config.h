@@ -8,10 +8,14 @@
 #pragma once
 
 //==================================== 內容定義 =========================================//
-#define CONTENT_STORY				0x00000001
-#define CONTENT_MUSIC_SPOTIFY		0x00000002
-#define CONTENT_MUSIC_MOOD			0x00000003
-#define CONTENT_ABSOLUTELY			0x00000004
+//#define CONTENT_STORY				0x00000001
+//#define CONTENT_MUSIC_SPOTIFY		0x00000002
+//#define CONTENT_MUSIC_MOOD			0x00000003
+//#define CONTENT_ABSOLUTELY			0x00000004
+typedef enum _CONTENT_TYPE
+{
+	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION
+} CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//
 #define TYPE_REQ_NODEFINE			0x00000000

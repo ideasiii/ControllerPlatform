@@ -20,9 +20,11 @@
 
 using namespace std;
 
-CJudgeMusic::CJudgeMusic()
+CJudgeMusic::CJudgeMusic() :
+		spotify(0)
 {
 	loadArtistDictionary();
+	spotify = new CSpotify;
 }
 
 CJudgeMusic::~CJudgeMusic()
@@ -46,6 +48,8 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 	string strWord;
 	JSONObject *jsonSpotify;
 	set<string>::const_iterator iter;
+	map<string, string> mapAlbums;
+	map<string, string>::const_iterator it;
 
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
@@ -54,14 +58,11 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 
 	if(!strArtist.empty())
 	{
-		CSpotify spotify;
-		map<string, string> mapAlbums;
-		map<string, string>::const_iterator it;
-		nResult = spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW");
+		nResult = spotify->getAlbum(strArtist.c_str(), mapAlbums, "TW");
 		if(ERROR_STATUS_NO_TOKEN == nResult)
 		{
-			spotify.authorization(SPOTIFY_CLIENT);
-			nResult = spotify.getAlbum(strArtist.c_str(), mapAlbums, "TW");
+			spotify->authorization(SPOTIFY_CLIENT);
+			nResult = spotify->getAlbum(strArtist.c_str(), mapAlbums, "TW");
 		}
 		if(0 < nResult)
 		{
@@ -69,11 +70,11 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 			{
 				_log("[CJudgeMusic] word get %s - %s -- %s", strArtist.c_str(), it->first.c_str(), it->second.c_str());
 				map<int, TRACK> mapSong;
-				nResult = spotify.getTrack(it->second.c_str(), mapSong, "TW");
+				nResult = spotify->getTrack(it->second.c_str(), mapSong, "TW");
 				if(ERROR_STATUS_NO_TOKEN == nResult)
 				{
-					spotify.authorization(SPOTIFY_CLIENT);
-					nResult = spotify.getTrack(it->second.c_str(), mapSong, "TW");
+					spotify->authorization(SPOTIFY_CLIENT);
+					nResult = spotify->getTrack(it->second.c_str(), mapSong, "TW");
 				}
 
 				if(0 < nResult)

@@ -16,13 +16,14 @@ BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql -I /usr/include/curl
-CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -g
+CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -std=c++11 -g 
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
+			-L/usr/lib/x86_64-linux-gnu \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lmysqlclient \

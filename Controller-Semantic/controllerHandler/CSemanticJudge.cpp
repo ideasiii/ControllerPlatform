@@ -16,6 +16,7 @@
 #include "CJudgeAbsolutely.h"
 #include "CJudgeStory.h"
 #include "CJudgeMusic.h"
+#include "CJudgeEducation.h"
 #include "CRankingHandler.cpp"
 #include "CSemantic.h"
 
@@ -24,21 +25,21 @@ using namespace std;
 CSemanticJudge::CSemanticJudge(CObject *object)
 {
 	mpController = object;
-	mpJudgeStory = new CJudgeStory;
-	mpJudgeMusic = new CJudgeMusic;
-	mpJudgeAbsolutely = new CJudgeAbsolutely;
-
-	mapSemanticObject[CONTENT_STORY] = mpJudgeStory;
-	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = mpJudgeMusic;
-	mapSemanticObject[CONTENT_ABSOLUTELY] = mpJudgeAbsolutely;
+	mapSemanticObject[CONTENT_STORY] = new CJudgeStory;
+	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = new CJudgeMusic;
+	mapSemanticObject[CONTENT_ABSOLUTELY] = new CJudgeAbsolutely;
+	mapSemanticObject[CONTENT_EDUCATION] = new CJudgeEducation;
 }
 
 CSemanticJudge::~CSemanticJudge()
 {
+
+	for(map<int, CSemantic*>::const_iterator it_map = mapSemanticObject.begin(); mapSemanticObject.end() != it_map;
+			++it_map)
+	{
+		delete it_map->second;
+	}
 	mapSemanticObject.clear();
-	delete mpJudgeStory;
-	delete mpJudgeMusic;
-	delete mpJudgeAbsolutely;
 }
 
 int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)

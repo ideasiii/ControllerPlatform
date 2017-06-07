@@ -10,9 +10,6 @@
 class JSONObject;
 class CObject;
 class CSemantic;
-class CJudgeAbsolutely;
-class CJudgeStory;
-class CJudgeMusic;
 
 class CSemanticJudge
 {
@@ -23,8 +20,5 @@ public:
 
 private:
 	CObject *mpController;
-	CJudgeStory *mpJudgeStory;
-	CJudgeMusic *mpJudgeMusic;
-	CJudgeAbsolutely *mpJudgeAbsolutely;
 	std::map<int, CSemantic*> mapSemanticObject;
 };

@@ -3,6 +3,7 @@
  *
  *  Created on: 2017年5月2日
  *      Author: Jugo
+ *      .....幹! 亂七八遭
  */
 
 #pragma once
@@ -31,6 +32,7 @@ typedef std::map<int, WORD_ATTR> WORD_BODY;		// 文字的肉體
 class CSemantic
 {
 public:
+	virtual ~CSemantic();
 	int getSubject(const char *szWord);
 	int getAttribute(const char *szWord, WORD_BODY &wordBody);
 	int getVerb(const char *szWord, WORD_ATTR &wordAttr);
@@ -39,8 +41,8 @@ public:
 	std::string _toString();
 
 protected:
-	virtual ~CSemantic();
 	virtual std::string toString();
 	virtual int word(const char *szInput, JSONObject* jsonResp);
 	virtual int evaluate(const char *szWord);
+
 };
