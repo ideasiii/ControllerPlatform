@@ -5,9 +5,9 @@
  *      Author: root
  */
 
+#include <time.h>
 #include "CATcpServer.h"
 #include "CMessageHandler.h"
-#include <time.h>
 #include "LogHandler.h"
 #include "event.h"
 #include "utility.h"
@@ -90,6 +90,7 @@ int CATcpServer::start(const char* cszAddr, short nPort, int nMsqKey)
 				return -1;
 			}
 			createThread(threadCATcpServerMessageReceive, this, "CATcpServer Message Receive");
+
 			createThread(threadTcpAccept, this, "CATcpServer Socket Accept Thread");
 			_log("[CATcpServer] %s Create Server Success Port: %d Socket FD: %lu", strTaskName.c_str(), nPort,
 					nSocketFD);

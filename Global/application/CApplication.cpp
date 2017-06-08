@@ -122,4 +122,5 @@ void runService(int nMsqKey)
 int main(int argc, char* argv[])
 {
 	return process(runService, clock());
+	terminate();
 }
