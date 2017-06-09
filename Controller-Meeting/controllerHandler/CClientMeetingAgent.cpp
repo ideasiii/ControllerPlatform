@@ -286,7 +286,7 @@ int CClientMeetingAgent::onSmartBuildingAppVersionRequest(int nSocket, int nComm
 	{
 		bodyData =
 			R"({"VERSION": "0.0.0", "VERSION_CODE": 0, "APP_DOWNLOAD_URL": ""})";
-	} 
+	}
 	else
 	{
 		bodyData =

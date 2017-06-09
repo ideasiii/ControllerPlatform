@@ -56,7 +56,6 @@ int CClientAmxController::startClient(int msqKey)
 
 		pthread_setname_np(msgRecvTid, msgThreadName.c_str());
 		pthread_setname_np(pktRecvTid, pktThreadName.c_str());
-
 	});
 
 	if (nRet < 0)

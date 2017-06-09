@@ -194,6 +194,9 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
+
+	_log("[CCmpClient] %s onTcpReceive result = %d", taskName().c_str(), result);
+
 	if (0 >= result)
 		return 0;
 	if (nHeaderSize == result)
