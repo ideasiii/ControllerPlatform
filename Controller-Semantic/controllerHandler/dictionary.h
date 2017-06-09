@@ -51,3 +51,10 @@ static map<string, string> mapStory;
 //=========================== Education ==========================================//
 static map<string, string> mapEducation;
 static map<string, string> mapEducationPoetry;
+
+//==================================== match_service ===========================================//
+
+#define SERVICE_CLOCK				1
+#define SERVICE_WEATHER				2
+static map<string, int> mapService;
+

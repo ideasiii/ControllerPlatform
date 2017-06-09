@@ -10,7 +10,7 @@
 //==================================== 內容定義 =========================================//
 typedef enum _CONTENT_TYPE
 {
-	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION
+	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION, CONTENT_SERVICE
 } CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//
@@ -42,9 +42,4 @@ typedef enum _CONTENT_TYPE
 
 //==================================== 固定回復 ===========================================//
 #define WORD_UNKNOW					"我不了解這句話的意思"
-
-//==================================== match_service ===========================================//
-
-#define SERVICE_CLOCK				1
-#define SERVICE_WEATHER				2
 

@@ -113,6 +113,24 @@ int JSONObject::getInt(string name, int defaultValue)
 	return nValue;
 }
 
+float JSONObject::getFloat(string name)
+{
+	return getFloat(name, 0.0);
+}
+
+float JSONObject::getFloat(string name, float defaultValue)
+{
+	float fValue = defaultValue;
+	if(cjsonObj)
+	{
+		if(!isNull(name) && (cJSON_Number == cJSON_GetObjectItem(cjsonObj, name.c_str())->type))
+		{
+			fValue = cJSON_GetObjectItem(cjsonObj, name.c_str())->valueint;
+		}
+	}
+	return fValue;
+}
+
 bool JSONObject::isNull(string name)
 {
 	if(cJSON_GetObjectItem(cjsonObj, name.c_str()))
@@ -174,3 +192,7 @@ cJSON *JSONObject::getJsonObject(std::string strName)
 	return cJSON_GetObjectItem(cjsonObj, strName.c_str());
 }
 
+void JSONObject::operator=(cJSON *c)
+{
+	cjsonObj = c;
+}

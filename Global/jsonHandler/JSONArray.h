@@ -41,6 +41,8 @@ public:
 	void release();
 	bool isValid();
 
+	void operator=(cJSON *c);
+
 private:
 	cJSON * cjsonArray;
 	int mnExtPointObj;

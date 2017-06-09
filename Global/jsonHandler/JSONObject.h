@@ -14,13 +14,15 @@ class JSONArray;
 class JSONObject
 {
 public:
-	explicit JSONObject();
+	JSONObject();
 	explicit JSONObject(std::string strSource);
 	explicit JSONObject(cJSON *pcJSON);
 	bool getBoolean(std::string name);
 	bool getBoolean(std::string name, bool defaultValue);
 	int getInt(std::string name);
 	int getInt(std::string name, int defaultValue);
+	float getFloat(std::string name);
+	float getFloat(std::string name, float defaultValue);
 	cJSON *getJsonArray(std::string strName);
 	cJSON *getJsonObject(std::string strName);
 	std::string getString(std::string name);
@@ -40,6 +42,8 @@ public:
 	cJSON * getcJSON();
 
 	void release();
+
+	void operator=(cJSON *c);
 
 private:
 	cJSON *cjsonObj;

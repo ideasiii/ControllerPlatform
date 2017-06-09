@@ -172,3 +172,8 @@ void JSONArray::release()
 	}
 }
 
+void JSONArray::operator=(cJSON *c)
+{
+	cjsonArray = c;
+}
+
