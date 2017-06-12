@@ -7,3 +7,5 @@
 #define DOOR_QR_CODE_101       "E8WZH+DXBiLkrJB0A6MvWRxc4ZO72SDF9jslzsH4Ahd1nu4ZZuE0qtj0uU2wxVsoCszE72bP9JSDoXCPaQL4sxIXOqwua6ZVn+VdtCI3ushUzi8qSogC3J7UtO5Kk4Vg+nC2k5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4aDsoYs="
 #define DOOR_QR_CODE_102       "E8WZH+DXBiLkrJB0A6MvWRxc4ZO72f0ATaH4Ahd1nu7rcrcq4Qa9+rJUZBqP+U4T13BrnqwsDCTY9uU2wxVsoCszE6ZKuuZjhZvXXFxAlJ4XEXkY1LDmXQYSlMF/L+3xk5jyUNlSPX1MbunsNLLMdgZYlOU+b0sB4G7kA8DsoYs="
 #define TEST_AMX_TOKEN "28084ca1-7386-4fa6-b174-098ee2784a5d"
+#define DOOR_TOKEN_101_DUMMY "abcabcab-ffff-0101-ffff-ffffffffffff"
+#define DOOR_TOKEN_102_DUMMY "abcabcab-ffff-0102-ffff-ffffffffffff"

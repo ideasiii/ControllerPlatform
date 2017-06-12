@@ -1,16 +1,35 @@
 #include "DoorAccessHandler.h"
 
 #include <chrono>
+#include <regex>
+
 #include "common.h"
 #include "utility.h"
+#include "../HiddenUtility.hpp"
+#include "../RegexPattern.h"
 #include "../TestStringsDefinition.h"
 #include "CConfig.h"
+#include "CMysqlHandler.h"
 #include "Ites1fDacClient.h"
 
+#define LOG_TAG "[DoorAccessHandler]"
 #define CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER "CLIENT ITES 1F DOOR CONTROLLER"
+#define CONF_BLOCK_MYSQL_SOURCE "MYSQL SOURCE"
 
 DoorAccessHandler::DoorAccessHandler()
 {
+	meetingRoomToReaderMap["ITES_101"] = "001";
+	meetingRoomToReaderMap["ITES_102"] = "002";
+	meetingRoomToReaderMap["ITES_103"] = "003";
+	meetingRoomToReaderMap["ITES_104"] = "004";
+	meetingRoomToReaderMap["ITES_105"] = "005";
+	meetingRoomToReaderMap["ITES_106"] = "006";
+	meetingRoomToReaderMap["ITES_107"] = "007";
+	meetingRoomToReaderMap["ITES_108"] = "008";
+	meetingRoomToReaderMap["ITES_109"] = "009";
+	meetingRoomToReaderMap["ITES_110"] = "010";
+	meetingRoomToReaderMap["ITES_111"] = "011";
+	meetingRoomToReaderMap["ITES_112"] = "012";
 }
 
 DoorAccessHandler::~DoorAccessHandler()
@@ -22,11 +41,22 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 	string strItes1fServerIp = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "server_ip");
 	string strItes1fServerPort = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "port");
 	string strItes1fServerAesKey = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "aes_key");
+	string strMysqlHost = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "host");
+	string strMysqlPort = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "port");
+	string strMysqlUser = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "user");
+	string strMysqlPassword = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "password");
+	string strMysqlDatabase = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "database");
 
-	if (strItes1fServerIp.empty() || strItes1fServerPort.empty()
-		|| strItes1fServerAesKey.empty())
+	if (strItes1fServerIp.empty() 
+		|| strItes1fServerPort.empty()
+		|| strItes1fServerAesKey.empty()
+		|| strMysqlHost.empty()
+		|| strMysqlPort.empty()
+		|| strMysqlUser.empty()
+		|| strMysqlPassword.empty()
+		|| strMysqlDatabase.empty())
 	{
-		_log("[DoorAccessHandler] configMember() 404");
+		_log(LOG_TAG" configMember() 404");
 		return FALSE;
 	}
 
@@ -36,89 +66,117 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 	this->ites1fDoor = std::make_unique<Ites1fDacClient>(strItes1fServerIp,
 		ites1fServerPort, (uint8_t*)strItes1fServerAesKey.c_str());
 
+	int mysqlPort;
+	convertFromString(mysqlPort, strMysqlPort);
+	mysqlSourceInfo = MysqlSourceInfo(strMysqlHost, mysqlPort, strMysqlUser, strMysqlPassword, strMysqlDatabase);
+
 	return TRUE;
 }
 
-std::string DoorAccessHandler::doRequestDummy(std::string uuid, std::string meetingRoom)
+bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const& uuid, std::string const& meetingRoom)
 {
-	if (uuid.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
-		&& meetingRoom.find("101") != string::npos)
-	{
-		//101 door lock (dummy response)
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"101 Door Opened (dummy)\"}}";
-	}
-	else if (uuid.find(TEST_USER_HAS_MEETING_IN_002) != string::npos
-		&& meetingRoom.find("102") != string::npos)
-	{
-		//102 door lock (dummy response)
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"102 Door Opened (dummy)\"}}";
-	}
+	std::regex uuidRegex(UUID_PATTERN);
+	std::regex meetingRoomHumanIdRegex(MEETING_ROOM_ID_PATTERN);
 
-	return "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"Permission to " + meetingRoom + " is not granted\"}}";
-}
-
-/**
- * This function REALLY SENDS commannd to Controller-DoorControl
- */
-std::string DoorAccessHandler::doRequest(std::string uuid, std::string meetingRoom)
-{
-	string token;
-	string reader;
-
-	if (uuid.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
-		&& meetingRoom.find("101") != string::npos)
+	if (!regex_match(uuid, uuidRegex))
 	{
-		// 101 door lock (REALLY opens the door)
-		token = "eeeeeeee-ffff-0101-ffff-ffffffffffff";
-		reader = "001";
+		_log(LOG_TAG" doRequest() ID %s is not a valid UUID", uuid.c_str());
+		resultMessage = "Invalid parameter";
+		return false;
 	}
-	else if (uuid.find(TEST_USER_HAS_MEETING_IN_002) != string::npos
-		&& meetingRoom.find("102") != string::npos)
+	else if (!regex_match(meetingRoom, meetingRoomHumanIdRegex))
 	{
-		// 102 door lock (REALLY opens the door)		
-		token = "eeeeeeee-ffff-0102-ffff-ffffffffffff";
-		reader = "002";
-	} 
-	else
-	{
-		return "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"Permission to " + meetingRoom + " is not granted \"}}";
+		_log(LOG_TAG" doRequest() meeting room ID %s is not valid", meetingRoom.c_str());
+		resultMessage = "Invalid parameter";
+		return false;
 	}
 
-	// TODO validate token
-	int64_t extendTime = 100000;
-	int64_t validFrom = unixTimeMilli() - extendTime;
-	int64_t goodThru = unixTimeMilli() + extendTime;
-	int64_t unixTimeNow = unixTimeMilli();
+	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
+	CMysqlHandler mysql;
+	int nRet = mysql.connect(mysqlSourceInfo.host, mysqlSourceInfo.database, mysqlSourceInfo.user,
+		mysqlSourceInfo.password);
 
-	if (unixTimeNow < validFrom || unixTimeNow > goodThru)
+	if (FALSE == nRet)
 	{
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\": \"Bad timing to open " + meetingRoom + "\"}}";
+		_log(LOG_TAG" doRequest() Mysql Error: %s", mysql.getLastError().c_str());
+		resultMessage = "System error";
+		return false;
+	}
+
+	list<map<string, string> > listRet;
+	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM meeting.door_access_token as t, meeting.user as u, meeting.meeting_room as m "
+		"WHERE u.uuid = '" + uuid + "' AND m.room_id = '" + meetingRoom
+		+ "' AND t.effective <= " + to_string(unixTimeNow) + " AND t.expiry >= " + to_string(unixTimeNow)
+		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
+
+	nRet = mysql.query(strSQL, listRet);
+	string strError = mysql.getLastError();
+	mysql.close();
+
+	if (FALSE == nRet)
+	{
+		_log(LOG_TAG" doRequest() Mysql Error: %s", strError.c_str());
+		resultMessage = "System error";
+		return false;
+	}
+	else if (listRet.size() < 1)
+	{
+		_log(LOG_TAG" doRequest() db no match token");
+		resultMessage = "Permission denied";
+		return false;
+	}
+	else if (listRet.size() > 1)
+	{
+		_log(LOG_TAG" doRequest() db returned more than 1 result?");
+	}
+
+	auto& retRow = *listRet.begin();
+	auto& retToken = retRow["uuid"];
+	auto& retValidFrom = retRow["effective"];
+	auto& retGoodThrough = retRow["expiry"];
+	
+	// return now if token is identified as simulation only
+	if (retToken.compare(DOOR_TOKEN_101_DUMMY) == 0
+		|| retToken.compare(DOOR_TOKEN_102_DUMMY) == 0)
+	{
+		resultMessage = meetingRoom + " Door Opened";
+		return true;
 	}
 
 	// 如果一定時間內已經成功開門，因為考慮到門不會馬上被關上，故直接返回成功，不再發送指令到遠端
-	if (lastOpenedTime.find(reader) != lastOpenedTime.end()
-		&& unixTimeNow - lastOpenedTime[reader] < 2000)
+	if (lastOpenedTime.find(meetingRoom) != lastOpenedTime.end()
+		&& unixTimeNow - lastOpenedTime[meetingRoom] < 2000)
 	{
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened (cached)\"}}";
+		resultMessage = "Door just opened";
+		return true;
 	}
 
-	std::string errorDescription;
-	bool apiCallOk = ites1fDoor->doorOpen(errorDescription, uuid, reader, token, validFrom, goodThru);
-	if (!apiCallOk)
+	string reader;
+	if (meetingRoomToReaderMap.find(meetingRoom) != meetingRoomToReaderMap.end())
 	{
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY failed to open: "
-			+ errorDescription + "\"}}";
+		reader = meetingRoomToReaderMap[meetingRoom];
 	}
 	else
 	{
-		lastOpenedTime[reader] = unixTimeMilli();
-		return "{\"QRCODE_TYPE\": \"3\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\": \"Door REALLY Opened\"}}";
-	}		
-	
-}
+		resultMessage = "Meeting room not found";
+		return false;
+	}
 
-int64_t DoorAccessHandler::unixTimeMilli()
-{
-	return std::chrono::duration_cast<std::chrono::milliseconds>
-		(std::chrono::system_clock::now().time_since_epoch()).count();
+	int64_t tokenValidFrom, tokenGoodThrough;
+	convertFromString(tokenValidFrom, retValidFrom);
+	convertFromString(tokenGoodThrough, retGoodThrough);
+
+	std::string errorDescription;
+	bool apiCallOk = ites1fDoor->doorOpen(errorDescription, uuid, reader, retToken, tokenValidFrom, tokenGoodThrough);
+	if (!apiCallOk)
+	{
+		resultMessage = "Failed: " + errorDescription;
+		return false;
+	}
+	else
+	{
+		lastOpenedTime[meetingRoom] = HiddenUtility::unixTimeMilli();
+		resultMessage = "Opened";
+		return true;
+	}		
 }

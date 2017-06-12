@@ -11,14 +11,11 @@
 #include "CMysqlHandler.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
+#include "../RegexPattern.h"
 
 #define TASK_NAME "ClientAMX"
 #define LOG_TAG "[CClientAmxController]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientAmxController\033[0m]"
-
-// UUID pattern, which does not conform to strict standards
-#define UUID_PATTERN R"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
-
 
 CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp,
 	int userPort, int validationPort, MysqlSourceInfo& mysqlSrc) :

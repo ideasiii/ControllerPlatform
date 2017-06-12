@@ -1,20 +1,23 @@
 #include "CClientMeetingAgent.h"
 
+#include <regex>
+
 #include "../enquireLinkYo/EnquireLinkYo.h"
 #include "common.h"
 #include "event.h"
 #include "iCommand.h"
 #include "packet.h"
 #include "AndroidPackageInfoQuierer.hpp"
+#include "AppVersionHandler/AppVersionHandler.h"
+#include "AppVersionHandler/AppVersionHandlerFactory.h"
 #include "ClientAmxController/AmxControllerInfo.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "CCmpHandler.h"
 #include "CConfig.h"
 #include "CThreadHandler.h"
 #include "JSONObject.h"
+#include "RegexPattern.h"
 #include "TestStringsDefinition.h"
-#include "AppVersionHandler/AppVersionHandler.h"
-#include "AppVersionHandler/AppVersionHandlerFactory.h"
 
 #define TASK_NAME "ClientAgent"
 
@@ -23,6 +26,7 @@
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
 
+#define JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE "{\"QRCODE_TYPE\":\"0\",\"MESSAGE\":{\"RESULT_MESSAGE\":\"Unknown type of QR-Code\"}}"
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller)
 {
@@ -185,95 +189,96 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	string strResponseBodyData = "";
 	_log(LOG_TAG" onSmartBuildingQrCodeToken() body: %s", strRequestBodyData.c_str());
 
-	if (strRequestBodyData.find(
-		"U9oKcId0/8PgoYnXpNaKq3/juvgr4C8HlIk82lF/FazsezL3D54oD3ioZtYtS6PRMwcShS+nvXrtREn4gqfKLw==")
-		!= string::npos)
-	{
-		//AMX Permission User
-		strResponseBodyData =
-			"{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\"}}";
-	}
-	else if (strRequestBodyData.find(
-		"SJlze0jJqfG7IrShMx7e0XoZ6LWdfKFE4G4i9yk2I/m9kumXDesRLQOEcTevE/FlkJHMOVBcaSj6XmZ9QtF3KA==")
-		!= string::npos)
-	{
-		//other user
-		strResponseBodyData =
-			"{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\"}}";
+	JSONObject reqJson(strRequestBodyData);
+	string reqUserId = reqJson.getString("USER_ID", "");
+	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
 
-	}
-	else if (strRequestBodyData.find(
-		"m+eJYbDinOt7XGXfVdBw5EZhQDDgmpnF8HXQr3Nkj6LBMSF+aGmoW//g54AXQcmrKl+gzOm4pz71tCLKOmR55g==")
-		!= string::npos)
+	std::unique_ptr<JSONObject> decodedQRCodeToken(decodeQRCodeString(reqQrCodeToken));
+
+	if (!reqJson.isValid() || reqQrCodeToken.size() < 1
+		|| decodedQRCodeToken == nullptr || !decodedQRCodeToken->isValid())
 	{
-		//digit sign up
-		if (strRequestBodyData.find("00000000-ffff-0000-ffff-ffffffffffff") != string::npos)
+		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+		return TRUE;
+	}
+	
+	string decStrQrCodeType = decodedQRCodeToken->getString("QRCODE_TYPE");
+	std::regex qrcodeTypePattern(QR_CODE_TYPE_PATTERN);
+
+	if (!regex_match(decStrQrCodeType, qrcodeTypePattern))
+	{
+		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+		return TRUE;
+	}
+
+	int decQrCodeType;
+	convertFromString(decQrCodeType, decStrQrCodeType);
+
+	if (decQrCodeType == 1)
+	{
+		// 開會通知
+		if (reqUserId.size() > 0)
+		{
+			// type 1 of QR code should not contain user uuid
+			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			return TRUE;
+		}
+
+		// this type of QR code contains exactly the content to be sent back to user
+		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, decodedQRCodeToken->toString().c_str());
+		return TRUE;
+	}
+	else if (decQrCodeType == 2)
+	{
+		// 數位簽到
+		if (reqUserId.size() < 1)
+		{
+			// type 2 of QR code should contain user uuid
+			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			return TRUE;
+		}
+
+		if (reqUserId.compare(TEST_USER_HAS_MEETING_IN_001) == 0)
 		{
 			strResponseBodyData =
-				"{\"QRCODE_TYPE\": \"2\",\"MESSAGE\":{\"RESULT\":true,\"RESULT_MESSAGE\":\"Sign Up Successful\"}}";
+				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":true,"RESULT_MESSAGE":"Sign Up Successful"}})";
 		}
 		else
 		{
 			strResponseBodyData =
-				"{\"QRCODE_TYPE\":\"2\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\": \"You Have No Meeting Today\"}}";
+				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"You Have No Meeting Today"}})";
 		}
 
+		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+		return TRUE;
 	}
-	else if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
-		|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
-		|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos
-		|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
+	else if (decQrCodeType == 3)
 	{
-		// Door access
-		std::string uuid;
-		if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos)
+		// 門禁
+		if (reqUserId.size() < 1)
 		{
-			uuid = TEST_USER_HAS_MEETING_IN_001;
-		}
-		else if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_002) != string::npos)
-		{
-			uuid = TEST_USER_HAS_MEETING_IN_002;
+			// type 3 of QR code should contain user uuid
+			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			return TRUE;
 		}
 
-		if (uuid.size() > 0)
+		string dstRoomId = decodedQRCodeToken->getString("DOOR_OPEN_ROOM_ID", "");
+		if (dstRoomId.size() < 1)
 		{
-			std::string meetingRoom = "000";
-
-			if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
-				|| strRequestBodyData.find(DOOR_QR_CODE_101) != string::npos)
-			{
-				meetingRoom = "101";
-			}
-			else if (strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos
-				|| strRequestBodyData.find(DOOR_QR_CODE_102) != string::npos)
-			{
-				meetingRoom = "102";
-			}
-
-			if (strRequestBodyData.find(DOOR_QR_CODE_101_DUMMY) != string::npos
-				|| strRequestBodyData.find(DOOR_QR_CODE_102_DUMMY) != string::npos)
-			{
-				strResponseBodyData = doorAccessHandler.doRequestDummy(uuid, meetingRoom);
-			}
-			else
-			{
-				strResponseBodyData = doorAccessHandler.doRequest(uuid, meetingRoom);
-			}
+			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			return TRUE;
 		}
-		else
-		{
-			strResponseBodyData =
-				"{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":false,\"RESULT_MESSAGE\":\"No permission to open this door\"}}";
-		}
+
+		std::string resultMessage;
+		bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
+
+		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
+			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
+		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+		return TRUE;
 	}
-	else
-	{
-		strResponseBodyData =
-			"{\"QRCODE_TYPE\":\"0\",\"MESSAGE\":{\"RESULT_MESSAGE\":\"Unknown this QR-Code Type\"}}";
-	}
-
-	response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
-
+	
+	response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 	return TRUE;
 }
 
@@ -359,6 +364,48 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 
 	return TRUE;
+}
+
+JSONObject *CClientMeetingAgent::decodeQRCodeString(std::string& src)
+{
+	if (src.size() < 1)
+	{
+		return nullptr;
+	}
+
+	if (src.compare("U9oKcId0/8PgoYnXpNaKq3/juvgr4C8HlIk82lF/FazsezL3D54oD3ioZtYtS6PRMwcShS+nvXrtREn4gqfKLw==") == 0)
+	{
+		// test user w/ AMX control permission
+		return new JSONObject("{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\"}}");
+	}
+	else if (src.compare("SJlze0jJqfG7IrShMx7e0XoZ6LWdfKFE4G4i9yk2I/m9kumXDesRLQOEcTevE/FlkJHMOVBcaSj6XmZ9QtF3KA==") == 0)
+	{
+		// test user w/o AMX control permission
+		return new JSONObject("{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\"}}");
+	}
+	else if (src.compare("m+eJYbDinOt7XGXfVdBw5EZhQDDgmpnF8HXQr3Nkj6LBMSF+aGmoW//g54AXQcmrKl+gzOm4pz71tCLKOmR55g==") == 0)
+	{
+		// digital signin
+		return new JSONObject(R"({"DIGIT_SIGN_PLACE": "ITeS", "QRCODE_TYPE": "2"})");
+	}
+	else if (src.compare(DOOR_QR_CODE_101_DUMMY) == 0)
+	{
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3")");
+	}
+	else if (src.compare(DOOR_QR_CODE_102_DUMMY) == 0)
+	{
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3")");
+	}
+	else if (src.compare(DOOR_QR_CODE_101) == 0)
+	{
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101", "QRCODE_TYPE": "3")");
+	}
+	else if (src.compare(DOOR_QR_CODE_102) == 0)
+	{
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3")");
+	}
+
+	return nullptr;
 }
 
 void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)

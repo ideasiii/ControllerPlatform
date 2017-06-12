@@ -15,6 +15,7 @@ class CCmpHandler;
 class CConfig;
 class CSocketClient;
 class EnquireLinkYo;
+class JSONObject;
 
 class CClientMeetingAgent : public CCmpClient
 {
@@ -56,7 +57,11 @@ protected:
 
 private:
 	// 初始化連線到 agent 需要的參數
-	int initMeetingAgentServerParams(std::unique_ptr<CConfig> &config);
+	int initMeetingAgentServerParams(std::unique_ptr<CConfig>& config);
+
+	// 解碼 QR code 掃出來的字串
+	// 不再使用時必須 delete 該物件
+	JSONObject *decodeQRCodeString(std::string& src);
 
 	std::string agentIp;
 	int agentPort;
