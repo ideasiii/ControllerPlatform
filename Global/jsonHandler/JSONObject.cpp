@@ -143,6 +143,11 @@ string JSONObject::toString()
 	return cJSON_Print(cjsonObj);
 }
 
+string JSONObject::toUnformattedString()
+{
+	return cJSON_PrintUnformatted(cjsonObj);
+}
+
 cJSON * JSONObject::getcJSON()
 {
 	return cjsonObj;

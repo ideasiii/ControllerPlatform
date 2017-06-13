@@ -32,6 +32,7 @@ public:
 	virtual ~JSONObject();
 	bool isValid();
 	std::string toString();
+	std::string toUnformattedString();
 	void put(std::string strKey, std::string strValue);
 	void put(std::string strKey, const char* szrValue);
 	void put(std::string strKey, int nValue);
