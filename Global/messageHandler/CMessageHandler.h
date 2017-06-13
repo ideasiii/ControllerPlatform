@@ -31,8 +31,6 @@ struct MESSAGE_BUF
 	char cData[DATA_LEN];
 	int what;
 	int arg[ARG_LEN];
-//	int arg1;
-//	int arg2;
 };
 
 class CMessageHandler

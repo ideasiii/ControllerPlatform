@@ -29,7 +29,7 @@ CJudgeMusic::CJudgeMusic() :
 
 CJudgeMusic::~CJudgeMusic()
 {
-
+	delete spotify;
 }
 
 string CJudgeMusic::toString()

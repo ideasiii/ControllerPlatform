@@ -102,6 +102,23 @@ __attribute__ ((unused)) static const string currentDateTime()
 	return buf;
 }
 
+__attribute__ ((unused)) static const void currentDateTimeNum(int &nYear, int &nMonth, int &nDay, int &nHour,
+		int &nMinute, int &nSecond)
+{
+	unsigned long long nTime;
+	time_t now = time(0);
+	struct tm tstruct;
+	char buf[24];
+	tstruct = *localtime(&now);
+	nYear = tstruct.tm_year + 1900;
+	nMonth = tstruct.tm_mon + 1;
+	nDay = tstruct.tm_mday;
+	nHour = tstruct.tm_hour;
+	nMinute = tstruct.tm_min;
+	nSecond = tstruct.tm_sec;
+	printf("%d %d %d %d %d %d\n", nYear, nMonth, nDay, nHour, nMinute, nSecond);
+}
+
 __attribute__ ((unused)) static const string currentDate()
 {
 	time_t now = time(0);
@@ -110,6 +127,18 @@ __attribute__ ((unused)) static const string currentDate()
 	tstruct = *localtime(&now);
 	strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
 	return buf;
+}
+
+__attribute__ ((unused)) static const int currentDateNum()
+{
+	int nDate;
+	time_t now = time(0);
+	struct tm tstruct;
+	char buf[24];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%04Y%02m%02d", &tstruct);
+	convertFromString(nDate, buf);
+	return nDate;
 }
 
 __attribute__ ((unused)) static string trim(string strSource)

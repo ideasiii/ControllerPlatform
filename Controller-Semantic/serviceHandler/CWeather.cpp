@@ -12,6 +12,7 @@
 #include "JSONArray.h"
 #include "CHttpsClient.h"
 #include "utility.h"
+#include "LogHandler.h"
 
 #define WEATHER_CURRENT			"http://api.openweathermap.org/data/2.5/weather?q=%s,tw&appid=63daed3b782efe4bef4fbe300ea8acab&lang=zh_tw"
 
@@ -36,6 +37,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 	JSONObject *jroot;
 	JSONArray jArray;
 	JSONObject jItem;
+	int nYear, nMonth, nDay, nHour, nMin, nSec;
 
 	if(!szLocation)
 		return;
@@ -47,6 +49,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 
 	if(!strData.empty())
 	{
+		_log("[CWeather] getWeather HTTP Response: %s", strData.c_str());
 		jroot = new JSONObject(strData);
 		if(jroot->isValid())
 		{
@@ -68,8 +71,14 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 			if(jItem.isValid())
 			{
 				weather.fTemperature = jItem.getFloat("temp") - 273.15; // ℃ = K - 273.15
+				weather.fPressure = jItem.getFloat("pressure");
+				weather.fHumidity = jItem.getFloat("humidity");
+				weather.fTemperature_max = jItem.getFloat("temp_max") - 273.15;
 			}
-
+			weather.fVisibility = jroot->getInt("visibility");
+			currentDateTimeNum(nYear, nMonth, nDay, nHour, nMin, nSec);
+			weather.lnToday = nowSecond();
+			_log("@@@@@@@@@  %d", weather.lnToday);
 		}
 		jroot->release();
 		delete jroot;

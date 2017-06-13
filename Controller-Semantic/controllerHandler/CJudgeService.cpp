@@ -17,12 +17,12 @@
 #include "common.h"
 #include "JSONObject.h"
 
-
 using namespace std;
 
 CJudgeService::CJudgeService()
 {
 	loadServiceDictionary();
+	weather.clear();
 }
 
 CJudgeService::~CJudgeService()
@@ -41,7 +41,6 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	string strWord;
 	string strTTS;
 	map<string, int>::const_iterator it_map;
-	WEATHER weather;
 
 	strWord = szInput;
 	if(strWord.empty())
@@ -60,15 +59,16 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	switch(nService)
 	{
 	case SERVICE_CLOCK:
-		_log("XXXXXXXXXXxxx 時間");
 		break;
 	case SERVICE_WEATHER:
-		_log("XXXXXXXXXXxxx 天氣");
 		getWeather("台北", weather);
-		strTTS = format("%s", weather.strWeather.c_str());
+		_log("############# %d", weather.lnToday);
+		strTTS = format("現在天氣%s，氣溫%.02f度，溼度%.02f度", weather.strWeather.c_str(), weather.fTemperature,
+				weather.fHumidity);
 		break;
 	}
 
+	jsonResp->put("tts", strTTS);
 	return 0;
 }
 
@@ -145,6 +145,5 @@ void CJudgeService::getWeather(const char *szLocation, WEATHER &weather)
 		return;
 
 	wt.getWeather(szLocation, weather);
-
 }
 

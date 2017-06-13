@@ -130,10 +130,13 @@ void CController::onHandleMessage(Message &message)
 		thread([=]
 		{	onSemanticWordRequest( message.arg[0], message.arg[1], message.arg[2], message.arg[3],
 					message.strData.c_str());}).detach();
+
 //		auto lambda = [=]
 //		{	onSemanticWordRequest( message.arg[0], message.arg[1], message.arg[2], message.arg[3],
 //					message.strData.c_str());};
 //		thread(lambda).detach();
+
+//		onSemanticWordRequest(message.arg[0], message.arg[1], message.arg[2], message.arg[3], message.strData.c_str());
 		break;
 	}
 }

@@ -24,6 +24,9 @@ protected:
 	int evaluate(const char *szWord);
 
 private:
+	WEATHER weather;
+
+private:
 	void loadServiceDictionary();
 	void getClock(std::string &strClock);
 	void getWeather(const char *szLocation, WEATHER &weather);

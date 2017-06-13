@@ -140,6 +140,7 @@ bool JSONObject::isNull(string name)
 
 string JSONObject::toString()
 {
+	//return ObjectToString(cjsonObj);
 	return cJSON_Print(cjsonObj);
 }
 
