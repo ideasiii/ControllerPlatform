@@ -12,9 +12,8 @@
 #include "AppVersionHandler/AppVersionHandlerFactory.h"
 #include "ClientAmxController/AmxControllerInfo.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
-#include "CCmpHandler.h"
 #include "CConfig.h"
-#include "CThreadHandler.h"
+#include "CMysqlHandler.h"
 #include "JSONObject.h"
 #include "RegexPattern.h"
 #include "TestStringsDefinition.h"
@@ -27,6 +26,7 @@
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
 
 #define JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE "{\"QRCODE_TYPE\":\"0\",\"MESSAGE\":{\"RESULT_MESSAGE\":\"Unknown type of QR-Code\"}}"
+
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller)
 {
@@ -92,21 +92,8 @@ int CClientMeetingAgent::startClient(int msqKey)
 	int nRet = connectWithCallback(agentIp.c_str(), agentPort, msqKey, 
 		[](CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid) -> void
 	{
-		CClientMeetingAgent *self = dynamic_cast<CClientMeetingAgent *>(caller);
-		if (self == nullptr)
-		{
-			_log(LOG_TAG" startClient() cast failed on callback");
-			return;
-		}
-
-		//_log(LOG_TAG" startClient() Set receivers thread name");
-
-		std::string msgThreadName = "AgentMsgRecv";
-		std::string pktThreadName = "AgentPktRecv";
-
-		pthread_setname_np(msgRecvTid, msgThreadName.c_str());
-		pthread_setname_np(pktRecvTid, pktThreadName.c_str());
-
+		pthread_setname_np(msgRecvTid, "AgentMsgRecv");
+		pthread_setname_np(pktRecvTid, "AgentPktRecv");
 	});
 
 	if (nRet < 0)
@@ -193,21 +180,21 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
 
-	std::unique_ptr<JSONObject> decodedQRCodeToken(decodeQRCodeString(reqQrCodeToken));
+	std::unique_ptr<JSONObject> decodedQrCodeJson(decodeQRCodeString(reqQrCodeToken));
 
 	if (!reqJson.isValid() || reqQrCodeToken.size() < 1
-		|| decodedQRCodeToken == nullptr || !decodedQRCodeToken->isValid())
+		|| decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
 	{
-		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 		return TRUE;
 	}
 	
-	string decStrQrCodeType = decodedQRCodeToken->getString("QRCODE_TYPE");
-	std::regex qrcodeTypePattern(QR_CODE_TYPE_PATTERN);
+	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE");
+	std::regex qrCodeTypePattern(QR_CODE_TYPE_PATTERN);
 
-	if (!regex_match(decStrQrCodeType, qrcodeTypePattern))
+	if (!regex_match(decStrQrCodeType, qrCodeTypePattern))
 	{
-		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 		return TRUE;
 	}
 
@@ -217,15 +204,15 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	if (decQrCodeType == 1)
 	{
 		// 開會通知
-		if (reqUserId.size() > 0)
+		if (reqUserId.compare("null") != 0)
 		{
-			// type 1 of QR code should not contain user uuid
-			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			// type 1 of QR code should contain string "null" in USER_ID field
+			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 			return TRUE;
 		}
 
 		// this type of QR code contains exactly the content to be sent back to user
-		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, decodedQRCodeToken->toString().c_str());
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, decodedQrCodeJson->toString().c_str());
 		return TRUE;
 	}
 	else if (decQrCodeType == 2)
@@ -234,11 +221,11 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 		if (reqUserId.size() < 1)
 		{
 			// type 2 of QR code should contain user uuid
-			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 			return TRUE;
 		}
 
-		if (reqUserId.compare(TEST_USER_HAS_MEETING_IN_001) == 0)
+		if (reqUserId.compare(TEST_USER_CAN_OPEN_101) == 0)
 		{
 			strResponseBodyData =
 				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":true,"RESULT_MESSAGE":"Sign Up Successful"}})";
@@ -249,23 +236,18 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"You Have No Meeting Today"}})";
 		}
 
-		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 		return TRUE;
 	}
 	else if (decQrCodeType == 3)
 	{
 		// 門禁
-		if (reqUserId.size() < 1)
+		string dstRoomId = decodedQrCodeJson->getString("DOOR_OPEN_ROOM_ID", "");
+
+		if (reqUserId.size() < 1 || dstRoomId.size() < 1)
 		{
 			// type 3 of QR code should contain user uuid
-			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-			return TRUE;
-		}
-
-		string dstRoomId = decodedQRCodeToken->getString("DOOR_OPEN_ROOM_ID", "");
-		if (dstRoomId.size() < 1)
-		{
-			response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 			return TRUE;
 		}
 
@@ -274,11 +256,11 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 
 		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
 			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
-		response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 		return TRUE;
 	}
 	
-	response(this->getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 	return TRUE;
 }
 
@@ -312,13 +294,13 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 	string strResponseBodyData = "";
 	_log("[ClientMeetingAgent] onSmartBuildingMeetingData() body: %s", strRequestBodyData.c_str());
 
-	if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos)
+	if (strRequestBodyData.find(TEST_USER_CAN_OPEN_101) != string::npos)
 	{
 		strResponseBodyData =
 			"{\"USER_ID\":\"00000000-ffff-0000-ffff-ffffffffffff\",\"USER_NAME\":\"李二二\",\"USER_EMAIL\":\"qwwwew@gmail.com\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2016-06-30 09:30:00\",\"END_TIME\":\"2016-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1afd78\",\"SUPJECT\":\"促進XXX發展計畫\",\"START_TIME\":\"2016-07-30 09:30:00\",\"END_TIME\":\"2016-07-30 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一二\",\"OWNER_EMAIL\":\"qoiu1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2016-08-30 09:30:00\",\"END_TIME\":\"2016-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass71\",\"SUPJECT\":\"促進WWWW發展計畫\",\"START_TIME\":\"2016-08-31 09:30:00\",\"END_TIME\":\"2016-08-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一四\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass72\",\"SUPJECT\":\"促進YYY發展計畫\",\"START_TIME\":\"2016-09-30 09:30:00\",\"END_TIME\":\"2016-09-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一五\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46c0-b0c0-00eede1ass73\",\"SUPJECT\":\"XXXx公司會議\",\"START_TIME\":\"2016-10-30 09:30:00\",\"END_TIME\":\"2016-10-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一六\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-43b0-b0c0-00eede1ass74\",\"SUPJECT\":\"促進YXXY發展計畫\",\"START_TIME\":\"2016-11-28 09:30:00\",\"END_TIME\":\"2016-11-28 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一七\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass75\",\"SUPJECT\":\"促進WWXY發展計畫\",\"START_TIME\":\"2016-11-29 09:30:00\",\"END_TIME\":\"2016-11-29 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一八\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass76\",\"SUPJECT\":\"促進WWY發展計畫\",\"START_TIME\":\"2016-11-30 09:30:00\",\"END_TIME\":\"2016-11-30 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一九\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass18\",\"SUPJECT\":\"促進YYYX發展計畫\",\"START_TIME\":\"2016-12-30 09:30:00\",\"END_TIME\":\"2016-12-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一十\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass28\",\"SUPJECT\":\"促進YYYW發展計畫\",\"START_TIME\":\"2016-12-31 09:30:00\",\"END_TIME\":\"2016-12-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王二一\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
 
 	}
-	else if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_002) != string::npos)
+	else if (strRequestBodyData.find(TEST_USER_CAN_OPEN_102) != string::npos)
 	{
 		strResponseBodyData =
 			"{\"USER_ID\":\"ffffffff-ffff-0000-0000-ffffffffffff\",\"USER_NAME\":\"王二二\",\"USER_EMAIL\":\"qqdsdw@iii.org.tw\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2017-06-30 09:30:00\",\"END_TIME\":\"2017-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2017-08-30 09:30:00\",\"END_TIME\":\"2017-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
@@ -342,12 +324,25 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	std::stringstream ss;
 	
 	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
+
+	JSONObject reqJson(strRequestBodyData);
+
+	// ROOM_ID is a descriptive string like "ITES_101", not a magic number
+	string reqRoomId = reqJson.getString("ROOM_ID", "");
+	string reqUserId = reqJson.getString("USER_ID", "");
+
+	if (!reqJson.isValid() || reqUserId.size() < 1 || reqRoomId.size() < 1)
+	{
+		/*response what?
+		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+		return TRUE;*/
+	}
 	
-	if (strRequestBodyData.find(TEST_USER_HAS_MEETING_IN_001) != string::npos
+	if (strRequestBodyData.find(TEST_USER_CAN_OPEN_101) != string::npos
 		&& strRequestBodyData.find("ITES_101") != string::npos)
 	{
 		//OK can control AMX
-		ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
+		ss << "{\"USER_ID\": \"" << reqUserId
 			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerInfo->serverIp
 			<< "\", \"ROOM_PORT\": " << amxControllerInfo->devicePort
 			<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
@@ -356,13 +351,11 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	else
 	{
 		//NO cannot control AMX
-		ss << "{\"USER_ID\": \"" << TEST_USER_HAS_MEETING_IN_001
-			<< "\", \"RESULT\": false}";
+		ss << "{\"USER_ID\": \"" << reqUserId << "\", \"RESULT\": false}";
 		strResponseBodyData = ss.str();
 	}
 
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
-
 	return TRUE;
 }
 
@@ -373,36 +366,36 @@ JSONObject *CClientMeetingAgent::decodeQRCodeString(std::string& src)
 		return nullptr;
 	}
 
-	if (src.compare("U9oKcId0/8PgoYnXpNaKq3/juvgr4C8HlIk82lF/FazsezL3D54oD3ioZtYtS6PRMwcShS+nvXrtREn4gqfKLw==") == 0)
+	if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// test user w/ AMX control permission
-		return new JSONObject("{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"00000000-ffff-0000-ffff-ffffffffffff\"}}");
+		return new JSONObject(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "00000000-ffff-0000-ffff-ffffffffffff"}})");
 	}
-	else if (src.compare("SJlze0jJqfG7IrShMx7e0XoZ6LWdfKFE4G4i9yk2I/m9kumXDesRLQOEcTevE/FlkJHMOVBcaSj6XmZ9QtF3KA==") == 0)
+	else if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_102) == 0)
 	{
 		// test user w/o AMX control permission
-		return new JSONObject("{\"QRCODE_TYPE\": \"1\",\"MESSAGE\":{\"USER_ID\": \"ffffffff-ffff-0000-0000-ffffffffffff\"}}");
+		return new JSONObject(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "ffffffff-ffff-0000-0000-ffffffffffff"}})");
 	}
-	else if (src.compare("m+eJYbDinOt7XGXfVdBw5EZhQDDgmpnF8HXQr3Nkj6LBMSF+aGmoW//g54AXQcmrKl+gzOm4pz71tCLKOmR55g==") == 0)
+	else if (src.compare(QR_CODE_DIGITAL_CHECKIN_ITES) == 0)
 	{
-		// digital signin
+		// digital checkin
 		return new JSONObject(R"({"DIGIT_SIGN_PLACE": "ITeS", "QRCODE_TYPE": "2"})");
 	}
-	else if (src.compare(DOOR_QR_CODE_101_DUMMY) == 0)
+	else if (src.compare(QR_CODE_DOOR_101_DUMMY) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3")");
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3"})");
 	}
-	else if (src.compare(DOOR_QR_CODE_102_DUMMY) == 0)
+	else if (src.compare(QR_CODE_DOOR_102_DUMMY) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3")");
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3"})");
 	}
-	else if (src.compare(DOOR_QR_CODE_101) == 0)
+	else if (src.compare(QR_CODE_DOOR_101) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101", "QRCODE_TYPE": "3")");
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101", "QRCODE_TYPE": "3"})");
 	}
-	else if (src.compare(DOOR_QR_CODE_102) == 0)
+	else if (src.compare(QR_CODE_DOOR_102) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3")");
+		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3"})");
 	}
 
 	return nullptr;

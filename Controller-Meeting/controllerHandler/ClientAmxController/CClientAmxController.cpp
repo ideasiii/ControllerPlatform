@@ -39,20 +39,8 @@ int CClientAmxController::startClient(int msqKey)
 	int nRet = connectWithCallback(serverIp.c_str(), validationPort, msqKey,
 		[](CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid) -> void
 	{
-		CClientAmxController *self = dynamic_cast<CClientAmxController *>(caller);
-		if (self == nullptr)
-		{
-			_log(LOG_TAG" startClient() cast failed on callback");
-			return;
-		}
-
-		//_log(LOG_TAG" startClient() Set receivers thread name");
-
-		std::string msgThreadName = "AmxMsgRecv";
-		std::string pktThreadName = "AmxPktRecv";
-
-		pthread_setname_np(msgRecvTid, msgThreadName.c_str());
-		pthread_setname_np(pktRecvTid, pktThreadName.c_str());
+		pthread_setname_np(msgRecvTid, "AmxMsgRecv");
+		pthread_setname_np(pktRecvTid, "AmxPktRecv");
 	});
 
 	if (nRet < 0)
