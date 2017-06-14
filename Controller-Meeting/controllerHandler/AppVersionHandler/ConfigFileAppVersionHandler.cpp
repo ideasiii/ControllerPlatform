@@ -64,6 +64,7 @@ void ConfigFileAppVersionHandler::reload()
 	if (packageName.empty() || versionCode < 0 || versionName.empty() || downloadLink.empty())
 	{
 		_log(LOG_TAG" reload() json parsing failed");
+		configJson.release();
 		return;
 	}
 

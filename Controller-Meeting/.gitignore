@@ -8,3 +8,6 @@ controllerHandler/DoorAccessControllerParams.h
 *.o
 controller-meeting.conf
 app_version_handler_config.json
+
+# dore dump
+core.*

@@ -15,7 +15,6 @@
 #include "ClientAmxController/CClientAmxController.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "HiddenUtility.hpp"
-#include "JSONObject.h"
 #include "AppVersionHandler/AppVersionHandler.h"
 
 using namespace std;

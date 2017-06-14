@@ -19,13 +19,16 @@
 #include "TestStringsDefinition.h"
 
 #define TASK_NAME "ClientAgent"
-
 #define LOG_TAG "[CClientMeetingAgent]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientMeetingAgent\033[0m]"
 
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
+#define JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE R"({"QRCODE_TYPE":"0","MESSAGE":{"RESULT_MESSAGE":"Unknown type of QR-Code"}})"
 
-#define JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE "{\"QRCODE_TYPE\":\"0\",\"MESSAGE\":{\"RESULT_MESSAGE\":\"Unknown type of QR-Code\"}}"
+void ReleaseJSONObject(JSONObject *j)
+{
+	j->release();
+}
 
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller)
@@ -179,25 +182,26 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	JSONObject reqJson(strRequestBodyData);
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
-
+	
 	std::unique_ptr<JSONObject> decodedQrCodeJson(decodeQRCodeString(reqQrCodeToken));
+	reqJson.release();
 
-	if (!reqJson.isValid() || reqQrCodeToken.size() < 1
-		|| decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
+	if (reqQrCodeToken.size() < 1 || decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
 	{
 		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 		return TRUE;
 	}
-	
-	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE");
+
+	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE", "");
 	std::regex qrCodeTypePattern(QR_CODE_TYPE_PATTERN);
+	decodedQrCodeJson->release();
 
 	if (!regex_match(decStrQrCodeType, qrCodeTypePattern))
 	{
 		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
 		return TRUE;
 	}
-
+	
 	int decQrCodeType;
 	convertFromString(decQrCodeType, decStrQrCodeType);
 
@@ -206,26 +210,22 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 		// 開會通知
 		if (reqUserId.compare("null") != 0)
 		{
-			// type 1 of QR code should contain string "null" in USER_ID field
-			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-			return TRUE;
+			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 		}
-
-		// this type of QR code contains exactly the content to be sent back to user
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, decodedQrCodeJson->toString().c_str());
-		return TRUE;
+		else
+		{
+			// this type of QR code contains exactly the content to be sent back to user
+			strResponseBodyData = decodedQrCodeJson->toUnformattedString();
+		}
 	}
 	else if (decQrCodeType == 2)
 	{
 		// 數位簽到
 		if (reqUserId.size() < 1)
 		{
-			// type 2 of QR code should contain user uuid
-			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-			return TRUE;
+			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 		}
-
-		if (reqUserId.compare(TEST_USER_CAN_OPEN_101) == 0)
+		else if (reqUserId.compare(TEST_USER_CAN_OPEN_101) == 0)
 		{
 			strResponseBodyData =
 				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":true,"RESULT_MESSAGE":"Sign Up Successful"}})";
@@ -235,9 +235,6 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 			strResponseBodyData =
 				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"You Have No Meeting Today"}})";
 		}
-
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
-		return TRUE;
 	}
 	else if (decQrCodeType == 3)
 	{
@@ -246,21 +243,23 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 
 		if (reqUserId.size() < 1 || dstRoomId.size() < 1)
 		{
-			// type 3 of QR code should contain user uuid
-			response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-			return TRUE;
+			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 		}
+		else
+		{
+			std::string resultMessage;
+			bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
 
-		std::string resultMessage;
-		bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
-
-		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
-			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
-		return TRUE;
+			strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
+				+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
+		}
+	}
+	else
+	{
+		strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 	}
 	
-	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 	return TRUE;
 }
 

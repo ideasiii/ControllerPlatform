@@ -125,10 +125,12 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 			errorDescription = "Permission not granted by remote: " + message;
 		}
 		
+		respJson.release();
 		return false;
 	}
 	
 	_log("[Ites1F_DAClient] doorOpen() request successful\n");
+	respJson.release();
 	return true;
 }
 

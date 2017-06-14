@@ -61,7 +61,7 @@ private:
 
 	// 解碼 QR code 掃出來的字串
 	// 不再使用時必須 delete 該物件
-	JSONObject *decodeQRCodeString(std::string& src);
+	JSONObject* decodeQRCodeString(std::string& src);
 
 	std::string agentIp;
 	int agentPort;
