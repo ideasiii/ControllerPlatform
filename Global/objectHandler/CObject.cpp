@@ -32,18 +32,22 @@ void _onTimer(int nId)
 CObject::CObject() :
 		messageHandler(new CMessageHandler), mnTimerEventId(-1), mnFilter(-1)
 {
-	pthread_mutex_init(&mutex, 0);
+
 }
 
 CObject::~CObject()
 {
-	pthread_mutex_destroy(&mutex);
+	if(messageHandler)
+		delete messageHandler;
+	messageHandler = 0;
 }
 
 void CObject::closeMsq()
 {
 	clearMessage();
-	delete messageHandler;
+	if(messageHandler)
+		delete messageHandler;
+	messageHandler = 0;
 }
 
 int CObject::initMessage(int nKey, const char * szDescript)
@@ -71,8 +75,14 @@ int CObject::initMessage(int nKey, const char * szDescript)
 
 int CObject::run(int lFilter, const char * szDescript)
 {
+
 	int nRecv;
-	MESSAGE_BUF *msgbuf;
+	MESSAGE_BUF msgbuf;
+	Message message;
+	void *pdata = &msgbuf;
+
+	msgbuf.clear();
+	message.clear();
 
 	if(-1 == messageHandler->getMsqid())
 	{
@@ -86,9 +96,6 @@ int CObject::run(int lFilter, const char * szDescript)
 		return -1;
 	}
 
-	msgbuf = new MESSAGE_BUF;
-	void * pdata;
-	pdata = msgbuf;
 	messageHandler->setRecvEvent(lFilter);
 
 	szDescript ?
@@ -97,34 +104,24 @@ int CObject::run(int lFilter, const char * szDescript)
 
 	while(1)
 	{
-		memset(msgbuf, 0, sizeof(MESSAGE_BUF));
+		msgbuf.clear();
 
 		nRecv = messageHandler->recvMessage(&pdata);
-		if (0 < nRecv)
+		if(0 < nRecv)
 		{
-			//_log("[CObject] %s run() 0 < nRecv", taskName().c_str());
-
-			if (EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand)
+			if(EVENT_COMMAND_HANDLE_MESSAGE == msgbuf.nCommand)
 			{
-				//_log("[CObject] %s run() EVENT_COMMAND_HANDLE_MESSAGE == msgbuf->nCommand", taskName().c_str());
-
-				Message message;
-				message.what = msgbuf->what;
-				for (int i = 0; i < ARG_LEN; ++i)
+				message.what = msgbuf.what;
+				for(int i = 0; i < ARG_LEN; ++i)
 				{
-					message.arg[i] = msgbuf->arg[i];
+					message.arg[i] = msgbuf.arg[i];
 				}
-				message.strData = msgbuf->cData;
+				message.strData = msgbuf.cData;
 				onHandleMessage(message);
 			}
 			else
 			{
-				/*if (msgbuf->nDataLen > 0)
-				{
-					_log("[CObject] %s msgbuf->nDataLen > 0, print data: `%s`", taskName().c_str(), msgbuf->cData);
-				}*/
-
-				onReceiveMessage(msgbuf->lFilter, msgbuf->nCommand, msgbuf->nId, msgbuf->nDataLen, msgbuf->cData);
+				onReceiveMessage(msgbuf.lFilter, msgbuf.nCommand, msgbuf.nId, msgbuf.nDataLen, msgbuf.cData);
 			}
 		}
 		else if(-2 == nRecv)
@@ -142,8 +139,6 @@ int CObject::run(int lFilter, const char * szDescript)
 		}
 	}
 
-	delete msgbuf;
-
 	szDescript ?
 			_log("[CObject] %s Message Receiver loop end", szDescript) : _log("[CObject] Message Receiver loop end");
 
@@ -153,6 +148,11 @@ int CObject::run(int lFilter, const char * szDescript)
 int CObject::sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	return messageHandler->sendMessage(nEvent, nCommand, nId, nDataLen, pData);
+}
+
+int CObject::sendMessage(int nEvent, int nCommand, unsigned long int nId)
+{
+	return messageHandler->sendMessage(nEvent, nCommand, nId);
 }
 
 /**
@@ -165,12 +165,12 @@ int CObject::sendMessage(int nCommand, unsigned long int nId, int nDataLen, cons
 
 int CObject::sendMessage(int nEvent, Message &message)
 {
-	return messageHandler->sendMessage(nEvent, EVENT_COMMAND_HANDLE_MESSAGE, 0, 0, 0, message);
+	return messageHandler->sendMessage(nEvent, EVENT_COMMAND_HANDLE_MESSAGE, 0, message);
 }
 
 int CObject::sendMessage(Message &message)
 {
-	return messageHandler->sendMessage(messageHandler->getRecvEvent(), EVENT_COMMAND_HANDLE_MESSAGE, 0, 0, 0, message);
+	return messageHandler->sendMessage(messageHandler->getRecvEvent(), EVENT_COMMAND_HANDLE_MESSAGE, 0, message);
 }
 
 void CObject::clearMessage()
@@ -224,16 +224,6 @@ int CObject::threadCancel(unsigned long int thread)
 unsigned long int CObject::getThreadID()
 {
 	return _GetThreadID();
-}
-
-void CObject::mutexLock()
-{
-	pthread_mutex_lock(&mutex);
-}
-
-void CObject::mutexUnlock()
-{
-	pthread_mutex_unlock(&mutex);
 }
 
 string CObject::taskName()

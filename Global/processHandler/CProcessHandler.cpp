@@ -117,6 +117,8 @@ int process(void (*entry)(int), int nMsqKey)
 			signal(SIGINT, CSigHander);
 			signal(SIGTERM, CSigHander);
 			signal(SIGPIPE, SIG_IGN);
+			signal(0, SIG_IGN);
+			signal(256, SIG_IGN);
 
 			(*entry)(nMsqKey);
 			return 0;
@@ -129,6 +131,8 @@ int process(void (*entry)(int), int nMsqKey)
 		signal(SIGTERM, PSigHander);
 		signal(SIGHUP, PSigHander);
 		signal(SIGPIPE, SIG_IGN);
+		signal(0, SIG_IGN);
+		signal(256, SIG_IGN);
 
 		w = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
 

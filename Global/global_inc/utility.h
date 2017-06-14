@@ -105,10 +105,9 @@ __attribute__ ((unused)) static const string currentDateTime()
 __attribute__ ((unused)) static const void currentDateTimeNum(int &nYear, int &nMonth, int &nDay, int &nHour,
 		int &nMinute, int &nSecond)
 {
-	unsigned long long nTime;
 	time_t now = time(0);
 	struct tm tstruct;
-	char buf[24];
+
 	tstruct = *localtime(&now);
 	nYear = tstruct.tm_year + 1900;
 	nMonth = tstruct.tm_mon + 1;

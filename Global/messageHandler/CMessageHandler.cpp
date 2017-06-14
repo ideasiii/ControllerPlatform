@@ -104,22 +104,21 @@ int CMessageHandler::init(const long lkey)
 int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
 {
 	int nRet;
-	MESSAGE_BUF *pBuf;
+	MESSAGE_BUF pBuf;
+	const void *pbuf = &pBuf;
 
-	pBuf = new MESSAGE_BUF;
+	pBuf.clear();
+	pBuf.lFilter = lFilter;
+	pBuf.nCommand = nCommand;
+	pBuf.nId = nId;
 
-	pBuf->lFilter = lFilter;
-	pBuf->nCommand = nCommand;
-	pBuf->nId = nId;
-
-	memset(pBuf->cData, 0, sizeof(pBuf->cData));
 	if( NULL != pData && 0 < nDataLen)
 	{
-		memcpy(pBuf->cData, pData, nDataLen);
-		pBuf->nDataLen = nDataLen;
+		memcpy(pBuf.cData, pData, nDataLen);
+		pBuf.nDataLen = nDataLen;
 	}
 
-	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), 0))
+	if(-1 == msgsnd(getMsqid(), pbuf, getBufLength(), 0))
 	{
 		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
 		errno);
@@ -130,42 +129,63 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 		nRet = getBufLength();
 	}
 
-	delete pBuf;
+	return nRet;
+}
+
+int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId)
+{
+	int nRet;
+	MESSAGE_BUF pBuf;
+	const void *pbuf = &pBuf;
+
+	pBuf.clear();
+	pBuf.lFilter = lFilter;
+	pBuf.nCommand = nCommand;
+	pBuf.nId = nId;
+
+	if(-1 == msgsnd(getMsqid(), pbuf, getBufLength(), 0))
+	{
+		_log("[CMessageHandler] message queue send fail, msqid=%d error=%s errorno=%d", getMsqid(), strerror(errno),
+		errno);
+		nRet = -1;
+	}
+	else
+	{
+		nRet = getBufLength();
+	}
 
 	return nRet;
 }
 
-int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData,
-		Message &message)
+int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int nId, Message &message)
 {
 	int nRet;
-	MESSAGE_BUF *pBuf;
+	MESSAGE_BUF pBuf;
+	const void *pbuf = &pBuf;
 
-	pBuf = new MESSAGE_BUF;
-
-	pBuf->lFilter = lFilter;
-	pBuf->nCommand = nCommand;
-	pBuf->nId = nId;
+	pBuf.clear();
+	pBuf.lFilter = lFilter;
+	pBuf.nCommand = nCommand;
+	pBuf.nId = nId;
 
 	//====== Handle Message ========//
-	pBuf->what = message.what;
+	pBuf.what = message.what;
 	for(int i = 0; i < ARG_LEN; ++i)
 	{
-		pBuf->arg[i] = message.arg[i];
+		pBuf.arg[i] = message.arg[i];
 	}
 
-	memset(pBuf->cData, 0, sizeof(pBuf->cData));
 	if(DATA_LEN >= message.strData.length())
 	{
-		pBuf->nDataLen = message.strData.length();
-		memcpy(pBuf->cData, message.strData.c_str(), message.strData.length());
+		pBuf.nDataLen = message.strData.length();
+		memcpy(pBuf.cData, message.strData.c_str(), message.strData.length());
 	}
 	else
 	{
-		pBuf->nDataLen = 0;
+		pBuf.nDataLen = 0;
 	}
 
-	if(-1 == msgsnd(getMsqid(), pBuf, getBufLength(), 0))
+	if(-1 == msgsnd(getMsqid(), pbuf, getBufLength(), 0))
 	{
 		_log("[CMessageHandler] message queue send fail (Message), msqid=%d error=%s errorno=%d", getMsqid(),
 				strerror(errno),
@@ -177,16 +197,12 @@ int CMessageHandler::sendMessage(long lFilter, int nCommand, unsigned long int n
 		nRet = getBufLength();
 	}
 
-	delete pBuf;
-
-	//_log("[CMessageHandler] sendMessage step out, nRet = %d\n", nRet);
 	return nRet;
 }
 
 int CMessageHandler::recvMessage(void **pbuf)
 {
 	ssize_t recvSize = 0;
-	//_log("[CMessageHandler] recvMessage() step in");
 
 	if( NULL == *pbuf)
 		return -1;
@@ -198,7 +214,6 @@ int CMessageHandler::recvMessage(void **pbuf)
 	}
 
 	recvSize = msgrcv(getMsqid(), *pbuf, getBufLength(), getRecvEvent(), 0);
-	//_log("[CMessageHandler] recvMessage() recvSize = %d", recvSize);
 
 	if(0 > recvSize)
 	{

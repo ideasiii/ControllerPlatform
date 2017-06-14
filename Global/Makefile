@@ -131,7 +131,7 @@ package-u:
 	@echo "\n"
 
 debug:
-	apt-get -y install libc6-dbg gdb valgrind	
+	apt-get -y install libc6-dbg gdb valgrind valkyrie	
 	@echo -ne '\n###### Package for Ubuntu Debug Tool install Completed. ######\n'
 	@echo "\n"
 	

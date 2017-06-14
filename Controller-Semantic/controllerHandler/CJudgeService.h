@@ -30,4 +30,5 @@ private:
 	void loadServiceDictionary();
 	void getClock(std::string &strClock);
 	void getWeather(const char *szLocation, WEATHER &weather);
+	void getLocation(const char *szWord, WEATHER &weather);
 };

@@ -32,9 +32,9 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 {
 	string strURL;
 	string strData;
-	CHttpsClient *httpsClient;
+	CHttpsClient httpsClient;
 	set<string> setHead;
-	JSONObject *jroot;
+	//JSONObject jroot;
 	JSONArray jArray;
 	JSONObject jItem;
 	int nYear, nMonth, nDay, nHour, nMin, nSec;
@@ -42,18 +42,17 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 	if(!szLocation)
 		return;
 
-	httpsClient = new CHttpsClient;
 	strURL = format(WEATHER_CURRENT, urlEncode(szLocation).c_str());
-	httpsClient->GET(strURL.c_str(), strData, setHead);
-	delete httpsClient;
+	httpsClient.GET(strURL.c_str(), strData, setHead);
 
 	if(!strData.empty())
 	{
-		_log("[CWeather] getWeather HTTP Response: %s", strData.c_str());
-		jroot = new JSONObject(strData);
-		if(jroot->isValid())
+		//_log("[CWeather] getWeather HTTP Response: %s", strData.c_str());
+		JSONObject jroot(strData);
+
+		if(jroot.isValid())
 		{
-			jArray = jroot->getJsonArray("weather");
+			jArray = jroot.getJsonArray("weather");
 			if(jArray.isValid())
 			{
 				jItem = jArray.getJsonObject(0);
@@ -67,7 +66,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 				}
 			}
 
-			jItem = jroot->getJsonObject("main");
+			jItem = jroot.getJsonObject("main");
 			if(jItem.isValid())
 			{
 				weather.fTemperature = jItem.getFloat("temp") - 273.15; // ℃ = K - 273.15
@@ -75,13 +74,11 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 				weather.fHumidity = jItem.getFloat("humidity");
 				weather.fTemperature_max = jItem.getFloat("temp_max") - 273.15;
 			}
-			weather.fVisibility = jroot->getInt("visibility");
+			weather.fVisibility = jroot.getInt("visibility");
 			currentDateTimeNum(nYear, nMonth, nDay, nHour, nMin, nSec);
 			weather.lnToday = nowSecond();
-			_log("@@@@@@@@@  %d", weather.lnToday);
 		}
-		jroot->release();
-		delete jroot;
+		jroot.release();
 	}
 }
 

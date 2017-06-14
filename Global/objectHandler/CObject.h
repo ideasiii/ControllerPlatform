@@ -51,6 +51,7 @@ public:
 	void clearMessage();
 	int sendMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
 	int sendMessage(int nCommand, unsigned long int nId, int nDataLen, const void* pData);
+	int sendMessage(int nEvent, int nCommand, unsigned long int nId);
 	int sendMessage(int nEvent, Message &message);
 	int sendMessage(Message &message);
 	void _OnTimer(int nId);
@@ -62,8 +63,6 @@ public:
 	void threadJoin(unsigned long int thdid);
 	void threadExit();
 	int threadCancel(unsigned long int thread);
-	void mutexLock();
-	void mutexUnlock();
 	unsigned long int getThreadID();
 	void closeMsq();
 
@@ -84,7 +83,6 @@ protected:
 private:
 	CMessageHandler *messageHandler;
 	int mnTimerEventId;
-	pthread_mutex_t mutex;
 	int mnFilter;
 };
 

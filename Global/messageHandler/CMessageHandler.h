@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <memory.h>
 
 #define DATA_LEN    4096
 #define ARG_LEN		9
@@ -17,6 +18,12 @@ typedef struct _Message
 	int what;
 	int arg[ARG_LEN];
 	std::string strData;
+	void clear()
+	{
+		what = 0;
+		memset(arg, 0, ARG_LEN);
+		strData.clear();
+	}
 } Message;
 
 /*
@@ -31,6 +38,16 @@ struct MESSAGE_BUF
 	char cData[DATA_LEN];
 	int what;
 	int arg[ARG_LEN];
+	void clear()
+	{
+		lFilter = 0;
+		nCommand = 0;
+		nId = 0;
+		nDataLen = 0;
+		memset(cData, 0, DATA_LEN);
+		what = 0;
+		memset(arg, 0, ARG_LEN);
+	}
 };
 
 class CMessageHandler
@@ -41,8 +58,8 @@ public:
 	void close();
 	int init(const long lkey);
 	int sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData);
-	int sendMessage(long lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData,
-			Message &message);
+	int sendMessage(long lFilter, int nCommand, unsigned long int nId);
+	int sendMessage(long lFilter, int nCommand, unsigned long int nId, Message &message);
 	int recvMessage(void **pbuf);
 	void setRecvEvent(int nEvent);
 	int getRecvEvent() const;

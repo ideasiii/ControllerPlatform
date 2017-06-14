@@ -54,6 +54,7 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 		}
 
 		Message message;
+		message.clear();
 		message.what = semantic_word_request;
 		message.arg[0] = nSocket;
 		message.arg[1] = nSequence;

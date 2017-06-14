@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <map>
@@ -40,6 +41,7 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	int nService;
 	string strWord;
 	string strTTS;
+	string strLocation;
 	map<string, int>::const_iterator it_map;
 
 	strWord = szInput;
@@ -61,10 +63,16 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	case SERVICE_CLOCK:
 		break;
 	case SERVICE_WEATHER:
-		getWeather("台北", weather);
-		_log("############# %d", weather.lnToday);
-		strTTS = format("現在天氣%s，氣溫%.02f度，溼度%.02f度", weather.strWeather.c_str(), weather.fTemperature,
-				weather.fHumidity);
+		strLocation = trim(weather.strLocation);
+		getLocation(szInput, weather);
+		if(60 < (nowSecond() - weather.lnToday) || trim(weather.strLocation).compare(strLocation))
+		{
+			getWeather(weather.strLocation.c_str(), weather);
+			_log("[CJudgeService] word Update Weather: %s", weather.strLocation.c_str());
+		}
+
+		strTTS = format("現在%s天氣，%s;氣溫%.02f度;溼度%.02f度", weather.strLocation.c_str(), weather.strWeather.c_str(),
+				weather.fTemperature, weather.fHumidity);
 		break;
 	}
 
@@ -129,6 +137,10 @@ void CJudgeService::loadServiceDictionary()
 		}
 	}
 	_log("[CJudgeService] loadServiceDictionary Total Service Match Count: %d", mapService.size());
+
+	setData.clear();
+	fh.readAllLine("dictionary/location.txt", setLocation);
+	_log("[CJudgeService] loadServiceDictionary Total Service Location Count: %d", setLocation.size());
 }
 
 void CJudgeService::getClock(string &strClock)
@@ -145,5 +157,31 @@ void CJudgeService::getWeather(const char *szLocation, WEATHER &weather)
 		return;
 
 	wt.getWeather(szLocation, weather);
+}
+
+void CJudgeService::getLocation(const char *szWord, WEATHER &weather)
+{
+	set<string>::const_iterator it_set;
+	string strWord;
+	string strLocation;
+
+	if(!szWord)
+		return;
+
+	strWord = trim(szWord);
+	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
+
+	for(it_set = setLocation.begin(); setLocation.end() != it_set; ++it_set)
+	{
+		strLocation = trim(*it_set);
+		transform(strLocation.begin(), strLocation.end(), strLocation.begin(), ::tolower);
+		if(string::npos != strWord.find(strLocation))
+		{
+			weather.strLocation = strLocation;
+			return;
+		}
+	}
+
+	weather.strLocation = "台北";
 }
 

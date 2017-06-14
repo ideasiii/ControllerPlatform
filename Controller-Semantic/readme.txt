@@ -65,4 +65,5 @@ ipcrm -q [msq_id]
 # Download Youtube
 youtube-dl --extract-audio --audio-format mp3 'https://www.youtube.com/watch?v=DdskNY5ayfc'
 
-valgrind --leak-check=full bin/controller-semantic
+valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all bin/controller-semantic
+valkyrie bin/controller-semantic

@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 				while(1)
 				{
 					cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
-					sleep(3);
+					sleep(0.5);
 				}
 				jsonWord.release();
 			}
