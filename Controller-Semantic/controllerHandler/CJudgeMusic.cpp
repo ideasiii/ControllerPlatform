@@ -37,7 +37,7 @@ string CJudgeMusic::toString()
 	return "CJudgeMusic";
 }
 
-int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
+int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
 	int nResult;
 	int nIndex;
@@ -140,7 +140,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp)
 	return TRUE;
 }
 
-int CJudgeMusic::evaluate(const char *szWord)
+int CJudgeMusic::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;

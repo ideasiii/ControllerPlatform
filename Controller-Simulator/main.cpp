@@ -20,19 +20,15 @@
 #include "utility.h"
 #include "CEvilTest.h"
 #include "JSONObject.h"
+#include "Command.h"
 
 #define BUFSIZE 		1024
-#define BYE				555
-#define PRESSURE		444
-#define HELP			777
-#define IO_PRESSURE		888
-#define EVIL			666
-#define WORD			2310
-#define MONGO			27027
 
 using namespace std;
 
+void options(int argc, char **argv);
 int cmpRequest(int nCommand, CCmpTest *cmpTest);
+bool mbPressure;
 
 int main(int argc, char* argv[])
 {
@@ -47,55 +43,14 @@ int main(int argc, char* argv[])
 	int noEvents;               				// EPOLL event number.
 	int nService;								// Test what service.....
 
-	static map<string, int> mapCommand = create_map<string, int>\
-("evil", EVIL)\
-("bye", BYE)\
-("help", HELP)\
-("pressure",
-	PRESSURE)\
-("mongo", MONGO)\
-("cmp fcm", fcm_id_register_request)\
-("cmp fbtoken", facebook_token_client_request)\
-(
-			"cmp qrcode",
-			smart_building_qrcode_tokn_request)\
-("cmp sbversion", smart_building_appversion_request)\
-("cmp sbdata",
-	smart_building_getmeetingdata_request)\
-("cmp amxaccess", smart_building_amx_control_access_request)\
-("cmp wpc",
-	smart_building_wireless_power_charge_request)\
-("cmp init", initial_request)\
-("cmp signup",
-	sign_up_request)\
-("cmp enquire", enquire_link_request)\
-("cmp access", access_log_request)\
-("rdm login",
-	rdm_login_request)\
-("rdm operate", rdm_operate_request)\
-("rdm logout", rdm_logout_request)\
-("io", IO_PRESSURE)\
-(
-			"cmp pwstate", power_port_state_request)\
-("cmp pwset",
-	power_port_set_request)\
-("cmp auth", authentication_request)\
-("cmp bind", bind_request)\
-("cmp unbind",
-	unbind_request)\
-("amx bind", AMX_BIND)\
-("amx system on", AMX_SYSTEM_ON)\
-("amx control", amx_control_request)\
-(
-			"amx status", amx_status_request)\
-("semantic", semantic_request)("amx status2", 1166)("word",
-	semantic_word_request);
+	mbPressure = false;
+	options(argc, argv);
 
 	printf("This process is a Controller testing process!.\n");
 
-	if(argc < 3)
+	if(argc != 2 && argc != 3)
 	{
-		fprintf( stderr, "Usage:  %s <IP> <Remote Port>  ...\n", argv[0]);
+		fprintf( stderr, "Usage:  %s <IP> <Remote Port> <Option> ...\n", argv[0]);
 		exit(1);
 	}
 
@@ -127,7 +82,7 @@ int main(int argc, char* argv[])
 			fgets(buffer, 1024, stdin);
 			strInput = trim(buffer);
 
-			if(BYE == mapCommand[strInput])
+			if(BYE == mapCommands[strInput])
 			{
 				printf("Bye.\n");
 				running = 0;
@@ -142,16 +97,21 @@ int main(int argc, char* argv[])
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);
-				while(1)
+				if(mbPressure)
 				{
-					cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
-					sleep(0.5);
+					while(1)
+					{
+						cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
+						sleep(0.5);
+					}
 				}
+				else
+					cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
 				jsonWord.release();
 			}
 			else
 			{
-				switch(mapCommand[strInput])
+				switch(mapCommands[strInput])
 				{
 				case EVIL:
 					evil->start(500);
@@ -162,13 +122,13 @@ int main(int argc, char* argv[])
 					break;
 				case HELP:
 					printf("Test CMP Use:\n");
-					for(map<string, int>::iterator i = mapCommand.begin(); i != mapCommand.end(); ++i)
+					for(map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
 					{
 						cout << (*i).first << endl;
 					}
 					break;
 				default:
-					cmpRequest(mapCommand[strInput], cmpTest);
+					cmpRequest(mapCommands[strInput], cmpTest);
 					break;
 				}
 
@@ -229,5 +189,30 @@ int cmpRequest(int nCommand, CCmpTest *cmpTest)
 	}
 
 	return 1;
+}
+
+void options(int argc, char **argv)
+{
+	int c;
+
+	while((c = getopt(argc, argv, "H:h:P:p")) != -1)
+	{
+		switch(c)
+		{
+		case 'H':
+		case 'h':
+			printf("Option Parameter:\nsimulator <IP> <Port> [Option]\nOption: -p=pressure test\n");
+			printf("Usage Command\n");
+			for(map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
+			{
+				cout << (*i).first << endl;
+			}
+			break;
+		case 'P':
+		case 'p':
+			mbPressure = true;
+			break;
+		}
+	}
 }
 

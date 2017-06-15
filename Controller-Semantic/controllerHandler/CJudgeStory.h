@@ -18,8 +18,8 @@ public:
 
 protected:
 	std::string toString();
-	int word(const char *szInput, JSONObject* jsonResp);
-	int evaluate(const char *szWord);
+	int word(const char *szInput, JSONObject* jsonResp, std::map<std::string, std::string> &mapMatch);
+	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 
 private:
 	void loadStoryDictionary();

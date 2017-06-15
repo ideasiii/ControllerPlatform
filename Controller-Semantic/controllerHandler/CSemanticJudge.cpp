@@ -53,6 +53,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	int nValue;
 	map<int, CSemantic*>::const_iterator iter;
 	CRankingHandler<int, int> ranking;
+	map<string, string> mapMatch;
 
 	if(0 >= szInput)
 	{
@@ -66,7 +67,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 
 	for(iter = mapSemanticObject.begin(); mapSemanticObject.end() != iter; ++iter)
 	{
-		nScore = iter->second->_evaluate(szInput);
+		nScore = iter->second->_evaluate(szInput, mapMatch);
 		ranking.add(iter->first, nScore);
 		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
 	}
@@ -77,7 +78,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	{
 		nTop = ranking.topValueKey();
 		_log("[CSemanticJudge] word Top Key is %d", nTop);
-		mapSemanticObject[nTop]->_word(szInput, jsonResp);
+		mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
 	}
 	else
 	{

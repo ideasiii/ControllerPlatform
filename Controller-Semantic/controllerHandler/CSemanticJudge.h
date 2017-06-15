@@ -13,6 +13,7 @@ class CSemantic;
 
 class CSemanticJudge
 {
+
 public:
 	explicit CSemanticJudge(CObject *object);
 	virtual ~CSemanticJudge();

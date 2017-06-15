@@ -32,7 +32,7 @@ std::string CJudgeStory::toString()
 	return "CJudgeStory";
 }
 
-int CJudgeStory::word(const char *szInput, JSONObject* jsonResp)
+int CJudgeStory::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
 	bool bMatch = false;
 	JSONObject jsonStory;
@@ -66,7 +66,7 @@ int CJudgeStory::word(const char *szInput, JSONObject* jsonResp)
 	return TRUE;
 }
 
-int CJudgeStory::evaluate(const char *szWord)
+int CJudgeStory::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;

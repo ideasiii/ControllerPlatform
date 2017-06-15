@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <map>
 #include <string>
 #include "CSemantic.h"
 #include "config.h"
@@ -89,22 +90,22 @@ int CSemantic::getAttribute(const char *szWord, WORD_BODY &wordBody)
 	return 0;
 }
 
-int CSemantic::_word(const char *szInput, JSONObject* jsonResp)
+int CSemantic::_word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
-	return word(szInput, jsonResp);
+	return word(szInput, jsonResp, mapMatch);
 }
 
-int CSemantic::word(const char *szInput, JSONObject* jsonResp)
+int CSemantic::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
 	return 0;
 }
 
-int CSemantic::_evaluate(const char *szWord)
+int CSemantic::_evaluate(const char *szWord, map<string, string> &mapMatch)
 {
-	return evaluate(szWord);
+	return evaluate(szWord, mapMatch);
 }
 
-int CSemantic::evaluate(const char *szWord)
+int CSemantic::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	return 0;
 }

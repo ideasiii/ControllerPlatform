@@ -36,13 +36,14 @@ string CJudgeService::toString()
 	return "CJudgeService";
 }
 
-int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
+int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
 	int nService;
 	string strWord;
 	string strTTS;
 	string strLocation;
 	map<string, int>::const_iterator it_map;
+	int nYear, nMonth, nDay, nHour, nMinute, nSecond;
 
 	strWord = szInput;
 	if(strWord.empty())
@@ -61,6 +62,8 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	switch(nService)
 	{
 	case SERVICE_CLOCK:
+		currentDateTimeNum(nYear, nMonth, nDay, nHour, nMinute, nSecond);
+		strTTS = format("現在時刻，%d點，%d分，%d秒", nHour, nMinute, nSecond);
 		break;
 	case SERVICE_WEATHER:
 		strLocation = trim(weather.strLocation);
@@ -80,11 +83,13 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp)
 	return 0;
 }
 
-int CJudgeService::evaluate(const char *szWord)
+int CJudgeService::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;
+	string strLocation;
 	map<string, int>::const_iterator it_map;
+	set<string>::const_iterator it_set;
 
 	nScore = 0;
 	strWord = szWord;
@@ -95,7 +100,7 @@ int CJudgeService::evaluate(const char *szWord)
 	//======== 評估相同字 ==========//
 	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
 	{
-		if(!it_map->first.compare(strWord))
+		if(!trim(it_map->first).compare(trim(strWord)))
 		{
 			return 100;
 		}
@@ -107,6 +112,19 @@ int CJudgeService::evaluate(const char *szWord)
 		if(string::npos != strWord.find(it_map->first))
 		{
 			++nScore;
+			if(SERVICE_WEATHER == it_map->second)
+			{
+				for(it_set = setLocation.begin(); setLocation.end() != it_set; ++it_set)
+				{
+					strLocation = trim(*it_set);
+					transform(strLocation.begin(), strLocation.end(), strLocation.begin(), ::tolower);
+					if(string::npos != strWord.find(strLocation))
+					{
+						++nScore;
+						break;
+					}
+				}
+			}
 			break;
 		}
 	}

@@ -31,7 +31,7 @@ string CJudgeEducation::toString()
 	return "CJudgeEducation";
 }
 
-int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp)
+int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
 {
 	int nRand;
 	string strWord;
@@ -75,7 +75,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp)
 	return TRUE;
 }
 
-int CJudgeEducation::evaluate(const char *szWord)
+int CJudgeEducation::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;
