@@ -18,9 +18,9 @@
 #define LOG_TAG_COLORED "[\033[1;31mCClientAmxController\033[0m]"
 
 CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp,
-	int userPort, int validationPort, MysqlSourceInfo& mysqlSrc) :
+	int userPort, int validationPort) :
 	serverIp(serverIp), userPort(userPort), validationPort(validationPort), 
-	mysqlSourceInfo(mysqlSrc), mpController(controller)
+	mpController(controller)
 {
 	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
 		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX, mpController));
@@ -183,22 +183,19 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 			&& hitRecord.goodThrough >= when;
 	}
 
-	CMysqlHandler mysql;
-	int nRet = mysql.connect(mysqlSourceInfo.host, mysqlSourceInfo.database, mysqlSourceInfo.user,
-		mysqlSourceInfo.password);
-
-	if (FALSE == nRet)
+	std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
+	if (mysql == nullptr)
 	{
-		_log(LOG_TAG" validateToken() Mysql Error: %s", mysql.getLastError().c_str());
+		_log(LOG_TAG" validateToken() Mysql cannot make connection");
 		return true;
 	}
 
 	list<map<string, string> > listRet;
 	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
 		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
-	nRet = mysql.query(strSQL, listRet);
-	string strError = mysql.getLastError();
-	mysql.close();
+	int nRet = mysql->query(strSQL, listRet);
+	string strError = mysql->getLastError();
+	mysql->close();
 
 	if (FALSE == nRet)
 	{

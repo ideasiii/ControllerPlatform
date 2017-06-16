@@ -14,7 +14,6 @@
 
 #define LOG_TAG "[DoorAccessHandler]"
 #define CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER "CLIENT ITES 1F DOOR CONTROLLER"
-#define CONF_BLOCK_MYSQL_SOURCE "MYSQL SOURCE"
 
 DoorAccessHandler::DoorAccessHandler()
 {
@@ -41,20 +40,10 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 	string strItes1fServerIp = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "server_ip");
 	string strItes1fServerPort = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "port");
 	string strItes1fServerAesKey = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "aes_key");
-	string strMysqlHost = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "host");
-	string strMysqlPort = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "port");
-	string strMysqlUser = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "user");
-	string strMysqlPassword = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "password");
-	string strMysqlDatabase = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "database");
 
 	if (strItes1fServerIp.empty() 
 		|| strItes1fServerPort.empty()
-		|| strItes1fServerAesKey.empty()
-		|| strMysqlHost.empty()
-		|| strMysqlPort.empty()
-		|| strMysqlUser.empty()
-		|| strMysqlPassword.empty()
-		|| strMysqlDatabase.empty())
+		|| strItes1fServerAesKey.empty())
 	{
 		_log(LOG_TAG" configMember() 404");
 		return FALSE;
@@ -65,10 +54,6 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 	
 	this->ites1fDoor = std::make_unique<Ites1fDacClient>(strItes1fServerIp,
 		ites1fServerPort, (uint8_t*)strItes1fServerAesKey.c_str());
-
-	int mysqlPort;
-	convertFromString(mysqlPort, strMysqlPort);
-	mysqlSourceInfo = MysqlSourceInfo(strMysqlHost, mysqlPort, strMysqlUser, strMysqlPassword, strMysqlDatabase);
 
 	return TRUE;
 }
@@ -90,28 +75,25 @@ bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const&
 		resultMessage = "Invalid parameter";
 		return false;
 	}
-
-	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
-	CMysqlHandler mysql;
-	int nRet = mysql.connect(mysqlSourceInfo.host, mysqlSourceInfo.database, mysqlSourceInfo.user,
-		mysqlSourceInfo.password);
-
-	if (FALSE == nRet)
+	
+	std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
+	if (mysql == nullptr)
 	{
-		_log(LOG_TAG" doRequest() Mysql Error: %s", mysql.getLastError().c_str());
+		_log(LOG_TAG" doRequest() Mysql Error");
 		resultMessage = "System error";
 		return false;
 	}
 
+	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
 	list<map<string, string> > listRet;
 	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM meeting.door_access_token as t, meeting.user as u, meeting.meeting_room as m "
 		"WHERE u.uuid = '" + uuid + "' AND m.room_id = '" + meetingRoom
 		+ "' AND t.effective <= " + to_string(unixTimeNow) + " AND t.expiry >= " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
 
-	nRet = mysql.query(strSQL, listRet);
-	string strError = mysql.getLastError();
-	mysql.close();
+	int nRet = mysql->query(strSQL, listRet);
+	string strError = mysql->getLastError();
+	mysql->close();
 
 	if (FALSE == nRet)
 	{

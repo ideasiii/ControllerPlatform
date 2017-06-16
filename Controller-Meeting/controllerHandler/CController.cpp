@@ -11,6 +11,7 @@
 #include "utility.h"
 #include "CClientMeetingAgent.h"
 #include "CConfig.h"
+#include "CMysqlHandler.h"
 #include "CThreadHandler.h"
 #include "ClientAmxController/CClientAmxController.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
@@ -68,6 +69,13 @@ int CController::onInitial(void* szConfPath)
 	if(!nRet)
 	{
 		_log(LOG_TAG" onInitial() config->loadConfig() failed");
+		return FALSE;
+	}
+
+	bool bRet = MysqlSource::getInstance().initialize(config);
+	if (!bRet)
+	{
+		_log(LOG_TAG" onInitial() MysqlSource initialize() failed");
 		return FALSE;
 	}
 
