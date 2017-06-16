@@ -33,35 +33,34 @@ CSpotify::~CSpotify()
 
 }
 
-int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
-		const char *szAvailableMarket)
+int CSpotify::getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAlbums, const char *szAvailableMarket)
 {
 	bool bSupport;
 	int nError;
 	set<string> setHead;
-	CHttpsClient *httpsClient;
+	CHttpsClient httpsClient;
 	string strToken;
 	string strData;
 	string strURL;
 	string strAlbum;
 	string strAlbumId;
-	JSONObject *jroot;
-	JSONObject *jAlbums;
-	JSONObject *jAlbum;
-	JSONArray *jItems;
-	JSONArray *jarrAM;
+	JSONObject jAlbums;
+	JSONObject jAlbum;
+	JSONObject jImage;
+	JSONArray jItems;
+	JSONArray jarrAM;
+	JSONArray jarrImages;
+	ALBUM album;
 
 	if(!szArtist)
 		return ERROR_STATUS_ERROR;
 	if(mstrAccessToken.empty())
 		return ERROR_STATUS_NO_TOKEN;
 
-	httpsClient = new CHttpsClient;
 	strURL = format(QUERY_ALBUM, urlEncode(szArtist).c_str());
 
 	setHead.insert(mstrAccessToken);
-	httpsClient->GET(strURL.c_str(), strData, setHead);
-	delete httpsClient;
+	httpsClient.GET(strURL.c_str(), strData, setHead);
 
 	if(!strData.empty())
 	{
@@ -69,73 +68,77 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 		if(ERROR_STATUS_SUCCESS != nError)
 			return nError;
 
-		jroot = new JSONObject(strData);
-		if(!jroot->isValid())
+		JSONObject jroot(strData);
+		if(!jroot.isValid())
 		{
-			jroot->release();
-			delete jroot;
+			jroot.release();
 			_log("[CSpotify] getAlbum Invalid JSON Response: %s", strData.c_str());
 			return ERROR_STATUS_ERROR;
 		}
 
-		jAlbums = new JSONObject(jroot->getJsonObject("albums"));
-		if(!jAlbums->isValid())
+		jAlbums = jroot.getJsonObject("albums");
+		if(!jAlbums.isValid())
 		{
 			_log("[CSpotify] getAlbum Invalid JSON albums: %s", strData.c_str());
-			jAlbums->release();
-			jroot->release();
-			delete jAlbums;
-			delete jroot;
+			jroot.release();
 			return ERROR_STATUS_ERROR;
 		}
-		jItems = new JSONArray(jAlbums->getJsonArray("items"));
-		for(int i = 0; i < jItems->size(); ++i)
+		jItems = jAlbums.getJsonArray("items");
+		for(int i = 0; i < jItems.size(); ++i)
 		{
-			jAlbum = new JSONObject(jItems->getJsonObject(i));
-			jarrAM = new JSONArray(jAlbum->getJsonArray("available_markets"));
+			jAlbum = jItems.getJsonObject(i);
+			jarrAM = jAlbum.getJsonArray("available_markets");
 			if(szAvailableMarket)
 			{
 				bSupport = false;
-				for(int i = 0; i < jarrAM->size(); ++i)
+				for(int i = 0; i < jarrAM.size(); ++i)
 				{
-					if(!jarrAM->getString(i).compare(szAvailableMarket))
+					if(!jarrAM.getString(i).compare(szAvailableMarket))
 					{
 						bSupport = true;
-						if(0 == jAlbum->getString("type").compare("album"))
+						if(0 == jAlbum.getString("type").compare("album"))
 						{
-							strAlbum = jAlbum->getString("name");
-							strAlbumId = jAlbum->getString("id");
-							if(!strAlbum.empty() && !strAlbumId.empty())
-								mapAlbums[strAlbum] = strAlbumId;
+							album.name = jAlbum.getString("name");
+							album.id = jAlbum.getString("id");
+							jarrImages = jAlbum.getJsonArray("images");
+							if(jarrImages.isValid())
+							{
+								jImage = jarrImages.getJsonObject(1);
+								album.strCover = jImage.getString("url");
+							}
+
+							if(!album.name.empty() && !album.id.empty())
+							{
+								mapAlbums[album.name] = album;
+							}
 							break;
 						}
 					}
 				}
 				if(bSupport)
-					_log("[CSpotify] getAlbum Album: %s not support: %s", jAlbum->getString("name").c_str(),
+					_log("[CSpotify] getAlbum Album: %s not support: %s", jAlbum.getString("name").c_str(),
 							szAvailableMarket);
-				jarrAM->release();
-				delete jarrAM;
 			}
 			else
 			{
-				if(0 == jAlbum->getString("type").compare("album"))
+				if(0 == jAlbum.getString("type").compare("album"))
 				{
-					strAlbum = jAlbum->getString("name");
-					strAlbumId = jAlbum->getString("id");
-					if(!strAlbum.empty() && !strAlbumId.empty())
-						mapAlbums[strAlbum] = strAlbumId;
+					album.name = jAlbum.getString("name");
+					album.id = jAlbum.getString("id");
+					jarrImages = jAlbum.getJsonArray("images");
+					if(jarrImages.isValid())
+					{
+						jImage = jarrImages.getJsonObject(1);
+						album.strCover = jImage.getString("url");
+					}
+					if(!album.name.empty() && !album.id.empty())
+					{
+						mapAlbums[album.name] = album;
+					}
 				}
 			}
-			jAlbum->release();
-			delete jAlbum;
 		}
-		jItems->release();
-		jAlbums->release();
-		jroot->release();
-		delete jItems;
-		delete jAlbums;
-		delete jroot;
+		jroot.release();
 	}
 
 	return mapAlbums.size();
@@ -144,15 +147,14 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, std::string> 
 int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket)
 {
 	int nError;
-	CHttpsClient *httpsClient;
+	CHttpsClient httpsClient;
 	string strData;
 	string strURL;
 	string strSong;
 	set<string> setHead;
-	JSONObject *jroot;
-	JSONArray *jItems;
-	JSONArray *jarrAM;
-	JSONObject *jTrack;
+	JSONArray jItems;
+	JSONArray jarrAM;
+	JSONObject jTrack;
 	TRACK track;
 
 	if(!szAlbumId)
@@ -160,11 +162,9 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 	if(mstrAccessToken.empty())
 		return ERROR_STATUS_NO_TOKEN;
 
-	httpsClient = new CHttpsClient;
 	strURL = format(QUERY_TRACK_ALBUM, szAlbumId);
 	setHead.insert(mstrAccessToken);
-	httpsClient->GET(strURL.c_str(), strData, setHead);
-	delete httpsClient;
+	httpsClient.GET(strURL.c_str(), strData, setHead);
 
 	if(!strData.empty())
 	{
@@ -172,76 +172,65 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 		if(ERROR_STATUS_SUCCESS != nError)
 			return nError;
 
-		jroot = new JSONObject(strData);
-		if(!jroot->isValid())
+		JSONObject jroot(strData);
+		if(!jroot.isValid())
 		{
-			jroot->release();
-			delete jroot;
+			jroot.release();
 			_log("[CSpotify] getTrack Invalid JSON Response: %s", strData.c_str());
 			return ERROR_STATUS_ERROR;
 		}
 
-		jItems = new JSONArray(jroot->getJsonArray("items"));
-		if(!jItems->isValid())
+		jItems = jroot.getJsonArray("items");
+		if(!jItems.isValid())
 		{
 			_log("[CSpotify] getTrack Invalid JSON items: %s", strData.c_str());
-			jItems->release();
-			jroot->release();
-			delete jItems;
-			delete jroot;
+			jroot.release();
 			return ERROR_STATUS_ERROR;
 		}
 
-		for(int i = 0; i < jItems->size(); ++i)
+		for(int i = 0; i < jItems.size(); ++i)
 		{
-			jTrack = new JSONObject(jItems->getJsonObject(i));
-			if(0 == jTrack->getString("type").compare("track"))
+			jTrack = jItems.getJsonObject(i);
+			if(0 == jTrack.getString("type").compare("track"))
 			{
 				track.clear();
 				if(szAvailableMarket)
 				{
-					jarrAM = new JSONArray(jTrack->getJsonArray("available_markets"));
-					for(int i = 0; i < jarrAM->size(); ++i)
+					jarrAM = jTrack.getJsonArray("available_markets");
+					for(int i = 0; i < jarrAM.size(); ++i)
 					{
-						if(!jarrAM->getString(i).compare(szAvailableMarket))
+						if(!jarrAM.getString(i).compare(szAvailableMarket))
 						{
-							track.href = jTrack->getString("href");
-							track.id = jTrack->getString("id");
-							track.name = jTrack->getString("name");
-							track.popularity = jTrack->getInt("popularity");
-							track.preview_url = jTrack->getString("preview_url");
-							track.track_number = jTrack->getInt("track_number");
-							track.uri = jTrack->getString("uri");
-							mapSong[jTrack->getInt("track_number")] = track;
+							track.href = jTrack.getString("href");
+							track.id = jTrack.getString("id");
+							track.name = jTrack.getString("name");
+							track.popularity = jTrack.getInt("popularity");
+							track.preview_url = jTrack.getString("preview_url");
+							track.track_number = jTrack.getInt("track_number");
+							track.uri = jTrack.getString("uri");
+							mapSong[jTrack.getInt("track_number")] = track;
 						}
 
 					}
-					jarrAM->release();
-					delete jarrAM;
+
 					if(track.uri.empty())
-						_log("[CSpotify] getTrack track: %s not support: %s", jTrack->getString("name").c_str(),
+						_log("[CSpotify] getTrack track: %s not support: %s", jTrack.getString("name").c_str(),
 								szAvailableMarket);
 				}
 				else
 				{
-					track.href = jTrack->getString("href");
-					track.id = jTrack->getString("id");
-					track.name = jTrack->getString("name");
-					track.popularity = jTrack->getInt("popularity");
-					track.preview_url = jTrack->getString("preview_url");
-					track.track_number = jTrack->getInt("track_number");
-					track.uri = jTrack->getString("uri");
-					mapSong[jTrack->getInt("track_number")] = track;
+					track.href = jTrack.getString("href");
+					track.id = jTrack.getString("id");
+					track.name = jTrack.getString("name");
+					track.popularity = jTrack.getInt("popularity");
+					track.preview_url = jTrack.getString("preview_url");
+					track.track_number = jTrack.getInt("track_number");
+					track.uri = jTrack.getString("uri");
+					mapSong[jTrack.getInt("track_number")] = track;
 				}
 			}
-			jTrack->release();
-			delete jTrack;
 		}
-
-		jItems->release();
-		jroot->release();
-		delete jItems;
-		delete jroot;
+		jroot.release();
 	}
 
 	return mapSong.size();
@@ -249,7 +238,7 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 
 void CSpotify::authorization(const char* szClient)
 {
-	CHttpsClient *httpsClient;
+	CHttpsClient httpsClient;
 	string strData;
 	string strClient;
 	string strToken;
@@ -260,22 +249,20 @@ void CSpotify::authorization(const char* szClient)
 	if(!szClient)
 		return;
 
-	httpsClient = new CHttpsClient;
-
 	strClient = format("Authorization: Basic %s", szClient);
 	setHead.insert(strClient.c_str());
 	setParameter.insert("grant_type=client_credentials");
 
-	httpsClient->POST(QUERY_TOKEN, strData, setHead, setParameter);
+	httpsClient.POST(QUERY_TOKEN, strData, setHead, setParameter);
 	_log("[CSpotify] authorization token: %s", strData.c_str());
 
-	JSONObject *jroot = new JSONObject(strData);
-	if(jroot->isValid())
+	JSONObject jroot(strData);
+	if(jroot.isValid())
 	{
-		strToken = jroot->getString("access_token");
+		strToken = jroot.getString("access_token");
 		if(strToken.empty())
 		{
-			strError = jroot->getString("error");
+			strError = jroot.getString("error");
 			if(!strError.empty())
 			{
 				_log("[CSpotify] authorization Error: %s", strError.c_str());
@@ -287,8 +274,7 @@ void CSpotify::authorization(const char* szClient)
 			_log("[CSpotify] authorization Access Token: %s", mstrAccessToken.c_str());
 		}
 	}
-	jroot->release();
-	delete jroot;
+	jroot.release();
 
 //============= Success ================//
 // {"access_token":"BQC4QZN_jZwsv_zZYzu06wzNhev2BUTGlpjzMNYYMujqyyRRhqbVaCm7uQ1ExsKLS1LWuW4vIZaXGFEoGU1sjg","token_type":"Bearer","expires_in":3600}
@@ -307,8 +293,7 @@ void CSpotify::authorization(const char* szClient)
  */
 int CSpotify::checkError(const char *szJSONResp)
 {
-	JSONObject *jroot;
-	JSONObject *jerror;
+	JSONObject jerror;
 	int nStatus;
 	string strMessage;
 
@@ -319,21 +304,18 @@ int CSpotify::checkError(const char *szJSONResp)
 	}
 	nStatus = ERROR_STATUS_SUCCESS;
 
-	jroot = new JSONObject(szJSONResp);
-	if(jroot->isValid())
+	JSONObject jroot(szJSONResp);
+	if(jroot.isValid())
 	{
-		jerror = new JSONObject(jroot->getJsonObject("error"));
-		if(jerror->isValid())
+		jerror = jroot.getJsonObject("error");
+		if(jerror.isValid())
 		{
-			nStatus = jerror->getInt("status");
-			strMessage = jerror->getString("message");
+			nStatus = jerror.getInt("status");
+			strMessage = jerror.getString("message");
 			_log("[CSpotify] checkError status: %d message: %s", nStatus, strMessage.c_str());
 		}
-		jerror->release();
-		delete jerror;
 	}
-	jroot->release();
-	delete jroot;
+	jroot.release();
 	return nStatus;
 }
 

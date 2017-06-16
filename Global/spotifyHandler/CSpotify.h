@@ -11,6 +11,19 @@
 #define ERROR_STATUS_SUCCESS	0
 #define ERROR_STATUS_NO_TOKEN	401
 
+typedef struct _ALBUM
+{
+	std::string name;
+	std::string id;
+	std::string strCover;
+	void clear()
+	{
+		name.clear();
+		id.clear();
+		strCover.clear();
+	}
+} ALBUM;
+
 typedef struct _TRACK
 {
 	int track_number;
@@ -20,6 +33,7 @@ typedef struct _TRACK
 	std::string name;
 	std::string preview_url;
 	std::string uri;
+	std::string strCover;
 	void clear()
 	{
 		track_number = -1;
@@ -29,6 +43,7 @@ typedef struct _TRACK
 		name.clear();
 		preview_url.clear();
 		uri.clear();
+		strCover.clear();
 	}
 } TRACK;
 
@@ -38,8 +53,7 @@ class CSpotify
 public:
 	CSpotify();
 	virtual ~CSpotify();
-	int getAlbum(const char *szArtist, std::map<std::string, std::string> &mapAlbums,
-			const char *szAvailableMarket = 0);
+	int getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAlbums, const char *szAvailableMarket = 0);
 	int getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, const char *szAvailableMarket = 0);
 	void authorization(const char* szClient);
 

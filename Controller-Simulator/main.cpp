@@ -43,13 +43,11 @@ int main(int argc, char* argv[])
 	int noEvents;               				// EPOLL event number.
 	int nService;								// Test what service.....
 
-	mbPressure = false;
-	options(argc, argv);
-
 	printf("This process is a Controller testing process!.\n");
 
-	if(argc != 2 && argc != 3)
+	if(argc != 3 && argc != 4)
 	{
+		printf("argc = %d\n", argc);
 		fprintf( stderr, "Usage:  %s <IP> <Remote Port> <Option> ...\n", argv[0]);
 		exit(1);
 	}
@@ -58,6 +56,9 @@ int main(int argc, char* argv[])
 	nPort = atoi(argv[2]);
 	printf("Connect IP:%s Port:%d.\n", strIP.c_str(), nPort);
 	nService = nPort;
+
+	mbPressure = false;
+	options(argc, argv);
 
 	CCmpTest *cmpTest = new CCmpTest();
 	if(!cmpTest->connectController(strIP, nPort))
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
 					while(1)
 					{
 						cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
-						sleep(0.5);
+						sleep(1);
 					}
 				}
 				else
@@ -211,6 +212,7 @@ void options(int argc, char **argv)
 		case 'P':
 		case 'p':
 			mbPressure = true;
+			printf("Set to Pressure\n");
 			break;
 		}
 	}

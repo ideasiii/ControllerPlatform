@@ -27,6 +27,7 @@ LDLIBS    := $(LIB_LINK) \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-L/usr/lib/x86_64-linux-gnu \
+			-L/usr/include \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lpq \
@@ -40,7 +41,8 @@ LDLIBS    := $(LIB_LINK) \
 			-L/usr/local/lib \
 			-lmysqlclient \
 			-lcurl \
-			-lcrypto++
+			-lcrypto++ \
+			-ltinyxml2
 					
 vpath %.cpp $(SRC_DIR)
 
@@ -127,6 +129,7 @@ package-u:
 	apt-get -y install scons
 	apt-get -y install libcurl4-openssl-dev
 	apt-get -y install libcrypto++-dev
+	apt-get -y install libtinyxml2-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
