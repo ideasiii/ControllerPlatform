@@ -145,6 +145,11 @@ string JSONObject::toString()
 
 string JSONObject::toUnformattedString()
 {
+	if (cjsonObj == NULL)
+	{
+		return "{\"nullSource\":null}";
+	}
+
 	return cJSON_PrintUnformatted(cjsonObj);
 }
 

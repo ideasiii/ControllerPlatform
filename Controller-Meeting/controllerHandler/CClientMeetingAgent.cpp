@@ -194,7 +194,6 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 
 	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE", "");
 	std::regex qrCodeTypePattern(QR_CODE_TYPE_PATTERN);
-	decodedQrCodeJson->release();
 
 	if (!regex_match(decStrQrCodeType, qrCodeTypePattern))
 	{
@@ -259,6 +258,7 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 		strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 	}
 	
+	decodedQrCodeJson->release();
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
 	return TRUE;
 }
