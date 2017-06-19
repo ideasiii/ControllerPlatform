@@ -56,7 +56,8 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 
-	strArtist = trim(getArtist(szInput));
+	//strArtist = trim(getArtist(szInput));
+	strArtist = trim(mapMatch["artist"]);
 
 	if(!strArtist.empty())
 	{
@@ -172,7 +173,10 @@ int CJudgeMusic::evaluate(const char *szWord, map<string, string> &mapMatch)
 //======== 評估歌手 ===========//
 	strArtist = getArtist(strWord.c_str());
 	if(!strArtist.empty())
+	{
+		mapMatch["artist"] = strArtist;
 		++nScore;
+	}
 
 //======== 評估動詞 ===========//
 	WORD_ATTR wordAttr;
