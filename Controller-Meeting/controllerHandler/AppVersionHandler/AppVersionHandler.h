@@ -16,7 +16,7 @@ public:
 
 	// 停止 watcher thread
 	void stop();
-	
+
 	virtual std::string getPackageName() = 0;
 	virtual int getVersionCode() = 0;
 	virtual std::string getVersionName() = 0;
@@ -28,13 +28,13 @@ protected:
 
 	// Android apk 的 package name
 	std::string packageName;
-	
+
 	// Android apk 的 version code (a.k.a. build number)
 	int versionCode;
-	
+
 	// Android apk 的版本名稱
 	std::string versionName;
-	
+
 	// Android apk 的下載網址
 	std::string downloadLink;
 
@@ -52,7 +52,7 @@ protected:
 	virtual bool onInotifyEvent(struct inotify_event *event) = 0;
 
 private:
-	const int inotifyEventMask; 
+	const int inotifyEventMask;
 	pthread_t watcherThreadId;
 	bool doLoop;
 	std::string strTaskName;

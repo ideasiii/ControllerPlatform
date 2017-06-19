@@ -16,7 +16,7 @@ SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdi
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql
 CXXFLAGS  := -Wall -Wno-unused-variable -Wreturn-type -g -fno-strict-aliasing -std=c++14 -fno-limit-debug-info $(LOG)
-EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
+EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
@@ -27,12 +27,12 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lsqlite3 \
 			-lmysqlclient \
 			-lcrypto++
-					
+
 vpath %.cpp $(SRC_DIR) $(SRC_DIR)../Global
 
 define make-goal
 $1/%.o: %.cpp
-	$(CC) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS) 
+	$(CC) $(EXT_INCLUDES) $(INCLUDES) -c $$< -o $$@ $(CXXFLAGS)
 	@echo -ne '###### $1 Object Build Done. ######\n'
 	@echo "\n"
 endef
@@ -48,7 +48,7 @@ all: checkdirs bin/$(TARGET)
 
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
-	
+
 init: package-u checkdirs bin/$(TARGET)
 	# use symbolic link to make sure change is synchronized between 2 locations
 	#@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
@@ -69,11 +69,11 @@ lib:
 	done
 	@echo -ne '\n###### All Library Build Done. ######\n'
 	@echo "\n"
-		
+
 checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
-	
+
 clean:
 	@for libName in ${MODULES} ; do \
 		$(MAKE) V=99 -C $$libName clean > /dev/null; \
@@ -91,7 +91,7 @@ clean:
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs
-	
+
 mk_debug:
 	@echo "\n"
 	@echo 'Program Name    : '$(TARGET)
@@ -102,10 +102,10 @@ mk_debug:
 	@echo 'Link Library    : '$(LDLIBS)"\n"
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
 	@echo 'Libs:'${LIB_NAMES}"\n"
-	
+
 # say goodbye to RedHat
 #package-s:
-	
+
 package-u:
 	apt-get -y install \
 		 libboost-all-dev libboost-thread-dev \
@@ -114,5 +114,5 @@ package-u:
 		 libcrypto++-dev libcurl4-openssl-dev
 	@echo -ne '\n###### Installed build dependency on Debian-based distribution. ######\n'
 	@echo "\n"
-	
+
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

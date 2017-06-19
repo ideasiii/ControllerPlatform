@@ -15,7 +15,7 @@
 
 ApkPeekingAppVersionHandler::ApkPeekingAppVersionHandler
 	(AndroidPackageInfoQuierer *q, std::string pkgName, std::string apkDir, std::string dlLinkBase) :
-		AppVersionHandler(apkDir, INOTIFY_WATCH_EVENT), apkQuierer(q), 
+		AppVersionHandler(apkDir, INOTIFY_WATCH_EVENT), apkQuierer(q),
 		downloadLinkBasePath(dlLinkBase)
 {
 	packageName = pkgName;
@@ -55,7 +55,7 @@ void ApkPeekingAppVersionHandler::reload()
 
 	struct dirent * dp;
 
-	while ((dp = readdir(dirp)) != NULL) 
+	while ((dp = readdir(dirp)) != NULL)
 	{
 	    char *name = dp->d_name;
 	    if(HiddenUtility::strEndsWith(name, ".apk"))
@@ -78,7 +78,7 @@ void ApkPeekingAppVersionHandler::reload()
 	if (largestVersionCode > 0)
 	{
 		apkQuierer->extractVersionFromApk(watchDir + "/" + newestApkName);
-		
+
 		versionCode = apkQuierer->getVersionCode();
 		versionName = apkQuierer->getVersionName();
 		downloadLink = downloadLinkBasePath + "/" + newestApkName;

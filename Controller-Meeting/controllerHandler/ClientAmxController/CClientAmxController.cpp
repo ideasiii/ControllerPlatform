@@ -17,7 +17,7 @@
 
 CClientAmxController::CClientAmxController(CObject *controller, const std::string &serverIp,
 	int userPort, int validationPort) :
-	serverIp(serverIp), userPort(userPort), validationPort(validationPort), 
+	serverIp(serverIp), userPort(userPort), validationPort(validationPort),
 	mpController(controller)
 {
 	enquireLinkYo.reset(new EnquireLinkYo("ClientAMX.ely", this,
@@ -62,8 +62,6 @@ int CClientAmxController::startClient(int msqKey)
 
 void CClientAmxController::stopClient()
 {
-	//_DBG(LOG_TAG" stopClient() step in"); 
-
 	if (enquireLinkYo != nullptr)
 	{
 		enquireLinkYo->stop();
@@ -77,8 +75,6 @@ void CClientAmxController::stopClient()
 
 	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
 	stop();
-
-	//_DBG(LOG_TAG" stopClient() step out");
 }
 
 int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
@@ -103,7 +99,7 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 		_log(LOG_TAG" onResponse() unhandled nCommand %s", numberToHex(nCommand).c_str());
 		break;
 	}
-	
+
 	return TRUE;
 }
 
@@ -123,7 +119,7 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 
 	if (reqToken.empty() || reqId.empty())
 	{
-		_log(LOG_TAG" onAuthenticationRequest() Miss something in JSON");
+		_log(LOG_TAG" onAuthenticationRequest() Missed something in JSON");
 		response(getSocketfd(), nCommand, STATUS_RINVJSON, nSequence, NULL);
 		return TRUE;
 	}
@@ -146,9 +142,9 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 			reqId.c_str(), reqToken.c_str());
 		ss << "n";
 	}
-	
+
 	ss << "\"}";
-	
+
 	std::string respBody = ss.str();
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, respBody.c_str());
 
@@ -182,7 +178,7 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 	list<map<string, string> > listRet;
 	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
 		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
-	
+
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" validateToken()", strSQL, listRet);
 	if (!bRet)
 	{
@@ -192,7 +188,7 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 	{
 		_log(LOG_TAG" validateToken() db returned more than 1 result?");
 	}
-	
+
 	auto& retRow = *listRet.begin();
 	auto& strValidFrom = retRow["time_start"];
 	auto& strGoodThrough = retRow["time_end"];
@@ -229,7 +225,7 @@ std::string CClientAmxController::getServerIp()
 {
 	return serverIp;
 }
-	
+
 int CClientAmxController::getUserPort()
 {
 	return userPort;

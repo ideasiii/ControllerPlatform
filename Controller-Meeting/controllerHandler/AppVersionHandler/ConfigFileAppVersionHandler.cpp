@@ -41,18 +41,18 @@ void ConfigFileAppVersionHandler::reload()
 {
 	std::string content, line;
 	std::ifstream file(watchDir + "/" + configName);
-	
+
 	while (file && std::getline(file, line))
 	{
 		content += line;
 	}
-	
+
 	file.close();
 
 	JSONObject configJson(content);
 	if (!configJson.isValid())
 	{
-		_log(LOG_TAG" reload() bad content");
+		_log(LOG_TAG" reload() bad format");
 		return;
 	}
 
@@ -60,11 +60,11 @@ void ConfigFileAppVersionHandler::reload()
 	int versionCode = configJson.getInt("versionCode", -1);
 	std::string versionName = configJson.getString("versionName", "");
 	std::string downloadLink = configJson.getString("downloadLink", "");
+	configJson.release();
 
 	if (packageName.empty() || versionCode < 0 || versionName.empty() || downloadLink.empty())
 	{
 		_log(LOG_TAG" reload() json parsing failed");
-		configJson.release();
 		return;
 	}
 

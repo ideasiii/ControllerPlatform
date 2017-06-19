@@ -11,7 +11,7 @@
 *   - PDU body 不一定以 '\0' 做結尾
 *
 * Fake CMP client & server 通訊流程
-*   - client 連線至 server 
+*   - client 連線至 server
 *   - 建立連線後，client 送出一個 PDU
 *   - server 回應一個 PDU，然後斷線
 */
@@ -28,7 +28,7 @@ public:
 	* @return             how many bytes received (PDU length), <0 on error.
 	*/
 	int sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP_PACKET *responsePdu);
-	
+
 	/**
 	* helper function for building request PDU
 	* @param dst        Pointer to output PDU

@@ -14,14 +14,13 @@ enquireLinkYo \
 ../Global/cmpHandler \
 ../Global/protocolHandler \
 ../Global/global_inc \
-../Global/configHandler	\
+../Global/configHandler \
 ../Global/messageHandler \
 ../Global/mysqlHandler \
-../Global/objectHandler	\
-../Global/socketHandler	\
-../Global/threadHandler	\
-../Global/dataHandler	\
+../Global/objectHandler \
+../Global/socketHandler \
+../Global/threadHandler \
+../Global/dataHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
-../Global/processHandler \
-			 
+../Global/processHandler

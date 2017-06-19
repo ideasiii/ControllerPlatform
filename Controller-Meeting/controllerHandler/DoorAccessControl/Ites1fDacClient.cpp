@@ -10,13 +10,15 @@
 #define ENCRYPT_REQUEST_PDU_BODY
 #define DECRYPT_RESPONSE_PDU_BODY
 
+#define LOG_TAG "[Ites1fDacClient]"
+
 int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody, uint8_t *oBuf, int bufSize);
 std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu);
 
 Ites1fDacClient::Ites1fDacClient(const std::string ip, int port, const uint8_t *key):
 	serverIp(ip), serverPort(port)
 {
-	_log("[Ites1fDacClient] construct with server ip %s, port %d. key not shown.", ip.c_str(), port);
+	_log(LOG_TAG" construct with server ip %s, port %d. key not shown.", ip.c_str(), port);
 
 	memcpy(aesKey, key, AesCrypto::KeyLength);
 }
@@ -28,7 +30,7 @@ Ites1fDacClient::~Ites1fDacClient()
 bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUuid,
 	std::string readerId, std::string token, int64_t validFrom, int64_t goodThrough)
 {
-	_log("[Ites1F_DAClient] doorOpen() step in");
+	_log(LOG_TAG" doorOpen() step in");
 	CMP_PACKET reqPdu, respPdu;
 
 	std::stringstream ss;
@@ -40,7 +42,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		<< "}";
 
 	const std::string& reqBody = ss.str();
-	_log("[Ites1F_DAClient] doorOpen() reqBody.size() = %d", reqBody.size());
+	_log(LOG_TAG" doorOpen() reqBody.size() = %d", reqBody.size());
 
 #ifdef ENCRYPT_REQUEST_PDU_BODY
 	AesCrypto crypto(aesKey);
@@ -55,10 +57,10 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 #else
 	int bufSize = reqBody.size() + 1;
 	uint8_t *buf = (uint8_t *)reqBody.c_str();
-	_log("[Ites1F_DAClient] Not Encrypting request PDU body, bufSize = %d", bufSize);
+	_log(LOG_TAG" Not Encrypting request PDU body, bufSize = %d", bufSize);
 #endif
 
-	int reqPduSize = FakeCmpClient::craftCmpPdu(&reqPdu, bufSize, 
+	int reqPduSize = FakeCmpClient::craftCmpPdu(&reqPdu, bufSize,
 		smart_building_door_control_request, STATUS_ROK, 0, buf);
 
 	if (reqPduSize < 1)
@@ -67,42 +69,41 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		return false;
 	}
 
-	_log("[Ites1F_DAClient] doorOpen() reqPduSize = %d", reqPduSize);
+	_log(LOG_TAG" doorOpen() reqPduSize = %d", reqPduSize);
 
 	FakeCmpClient client(this->serverIp.data(), this->serverPort);
 	int respPduSize = client.sendOnlyOneRequest(&reqPdu, reqPduSize, &respPdu);
-	
+
 	if (respPduSize < (int)sizeof(CMP_HEADER))
 	{
 		errorDescription.assign("Error sending request");
 		return false;
 	}
 
-	
-	// check return status in header
+
 
 #ifdef DECRYPT_RESPONSE_PDU_BODY
 	std::string respBodyStr = decryptRequestBody(crypto, &respPdu);
 
 	if (respBodyStr.length() < 2)
 	{
-		_log("[Ites1F_DAClient] doorOpen() decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
+		_log(LOG_TAG" doorOpen() decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
 		errorDescription.assign("Reading server response failed");
 		return false;
 	}
 	else
 	{
-		_log("[Ites1F_DAClient] doorOpen() response body decrypt ok: `%s`\n", respBodyStr.c_str());
+		_log(LOG_TAG" doorOpen() response body decrypt ok: `%s`\n", respBodyStr.c_str());
 	}
 #else
 	std::string respBodyStr(respPdu.cmpBody.cmpdata);
-	_log("[Ites1F_DAClient] raw response: %s", (uint8_t*)respPdu.cmpBody.cmpdata);
+	_log(LOG_TAG" raw response: %s", (uint8_t*)respPdu.cmpBody.cmpdata);
 #endif
 
 	JSONObject respJson(respBodyStr);
 	if (!respJson.isValid())
 	{
-		_log("[Ites1F_DAClient] doorOpen() respJson.isValid() = false");
+		_log(LOG_TAG" doorOpen() respJson.isValid() = false");
 		errorDescription.assign("Reading server response failed");
 		return false;
 	}
@@ -113,9 +114,9 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		bool granted = respJson.getBoolean("granted");
 		std::string message = respJson.getString("message");
 
-		_log("[Ites1F_DAClient] doorOpen() request failed (granted: %s): `%s`\n",
+		_log(LOG_TAG" doorOpen() request failed (granted: %s): `%s`\n",
 			granted ? "true" : "false", message.c_str());
-		
+
 		if(granted)
 		{
 			errorDescription = "Permission granted by remote but action failed: " + message;
@@ -124,12 +125,12 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 		{
 			errorDescription = "Permission not granted by remote: " + message;
 		}
-		
+
 		respJson.release();
 		return false;
 	}
-	
-	_log("[Ites1F_DAClient] doorOpen() request successful\n");
+
+	_log(LOG_TAG" doorOpen() request successful\n");
 	respJson.release();
 	return true;
 }
@@ -150,7 +151,7 @@ int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody,
 
 	if (outputSize > bufSize)
 	{
-		_log("[Ites1F_DAClient] Encrypt request PDU body failed, outputSize > bufSize (%d > %d)",
+		_log(LOG_TAG" Encrypt request PDU body failed, outputSize > bufSize (%d > %d)",
 			outputSize, bufSize);
 		return -1;
 	}
@@ -158,7 +159,7 @@ int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody,
 	memcpy(oBuf, iv, AesCrypto::IvLength);
 	memcpy(oBuf + AesCrypto::IvLength, ciphertext.c_str(), ciphertext.size());
 
-	_log("[Ites1F_DAClient] Encrypt request PDU body, "
+	_log(LOG_TAG" Encrypt request PDU body, "
 		"IV len = %d, reqBody.size() = %d, ciphertext.size() = %d, outputSize = %d"
 		, AesCrypto::IvLength, reqBody.size(), ciphertext.size(), outputSize);
 
@@ -170,10 +171,10 @@ std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu)
 	uint8_t *respIv = (uint8_t*)pdu->cmpBody.cmpdata;
 	uint8_t *respBody = ((uint8_t*)pdu->cmpBody.cmpdata) + AesCrypto::IvLength;
 	int respCipherLen = pdu->cmpHeader.command_length - sizeof(CMP_HEADER) - AesCrypto::IvLength;
-	_log("[Ites1F_DAClient] response ciphertext length = %d", respCipherLen);
+	_log(LOG_TAG" response ciphertext length = %d", respCipherLen);
 
 	std::string respBodyStr = crypto.decrypt(respBody, respCipherLen, respIv);
-	_log("[Ites1F_DAClient] decrypt.length = %d", respBodyStr.length());
+	_log(LOG_TAG" decrypt.length = %d", respBodyStr.length());
 
 	return respBodyStr;
 }

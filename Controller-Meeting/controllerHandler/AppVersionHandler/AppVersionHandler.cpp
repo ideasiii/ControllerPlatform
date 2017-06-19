@@ -17,7 +17,7 @@
 
 void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 {
-	auto avh = reinterpret_cast<AppVersionHandler*>(argv); 
+	auto avh = reinterpret_cast<AppVersionHandler*>(argv);
 	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", avh->strTaskName.c_str());
 
 	pthread_detach(pthread_self());
@@ -25,12 +25,12 @@ void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 	avh->watcherThreadId = pthread_self();
 	avh->doLoop = true;
 	avh->runWatcher();
-	
+
 	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step out", avh->strTaskName.c_str());
 	return 0;
 }
 
-AppVersionHandler::AppVersionHandler(std::string watchDirectory, int inotifyMask) : 
+AppVersionHandler::AppVersionHandler(std::string watchDirectory, int inotifyMask) :
 	watchDir(watchDirectory), lastUpdated(-1), inotifyEventMask(inotifyMask), doLoop(false)
 {
 }
@@ -44,7 +44,7 @@ void AppVersionHandler::start()
 {
 	strTaskName = taskName();
 
-	createThread(threadStartRoutine_AppVersionHandler_runWatcher, 
+	createThread(threadStartRoutine_AppVersionHandler_runWatcher,
 		this, "AppVersionHandler Watcher Thread");
 }
 
@@ -80,21 +80,21 @@ void AppVersionHandler::runWatcher()
 			{
 				_log(LOG_TAG" %s runWatcher() watch created, break creating loop", strTaskName.c_str());
 				break;
-			}	
-			
+			}
+
 			lastUpdated = -1;
 			sleep(10);
 		} while(doLoop);
-		
+
 		int maxFd = inotifyFd + 1;
 		_log(LOG_TAG" %s runWatcher() watching changes in %s", strTaskName.c_str(), watchDir.c_str());
-		
+
 		while(doLoop)
 		{
 			fd_set readFdSet;
 			FD_ZERO(&readFdSet);
 			FD_SET(inotifyFd, &readFdSet);
-			
+
 			// On Linux, select() modifies timeout to reflect the amount of time not slept
 			struct timeval timeout;
 			timeout.tv_sec = 1;
@@ -128,10 +128,10 @@ void AppVersionHandler::runWatcher()
 				_log(LOG_TAG" %s runWatcher() select() failed: %s", strTaskName.c_str(), strerror(errno));
 				break;
 			}
-			
+
 			uint8_t buf[INOTIFY_BUF_LEN];
 			size_t len = read(inotifyFd, buf, INOTIFY_BUF_LEN);
-			
+
 			if (len < 1)
 			{
 				_log(LOG_TAG" %s runWatcher() read() failed: %s", strTaskName.c_str(), strerror(errno));
@@ -139,14 +139,14 @@ void AppVersionHandler::runWatcher()
 			}
 
 			_log(LOG_TAG" %s runWatcher() detected dir change, len = %d", strTaskName.c_str(), len);
-			
+
 			size_t i = 0;
-			while (i < len) 
+			while (i < len)
 			{
 				// TODO MOVED_FROM and MOVE_TO and IGNORE handling
 				// when dir is moved from original tree
 				struct inotify_event *event = (struct inotify_event *) &buf[i];
-				if (event->len && (event->mask & inotifyEventMask)) 
+				if (event->len && (event->mask & inotifyEventMask))
 				{
 					if (!onInotifyEvent(event))
 					{
@@ -160,7 +160,7 @@ void AppVersionHandler::runWatcher()
 
 		inotify_rm_watch(inotifyFd, inotifyWd);
 		close(inotifyFd);
-		
+
 		if (doLoop)
 		{
 			_log(LOG_TAG" %s runWatcher() sleep before next watch loop", strTaskName.c_str());

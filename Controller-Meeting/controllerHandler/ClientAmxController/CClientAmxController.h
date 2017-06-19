@@ -8,6 +8,7 @@
 class EnquireLinkYo;
 class CMysqlHandler;
 
+// 從 DB 拿出來的 token 資料
 struct CachedTokenInfo
 {
 	std::string userUuid;
@@ -15,16 +16,17 @@ struct CachedTokenInfo
 	int64_t goodThrough;
 };
 
+// controller-amx 的 client, 主要接收來自 server 的 token 驗證請求 
 class CClientAmxController : public CCmpClient
 {
 public:
-	explicit CClientAmxController(CObject *controller, const std::string &serverIp, 
+	explicit CClientAmxController(CObject *controller, const std::string &serverIp,
 		int userPort, int validationPort);
 	virtual ~CClientAmxController();
 
 	// Establish connection to controller, start enquire link thread,
 	// start message receiving loop with message queue ID 'msqKey'.
-	int startClient(int msqKey); 
+	int startClient(int msqKey);
 
 	// Stop enquire link thread, stop message receiving loop,
 	// disconnect from controller.

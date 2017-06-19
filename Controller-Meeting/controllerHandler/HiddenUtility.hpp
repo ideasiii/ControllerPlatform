@@ -16,11 +16,12 @@
 #include "LogHandler.h"
 #include "MysqlSource.h"
 
-// Some functions in HiddenUtility requires C++11 support
+// Utility functions that requires C++11,
+// which means merge into Global is not possible (for now)
 class HiddenUtility
 {
 public:
-	// Returns Unix timestamp in milliseconds, UTC timezone 
+	// Returns Unix timestamp in milliseconds, UTC timezone
 	inline static int64_t unixTimeMilli()
 	{
 		return std::chrono::duration_cast<std::chrono::milliseconds>
@@ -146,8 +147,8 @@ private:
 	HiddenUtility()
 	{
 	}
-	
-	~HiddenUtility() 
+
+	~HiddenUtility()
 	{
 	}
 };

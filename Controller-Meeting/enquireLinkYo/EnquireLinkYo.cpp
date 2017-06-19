@@ -15,10 +15,10 @@ void *threadStartRoutine_EnquireLinkYo_run(void *argv)
 {
 	pthread_detach(pthread_self());
 
-	auto ely = reinterpret_cast<EnquireLinkYo*>(argv); 
+	auto ely = reinterpret_cast<EnquireLinkYo*>(argv);
 	_log(LOG_TAG" %s threadStartRoutine_EnquireLinkYo_run() step in", ely->yoIdentifier.c_str());
 	prctl(PR_SET_NAME, (unsigned long)ely->yoIdentifier.c_str());
-	
+
 	ely->loopThreadId = pthread_self();
 	ely->run();
 
@@ -118,20 +118,20 @@ void EnquireLinkYo::run()
 
 	isRunning = true;
 	balance = 0;
-	
+
 	if (!client->isValidSocketFD())
 	{
 		_log(LOG_TAG" %s run() sock fd is not valid, quit before looping", yoIdentifier.c_str());
 		isRunning = false;
 		return;
 	}
-	
+
 	//int crashCounter = 0;
-	
+
 	while (isRunning)
 	{
 		sleep(requestInterval);
-		
+
 		if (!isRunning)
 		{
 			break;
@@ -164,7 +164,7 @@ void EnquireLinkYo::run()
 			// Enquire Link Failed
 			_log(LOG_TAG" %s run() assume broken pipe (reached maxBalance %d)", yoIdentifier.c_str(), maxBalance);
 			informEnquireLinkFailure();
-			
+
 			// socket 壞了，只能退出迴圈
 			break;
 		}
@@ -187,7 +187,7 @@ void EnquireLinkYo::run()
 		{
 			_log(LOG_TAG" %s run() Send enquire link failed, result = %d", yoIdentifier.c_str(), nRet);
 			informEnquireLinkFailure();
-			
+
 			// socket 壞了，只能退出迴圈
 			break;
 		}
@@ -210,7 +210,7 @@ void EnquireLinkYo::informEnquireLinkFailure()
 	}
 
 	// First event sometimes dropped by external receiver
-	// So send message twice!?
+	// So send it twice!?
 	dyingMessage = yoIdentifier + " disconnect (2)....";
 	mpController->sendMessage(commandOnDisconnect, 0, dyingMessage.length(), dyingMessage.c_str());
 }

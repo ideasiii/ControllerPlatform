@@ -39,7 +39,7 @@ private:
 	// string returned in taskName()
 	// 最好不要超過 15 字元 (PR_SET_NAME 限制)
 	const std::string yoIdentifier;
-	
+
 	// do not delete this or this class will die with it
 	CCmpClient * const client;
 	// do not delete this or the whole world will collapse
@@ -54,7 +54,7 @@ private:
 	int requestInterval;
 	int maxBalance;
 	std::atomic_int balance;
-	
+
 	// main loops used to send and monitor enquire link requests
 	void run();
 

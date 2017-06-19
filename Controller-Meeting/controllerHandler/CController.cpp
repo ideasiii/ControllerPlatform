@@ -28,7 +28,7 @@ void *threadStartRoutine_CController_connectToAgent(void *argv);
 void *threadStartRoutine_CController_connectToAmx(void *argv);
 
 CController::CController() :
-	mnMsqKey(-1), 
+	mnMsqKey(-1),
 	agentClient(nullptr), amxControllerClient(nullptr),
 	agentConnectingThreadId(0), amxConnectingThreadId(0)
 {
@@ -55,15 +55,15 @@ int CController::onInitial(void* szConfPath)
 {
 	// We use the config lies under the same directory with process image
 	//string strConfPath = reinterpret_cast<const char*>(szConfPath);
-	
+
 	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
 	_log(LOG_TAG" onInitial() Config path = `%s`", strConfPath.c_str());
-	
+
 	if(strConfPath.empty())
 	{
 		return FALSE;
 	}
-	
+
 	std::unique_ptr<CConfig> config = make_unique<CConfig>();
 	int nRet = config->loadConfig(strConfPath);
 	if(!nRet)
@@ -104,7 +104,7 @@ int CController::onInitial(void* szConfPath)
 	}
 
 	startConnectToAgentThread();
-	
+
 	return TRUE;
 }
 
@@ -127,7 +127,7 @@ int CController::onFinish(void* nMsqKey)
 		threadCancel(agentConnectingThreadId);
 		agentConnectingThreadId = 0;
 	}
-	
+
 	if (amxConnectingThreadId > 0)
 	{
 		threadCancel(amxConnectingThreadId);
@@ -169,15 +169,15 @@ void CController::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 
 		if (agentConnectingThreadId < 1)
 		{
-			_log(LOG_TAG" Reconnecting to agent");			
+			_log(LOG_TAG" Reconnecting to agent");
 			agentClient->stopClient();
-			usleep(200); 
+			usleep(200);
 			startConnectToAgentThread();
 
 			// wait thread to be created
 			usleep(200);
 		}
-				
+
 		break;
 	case EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX:
 		_log(LOG_TAG_COLORED" Connection to AMX controller is broken! JKSKALXUH@OUW)233333333333");
@@ -226,6 +226,7 @@ void CController::startConnectToAgentThread()
 {
 	createThread(threadStartRoutine_CController_connectToAgent, this, "agentConnect");
 }
+
 void CController::startConnectToAmxThread()
 {
 	createThread(threadStartRoutine_CController_connectToAmx, this, "amxConnect");
@@ -247,8 +248,8 @@ void *threadStartRoutine_CController_connectToAgent(void *argv)
 
 	ctlr->agentConnectingThreadId = tid;
 	prctl(PR_SET_NAME, (unsigned long)"C_agentConnect");
-	
-	
+
+
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<> dist(RECONNECT_INTERVAL/2, RECONNECT_INTERVAL*2);
@@ -263,7 +264,7 @@ void *threadStartRoutine_CController_connectToAgent(void *argv)
 		}
 		else if (client->isValidSocketFD())
 		{
-			_log(LOG_TAG" C_agentConnect assume already connected,  quit");
+			_log(LOG_TAG" C_agentConnect assume already connected, quit");
 			break;
 		}
 		else if(client->startClient(ctlr->mnMsqKey) == TRUE)
@@ -299,7 +300,7 @@ void *threadStartRoutine_CController_connectToAmx(void *argv)
 
 	ctlr->amxConnectingThreadId = tid;
 	prctl(PR_SET_NAME, (unsigned long)"C_amxConnect");
-	
+
 
 	std::random_device rd;
 	std::mt19937 mt(rd());
@@ -315,7 +316,7 @@ void *threadStartRoutine_CController_connectToAmx(void *argv)
 		}
 		else if (client->isValidSocketFD())
 		{
-			_log(LOG_TAG" C_amxConnect assume already connected,  quit");
+			_log(LOG_TAG" C_amxConnect assume already connected, quit");
 			break;
 		}
 		else if (client->startClient(ctlr->mnMsqKey) == TRUE)

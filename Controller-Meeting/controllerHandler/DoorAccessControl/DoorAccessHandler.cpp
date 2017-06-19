@@ -37,7 +37,7 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 	string strItes1fServerPort = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "port");
 	string strItes1fServerAesKey = config->getValue(CONF_BLOCK_CLIENT_ITES_1F_CONTROLLER, "aes_key");
 
-	if (strItes1fServerIp.empty() 
+	if (strItes1fServerIp.empty()
 		|| strItes1fServerPort.empty()
 		|| strItes1fServerAesKey.empty())
 	{
@@ -47,7 +47,7 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 
 	int ites1fServerPort;
 	convertFromString(ites1fServerPort, strItes1fServerPort);
-	
+
 	this->ites1fDoor = std::make_unique<Ites1fDacClient>(strItes1fServerIp,
 		ites1fServerPort, (uint8_t*)strItes1fServerAesKey.c_str());
 
@@ -68,14 +68,14 @@ bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const&
 		resultMessage = "Invalid parameter";
 		return false;
 	}
-	
+
 	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
 	list<map<string, string>> listRet;
 	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM meeting.door_access_token as t, meeting.user as u, meeting.meeting_room as m "
 		"WHERE u.uuid = '" + uuid + "' AND m.room_id = '" + meetingRoom
 		+ "' AND t.effective <= " + to_string(unixTimeNow) + " AND t.expiry >= " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
-	
+
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doRequest()", strSQL, listRet);
 	if (!bRet)
 	{
@@ -91,7 +91,7 @@ bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const&
 	auto& retToken = retRow["uuid"];
 	auto& retValidFrom = retRow["effective"];
 	auto& retGoodThrough = retRow["expiry"];
-	
+
 	// return now if token is identified as simulation only
 	if (retToken.compare(DOOR_TOKEN_101_DUMMY) == 0
 		|| retToken.compare(DOOR_TOKEN_102_DUMMY) == 0)
@@ -135,5 +135,5 @@ bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const&
 		lastOpenedTime[meetingRoom] = HiddenUtility::unixTimeMilli();
 		resultMessage = "Opened";
 		return true;
-	}		
+	}
 }

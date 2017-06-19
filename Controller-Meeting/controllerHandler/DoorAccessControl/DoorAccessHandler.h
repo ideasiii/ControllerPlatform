@@ -17,11 +17,11 @@ class DoorAccessHandler
 public:
 	DoorAccessHandler();
 	~DoorAccessHandler();
-	
+
 	// Intializes members that needs parameters in config.
 	// Returns FALSE if anything bad happens
 	int initMember(std::unique_ptr<CConfig>& config);
-	
+
 	// 處理開門要求
 	// resultMessage: (output) 關於處理結果的描述訊息
 	// uuid: (intput) 使用者的 UUID

@@ -18,7 +18,7 @@ CClientAmxController* CClientAmxControllerFactory::createFromConfig(std::unique_
 	string strAmxControllerDevicePort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "user_port");
 	string strAmxControllerValidationPort = config->getValue(CONF_BLOCK_AMX_CONTROLLER, "validation_port");
 
-	if (strControllerIp.empty() 
+	if (strControllerIp.empty()
 		|| strAmxControllerDevicePort.empty()
 		|| strAmxControllerValidationPort.empty())
 	{
@@ -28,7 +28,7 @@ CClientAmxController* CClientAmxControllerFactory::createFromConfig(std::unique_
 
 	int devicePort;
 	int validationPort;
-	
+
 	convertFromString(devicePort, strAmxControllerDevicePort);
 	convertFromString(validationPort, strAmxControllerValidationPort);
 
