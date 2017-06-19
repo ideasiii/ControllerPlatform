@@ -18,6 +18,7 @@ class CCmpWord: public CCmpServer
 		int nTotal;
 		int nNumber;
 		std::string strWord;
+		std::string strDeviceId;
 		_WORD_REQUEST()
 		{
 			nId = -1;

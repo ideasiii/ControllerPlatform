@@ -42,6 +42,7 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 			wordRequest.nTotal = jobjRoot->getInt("total");
 			wordRequest.nNumber = jobjRoot->getInt("number");
 			wordRequest.strWord = jobjRoot->getString("word");
+			wordRequest.strDeviceId = jobjRoot->getString("device_id");
 		}
 		jobjRoot->release();
 		delete jobjRoot;
