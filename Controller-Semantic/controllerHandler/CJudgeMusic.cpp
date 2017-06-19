@@ -41,6 +41,8 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 {
 	int nResult;
 	int nIndex;
+	int nRand;
+	int nCount;
 	string strArtist;
 	string strAlbum;
 	string strTrack;
@@ -52,6 +54,8 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 	map<string, ALBUM> mapAlbums;
 	map<string, ALBUM>::const_iterator it;
 	map<int, TRACK> mapSong;
+	map<int, TRACK> mapAllTrack;
+	TRACK track;
 
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
@@ -61,6 +65,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 
 	if(!strArtist.empty())
 	{
+		nCount = 0;
 		nResult = spotify->getAlbum(strArtist.c_str(), mapAlbums, "TW");
 		if(ERROR_STATUS_NO_TOKEN == nResult)
 		{
@@ -88,7 +93,6 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 				{
 					for(map<int, TRACK>::const_iterator cit = mapSong.begin(); mapSong.end() != cit; ++cit)
 					{
-						_log("			 %s - %s", it->first.c_str(), cit->second.name.c_str());
 						strAlbum = it->first;
 						strTrack = cit->second.name;
 						strTrackUri = cit->second.uri;
@@ -99,6 +103,22 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 							if((int) string::npos != nIndex)
 								strTrack = trim(strTrack.substr(0, nIndex));
 						}
+
+						nIndex = strTrack.find("(");
+						if((int) string::npos != nIndex)
+						{
+							strTrack = trim(strTrack.substr(0, nIndex));
+						}
+
+						_log("			 %s - %s", strAlbum.c_str(), strTrack.c_str());
+
+						track.clear();
+						track.artist = strArtist;
+						track.album = strAlbum;
+						track.name = strTrack;
+						track.id = strTrackUri;
+						track.strCover = strCover;
+						mapAllTrack[nCount++] = track;
 
 						transform(strTrack.begin(), strTrack.end(), strTrack.begin(), ::tolower);
 						if(string::npos != strWord.find(strTrack))
@@ -123,14 +143,18 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 		}
 	}
 
+	nRand = getRand(0, mapAllTrack.size() - 1);
+
+	strTrackUri = mapAllTrack[nRand].id;
+
 	if(!strTrackUri.empty())
 	{
 		jsonSpotify.put("source", 2);
-		jsonSpotify.put("album", strAlbum);
-		jsonSpotify.put("artist", strArtist);
-		jsonSpotify.put("song", strTrack);
-		jsonSpotify.put("id", strTrackUri);
-		jsonSpotify.put("cover", strCover);
+		jsonSpotify.put("album", mapAllTrack[nRand].album);
+		jsonSpotify.put("artist", mapAllTrack[nRand].artist);
+		jsonSpotify.put("song", mapAllTrack[nRand].name);
+		jsonSpotify.put("id", mapAllTrack[nRand].id);
+		jsonSpotify.put("cover", mapAllTrack[nRand].strCover);
 		jsonResp->put("type", TYPE_RESP_MUSIC);
 		jsonResp->put("music", jsonSpotify);
 	}
@@ -196,6 +220,7 @@ string CJudgeMusic::getArtist(const char *szWord)
 {
 	string strWord;
 	string strArtist;
+	string strValue;
 	set<string>::iterator it_set;
 	map<string, string>::const_iterator it_map;
 
@@ -203,32 +228,43 @@ string CJudgeMusic::getArtist(const char *szWord)
 
 	if(!strWord.empty())
 	{
+		strArtist.clear();
 		transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 		for(it_set = setArtist.begin(); setArtist.end() != it_set; ++it_set)
 		{
-			strArtist = trim(*it_set);
-			transform(strArtist.begin(), strArtist.end(), strArtist.begin(), ::tolower);
-			if(!strArtist.empty() && 0 < strArtist.length() && string::npos != strWord.find(strArtist))
+			strValue = trim(*it_set);
+			transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+			if(!strValue.empty() && 0 < strValue.length() && string::npos != strWord.find(strValue))
 			{
-				_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
-				return strArtist;
+				if(strValue.length() >= strArtist.length())
+				{
+					strArtist = strValue;
+				}
 			}
 		}
 
-		for(it_map = mapArtistMatch.begin(); mapArtistMatch.end() != it_map; ++it_map)
+		if(strArtist.empty())
 		{
-			strArtist = trim(it_map->first);
-			transform(strArtist.begin(), strArtist.end(), strArtist.begin(), ::tolower);
-			if(!strArtist.empty() && 0 < strArtist.length() && string::npos != strWord.find(strArtist))
+			// 尋找中英文對應的歌手
+			for(it_map = mapArtistMatch.begin(); mapArtistMatch.end() != it_map; ++it_map)
 			{
-				strArtist = trim(it_map->second);
-				_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
-				return strArtist;
+				strValue = trim(it_map->first);
+				transform(strValue.begin(), strValue.end(), strValue.begin(), ::tolower);
+				if(!strValue.empty() && 0 < strValue.length() && string::npos != strWord.find(strValue))
+				{
+					strArtist = trim(it_map->second);
+					_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
+					break;
+				}
 			}
 		}
 	}
 
-	strArtist.clear();
+	if(!strArtist.empty())
+	{
+		_log("[CJudgeMusic] getArtist Find Artist: %s", strArtist.c_str());
+	}
+
 	return strArtist;
 }
 

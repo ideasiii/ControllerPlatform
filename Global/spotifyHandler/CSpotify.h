@@ -28,6 +28,8 @@ typedef struct _TRACK
 {
 	int track_number;
 	int popularity;
+	std::string artist;
+	std::string album;
 	std::string href;
 	std::string id;
 	std::string name;
@@ -44,6 +46,8 @@ typedef struct _TRACK
 		preview_url.clear();
 		uri.clear();
 		strCover.clear();
+		artist.clear();
+		album.clear();
 	}
 } TRACK;
 
