@@ -1,15 +1,11 @@
 #include "DoorAccessHandler.h"
 
-#include <chrono>
-#include <regex>
-
 #include "common.h"
 #include "utility.h"
 #include "../HiddenUtility.hpp"
 #include "../RegexPattern.h"
 #include "../TestStringsDefinition.h"
 #include "CConfig.h"
-#include "CMysqlHandler.h"
 #include "Ites1fDacClient.h"
 
 #define LOG_TAG "[DoorAccessHandler]"
@@ -60,50 +56,29 @@ int DoorAccessHandler::initMember(std::unique_ptr<CConfig>& config)
 
 bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const& uuid, std::string const& meetingRoom)
 {
-	std::regex uuidRegex(UUID_PATTERN);
-	std::regex meetingRoomHumanIdRegex(MEETING_ROOM_ID_PATTERN);
-
-	if (!regex_match(uuid, uuidRegex))
+	if (!HiddenUtility::RegexMatch(uuid, UUID_PATTERN))
 	{
 		_log(LOG_TAG" doRequest() ID %s is not a valid UUID", uuid.c_str());
 		resultMessage = "Invalid parameter";
 		return false;
 	}
-	else if (!regex_match(meetingRoom, meetingRoomHumanIdRegex))
+	else if (!HiddenUtility::RegexMatch(meetingRoom, MEETING_ROOM_ID_PATTERN))
 	{
 		_log(LOG_TAG" doRequest() meeting room ID %s is not valid", meetingRoom.c_str());
 		resultMessage = "Invalid parameter";
 		return false;
 	}
 	
-	std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
-	if (mysql == nullptr)
-	{
-		_log(LOG_TAG" doRequest() Mysql Error");
-		resultMessage = "System error";
-		return false;
-	}
-
 	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
-	list<map<string, string> > listRet;
+	list<map<string, string>> listRet;
 	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM meeting.door_access_token as t, meeting.user as u, meeting.meeting_room as m "
 		"WHERE u.uuid = '" + uuid + "' AND m.room_id = '" + meetingRoom
 		+ "' AND t.effective <= " + to_string(unixTimeNow) + " AND t.expiry >= " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
-
-	int nRet = mysql->query(strSQL, listRet);
-	string strError = mysql->getLastError();
-	mysql->close();
-
-	if (FALSE == nRet)
+	
+	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doRequest()", strSQL, listRet);
+	if (!bRet)
 	{
-		_log(LOG_TAG" doRequest() Mysql Error: %s", strError.c_str());
-		resultMessage = "System error";
-		return false;
-	}
-	else if (listRet.size() < 1)
-	{
-		_log(LOG_TAG" doRequest() db no match token");
 		resultMessage = "Permission denied";
 		return false;
 	}

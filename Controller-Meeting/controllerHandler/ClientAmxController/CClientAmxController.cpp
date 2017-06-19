@@ -1,6 +1,5 @@
 #include "CClientAmxController.h"
 
-#include <regex>
 #include <sstream>
 #include "packet.h"
 #include "event.h"
@@ -8,7 +7,6 @@
 #include "../../enquireLinkYo/EnquireLinkYo.h"
 #include "../HiddenUtility.hpp"
 #include "../TestStringsDefinition.h"
-#include "CMysqlHandler.h"
 #include "JSONObject.h"
 #include "LogHandler.h"
 #include "../RegexPattern.h"
@@ -161,14 +159,12 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 // 'when' is the point we received the validation request, in unix epoch (milliseconds, UTC)
 bool CClientAmxController::validateToken(const std::string& reqId, const std::string& reqToken, const int64_t when)
 {
-	std::regex uuidRegex(UUID_PATTERN);
-
-	if (!regex_match(reqId, uuidRegex))
+	if (!HiddenUtility::RegexMatch(reqId, UUID_PATTERN))
 	{
 		_log(LOG_TAG" validateToken() ID %s is not a valid UUID", reqId.c_str());
 		return false;
 	}
-	else if (!regex_match(reqToken, uuidRegex))
+	else if (!HiddenUtility::RegexMatch(reqToken, UUID_PATTERN))
 	{
 		_log(LOG_TAG" validateToken() Token %s is not a valid UUID", reqToken.c_str());
 		return false;
@@ -183,34 +179,18 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 			&& hitRecord.goodThrough >= when;
 	}
 
-	std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
-	if (mysql == nullptr)
-	{
-		_log(LOG_TAG" validateToken() Mysql cannot make connection");
-		return true;
-	}
-
 	list<map<string, string> > listRet;
 	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
 		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
-	int nRet = mysql->query(strSQL, listRet);
-	string strError = mysql->getLastError();
-	mysql->close();
-
-	if (FALSE == nRet)
+	
+	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" validateToken()", strSQL, listRet);
+	if (!bRet)
 	{
-		_log(LOG_TAG" validateToken() Mysql Error: %s", strError.c_str());
-		return true;
-	}
-	else if (listRet.size() < 1)
-	{
-		_log(LOG_TAG" validateToken() db no match token");
 		return false;
 	}
 	else if (listRet.size() > 1)
 	{
 		_log(LOG_TAG" validateToken() db returned more than 1 result?");
-		return true;
 	}
 	
 	auto& retRow = *listRet.begin();

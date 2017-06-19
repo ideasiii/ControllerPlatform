@@ -1,7 +1,5 @@
 #include "CClientMeetingAgent.h"
 
-#include <regex>
-
 #include "../enquireLinkYo/EnquireLinkYo.h"
 #include "common.h"
 #include "event.h"
@@ -13,7 +11,7 @@
 #include "ClientAmxController/AmxControllerInfo.h"
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "CConfig.h"
-#include "CMysqlHandler.h"
+#include "HiddenUtility.hpp"
 #include "JSONObject.h"
 #include "RegexPattern.h"
 #include "TestStringsDefinition.h"
@@ -183,7 +181,7 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
 	
-	std::unique_ptr<JSONObject> decodedQrCodeJson(decodeQRCodeString(reqQrCodeToken));
+	std::unique_ptr<JSONObject> decodedQrCodeJson = decodeQRCodeString(reqQrCodeToken);
 	reqJson.release();
 
 	if (reqQrCodeToken.size() < 1 || decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
@@ -224,15 +222,32 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 		{
 			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 		}
-		else if (reqUserId.compare(TEST_USER_CAN_OPEN_101) == 0)
-		{
-			strResponseBodyData =
-				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":true,"RESULT_MESSAGE":"Sign Up Successful"}})";
-		}
 		else
 		{
-			strResponseBodyData =
-				R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"You Have No Meeting Today"}})";
+			string meetingName;
+			JSONObject respJson;
+			JSONObject respMessageJson;
+
+			if (doDigitalSignup(meetingName, reqUserId))
+			{
+				respMessageJson.put("RESULT", true);
+				respMessageJson.put("RESULT_MESSAGE", "Your first meeting today: " + meetingName);
+			}
+			else
+			{
+				respMessageJson.put("RESULT", false);
+				respMessageJson.put("RESULT_MESSAGE", "You have no meeting today");
+			}
+
+			respJson.put("QRCODE_TYPE", "2");
+			respJson.put("MESSAGE", respMessageJson);
+			// test if cJSON is deep of shallow copy
+			respMessageJson.release(); 
+			
+			strResponseBodyData = respJson.toUnformattedString();
+
+			
+			respJson.release();
 		}
 	}
 	else if (decQrCodeType == 3)
@@ -319,46 +334,117 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	//_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
-	string strResponseBodyData = "";
 	std::stringstream ss;
 	
 	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
 
-	JSONObject reqJson(strRequestBodyData);
-
 	// ROOM_ID is a descriptive string like "ITES_101", not a magic number
+	JSONObject reqJson(strRequestBodyData); 
 	string reqRoomId = reqJson.getString("ROOM_ID", "");
 	string reqUserId = reqJson.getString("USER_ID", "");
-
-	if (!reqJson.isValid() || reqUserId.size() < 1 || reqRoomId.size() < 1)
-	{
-		/*response what?
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-		return TRUE;*/
-	}
+	string retToken = getAMXControlToken(reqUserId, reqRoomId);
 	
-	if (strRequestBodyData.find(TEST_USER_CAN_OPEN_101) != string::npos
-		&& strRequestBodyData.find("ITES_101") != string::npos)
+	if (retToken.size() > 1)
 	{
-		//OK can control AMX
+		// Can control AMX
 		ss << "{\"USER_ID\": \"" << reqUserId
 			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerInfo->serverIp
 			<< "\", \"ROOM_PORT\": " << amxControllerInfo->devicePort
-			<< ", \"ROOM_TOKEN\": \"" << TEST_AMX_TOKEN << "\"}";
-		strResponseBodyData = ss.str();
+			<< ", \"ROOM_TOKEN\": \"" << retToken << "\"}";
 	}
 	else
 	{
-		//NO cannot control AMX
+		// Cannot control AMX
 		ss << "{\"USER_ID\": \"" << reqUserId << "\", \"RESULT\": false}";
-		strResponseBodyData = ss.str();
 	}
 
-	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, ss.str().c_str());
 	return TRUE;
 }
 
-JSONObject *CClientMeetingAgent::decodeQRCodeString(std::string& src)
+bool CClientMeetingAgent::doDigitalSignup(string& outMeetingName, string const& userId)
+{
+	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
+	{
+		_log(LOG_TAG" doDigitalSignup() ID %s is not a valid UUID", userId.c_str());
+		return false;
+	}
+
+	list<map<string, string>> listRet;
+	string strSQL;
+
+	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0)
+	{
+		// 挑出測試 user 所屬的會議名稱，不管會議是否在今天舉行
+		strSQL = "SELECT i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
+			"meeting.meeting_members as m, meeting.meeting_info as i, meeting.user as u "
+			"WHERE u.uuid = '" + userId + "' AND m.meeting_info_id = i.id "
+			"AND s.meeting_members_id = m.id AND m.user_id = u.id AND s.valid = 1 "
+			"AND m.valid = 1 AND u.valid = 1 ORDER BY i.time_start ASC LIMIT 1;";
+	}
+	else
+	{
+		// 挑出 user 今天參加的第一場會議的名稱
+		strSQL = "SELECT i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
+			"meeting.meeting_members as m, meeting.meeting_info as i, meeting.user as u "
+			"WHERE u.uuid = '" + userId + "' AND s.time_meeting_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
+			"AND s.time_meeting_end <= (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) AND m.meeting_info_id = i.id "
+			"AND s.meeting_members_id = m.id AND m.user_id = u.id AND s.valid = 1 "
+			"AND m.valid = 1 AND u.valid = 1 ORDER BY i.time_start ASC LIMIT 1;";
+	}
+
+	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
+	if (!bRet)
+	{
+		return false;
+	}
+	else if (listRet.size() > 1)
+	{
+		_log(LOG_TAG" doDigitalSignup() db returned more than 1 result?");
+	}
+
+	auto& retRow = *listRet.begin();
+	outMeetingName = retRow["subject"];
+	return true;
+}
+
+string CClientMeetingAgent::getAMXControlToken(std::string const& userId, std::string const& roomId)
+{
+	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
+	{
+		_log(LOG_TAG" getAMXControlToken() ID %s is not a valid UUID", userId.c_str());
+		return string();
+	}
+	else if (!HiddenUtility::RegexMatch(roomId, MEETING_ROOM_ID_PATTERN))
+	{
+		_log(LOG_TAG" getAMXControlToken() Room ID %s is not valid", roomId.c_str());
+		return string();
+	}
+
+	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
+	list<map<string, string>> listRet;
+	string strSQL = "SELECT token FROM meeting.amx_control_token as t, meeting.user as u, meeting.meeting_room as m"
+		" WHERE u.uuid = '" + userId + "' AND m.room_id = '" + roomId + "'"
+		+ " AND t.time_start <= " + to_string(unixTimeNow) + " AND t.time_end >= " + to_string(unixTimeNow)
+		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
+
+	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getAMXControlToken()", strSQL, listRet); 
+	if (!bRet)
+	{
+		return string();
+	}
+	else if (listRet.size() > 1)
+	{
+		_log(LOG_TAG" getAMXControlToken() db returned more than 1 result?");
+		return string();
+	}
+
+	auto& retRow = *listRet.begin();
+	auto& retToken = retRow["token"];
+	return retToken;
+}
+
+std::unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(std::string const& src)
 {
 	if (src.size() < 1)
 	{
@@ -368,33 +454,33 @@ JSONObject *CClientMeetingAgent::decodeQRCodeString(std::string& src)
 	if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// test user w/ AMX control permission
-		return new JSONObject(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "00000000-ffff-0000-ffff-ffffffffffff"}})");
+		return make_unique<JSONObject>(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "00000000-ffff-0000-ffff-ffffffffffff"}})");
 	}
 	else if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_102) == 0)
 	{
 		// test user w/o AMX control permission
-		return new JSONObject(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "ffffffff-ffff-0000-0000-ffffffffffff"}})");
+		return make_unique<JSONObject>(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "ffffffff-ffff-0000-0000-ffffffffffff"}})");
 	}
 	else if (src.compare(QR_CODE_DIGITAL_CHECKIN_ITES) == 0)
 	{
 		// digital checkin
-		return new JSONObject(R"({"DIGIT_SIGN_PLACE": "ITeS", "QRCODE_TYPE": "2"})");
+		return make_unique<JSONObject>(R"({"DIGIT_SIGN_PLACE": "ITeS", "QRCODE_TYPE": "2"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_101_DUMMY) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3"})");
+		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_102_DUMMY) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3"})");
+		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_101) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_101", "QRCODE_TYPE": "3"})");
+		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_101", "QRCODE_TYPE": "3"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_102) == 0)
 	{
-		return new JSONObject(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3"})");
+		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3"})");
 	}
 
 	return nullptr;

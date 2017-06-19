@@ -16,8 +16,9 @@ public:
 	static MysqlSource& getInstance();
 	bool initialize(std::unique_ptr<CConfig>& config);
 
+	// Get CMysqlHandler which has been already connected to DB
 	// returns nullptr if failed to create a connection
-	CMysqlHandler* getMysqlHandler();
+	std::unique_ptr<CMysqlHandler> getMysqlHandler();
 
 private:
 	bool initialized;

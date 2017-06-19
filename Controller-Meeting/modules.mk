@@ -23,6 +23,5 @@ enquireLinkYo \
 ../Global/dataHandler	\
 ../Global/jsonHandler \
 ../Global/logHandler \
-../Global/processHandler
+../Global/processHandler \
 			 
-#export EXT_MODULES=extInclude

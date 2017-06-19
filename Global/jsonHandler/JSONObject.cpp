@@ -149,8 +149,11 @@ string JSONObject::toUnformattedString()
 	{
 		return "{\"nullSource\":null}";
 	}
-
-	return cJSON_PrintUnformatted(cjsonObj);
+	
+	char *out = cJSON_PrintUnformatted(cjsonObj);
+	std::string strOut(out);
+	free(out);
+	return strOut;
 }
 
 cJSON * JSONObject::getcJSON()

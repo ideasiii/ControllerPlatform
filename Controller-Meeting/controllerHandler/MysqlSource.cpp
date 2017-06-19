@@ -70,7 +70,7 @@ bool MysqlSource::initialize(std::unique_ptr<CConfig>& config)
 	return true;
 }
 
-CMysqlHandler* MysqlSource::getMysqlHandler()
+std::unique_ptr<CMysqlHandler> MysqlSource::getMysqlHandler()
 {
 	CMysqlHandler* mysql = new CMysqlHandler();
 	int nRet = mysql->connect(host, database, user, password);
@@ -82,5 +82,5 @@ CMysqlHandler* MysqlSource::getMysqlHandler()
 		return nullptr;
 	}
 
-	return mysql;
+	return std::unique_ptr<CMysqlHandler>(mysql);
 }

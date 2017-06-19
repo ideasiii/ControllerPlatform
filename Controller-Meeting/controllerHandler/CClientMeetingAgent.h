@@ -59,9 +59,15 @@ private:
 	// 初始化連線到 agent 需要的參數
 	int initMeetingAgentServerParams(std::unique_ptr<CConfig>& config);
 
+	bool doDigitalSignup(std::string& outMeetingName, std::string const& userId);
+
+	// 取得 AMX 裝置控制 token
+	// 若取不到 token，傳回空字串
+	std::string getAMXControlToken(std::string const& userId, std::string const& roomId);
+
 	// 解碼 QR code 掃出來的字串
 	// 不再使用時必須 delete 該物件
-	JSONObject* decodeQRCodeString(std::string& src);
+	std::unique_ptr<JSONObject> decodeQRCodeString(std::string const& src);
 
 	std::string agentIp;
 	int agentPort;

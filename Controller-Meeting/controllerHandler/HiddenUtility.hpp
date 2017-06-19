@@ -1,12 +1,20 @@
 #pragma once
 
 #include <chrono>
+#include <ctime>
 #include <errno.h>
+#include <iomanip>
 #include <linux/limits.h>
+#include <regex>
+#include <sstream>
+#include <string>
 #include <string.h>
 #include <sys/inotify.h>
 #include <unistd.h>
+#include "common.h"
+#include "CMysqlHandler.h"
 #include "LogHandler.h"
+#include "MysqlSource.h"
 
 // Some functions in HiddenUtility requires C++11 support
 class HiddenUtility
@@ -17,6 +25,25 @@ public:
 	{
 		return std::chrono::duration_cast<std::chrono::milliseconds>
 			(std::chrono::system_clock::now().time_since_epoch()).count();
+	}
+
+	static std::string currentDateTime(bool inUtc)
+	{
+		auto now = std::chrono::system_clock::now();
+		auto now_time_t = std::chrono::system_clock::to_time_t(now);
+
+		std::stringstream ss;
+
+		if (inUtc)
+		{
+			ss << std::put_time(std::gmtime(&now_time_t), "%Y-%m-%d %X");
+		}
+		else
+		{
+			ss << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %X");
+		}
+
+		return ss.str();
 	}
 
 	static int initInotifyWithOneWatchDirectory(int *oFd, int *oWd, const char *dir, uint32_t mask)
@@ -70,6 +97,49 @@ public:
 		strConfPath.append(".conf");
 
 		return strConfPath;
+	}
+
+	// Checks whether 's' match regular expression pattern 'pattern'
+	static bool RegexMatch(std::string const& s, std::string const& pattern)
+	{
+		std::regex regexp(pattern);
+		return std::regex_match(s, regexp);
+	}
+
+	// Checks whether 's' match regular expression pattern 'pattern'
+	static bool RegexMatch(std::string const& s, const char* pattern)
+	{
+		std::regex regexp(pattern);
+		return std::regex_match(s, regexp);
+	}
+
+	// 從 DB 取出資料
+	// 當存取 DB 時發生錯誤或是得到的結果為空時, 返回 false, 否則返回 true
+	static bool selectFromDb(const char* callerDesc, std::string const& strSQL, std::list<std::map<std::string, std::string>> &listRet)
+	{
+		std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
+		if (mysql == nullptr)
+		{
+			_log("%s selectFromDb() Mysql cannot make connection", callerDesc);
+			return false;
+		}
+
+		int nRet = mysql->query(strSQL, listRet);
+		std::string strError = mysql->getLastError();
+		mysql->close();
+
+		if (FALSE == nRet)
+		{
+			_log("%s selectFromDb() Mysql Error: %s", callerDesc, strError.c_str());
+			return false;
+		}
+		else if (listRet.size() < 1)
+		{
+			_log("%s selectFromDb() Mysql no return row", callerDesc);
+			return false;
+		}
+
+		return true;
 	}
 
 private:
