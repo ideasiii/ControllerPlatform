@@ -24,11 +24,14 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-L/usr/lib/x86_64-linux-gnu \
+			-L/usr/include \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lmysqlclient \
 			-lcurl \
-			-lcryptopp
+			-lcryptopp \
+			-lssl \
+			-lcrypto
 					
 vpath %.cpp $(SRC_DIR) ../Global
 

@@ -78,13 +78,16 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 	{
 		nTop = ranking.topValueKey();
 		_log("[CSemanticJudge] word Top Key is %d", nTop);
-		mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
+		if(mapSemanticObject.end() != mapSemanticObject.find(nTop))
+		{
+			mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
+			return TRUE;
+		}
+		_log("[CSemanticJudge] word: No Object to Access this work");
 	}
-	else
-	{
-		jsonResp->put("type", 3);
-		jsonResp->put("tts", WORD_UNKNOW);
-	}
+
+	jsonResp->put("type", 3);
+	jsonResp->put("tts", WORD_UNKNOW);
 
 	return TRUE;
 }

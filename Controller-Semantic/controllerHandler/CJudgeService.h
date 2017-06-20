@@ -31,4 +31,5 @@ private:
 	void getClock(std::string &strClock);
 	void getWeather(const char *szLocation, WEATHER &weather);
 	void getLocation(const char *szWord, WEATHER &weather);
+	void getTranslate(const char *szWord, std::string &strResult);
 };

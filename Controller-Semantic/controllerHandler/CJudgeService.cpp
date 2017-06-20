@@ -17,6 +17,7 @@
 #include "config.h"
 #include "common.h"
 #include "JSONObject.h"
+#include "CTranslate.h"
 
 using namespace std;
 
@@ -42,6 +43,7 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, s
 	string strWord;
 	string strTTS;
 	string strLocation;
+	string strTranslate;
 	map<string, int>::const_iterator it_map;
 	int nYear, nMonth, nDay, nHour, nMinute, nSecond;
 
@@ -76,6 +78,10 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, s
 
 		strTTS = format("現在%s天氣，%s;氣溫%.02f度;溼度%.02f度", weather.strLocation.c_str(), weather.strWeather.c_str(),
 				weather.fTemperature, weather.fHumidity);
+		break;
+	case SERVICE_TRANSLATE:
+		getTranslate(szInput, strTranslate);
+		strTTS = strTranslate;
 		break;
 	}
 
@@ -201,5 +207,30 @@ void CJudgeService::getLocation(const char *szWord, WEATHER &weather)
 	}
 
 	weather.strLocation = "台北";
+}
+
+void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
+{
+	CTranslate translate;
+	RESULT result;
+	map<string, int>::const_iterator it_map;
+
+	if(!szWord)
+		return;
+
+	//翻譯,3
+	//中翻英,3
+
+	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
+	{
+		if(string::npos != strWord.find(it_map->first))
+		{
+			nService = it_map->second;
+			break;
+		}
+	}
+
+	translate.translate(en, szWord, result);
+	strResult = result.strResult;
 }
 

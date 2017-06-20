@@ -42,7 +42,9 @@ LDLIBS    := $(LIB_LINK) \
 			-lmysqlclient \
 			-lcurl \
 			-lcrypto++ \
-			-ltinyxml2
+			-ltinyxml2 \
+			-lssl \
+			-lcrypto
 					
 vpath %.cpp $(SRC_DIR)
 

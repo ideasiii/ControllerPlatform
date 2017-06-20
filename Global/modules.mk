@@ -19,6 +19,8 @@ mongoDBHandler \
 psqlHandler \
 mysqlHandler \
 protocolHandler \
-rankingHandler
+rankingHandler \
+spotifyHandler \
+translateHandler
 
 export EXT_MODULES=extInclude

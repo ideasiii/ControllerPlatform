@@ -56,6 +56,8 @@ static map<string, string> mapEducationPoetry;
 
 #define SERVICE_CLOCK				1
 #define SERVICE_WEATHER				2
+#define SERVICE_TRANSLATE			3
+
 static map<string, int> mapService;
 static set<string> setLocation;
 

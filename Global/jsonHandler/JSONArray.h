@@ -17,8 +17,8 @@ using namespace std;
 class JSONArray
 {
 public:
-	JSONArray();
-	JSONArray(cJSON *pcJSON);
+	explicit JSONArray();
+	explicit JSONArray(cJSON *pcJSON);
 	virtual ~JSONArray();
 	void add(JSONObject &jsonObject);
 	void add(JSONArray &jsonArray);
@@ -40,7 +40,8 @@ public:
 	string toString();
 	void release();
 	bool isValid();
-
+	void load(cJSON *pcJSON);
+	void create();
 	void operator=(cJSON *c);
 
 private:

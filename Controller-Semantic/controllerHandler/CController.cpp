@@ -96,6 +96,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		const char *szWord)
 {
 	JSONObject *jsonResp = new JSONObject;
+	jsonResp->create();
 
 	switch(nType)
 	{

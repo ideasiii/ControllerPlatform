@@ -15,7 +15,7 @@ using namespace std;
 JSONObject::JSONObject() :
 		cjsonObj(0), mnExtPointObj(0)
 {
-	cjsonObj = cJSON_CreateObject();
+
 }
 
 JSONObject::JSONObject(string strSource) :
@@ -37,6 +37,23 @@ JSONObject::JSONObject(cJSON *pcJSON) :
 JSONObject::~JSONObject()
 {
 
+}
+
+void JSONObject::create()
+{
+	mnExtPointObj = 0;
+	cjsonObj = cJSON_CreateObject();
+}
+
+void JSONObject::load(std::string strJSON)
+{
+	if(strJSON.empty())
+		return;
+	cjsonObj = cJSON_Parse(strJSON.c_str());
+	if(!cjsonObj)
+	{
+		printf("[JSONObject] Invalid JSON Source: %s", strJSON.c_str());
+	}
 }
 
 void JSONObject::release()
@@ -145,11 +162,11 @@ string JSONObject::toString()
 
 string JSONObject::toUnformattedString()
 {
-	if (cjsonObj == NULL)
+	if(cjsonObj == NULL)
 	{
 		return "{\"nullSource\":null}";
 	}
-	
+
 	char *out = cJSON_PrintUnformatted(cjsonObj);
 	std::string strOut(out);
 	free(out);

@@ -14,7 +14,7 @@ class JSONArray;
 class JSONObject
 {
 public:
-	JSONObject();
+	explicit JSONObject();
 	explicit JSONObject(std::string strSource);
 	explicit JSONObject(cJSON *pcJSON);
 	bool getBoolean(std::string name);
@@ -28,6 +28,8 @@ public:
 	std::string getString(std::string name);
 	std::string getString(std::string name, std::string defaultValue);
 	bool isNull(std::string name);
+	void load(std::string strJSON);
+	void create();
 
 	virtual ~JSONObject();
 	bool isValid();

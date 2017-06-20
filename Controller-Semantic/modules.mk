@@ -16,6 +16,7 @@ export MODULES=controllerHandler serviceHandler\
 ../Global/httpHandler \
 ../Global/spotifyHandler \
 ../Global/fileHandler \
-../Global/rssHandler
+../Global/rssHandler \
+../Global/translateHandler
 			 
 #export EXT_MODULES=extInclude

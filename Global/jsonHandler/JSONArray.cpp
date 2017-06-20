@@ -13,7 +13,7 @@
 JSONArray::JSONArray() :
 		cjsonArray(0), mnExtPointObj(0)
 {
-	cjsonArray = cJSON_CreateArray();
+
 }
 
 JSONArray::JSONArray(cJSON *pcJSON) :
@@ -24,9 +24,25 @@ JSONArray::JSONArray(cJSON *pcJSON) :
 		cjsonArray->type = cJSON_Array;
 }
 
+void JSONArray::create()
+{
+	mnExtPointObj = 0;
+	cjsonArray = cJSON_CreateArray();
+}
+
 JSONArray::~JSONArray()
 {
 
+}
+
+void JSONArray::load(cJSON *pcJSON)
+{
+	cjsonArray = pcJSON;
+	if(cjsonArray)
+	{
+		mnExtPointObj = 1;
+		cjsonArray->type = cJSON_Array;
+	}
 }
 
 bool JSONArray::isValid()
