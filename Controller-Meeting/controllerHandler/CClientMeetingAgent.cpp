@@ -294,7 +294,6 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 	{
 		strResponseBodyData =
 			"{\"USER_ID\":\"00000000-ffff-0000-ffff-ffffffffffff\",\"USER_NAME\":\"李二二\",\"USER_EMAIL\":\"qwwwew@gmail.com\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2016-06-30 09:30:00\",\"END_TIME\":\"2016-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1afd78\",\"SUPJECT\":\"促進XXX發展計畫\",\"START_TIME\":\"2016-07-30 09:30:00\",\"END_TIME\":\"2016-07-30 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一二\",\"OWNER_EMAIL\":\"qoiu1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2016-08-30 09:30:00\",\"END_TIME\":\"2016-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass71\",\"SUPJECT\":\"促進WWWW發展計畫\",\"START_TIME\":\"2016-08-31 09:30:00\",\"END_TIME\":\"2016-08-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一四\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass72\",\"SUPJECT\":\"促進YYY發展計畫\",\"START_TIME\":\"2016-09-30 09:30:00\",\"END_TIME\":\"2016-09-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一五\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46c0-b0c0-00eede1ass73\",\"SUPJECT\":\"XXXx公司會議\",\"START_TIME\":\"2016-10-30 09:30:00\",\"END_TIME\":\"2016-10-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一六\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-43b0-b0c0-00eede1ass74\",\"SUPJECT\":\"促進YXXY發展計畫\",\"START_TIME\":\"2016-11-28 09:30:00\",\"END_TIME\":\"2016-11-28 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一七\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass75\",\"SUPJECT\":\"促進WWXY發展計畫\",\"START_TIME\":\"2016-11-29 09:30:00\",\"END_TIME\":\"2016-11-29 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一八\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass76\",\"SUPJECT\":\"促進WWY發展計畫\",\"START_TIME\":\"2016-11-30 09:30:00\",\"END_TIME\":\"2016-11-30 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一九\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass18\",\"SUPJECT\":\"促進YYYX發展計畫\",\"START_TIME\":\"2016-12-30 09:30:00\",\"END_TIME\":\"2016-12-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一十\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass28\",\"SUPJECT\":\"促進YYYW發展計畫\",\"START_TIME\":\"2016-12-31 09:30:00\",\"END_TIME\":\"2016-12-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王二一\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
-
 	}
 	else if (strRequestBodyData.find(TEST_USER_CAN_OPEN_102) != string::npos)
 	{
@@ -316,7 +315,7 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	//_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
 
 	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
-	std::stringstream ss;
+	stringstream ss;
 
 	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
 
@@ -362,7 +361,7 @@ bool CClientMeetingAgent::doDigitalSignup(string& outMessage, string const& user
 
 	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
-		// 挑出測試 user 所屬的會議名稱，不管會議是否在今天舉行
+		// 從簽到表挑出測試 user 所屬的會議名稱，不管會議是否在今天舉行
 		strSQL = "SELECT i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
 			"meeting.meeting_members as m, meeting.meeting_info as i, meeting.user as u "
 			"WHERE u.uuid = '" + userId + "' AND m.meeting_info_id = i.id "
@@ -371,11 +370,11 @@ bool CClientMeetingAgent::doDigitalSignup(string& outMessage, string const& user
 	}
 	else
 	{
-		// 挑出 user 今天參加的第一場會議的名稱
+		// 從簽到表挑出 user 今天參加的第一場會議的名稱
 		strSQL = "SELECT i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
 			"meeting.meeting_members as m, meeting.meeting_info as i, meeting.user as u "
 			"WHERE u.uuid = '" + userId + "' AND s.time_meeting_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
-			"AND s.time_meeting_end <= (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) AND m.meeting_info_id = i.id "
+			"AND s.time_meeting_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) AND m.meeting_info_id = i.id "
 			"AND s.meeting_members_id = m.id AND m.user_id = u.id AND s.valid = 1 "
 			"AND m.valid = 1 AND u.valid = 1 ORDER BY i.time_start ASC LIMIT 1;";
 	}
