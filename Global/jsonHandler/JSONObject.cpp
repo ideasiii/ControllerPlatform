@@ -19,7 +19,7 @@ JSONObject::JSONObject() :
 }
 
 JSONObject::JSONObject(string strSource) :
-	cjsonObj(0), mnExtPointObj(0)
+		cjsonObj(0), mnExtPointObj(0)
 {
 	cjsonObj = cJSON_Parse(strSource.c_str());
 	if (!cjsonObj)
@@ -31,7 +31,7 @@ JSONObject::JSONObject(string strSource) :
 JSONObject::JSONObject(const char *pSource) :
 		cjsonObj(0), mnExtPointObj(0)
 {
-	if (!pSource)
+	if (pSource)
 	{
 		cjsonObj = cJSON_Parse(pSource);
 		if (!cjsonObj)

@@ -105,7 +105,10 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 
 int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	JSONObject reqJson(reinterpret_cast<const char *>(szBody));
+	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
+	_log(LOG_TAG" onAuthenticationRequest() body: %s", charRequestBodyData);
+
+	JSONObject reqJson(charRequestBodyData);
 	if (!reqJson.isValid())
 	{
 		_log(LOG_TAG" onAuthenticationRequest() This is not JSON");
@@ -127,27 +130,25 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 	int64_t now = HiddenUtility::unixTimeMilli();
 	bool authOk = validateToken(reqId, reqToken, now);
 
-	std::stringstream ss;
-	ss << "{\"ID\": \"" << reqId << "\", \"AUTH\": \"";
+	std::stringstream respSs;
+	respSs << "{\"ID\": \"" << reqId << "\", \"AUTH\": \"";
 
 	if (authOk)
 	{
 		_log(LOG_TAG_COLORED" onAuthenticationRequest() `%s` w/ token `%s` PASSED on validation",
 			reqId.c_str(), reqToken.c_str());
-		ss << "y";
+		respSs << "y";
 	}
 	else
 	{
 		_log(LOG_TAG_COLORED" onAuthenticationRequest() `%s` w/ token `%s` FAILED on validation",
 			reqId.c_str(), reqToken.c_str());
-		ss << "n";
+		respSs << "n";
 	}
 
-	ss << "\"}";
+	respSs << "\"}";
 
-	std::string respBody = ss.str();
-	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, respBody.c_str());
-
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, respSs.str().c_str());
 	return TRUE;
 }
 
@@ -175,7 +176,7 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 			&& hitRecord.goodThrough >= when;
 	}
 
-	list<map<string, string> > listRet;
+	list<map<string, string>> listRet;
 	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
 		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
 

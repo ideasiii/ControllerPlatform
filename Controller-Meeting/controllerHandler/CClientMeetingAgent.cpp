@@ -16,13 +16,14 @@
 #include "RegexPattern.h"
 #include "TestStringsDefinition.h"
 
-
 #define LOG_TAG "[CClientMeetingAgent]"
 #define LOG_TAG_COLORED "[\033[1;31mCClientMeetingAgent\033[0m]"
 
 #define TASK_NAME "ClientAgent"
 #define CONF_BLOCK_MEETING_AGENT_CLIENT "CLIENT MEETING_AGENT"
 #define JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE R"({"QRCODE_TYPE":"0","MESSAGE":{"RESULT_MESSAGE":"Unknown type of QR-Code"}})"
+
+using namespace std;
 
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller)
@@ -161,13 +162,11 @@ int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int 
 
 int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	//_DBG(LOG_TAG" onSmartBuildingQrCodeToken() step in");
-
-	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
+	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
 	string strResponseBodyData = "";
-	_log(LOG_TAG" onSmartBuildingQrCodeToken() body: %s", strRequestBodyData.c_str());
+	_log(LOG_TAG" onSmartBuildingQrCodeToken() body: %s", charRequestBodyData);
 
-	JSONObject reqJson(strRequestBodyData);
+	JSONObject reqJson(charRequestBodyData);
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
 
@@ -227,7 +226,9 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 			respJson.put("MESSAGE", respMessageJson);
 
 			strResponseBodyData = respJson.toUnformattedString();
-			respMessageJson.release();
+
+			// respMessageJson will be released by respJson
+			//respMessageJson.release();
 			respJson.release();
 		}
 	}
@@ -284,6 +285,8 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 	string strResponseBodyData = "";
 	_log(LOG_TAG" onSmartBuildingMeetingDataRequest() body: %s", strRequestBodyData.c_str());
 
+	JSONObject reqJson(strRequestBodyData);
+
 	if (strRequestBodyData.find(TEST_USER_CAN_OPEN_101) != string::npos)
 	{
 		strResponseBodyData =
@@ -306,15 +309,13 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 
 int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	//_DBG(LOG_TAG" onSmartBuildingAMXControlAccess() step in");
-
-	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
+	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
 	stringstream ss;
 
-	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", strRequestBodyData.c_str());
+	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", charRequestBodyData);
 
 	// ROOM_ID is a descriptive string like "ITES_101", not a magic number
-	JSONObject reqJson(strRequestBodyData);
+	JSONObject reqJson(charRequestBodyData);
 	string reqRoomId = reqJson.getString("ROOM_ID", "");
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string retToken = getAMXControlToken(reqUserId, reqRoomId);
@@ -337,7 +338,12 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	return TRUE;
 }
 
-bool CClientMeetingAgent::doDigitalSignup(string& outMessage, string const& userId)
+string CClientMeetingAgent::getMeetingsInfo(const string& userId)
+{
+
+}
+
+bool CClientMeetingAgent::doDigitalSignup(string& outMessage, const string& userId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
@@ -417,7 +423,7 @@ bool CClientMeetingAgent::doDigitalSignup(string& outMessage, string const& user
 	return bRet;
 }
 
-string CClientMeetingAgent::getAMXControlToken(string const& userId, string const& roomId)
+string CClientMeetingAgent::getAMXControlToken(const string& userId, const string& roomId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
@@ -453,7 +459,7 @@ string CClientMeetingAgent::getAMXControlToken(string const& userId, string cons
 	return retToken;
 }
 
-unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(string const& src)
+unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src)
 {
 	if (src.size() < 1)
 	{

@@ -58,17 +58,21 @@ private:
 	// 初始化連線到 agent 需要的參數
 	int initMeetingAgentServerParams(std::unique_ptr<CConfig>& config);
 
+	// 取得 user 的會議資訊
+	// 回傳 JSON 字串
+	std::string getMeetingsInfo(const std::string& userId);
+
 	// 進行數位簽到
 	// 如果 userId 今天還沒簽到，且今天有會議，回傳 true，並將今天第一場會議名稱存在 outMessage
 	// 否則回傳 false，並將訊息寫在 outMessage
-	bool doDigitalSignup(std::string& outMessage, std::string const& userId);
+	bool doDigitalSignup(std::string& outMessage, const std::string& userId);
 
 	// 取得 AMX 裝置控制 token
 	// 若取不到 token，傳回空字串
-	std::string getAMXControlToken(std::string const& userId, std::string const& roomId);
+	std::string getAMXControlToken(const std::string& userId, const std::string& roomId);
 
 	// 解碼 QR code 掃出來的字串
-	std::unique_ptr<JSONObject> decodeQRCodeString(std::string const& src);
+	std::unique_ptr<JSONObject> decodeQRCodeString(const std::string& src);
 
 	std::string agentIp;
 	int agentPort;
