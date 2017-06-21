@@ -46,8 +46,8 @@ void EnquireLinkYo::setRequestInterval(int value)
 	}
 	else
 	{
-		_log(LOG_TAG" %s setRequestInterval() value set to %d", yoIdentifier.c_str(), value);
 		requestInterval = value;
+		_log(LOG_TAG" %s setRequestInterval() value set to %d", yoIdentifier.c_str(), value);
 	}
 }
 
@@ -108,7 +108,7 @@ void EnquireLinkYo::zeroBalance()
 
 void EnquireLinkYo::run()
 {
-	_DBG(LOG_TAG" %s run() step in", yoIdentifier.c_str());
+	//_log(LOG_TAG" %s run() step in", yoIdentifier.c_str());
 
 	if (isRunning)
 	{
@@ -126,8 +126,6 @@ void EnquireLinkYo::run()
 		return;
 	}
 
-	//int crashCounter = 0;
-
 	while (isRunning)
 	{
 		sleep(requestInterval);
@@ -137,31 +135,16 @@ void EnquireLinkYo::run()
 			break;
 		}
 
-		/*
-		// isValidSocketFD() 只是檢查內部的 sock fd 是不是 -1
-		// 不是檢查 sock fd 是否可以送封包
-		// 所以如果 CCmpClient 在確定連到 server 之後才啟動這個 function 的話
-		// 這個檢查並沒有用
-		if (!client->isValidSocketFD())
-		{
-			informEnquireLinkFailure();
-
-			_log(LOG_TAG" %s run() client socket not valid, return", strTaskName.c_str());
-			// socket 壞了，只能退出迴圈
-			break;
-		}*/
-
-		/*if (crashCounter++ > 5)
-		{
-			// test message sending
-			_log(LOG_TAG" %s run() assume broken pipe (crashCounter > 5)", yoIdentifier.c_str());
-			informEnquireLinkFailure();
-			break;
-		}*/
+		// isValidSocketFD() 僅檢查內部的 sock fd 是不是 -1
+		// 不會檢查 sock fd 是否可以送封包
+		// 如果 CCmpClient 在連到 server 之後才啟動 EnquireLinkYo 的話
+		// 這個檢查並沒有用, 因為 sock fd 絕對不會是 -1
+		// if (!client->isValidSocketFD())
+		// {
+		// }
 
 		if (balance >= maxBalance)
 		{
-			// Enquire Link Failed
 			_log(LOG_TAG" %s run() assume broken pipe (reached maxBalance %d)", yoIdentifier.c_str(), maxBalance);
 			informEnquireLinkFailure();
 
@@ -179,8 +162,6 @@ void EnquireLinkYo::run()
 
 		if (nRet > 0)
 		{
-			// Enquire Link Success
-			// Really?
 			balance++;
 		}
 		else
