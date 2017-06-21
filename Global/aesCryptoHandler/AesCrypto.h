@@ -5,7 +5,7 @@
 
 /**
  * A helper class for doing AES 256 bit, CBC mode encryption/decryption.
- * 
+ *
  * This class relies on crypto++ which can be installed through apt on Debian:
  *     sudo apt-get -y install libcrypto++-dev
  * Linking option: -lcrypto++
@@ -18,7 +18,7 @@ public:
 	static const int IvLength = 16;
 
 	// Length of key in bytes.
-	static const int KeyLength = 32; 
+	static const int KeyLength = 32;
 
 	// Instantiate with a key used for encryption and decryption.
 	AesCrypto(const uint8_t *key);

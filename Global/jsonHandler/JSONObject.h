@@ -16,6 +16,7 @@ class JSONObject
 public:
 	explicit JSONObject();
 	explicit JSONObject(std::string strSource);
+	explicit JSONObject(const char *pSource);
 	explicit JSONObject(cJSON *pcJSON);
 	bool getBoolean(std::string name);
 	bool getBoolean(std::string name, bool defaultValue);

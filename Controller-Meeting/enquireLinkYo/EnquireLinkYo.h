@@ -10,7 +10,7 @@ class CCmpClient;
 class EnquireLinkYo : public CObject
 {
 public:
-	EnquireLinkYo(std::string whoUsedMe, CCmpClient *client, int nCommandOnDisconnect, CObject *controller);
+	EnquireLinkYo(std::string yoIdentifier, CCmpClient *client, int nCommandOnDisconnect, CObject *controller);
 	~EnquireLinkYo();
 
 	// 設定發送 enquire link 的間隔

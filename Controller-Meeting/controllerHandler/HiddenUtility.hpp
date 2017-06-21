@@ -16,7 +16,7 @@
 #include "LogHandler.h"
 #include "MysqlSource.h"
 
-// Utility functions that requires C++11,
+// Utility functions that may require C++11,
 // which means merge into Global is not possible (for now)
 class HiddenUtility
 {
@@ -116,7 +116,7 @@ public:
 
 	// 從 DB 取出資料
 	// 當存取 DB 時發生錯誤或是得到的結果為空時, 返回 false, 否則返回 true
-	static bool selectFromDb(const char* callerDesc, std::string const& strSQL, std::list<std::map<std::string, std::string>> &listRet)
+	static bool selectFromDb(const char* callerDesc, std::string const& strSQL, std::list<std::map<std::string, std::string>>& listRet)
 	{
 		std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
 		if (mysql == nullptr)
@@ -136,10 +136,32 @@ public:
 		}
 		else if (listRet.size() < 1)
 		{
-			_log("%s selectFromDb() Mysql no return row", callerDesc);
+			_log("%s selectFromDb() Mysql zero return row", callerDesc);
 			return false;
 		}
 
+		return true;
+	}
+
+	// 當存取 DB 時發生錯誤, 返回 false, 否則返回 true
+	static bool execOnDb(const char* callerDesc, std::string const& strSQL)
+	{
+		std::unique_ptr<CMysqlHandler> mysql(MysqlSource::getInstance().getMysqlHandler());
+		if (mysql == nullptr)
+		{
+			_log("%s insertIntoDb() Mysql cannot make connection", callerDesc);
+			return false;
+		}
+
+		if (FALSE == mysql->sqlExec(strSQL))
+		{
+			_log("%s Mysql sqlExec Error: %s", callerDesc, mysql->getLastError().c_str());
+			mysql->close();
+			return false;
+		}
+
+		_log("%s run MYSQL Success: %s", callerDesc, strSQL.c_str());
+		mysql->close();
 		return true;
 	}
 

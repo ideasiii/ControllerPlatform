@@ -28,7 +28,7 @@ public:
 	~AndroidPackageInfoQuierer()
 	{
 	}
-	
+
 	bool extractVersionFromApk(std::string apkPath)
 	{
 		char buffer[128];
@@ -37,13 +37,13 @@ public:
 		cmd += aaptPath + " d badging " + apkPath;
 		//_log("[AndroidPackageInfoQuierer] extractVersionFromApk() cmd = `%s`", cmd.c_str());
 		FILE *hFile = popen(cmd.c_str(), "r");
-		
+
 		if (!hFile)
 		{
 			_log("[AndroidPackageInfoQuierer] extractVersionFromApk() popen() failed!");
 			return false;
 		}
-		
+
 		try
 		{
 			while (!feof(hFile))
@@ -71,13 +71,13 @@ public:
 		std::regex pkgNameVerRegex(PKG_NAME_VER_PATTERN);
 		smatch sm;
 		//_log("[AndroidPackageInfoQuierer] PKG_NAME_VER_PATTERN = %s", PKG_NAME_VER_PATTERN);
-		
+
 		if (!regex_search(result, sm, pkgNameVerRegex))
 		{
 			_log("[AndroidPackageInfoQuierer] extractVersionFromApk() regex no match");
 			return false;
 		}
-		
+
 		std::string extractedPkgName = sm[1].str();
 		std::string extractedVersionCode = sm[3].str();
 		std::string extractedVersionName = sm[4].str();
@@ -115,5 +115,5 @@ private:
 
 	//std::string apkPath;
 	int versionCode;
-	std::string versionName;	
+	std::string versionName;
 };

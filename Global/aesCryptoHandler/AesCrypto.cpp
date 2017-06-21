@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include "LogHandler.h"
 
+#define LOG_TAG "[AesCrypto]"
+
 AesCrypto::AesCrypto(const uint8_t *key)
 {
 	this->key = key;
@@ -43,9 +45,9 @@ std::string AesCrypto::decrypt(const uint8_t *ciphertext, const int textLength, 
 	}
 	catch (CryptoPP::Exception const &e)
 	{
-		_log("[AesCrypto] decrypt failed: %s\n", e.what());
+		_log(LOG_TAG" decrypt failed: %s\n", e.what());
 	}
-	
+
 	return decryptedtext;
 }
 
