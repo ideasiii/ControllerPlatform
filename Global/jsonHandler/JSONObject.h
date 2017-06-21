@@ -28,7 +28,7 @@ public:
 	std::string getString(std::string name);
 	std::string getString(std::string name, std::string defaultValue);
 	bool isNull(std::string name);
-	void load(std::string strJSON);
+	JSONObject &load(std::string strJSON);
 	void create();
 
 	virtual ~JSONObject();

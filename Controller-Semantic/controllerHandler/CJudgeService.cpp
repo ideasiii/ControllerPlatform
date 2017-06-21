@@ -221,7 +221,7 @@ void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
 	//翻譯,3
 	//中翻英,3
 
-	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
+/*	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
 	{
 		if(string::npos != strWord.find(it_map->first))
 		{
@@ -229,7 +229,7 @@ void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
 			break;
 		}
 	}
-
+*/
 	translate.translate(en, szWord, result);
 	strResult = result.strResult;
 }

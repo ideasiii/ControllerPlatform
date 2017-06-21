@@ -2,7 +2,7 @@
  * CSpotify.cpp
  *
  *  Created on: 2017年4月24日
- *      Author: root
+ *      Author: Jugo
  */
 
 #include <set>
@@ -44,6 +44,7 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAl
 	string strURL;
 	string strAlbum;
 	string strAlbumId;
+	JSONObject jroot;
 	JSONObject jAlbums;
 	JSONObject jAlbum;
 	JSONObject jImage;
@@ -68,8 +69,7 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAl
 		if(ERROR_STATUS_SUCCESS != nError)
 			return nError;
 
-		JSONObject jroot(strData);
-		if(!jroot.isValid())
+		if(!jroot.load(strData).isValid())
 		{
 			jroot.release();
 			_log("[CSpotify] getAlbum Invalid JSON Response: %s", strData.c_str());
@@ -152,6 +152,7 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 	string strURL;
 	string strSong;
 	set<string> setHead;
+	JSONObject jroot;
 	JSONArray jItems;
 	JSONArray jarrAM;
 	JSONObject jTrack;
@@ -172,8 +173,7 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 		if(ERROR_STATUS_SUCCESS != nError)
 			return nError;
 
-		JSONObject jroot(strData);
-		if(!jroot.isValid())
+		if(!jroot.load(strData).isValid())
 		{
 			jroot.release();
 			_log("[CSpotify] getTrack Invalid JSON Response: %s", strData.c_str());

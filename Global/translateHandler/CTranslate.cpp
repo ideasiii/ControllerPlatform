@@ -71,8 +71,7 @@ int CTranslate::translate(LANGUAGE lang, const char *szInput, RESULT &result)
 	httpsClient.POST(TRANS_HOST, strData, setHead, setParameter);
 	_log("[CTranslate] translate Response Data: %s", strData.c_str());
 
-	jroot.load(strData);
-	if(jroot.isValid())
+	if(jroot.load(strData).isValid())
 	{
 		jArray = jroot.getJsonArray("trans_result");
 		if(jArray.isValid())

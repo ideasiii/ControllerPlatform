@@ -45,15 +45,16 @@ void JSONObject::create()
 	cjsonObj = cJSON_CreateObject();
 }
 
-void JSONObject::load(std::string strJSON)
+JSONObject &JSONObject::load(std::string strJSON)
 {
-	if(strJSON.empty())
-		return;
-	cjsonObj = cJSON_Parse(strJSON.c_str());
-	if(!cjsonObj)
+	release();
+	if(!strJSON.empty())
 	{
-		printf("[JSONObject] Invalid JSON Source: %s", strJSON.c_str());
+		cjsonObj = cJSON_Parse(strJSON.c_str());
+		if(!cjsonObj)
+			printf("[JSONObject] load Invalid JSON Source: %s", strJSON.c_str());
 	}
+	return (*this);
 }
 
 void JSONObject::release()

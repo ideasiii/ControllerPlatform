@@ -40,7 +40,7 @@ public:
 	string toString();
 	void release();
 	bool isValid();
-	void load(cJSON *pcJSON);
+	JSONArray &load(cJSON *pcJSON);
 	void create();
 	void operator=(cJSON *c);
 

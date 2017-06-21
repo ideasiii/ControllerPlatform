@@ -34,7 +34,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 	string strData;
 	CHttpsClient httpsClient;
 	set<string> setHead;
-	//JSONObject jroot;
+	JSONObject jroot;
 	JSONArray jArray;
 	JSONObject jItem;
 	int nYear, nMonth, nDay, nHour, nMin, nSec;
@@ -47,8 +47,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 
 	if(!strData.empty())
 	{
-		//_log("[CWeather] getWeather HTTP Response: %s", strData.c_str());
-		JSONObject jroot(strData);
+		jroot.load(strData);
 
 		if(jroot.isValid())
 		{

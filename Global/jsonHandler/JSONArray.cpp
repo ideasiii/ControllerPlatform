@@ -35,14 +35,18 @@ JSONArray::~JSONArray()
 
 }
 
-void JSONArray::load(cJSON *pcJSON)
+JSONArray &JSONArray::load(cJSON *pcJSON)
 {
+	release();
 	cjsonArray = pcJSON;
 	if(cjsonArray)
 	{
 		mnExtPointObj = 1;
 		cjsonArray->type = cJSON_Array;
 	}
+	else
+		printf("[JSONArray] load Invalid JSON Source");
+	return (*this);
 }
 
 bool JSONArray::isValid()
