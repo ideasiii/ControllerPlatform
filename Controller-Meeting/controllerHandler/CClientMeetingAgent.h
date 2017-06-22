@@ -63,12 +63,11 @@ private:
 	std::string getMeetingsInfo(const std::string& userId);
 
 	// 進行數位簽到
-	// 如果 userId 今天還沒簽到，且今天有會議，回傳 true，並將今天第一場會議名稱存在 outMessage
-	// 否則回傳 false，並將訊息寫在 outMessage
-	bool doDigitalSignup(std::string& outMessage, const std::string& userId);
+	// 返回內容為要回應給 client 的 json 字串
+	std::string doDigitalSignup(const std::string& userId);
 
 	// 取得 AMX 裝置控制 token
-	// 若取不到 token，傳回空字串
+	// 返回內容為要回應給 client 的 json 字串
 	std::string getAMXControlToken(const std::string& userId, const std::string& roomId);
 
 	// 解碼 QR code 掃出來的字串

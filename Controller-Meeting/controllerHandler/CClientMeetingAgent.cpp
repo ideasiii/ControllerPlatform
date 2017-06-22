@@ -12,6 +12,7 @@
 #include "ClientAmxController/CClientAmxControllerFactory.h"
 #include "CConfig.h"
 #include "HiddenUtility.hpp"
+#include "JSONArray.h"
 #include "JSONObject.h"
 #include "RegexPattern.h"
 #include "TestStringsDefinition.h"
@@ -207,48 +208,17 @@ int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCom
 	else if (decQrCodeType == 2)
 	{
 		// 數位簽到
-		if (reqUserId.size() < 1)
-		{
-			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
-		}
-		else
-		{
-			string outMessage;
-			JSONObject respJson;
-			JSONObject respMessageJson;
-			respJson.create();
-			respMessageJson.create();
-
-			bool bRet = doDigitalSignup(outMessage, reqUserId);
-			respMessageJson.put("RESULT", true);
-			respMessageJson.put("RESULT_MESSAGE", outMessage);
-			respJson.put("QRCODE_TYPE", "2");
-			respJson.put("MESSAGE", respMessageJson);
-
-			strResponseBodyData = respJson.toUnformattedString();
-
-			// respMessageJson will be released by respJson
-			//respMessageJson.release();
-			respJson.release();
-		}
+		strResponseBodyData = doDigitalSignup(reqUserId);
 	}
 	else if (decQrCodeType == 3)
 	{
 		// 門禁
 		string dstRoomId = decodedQrCodeJson->getString("DOOR_OPEN_ROOM_ID", "");
+		string resultMessage;
+		bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
 
-		if (reqUserId.size() < 1 || dstRoomId.size() < 1)
-		{
-			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
-		}
-		else
-		{
-			std::string resultMessage;
-			bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
-
-			strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
-				+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
-		}
+		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
+			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
 	}
 	else
 	{
@@ -281,28 +251,15 @@ int CClientMeetingAgent::onSmartBuildingAppVersionRequest(int nSocket, int nComm
 
 int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
-	string strRequestBodyData = string(reinterpret_cast<const char *>(szBody));
-	string strResponseBodyData = "";
-	_log(LOG_TAG" onSmartBuildingMeetingDataRequest() body: %s", strRequestBodyData.c_str());
+	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
+	_log(LOG_TAG" onSmartBuildingMeetingDataRequest() body: %s", charRequestBodyData);
 
-	JSONObject reqJson(strRequestBodyData);
+	JSONObject reqJson(charRequestBodyData);
+	string reqUserId = reqJson.getString("USER_ID", "");
+	reqJson.release();
 
-	if (strRequestBodyData.find(TEST_USER_CAN_OPEN_101) != string::npos)
-	{
-		strResponseBodyData =
-			"{\"USER_ID\":\"00000000-ffff-0000-ffff-ffffffffffff\",\"USER_NAME\":\"李二二\",\"USER_EMAIL\":\"qwwwew@gmail.com\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2016-06-30 09:30:00\",\"END_TIME\":\"2016-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1afd78\",\"SUPJECT\":\"促進XXX發展計畫\",\"START_TIME\":\"2016-07-30 09:30:00\",\"END_TIME\":\"2016-07-30 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一二\",\"OWNER_EMAIL\":\"qoiu1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2016-08-30 09:30:00\",\"END_TIME\":\"2016-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass71\",\"SUPJECT\":\"促進WWWW發展計畫\",\"START_TIME\":\"2016-08-31 09:30:00\",\"END_TIME\":\"2016-08-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王一四\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass72\",\"SUPJECT\":\"促進YYY發展計畫\",\"START_TIME\":\"2016-09-30 09:30:00\",\"END_TIME\":\"2016-09-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一五\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46c0-b0c0-00eede1ass73\",\"SUPJECT\":\"XXXx公司會議\",\"START_TIME\":\"2016-10-30 09:30:00\",\"END_TIME\":\"2016-10-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一六\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-43b0-b0c0-00eede1ass74\",\"SUPJECT\":\"促進YXXY發展計畫\",\"START_TIME\":\"2016-11-28 09:30:00\",\"END_TIME\":\"2016-11-28 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一七\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass75\",\"SUPJECT\":\"促進WWXY發展計畫\",\"START_TIME\":\"2016-11-29 09:30:00\",\"END_TIME\":\"2016-11-29 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一八\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass76\",\"SUPJECT\":\"促進WWY發展計畫\",\"START_TIME\":\"2016-11-30 09:30:00\",\"END_TIME\":\"2016-11-30 12:30:00\",\"ROOM_ID\":\"ITES_104\",\"OWNER\":\"王一九\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass18\",\"SUPJECT\":\"促進YYYX發展計畫\",\"START_TIME\":\"2016-12-30 09:30:00\",\"END_TIME\":\"2016-12-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一十\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass28\",\"SUPJECT\":\"促進YYYW發展計畫\",\"START_TIME\":\"2016-12-31 09:30:00\",\"END_TIME\":\"2016-12-31 12:30:00\",\"ROOM_ID\":\"ITES_102\",\"OWNER\":\"王二一\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
-	}
-	else if (strRequestBodyData.find(TEST_USER_CAN_OPEN_102) != string::npos)
-	{
-		strResponseBodyData =
-			"{\"USER_ID\":\"ffffffff-ffff-0000-0000-ffffffffffff\",\"USER_NAME\":\"王二二\",\"USER_EMAIL\":\"qqdsdw@iii.org.tw\",\"MEETING_DATA\":[{\"MEETING_ID\":\"a46595d0-fbcd-4d56-8bdc-3d8fa659b6a1\",\"SUPJECT\":\"XXX公司會議\",\"START_TIME\":\"2017-06-30 09:30:00\",\"END_TIME\":\"2017-06-30 12:30:00\",\"ROOM_ID\":\"ITES_101\",\"OWNER\":\"王一一\",\"OWNER_EMAIL\":\"qwer1234@iii.org.tw\"},{\"MEETING_ID\":\"95999b7e-f56f-46b0-b0c0-00eede1ass78\",\"SUPJECT\":\"nnnn公司會議\",\"START_TIME\":\"2017-08-30 09:30:00\",\"END_TIME\":\"2017-08-30 12:30:00\",\"ROOM_ID\":\"ITES_103\",\"OWNER\":\"王一三\",\"OWNER_EMAIL\":\"qoiu1234222@iii.org.tw\"}]}";
-	}
-	else
-	{
-		strResponseBodyData = "{\"USER_ID\":\"UNKNOWN USER\"}";
-	}
-
-	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+	string strResp = getMeetingsInfo(reqUserId);
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResp.c_str());
 
 	return TRUE;
 }
@@ -310,59 +267,130 @@ int CClientMeetingAgent::onSmartBuildingMeetingDataRequest(int nSocket, int nCom
 int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
-	stringstream ss;
-
 	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", charRequestBodyData);
 
 	// ROOM_ID is a descriptive string like "ITES_101", not a magic number
 	JSONObject reqJson(charRequestBodyData);
 	string reqRoomId = reqJson.getString("ROOM_ID", "");
 	string reqUserId = reqJson.getString("USER_ID", "");
-	string retToken = getAMXControlToken(reqUserId, reqRoomId);
+	string ret = getAMXControlToken(reqUserId, reqRoomId);
+	reqJson.release();
 
-	if (retToken.size() > 1)
-	{
-		// Can control AMX
-		ss << "{\"USER_ID\": \"" << reqUserId
-			<< "\", \"RESULT\": true, \"ROOM_IP\": \"" << amxControllerInfo->serverIp
-			<< "\", \"ROOM_PORT\": " << amxControllerInfo->devicePort
-			<< ", \"ROOM_TOKEN\": \"" << retToken << "\"}";
-	}
-	else
-	{
-		// Cannot control AMX
-		ss << "{\"USER_ID\": \"" << reqUserId << "\", \"RESULT\": false}";
-	}
-
-	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, ss.str().c_str());
+	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, ret.c_str());
 	return TRUE;
 }
 
 string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 {
+	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
+	{
+		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
+	}
 
+	JSONArray meetingDataJsonArr;
+	JSONObject respJson;
+
+	list<map<string, string>> listRet;
+	string strSQL = "SELECT `u`.`id`, `u`.`uuid`, `u`.`name`, `u`.`email` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
+		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                   ";
+
+	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
+	if (!bRet)
+	{
+		_log(LOG_TAG" getMeetingsInfo() ID %s not registered", userId.c_str());
+		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
+	}
+
+	meetingDataJsonArr.create();
+	respJson.create();
+
+	auto& retRow = *listRet.begin();
+	string strUserDbId = retRow["id"], respStr;
+	respJson.put("USER_ID", retRow["uuid"]);
+	respJson.put("USER_NAME", retRow["name"]);
+	respJson.put("USER_EMAIL", retRow["email"]);
+	respJson.put("MEETING_DATA", meetingDataJsonArr);
+
+	listRet.clear();
+	strSQL = "SELECT meetings_candidate.* FROM meeting.meeting_members AS mm, "
+		"(SELECT mi.id AS mi_id, mi.uuid AS meeting_id, mi.subject AS supject, "
+		"FROM_UNIXTIME(mi.time_start/1000, '%Y-%m-%d %H:%i') AS start_time, "
+		"FROM_UNIXTIME(mi.time_end/1000, '%Y-%m-%d %H:%i') AS end_time, "
+		"mr.room_id AS room_id, u.name as owner, u.email AS owner_email "
+		"FROM meeting.meeting_members AS mm, meeting.user AS u, meeting.meeting_info AS mi, meeting.meeting_room AS mr "
+		"WHERE mm.role = '1' AND mm.user_id = u.id AND mm.meeting_info_id = mi.id AND mi.room_id = mr.id";
+
+	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
+	{
+		// 測試 user 挑出所有會議
+	}
+	else
+	{
+		// 挑出 user 於今天明天後天進行的會議
+		strSQL += " AND mi.time_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
+			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 2 DAY) * 1000)";
+	}
+
+	strSQL = strSQL + ") AS meetings_candidate WHERE mm.user_id = '"
+		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id";
+
+	bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
+	if (!bRet)
+	{
+		_log(LOG_TAG" getMeetingsInfo() ID %s have no meeting", userId.c_str());
+		respStr = respJson.toUnformattedString();
+		respJson.release();
+		return respStr;
+	}
+
+	for (auto iter = listRet.begin(); iter != listRet.end(); iter++)
+	{
+		auto &retRow = *iter;
+		JSONObject meetingDataJsonObj;
+		meetingDataJsonObj.create();
+
+		meetingDataJsonObj.put("MEETING_ID", retRow["meeting_id"]);
+		meetingDataJsonObj.put("SUPJECT", retRow["supject"]);
+		meetingDataJsonObj.put("START_TIME", retRow["start_time"]);
+		meetingDataJsonObj.put("END_TIME", retRow["end_time"]);
+		meetingDataJsonObj.put("ROOM_ID", retRow["room_id"]);
+		meetingDataJsonObj.put("OWNER", retRow["owner"]);
+		meetingDataJsonObj.put("OWNER_EMAIL", retRow["owner_email"]);
+
+		meetingDataJsonArr.add(meetingDataJsonObj);
+	}
+
+	respStr = respJson.toUnformattedString();
+	respJson.release();
+	return respStr;
 }
 
-bool CClientMeetingAgent::doDigitalSignup(string& outMessage, const string& userId)
+string CClientMeetingAgent::doDigitalSignup(const string& userId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
 		_log(LOG_TAG" doDigitalSignup() ID %s is not a valid UUID", userId.c_str());
-		return false;
+		return R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"Unknown user"}})";
 	}
 
+	JSONObject respJson, respMessageJson;
 	list<map<string, string>> listRet;
 	string strSQL = "SELECT `u`.`id` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
 		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                   ";
+
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	if (!bRet)
 	{
-		outMessage = "Unknown user";
-		return false;
+		_log(LOG_TAG" doDigitalSignup() ID %s not registered", userId.c_str());
+		return R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"Unknown user"}})";
 	}
 
+	respJson.create();
+	respMessageJson.create();
+	respJson.put("QRCODE_TYPE", "2");
+
 	auto& retRow = *listRet.begin();
-	string strUserDbId = retRow["id"];
+	string strUserDbId = retRow["id"], respStr;
 	listRet.clear();
 
 	// check if user has already signed today
@@ -373,8 +401,13 @@ bool CClientMeetingAgent::doDigitalSignup(string& outMessage, const string& user
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	if (bRet)
 	{
-		outMessage = "You have already signed up today";
-		return false;
+		respMessageJson.put("RESULT", false);
+		respMessageJson.put("RESULT_MESSAGE", "You have already signed up today");
+		respJson.put("MESSAGE", respMessageJson);
+
+		respStr = respJson.toUnformattedString();
+		respJson.release();
+		return respStr;
 	}
 	listRet.clear();
 
@@ -401,26 +434,33 @@ bool CClientMeetingAgent::doDigitalSignup(string& outMessage, const string& user
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	string strSheetId;
+
 	if (!bRet)
 	{
-		outMessage = "You have no meeting today";
+		respMessageJson.put("RESULT", false);
+		respMessageJson.put("RESULT_MESSAGE", "You have no meeting today");
+		respJson.put("MESSAGE", respMessageJson);
 		strSheetId = "-1";
 	}
 	else
 	{
 		auto& retRow = *listRet.begin();
-		outMessage = "Your first meeting today: " + retRow["subject"];
+		respMessageJson.put("RESULT", true);
+		respMessageJson.put("RESULT_MESSAGE", "Your first meeting today: " + retRow["subject"]);
+		respJson.put("MESSAGE", respMessageJson);
 		strSheetId = retRow["id"];
 	}
 
 	// put record
 	strSQL = "INSERT INTO `meeting`.`signin_record` (`user_id`, `success`, `attendance_sheet_id`, `time_when`) VALUES ('"
 		+ strUserDbId + "', '" + (bRet ? "1" : "0") + "', '" + strSheetId  + "', '"
-		+ to_string(HiddenUtility::unixTimeMilli()) + "')"
-		"                                                                      ";
+		+ to_string(HiddenUtility::unixTimeMilli()) + "')                                   "
+		"                                                                                   ";
 	HiddenUtility::execOnDb(LOG_TAG" doDigitalSignup()", strSQL);
 
-	return bRet;
+	respStr = respJson.toUnformattedString();
+	respJson.release();
+	return respStr;
 }
 
 string CClientMeetingAgent::getAMXControlToken(const string& userId, const string& roomId)
@@ -428,12 +468,12 @@ string CClientMeetingAgent::getAMXControlToken(const string& userId, const strin
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
 		_log(LOG_TAG" getAMXControlToken() ID %s is not a valid UUID", userId.c_str());
-		return string();
+		return R"({"USER_ID":")" + userId + R"(","RESULT":false,"ROOM_IP":"",ROOM_PORT:-1,"ROOM_TOKEN":""})";
 	}
 	else if (!HiddenUtility::RegexMatch(roomId, MEETING_ROOM_ID_PATTERN))
 	{
 		_log(LOG_TAG" getAMXControlToken() Room ID %s is not valid", roomId.c_str());
-		return string();
+		return R"({"USER_ID":")" + userId + R"(","RESULT":false,"ROOM_IP":"",ROOM_PORT:-1,"ROOM_TOKEN":""})";
 	}
 
 	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
@@ -441,22 +481,21 @@ string CClientMeetingAgent::getAMXControlToken(const string& userId, const strin
 	string strSQL = "SELECT token FROM meeting.amx_control_token as t, meeting.user as u, meeting.meeting_room as m"
 		" WHERE u.uuid = '" + userId + "' AND m.room_id = '" + roomId + "'"
 		+ " AND t.time_start <= " + to_string(unixTimeNow) + " AND t.time_end >= " + to_string(unixTimeNow)
-		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
+		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getAMXControlToken()", strSQL, listRet);
 	if (!bRet)
 	{
-		return string();
-	}
-	else if (listRet.size() > 1)
-	{
-		_log(LOG_TAG" getAMXControlToken() db returned more than 1 result?");
-		return string();
+		return R"({"USER_ID":")" + userId + R"(","RESULT":false,"ROOM_IP":"",ROOM_PORT:-1,"ROOM_TOKEN":""})";
 	}
 
 	auto& retRow = *listRet.begin();
 	auto& retToken = retRow["token"];
-	return retToken;
+
+	return "{\"USER_ID\":\"" + userId
+		+ "\",\"RESULT\":true,\"ROOM_IP\":\"" + amxControllerInfo->serverIp
+		+ "\",\"ROOM_PORT\":" + to_string(amxControllerInfo->devicePort)
+		+ ",\"ROOM_TOKEN\":\"" + retToken + "\"}";
 }
 
 unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src)
