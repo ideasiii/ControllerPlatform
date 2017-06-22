@@ -19,7 +19,7 @@ CSemanticControl::~CSemanticControl()
 
 }
 
-int CSemanticControl::word(const char *szInput, JSONObject* jsonResp)
+int CSemanticControl::word(const char *szInput, JSONObject& jsonResp)
 {
 	return 0;
 }

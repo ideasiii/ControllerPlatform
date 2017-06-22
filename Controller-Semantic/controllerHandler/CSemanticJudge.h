@@ -17,7 +17,7 @@ class CSemanticJudge
 public:
 	explicit CSemanticJudge(CObject *object);
 	virtual ~CSemanticJudge();
-	int word(const char *szInput, JSONObject* jsonResp);
+	int word(const char *szInput, JSONObject& jsonResp);
 
 private:
 	CObject *mpController;

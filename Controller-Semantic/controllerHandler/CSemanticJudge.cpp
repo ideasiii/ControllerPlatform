@@ -44,7 +44,7 @@ CSemanticJudge::~CSemanticJudge()
 	mapSemanticObject.clear();
 }
 
-int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
+int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 {
 	int nTop;
 	int nScore;
@@ -57,7 +57,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 
 	if(0 >= szInput)
 	{
-		jsonResp->put("type", 0);
+		jsonResp.put("type", 0);
 		return TRUE;
 	}
 
@@ -86,8 +86,8 @@ int CSemanticJudge::word(const char *szInput, JSONObject *jsonResp)
 		_log("[CSemanticJudge] word: No Object to Access this work");
 	}
 
-	jsonResp->put("type", 3);
-	jsonResp->put("tts", WORD_UNKNOW);
+	jsonResp.put("type", 3);
+	jsonResp.put("tts", WORD_UNKNOW);
 
 	return TRUE;
 }

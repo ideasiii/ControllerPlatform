@@ -22,9 +22,10 @@ typedef enum _CONTENT_TYPE
 
 //==================================== 封包 Response 內容定義 =========================================//
 #define TYPE_RESP_UNKNOW			0x00000000
-#define TYPE_RESP_MUSIC				0x00000001
+#define TYPE_RESP_MUSIC_SPOTIFY		0x00000001
 #define TYPE_RESP_STORY				0x00000002
 #define TYPE_RESP_TTS				0x00000003
+#define TYPE_RESP_MUSIC_LOCAL		0x00000004
 
 #define STORY_PATH					"/data/opt/tomcat/webapps/story"
 #define STORY_HOST					"https://iiideasmartbuilding.sytes.net/story/"

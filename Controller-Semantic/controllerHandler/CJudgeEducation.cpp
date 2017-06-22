@@ -31,7 +31,7 @@ string CJudgeEducation::toString()
 	return "CJudgeEducation";
 }
 
-int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	int nRand;
 	string strWord;
@@ -40,13 +40,13 @@ int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp, map<string,
 	if(strWord.empty())
 		return FALSE;
 
-	jsonResp->put("type", TYPE_RESP_TTS);
+	jsonResp.put("type", TYPE_RESP_TTS);
 
 	for(map<string, string>::iterator iter = mapEducation.begin(); mapEducation.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
-			jsonResp->put("tts", iter->second);
+			jsonResp.put("tts", iter->second);
 			return TRUE;
 		}
 	}
@@ -55,7 +55,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp, map<string,
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
-			jsonResp->put("tts", iter->second);
+			jsonResp.put("tts", iter->second);
 			return TRUE;
 		}
 	}
@@ -68,7 +68,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject* jsonResp, map<string,
 		for(int i = 0; i < nRand; ++i)
 			++iter;
 
-		jsonResp->put("tts", iter->second);
+		jsonResp.put("tts", iter->second);
 		return TRUE;
 	}
 

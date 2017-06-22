@@ -37,12 +37,12 @@ public:
 	int getAttribute(const char *szWord, WORD_BODY &wordBody);
 	int getVerb(const char *szWord, WORD_ATTR &wordAttr);
 	int _evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
-	int _word(const char *szInput, JSONObject* jsonResp, std::map<std::string, std::string> &mapMatch);
+	int _word(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
 	std::string _toString();
 
 protected:
 	virtual std::string toString();
-	virtual int word(const char *szInput, JSONObject* jsonResp, std::map<std::string, std::string> &mapMatch);
+	virtual int word(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
 	virtual int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 
 };

@@ -84,6 +84,7 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAl
 			return ERROR_STATUS_ERROR;
 		}
 		jItems = jAlbums.getJsonArray("items");
+
 		for(int i = 0; i < jItems.size(); ++i)
 		{
 			jAlbum = jItems.getJsonObject(i);
@@ -138,9 +139,8 @@ int CSpotify::getAlbum(const char *szArtist, std::map<std::string, ALBUM> &mapAl
 				}
 			}
 		}
-		jroot.release();
 	}
-
+	jroot.release();
 	return mapAlbums.size();
 }
 
@@ -230,9 +230,9 @@ int CSpotify::getTrack(const char *szAlbumId, std::map<int, TRACK> &mapSong, con
 				}
 			}
 		}
-		jroot.release();
 	}
 
+	jroot.release();
 	return mapSong.size();
 }
 
@@ -245,6 +245,7 @@ void CSpotify::authorization(const char* szClient)
 	string strError;
 	set<string> setHead;
 	set<string> setParameter;
+	JSONObject jroot;
 
 	if(!szClient)
 		return;
@@ -256,8 +257,7 @@ void CSpotify::authorization(const char* szClient)
 	httpsClient.POST(QUERY_TOKEN, strData, setHead, setParameter);
 	_log("[CSpotify] authorization token: %s", strData.c_str());
 
-	JSONObject jroot(strData);
-	if(jroot.isValid())
+	if(jroot.load(strData).isValid())
 	{
 		strToken = jroot.getString("access_token");
 		if(strToken.empty())
@@ -293,6 +293,7 @@ void CSpotify::authorization(const char* szClient)
  */
 int CSpotify::checkError(const char *szJSONResp)
 {
+	JSONObject jroot;
 	JSONObject jerror;
 	int nStatus;
 	string strMessage;
@@ -304,8 +305,7 @@ int CSpotify::checkError(const char *szJSONResp)
 	}
 	nStatus = ERROR_STATUS_SUCCESS;
 
-	JSONObject jroot(szJSONResp);
-	if(jroot.isValid())
+	if(jroot.load(szJSONResp).isValid())
 	{
 		jerror = jroot.getJsonObject("error");
 		if(jerror.isValid())

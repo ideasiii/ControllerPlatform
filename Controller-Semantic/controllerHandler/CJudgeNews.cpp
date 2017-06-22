@@ -25,7 +25,7 @@ string CJudgeNews::toString()
 	return "CJudgeNews";
 }
 
-int CJudgeNews::word(const char *szInput, JSONObject* jsonResp, std::map<std::string, std::string> &mapMatch)
+int CJudgeNews::word(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch)
 {
 	return TRUE;
 }

@@ -19,7 +19,7 @@ CSemanticRecord::~CSemanticRecord()
 
 }
 
-int CSemanticRecord::word(const char *szInput, JSONObject* jsonResp)
+int CSemanticRecord::word(const char *szInput, JSONObject& jsonResp)
 {
 	return 0;
 }

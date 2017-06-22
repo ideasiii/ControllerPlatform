@@ -17,5 +17,5 @@ class CSemanticTalk
 public:
 	explicit CSemanticTalk(CObject *object);
 	virtual ~CSemanticTalk();
-	int word(const char *szInput, JSONObject* jsonResp);
+	int word(const char *szInput, JSONObject& jsonResp);
 };

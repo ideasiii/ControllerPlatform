@@ -90,12 +90,12 @@ int CSemantic::getAttribute(const char *szWord, WORD_BODY &wordBody)
 	return 0;
 }
 
-int CSemantic::_word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CSemantic::_word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	return word(szInput, jsonResp, mapMatch);
 }
 
-int CSemantic::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CSemantic::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	return 0;
 }

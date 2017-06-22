@@ -19,7 +19,7 @@ CSemanticTalk::~CSemanticTalk()
 
 }
 
-int CSemanticTalk::word(const char *szInput, JSONObject* jsonResp)
+int CSemanticTalk::word(const char *szInput, JSONObject& jsonResp)
 {
 	return 0;
 }

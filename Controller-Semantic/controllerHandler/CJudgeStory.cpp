@@ -32,7 +32,7 @@ std::string CJudgeStory::toString()
 	return "CJudgeStory";
 }
 
-int CJudgeStory::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	bool bMatch = false;
 	JSONObject jsonStory;
@@ -43,7 +43,7 @@ int CJudgeStory::word(const char *szInput, JSONObject* jsonResp, map<string, str
 		return FALSE;
 
 	jsonStory.put("host", STORY_HOST);
-	jsonResp->put("type", TYPE_RESP_STORY);
+	jsonResp.put("type", TYPE_RESP_STORY);
 
 	for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
 	{
@@ -62,7 +62,7 @@ int CJudgeStory::word(const char *szInput, JSONObject* jsonResp, map<string, str
 		jsonStory.put("story", "三隻小豬");
 	}
 
-	jsonResp->put("story", jsonStory);
+	jsonResp.put("story", jsonStory);
 	return TRUE;
 }
 

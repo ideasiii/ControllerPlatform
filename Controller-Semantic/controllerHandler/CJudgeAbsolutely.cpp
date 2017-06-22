@@ -27,7 +27,7 @@ string CJudgeAbsolutely::toString()
 {
 	return "CJudgeAbsolutely";
 }
-int CJudgeAbsolutely::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CJudgeAbsolutely::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	return 0;
 }

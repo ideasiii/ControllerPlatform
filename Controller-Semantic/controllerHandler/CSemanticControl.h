@@ -17,5 +17,5 @@ class CSemanticControl
 public:
 	explicit CSemanticControl(CObject *object);
 	virtual ~CSemanticControl();
-	int word(const char *szInput, JSONObject* jsonResp);
+	int word(const char *szInput, JSONObject& jsonResp);
 };

@@ -95,31 +95,33 @@ int CController::onFinish(void* nMsqKey)
 void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence, const int nId, const int nType,
 		const char *szWord)
 {
-	JSONObject *jsonResp = new JSONObject;
-	jsonResp->create();
+	JSONObject jsonResp;
+	jsonResp.create();
+	string strResp;
 
 	switch(nType)
 	{
 	case TYPE_REQ_NODEFINE: // 語意判斷
 		semanticJudge->word(szWord, jsonResp);
 		break;
-	case TYPE_REQ_CONTROL: // 控制
+	case TYPE_REQ_CONTROL:	// 控制
 		semanticControl->word(szWord, jsonResp);
 		break;
-	case TYPE_REQ_TALK: // 會話
+	case TYPE_REQ_TALK: 	// 會話
 		semanticTalk->word(szWord, jsonResp);
 		break;
-	case TYPE_REQ_RECORD: // 紀錄
+	case TYPE_REQ_RECORD:	// 紀錄
 		semanticRecord->word(szWord, jsonResp);
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
 		return;
 	}
-	jsonResp->put("id", nId);
-	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence, jsonResp->toString().c_str());
-	jsonResp->release();
-	delete jsonResp;
+	jsonResp.put("id", nId);
+	strResp = jsonResp.toString();
+	jsonResp.release();
+
+	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence, strResp.c_str());
 }
 
 void CController::onHandleMessage(Message &message)

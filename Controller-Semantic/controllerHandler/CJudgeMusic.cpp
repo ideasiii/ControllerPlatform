@@ -17,6 +17,7 @@
 #include "CSpotify.h"
 #include "CFileHandler.h"
 #include "utility.h"
+#include "CResponsePacket.cpp"
 
 using namespace std;
 
@@ -37,7 +38,7 @@ string CJudgeMusic::toString()
 	return "CJudgeMusic";
 }
 
-int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	int nResult;
 	int nIndex;
@@ -56,7 +57,11 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 	map<int, TRACK> mapSong;
 	map<int, TRACK> mapAllTrack;
 	TRACK track;
+	CResponsePacket<RSP_MUSIC> respPacket;
+	RSP_MUSIC rspMusic;
 
+	rspMusic.type = TYPE_RESP_MUSIC_SPOTIFY;
+	jsonSpotify.create();
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 
@@ -125,14 +130,16 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 						{
 							if(!strTrackUri.empty())
 							{
+								rspMusic.source = 2;
+								respPacket.format(1, rspMusic, jsonResp);
 								jsonSpotify.put("source", 2);
 								jsonSpotify.put("album", strAlbum);
 								jsonSpotify.put("artist", strArtist);
 								jsonSpotify.put("song", strTrack);
 								jsonSpotify.put("id", strTrackUri);
 								jsonSpotify.put("cover", strCover);
-								jsonResp->put("type", TYPE_RESP_MUSIC);
-								jsonResp->put("music", jsonSpotify);
+								jsonResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
+								jsonResp.put("music", jsonSpotify);
 							}
 							return TRUE;
 						}
@@ -143,31 +150,37 @@ int CJudgeMusic::word(const char *szInput, JSONObject* jsonResp, map<string, str
 		}
 	}
 
-	nRand = getRand(0, mapAllTrack.size() - 1);
-
-	strTrackUri = mapAllTrack[nRand].id;
+	if(mapAllTrack.size())
+	{
+		nRand = getRand(0, mapAllTrack.size() - 1);
+		strTrackUri = mapAllTrack[nRand].id;
+	}
 
 	if(!strTrackUri.empty())
 	{
+		rspMusic.source = 2;
+		respPacket.format(1, rspMusic, jsonResp);
 		jsonSpotify.put("source", 2);
 		jsonSpotify.put("album", mapAllTrack[nRand].album);
 		jsonSpotify.put("artist", mapAllTrack[nRand].artist);
 		jsonSpotify.put("song", mapAllTrack[nRand].name);
 		jsonSpotify.put("id", mapAllTrack[nRand].id);
 		jsonSpotify.put("cover", mapAllTrack[nRand].strCover);
-		jsonResp->put("type", TYPE_RESP_MUSIC);
-		jsonResp->put("music", jsonSpotify);
+		jsonResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
+		jsonResp.put("music", jsonSpotify);
+		return TRUE;
 	}
 	else
 	{
-		jsonResp->put("type", TYPE_RESP_TTS);
+		jsonResp.put("type", TYPE_RESP_TTS);
 		if(strArtist.empty())
 			strWord = "無此歌手的樂曲";
 		else
 			strWord = format("歌手%s的歌曲因版權問題暫時無法播放", strArtist.c_str());
-		jsonResp->put("tts", strWord);
+		jsonResp.put("tts", strWord);
 	}
 
+	jsonSpotify.release();
 	return TRUE;
 }
 

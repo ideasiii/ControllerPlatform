@@ -21,20 +21,23 @@ JSONObject::JSONObject() :
 JSONObject::JSONObject(string strSource) :
 		cjsonObj(0), mnExtPointObj(0)
 {
-	cjsonObj = cJSON_Parse(strSource.c_str());
-	if (!cjsonObj)
+	if(!strSource.empty())
 	{
-		printf("[JSONObject] Invalid JSON Source: %s", strSource.c_str());
+		cjsonObj = cJSON_Parse(strSource.c_str());
+		if(!cjsonObj)
+		{
+			printf("[JSONObject] Invalid JSON Source: %s", strSource.c_str());
+		}
 	}
 }
 
 JSONObject::JSONObject(const char *pSource) :
 		cjsonObj(0), mnExtPointObj(0)
 {
-	if (pSource)
+	if(pSource)
 	{
 		cjsonObj = cJSON_Parse(pSource);
-		if (!cjsonObj)
+		if(!cjsonObj)
 		{
 			printf("[JSONObject] Invalid JSON Source: %s", pSource);
 		}

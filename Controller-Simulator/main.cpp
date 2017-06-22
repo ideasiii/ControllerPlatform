@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <sys/epoll.h>
 #include <map>
+#include <getopt.h> //getopt_long()頭文件位置
 #include "common.h"
 #include "packet.h"
 #include "CCmpTest.h"
@@ -42,10 +43,10 @@ int main(int argc, char* argv[])
 	struct epoll_event events[5];         		// Used for EPOLL.
 	int noEvents;               				// EPOLL event number.
 	int nService;								// Test what service.....
-
+	int nRate;
 	printf("This process is a Controller testing process!.\n");
 
-	if(argc != 3 && argc != 4)
+	if(argc < 3)
 	{
 		printf("argc = %d\n", argc);
 		fprintf( stderr, "Usage:  %s <IP> <Remote Port> <Option> ...\n", argv[0]);
@@ -59,6 +60,8 @@ int main(int argc, char* argv[])
 
 	mbPressure = false;
 	options(argc, argv);
+	if(mbPressure)
+		nRate = atoi(argv[4]);
 
 	CCmpTest *cmpTest = new CCmpTest();
 	if(!cmpTest->connectController(strIP, nPort))
@@ -103,7 +106,7 @@ int main(int argc, char* argv[])
 					while(1)
 					{
 						cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
-						sleep(1);
+						sleep(nRate);
 					}
 				}
 				else
@@ -194,13 +197,14 @@ int cmpRequest(int nCommand, CCmpTest *cmpTest)
 
 void options(int argc, char **argv)
 {
-	int c;
-
-	while((c = getopt(argc, argv, "H:h:P:p")) != -1)
+	const char *optstring = "h:p";
+	int c, deb, index;
+	struct option opts[] = { { "help", no_argument, NULL, 'h' }, { "pressure", required_argument, NULL, 'p' }, {
+			"debug", no_argument, &deb, 1 }, { 0, 0, 0, 0 } };
+	while((c = getopt_long(argc, argv, optstring, opts, &index)) != -1)
 	{
 		switch(c)
 		{
-		case 'H':
 		case 'h':
 			printf("Option Parameter:\nsimulator <IP> <Port> [Option]\nOption: -p=pressure test\n");
 			printf("Usage Command\n");
@@ -209,12 +213,45 @@ void options(int argc, char **argv)
 				cout << (*i).first << endl;
 			}
 			break;
-		case 'P':
-		case 'p':
+		case 'p':								//-n 或者 --username 指定用戶名
 			mbPressure = true;
-			printf("Set to Pressure\n");
+			//	printf("pressure is %s\n", optarg);
+			break;
+		case 0:								//flag不为NULL
+			printf("debug is %d\n", deb);
+			break;
+		case '?':								//選項未定義
+			printf("?\n");
+			break;
+		default:
+			printf("c is %d\n", c);
 			break;
 		}
 	}
+
+	/*
+	 int c;
+
+	 while((c = getopt(argc, argv, "H:h:P:p")) != -1)
+	 {
+	 switch(c)
+	 {
+	 case 'H':
+	 case 'h':
+	 printf("Option Parameter:\nsimulator <IP> <Port> [Option]\nOption: -p=pressure test\n");
+	 printf("Usage Command\n");
+	 for(map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
+	 {
+	 cout << (*i).first << endl;
+	 }
+	 break;
+	 case 'P':
+	 case 'p':
+	 mbPressure = true;
+	 printf("Set to Pressure\n");
+	 break;
+	 }
+	 }
+	 */
 }
 

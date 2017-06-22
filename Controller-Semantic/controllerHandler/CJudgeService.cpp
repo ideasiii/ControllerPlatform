@@ -37,7 +37,7 @@ string CJudgeService::toString()
 	return "CJudgeService";
 }
 
-int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, string> &mapMatch)
+int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
 	int nService;
 	string strWord;
@@ -51,7 +51,7 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, s
 	if(strWord.empty())
 		return FALSE;
 
-	jsonResp->put("type", TYPE_RESP_TTS);
+	jsonResp.put("type", TYPE_RESP_TTS);
 	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
 	{
 		if(string::npos != strWord.find(it_map->first))
@@ -85,7 +85,7 @@ int CJudgeService::word(const char *szInput, JSONObject* jsonResp, map<string, s
 		break;
 	}
 
-	jsonResp->put("tts", strTTS);
+	jsonResp.put("tts", strTTS);
 	return 0;
 }
 
@@ -221,15 +221,15 @@ void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
 	//翻譯,3
 	//中翻英,3
 
-/*	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
-	{
-		if(string::npos != strWord.find(it_map->first))
-		{
-			nService = it_map->second;
-			break;
-		}
-	}
-*/
+	/*	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
+	 {
+	 if(string::npos != strWord.find(it_map->first))
+	 {
+	 nService = it_map->second;
+	 break;
+	 }
+	 }
+	 */
 	translate.translate(en, szWord, result);
 	strResult = result.strResult;
 }

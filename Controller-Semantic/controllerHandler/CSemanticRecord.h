@@ -17,5 +17,5 @@ class CSemanticRecord
 public:
 	explicit CSemanticRecord(CObject *object);
 	virtual ~CSemanticRecord();
-	int word(const char *szInput, JSONObject* jsonResp);
+	int word(const char *szInput, JSONObject& jsonResp);
 };
