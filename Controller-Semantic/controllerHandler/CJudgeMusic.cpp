@@ -17,7 +17,7 @@
 #include "CSpotify.h"
 #include "CFileHandler.h"
 #include "utility.h"
-#include "CResponsePacket.cpp"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -50,22 +50,17 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 	string strTrackUri;
 	string strCover;
 	string strWord;
-	JSONObject jsonSpotify;
+
 	set<string>::const_iterator iter;
 	map<string, ALBUM> mapAlbums;
 	map<string, ALBUM>::const_iterator it;
 	map<int, TRACK> mapSong;
 	map<int, TRACK> mapAllTrack;
 	TRACK track;
-	CResponsePacket<RSP_MUSIC> respPacket;
-	RSP_MUSIC rspMusic;
+	CResponsePacket respPacket;
 
-	rspMusic.type = TYPE_RESP_MUSIC_SPOTIFY;
-	jsonSpotify.create();
 	strWord = trim(szInput);
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
-
-	//strArtist = trim(getArtist(szInput));
 	strArtist = trim(mapMatch["artist"]);
 
 	if(!strArtist.empty())
@@ -130,17 +125,13 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 						{
 							if(!strTrackUri.empty())
 							{
-								rspMusic.source = 2;
-								respPacket.format(1, rspMusic, jsonResp);
-								jsonSpotify.put("source", 2);
-								jsonSpotify.put("album", strAlbum);
-								jsonSpotify.put("artist", strArtist);
-								jsonSpotify.put("song", strTrack);
-								jsonSpotify.put("id", strTrackUri);
-								jsonSpotify.put("cover", strCover);
-								jsonResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
-								jsonResp.put("music", jsonSpotify);
+								respPacket.setData("source", 2).setData("album", strAlbum).setData("artist", strArtist).setData(
+										"song", strTrack).setData("id", strTrackUri).setData("cover", strCover).format(
+								TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
 							}
+							mapAlbums.clear();
+							mapSong.clear();
+							mapAllTrack.clear();
 							return TRUE;
 						}
 					}
@@ -154,23 +145,16 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 	{
 		nRand = getRand(0, mapAllTrack.size() - 1);
 		strTrackUri = mapAllTrack[nRand].id;
+		if(!strTrackUri.empty())
+		{
+			respPacket.setData("source", 2).setData("album", mapAllTrack[nRand].album).setData("artist",
+					mapAllTrack[nRand].artist).setData("song", mapAllTrack[nRand].name).setData("id", strTrackUri).setData(
+					"cover", mapAllTrack[nRand].strCover).format(
+			TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
+		}
 	}
 
-	if(!strTrackUri.empty())
-	{
-		rspMusic.source = 2;
-		respPacket.format(1, rspMusic, jsonResp);
-		jsonSpotify.put("source", 2);
-		jsonSpotify.put("album", mapAllTrack[nRand].album);
-		jsonSpotify.put("artist", mapAllTrack[nRand].artist);
-		jsonSpotify.put("song", mapAllTrack[nRand].name);
-		jsonSpotify.put("id", mapAllTrack[nRand].id);
-		jsonSpotify.put("cover", mapAllTrack[nRand].strCover);
-		jsonResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
-		jsonResp.put("music", jsonSpotify);
-		return TRUE;
-	}
-	else
+	if(strTrackUri.empty())
 	{
 		jsonResp.put("type", TYPE_RESP_TTS);
 		if(strArtist.empty())
@@ -180,7 +164,10 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 		jsonResp.put("tts", strWord);
 	}
 
-	jsonSpotify.release();
+	mapAlbums.clear();
+	mapSong.clear();
+	mapAllTrack.clear();
+
 	return TRUE;
 }
 

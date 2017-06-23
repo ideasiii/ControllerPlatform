@@ -57,6 +57,11 @@ JSONObject::~JSONObject()
 
 void JSONObject::create()
 {
+	if(0 != cjsonObj)
+	{
+		cJSON_Delete(cjsonObj);
+		cjsonObj = 0;
+	}
 	mnExtPointObj = 0;
 	cjsonObj = cJSON_CreateObject();
 }
@@ -221,12 +226,12 @@ void JSONObject::put(std::string strKey, double dValue)
 
 void JSONObject::put(std::string strKey, JSONObject &jsonObject)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), jsonObject.getcJSON());
+	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonObject.getcJSON(), 1));
 }
 
 void JSONObject::put(std::string strKey, JSONArray &jsonArray)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), jsonArray.getcJSON());
+	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonArray.getcJSON(), 1));
 }
 
 cJSON *JSONObject::getJsonArray(std::string strName)

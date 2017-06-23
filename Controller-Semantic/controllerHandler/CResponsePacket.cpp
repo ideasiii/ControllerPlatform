@@ -6,39 +6,65 @@
  */
 
 #include "CResponsePacket.h"
-#include "JSONObject.h"
 #include "config.h"
 #include "LogHandler.h"
 
-template<typename T>
-CResponsePacket<T>::CResponsePacket()
-{
 
+CResponsePacket::CResponsePacket()
+{
+	jsonRoot.create();
 }
 
-template<typename T>
-CResponsePacket<T>::~CResponsePacket()
+CResponsePacket::~CResponsePacket()
 {
-
+	jsonRoot.release();
 }
 
-template<typename T>
-void CResponsePacket<T>::format(int nType, T &data, JSONObject &jResp)
+void CResponsePacket::format(int nType, JSONObject &jResp)
 {
-	switch(data.type)
+	switch(nType)
 	{
 	case TYPE_RESP_UNKNOW:
 		break;
 	case TYPE_RESP_MUSIC_SPOTIFY:
-		_log("[CResponsePacket] format type: TYPE_RESP_SPOTIFY");
+		jResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
+		jResp.put("music", jsonRoot);
 		break;
 	case TYPE_RESP_STORY:
-		_log("[CResponsePacket] format type: TYPE_RESP_STORY");
 		break;
 	case TYPE_RESP_TTS:
 		break;
 	case TYPE_RESP_MUSIC_LOCAL:
 		break;
 	}
+}
+
+CResponsePacket &CResponsePacket::setData(const char *szKey, const char *szValue)
+{
+	jsonRoot.put(szKey, szValue);
+	return (*this);
+}
+
+CResponsePacket &CResponsePacket::setData(const char *szKey, std::string strValue)
+{
+	jsonRoot.put(szKey, strValue);
+	return (*this);
+}
+
+CResponsePacket &CResponsePacket::setData(const char *szKey, int nValue)
+{
+	jsonRoot.put(szKey, nValue);
+	return (*this);
+}
+
+CResponsePacket &CResponsePacket::setData(const char *szKey, double fValue)
+{
+	jsonRoot.put(szKey, fValue);
+	return (*this);
+}
+
+void CResponsePacket::clear()
+{
+	jsonRoot.create();
 }
 

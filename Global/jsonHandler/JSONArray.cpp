@@ -58,12 +58,12 @@ bool JSONArray::isValid()
 
 void JSONArray::add(JSONObject &jsonObject)
 {
-	cJSON_AddItemToArray(cjsonArray, jsonObject.getcJSON());
+	cJSON_AddItemToArray(cjsonArray, cJSON_Duplicate(jsonObject.getcJSON(), 1));
 }
 
 void JSONArray::add(JSONArray &jsonArray)
 {
-	cJSON_AddItemToArray(cjsonArray, jsonArray.getcJSON());
+	cJSON_AddItemToArray(cjsonArray, cJSON_Duplicate(jsonArray.getcJSON(), 1));
 }
 
 void JSONArray::add(string name)
