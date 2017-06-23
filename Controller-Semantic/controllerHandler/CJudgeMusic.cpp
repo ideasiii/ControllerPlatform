@@ -10,7 +10,6 @@
 #include <map>
 #include <set>
 #include "CJudgeMusic.h"
-#include "JSONObject.h"
 #include "common.h"
 #include "dictionary.h"
 #include "config.h"
@@ -156,12 +155,12 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 
 	if(strTrackUri.empty())
 	{
-		jsonResp.put("type", TYPE_RESP_TTS);
 		if(strArtist.empty())
 			strWord = "無此歌手的樂曲";
 		else
 			strWord = format("歌手%s的歌曲因版權問題暫時無法播放", strArtist.c_str());
-		jsonResp.put("tts", strWord);
+
+		respPacket.setData("lang", "zh").setData("content", strWord).format(TYPE_RESP_TTS, jsonResp);
 	}
 
 	mapAlbums.clear();

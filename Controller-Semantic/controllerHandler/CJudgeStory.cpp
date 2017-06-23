@@ -9,11 +9,11 @@
 #include <map>
 #include <string>
 #include "CJudgeStory.h"
-#include "JSONObject.h"
 #include "config.h"
 #include "dictionary.h"
 #include "common.h"
 #include "CFileHandler.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -34,35 +34,33 @@ std::string CJudgeStory::toString()
 
 int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
-	bool bMatch = false;
-	JSONObject jsonStory;
+	CResponsePacket respPacket;
 	string strWord;
+	string strFile;
+	string strStory;
 
 	strWord = szInput;
 	if(strWord.empty())
 		return FALSE;
 
-	jsonStory.put("host", STORY_HOST);
-	jsonResp.put("type", TYPE_RESP_STORY);
-
 	for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
-			bMatch = true;
-			jsonStory.put("file", iter->second);
-			jsonStory.put("story", iter->first);
+			strFile = iter->second;
+			strStory = iter->first;
 			break;
 		}
 	}
 
-	if(!bMatch)
+	if(strFile.empty())
 	{
-		jsonStory.put("file", "三隻小豬.mp3");
-		jsonStory.put("story", "三隻小豬");
+		strFile = "三隻小豬.mp3";
+		strStory = "三隻小豬";
 	}
 
-	jsonResp.put("story", jsonStory);
+	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).format(TYPE_RESP_STORY,
+			jsonResp);
 	return TRUE;
 }
 

@@ -10,6 +10,7 @@
 #include "CFileHandler.h"
 #include "dictionary.h"
 #include "common.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 

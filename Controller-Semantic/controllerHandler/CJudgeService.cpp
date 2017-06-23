@@ -16,8 +16,8 @@
 #include "dictionary.h"
 #include "config.h"
 #include "common.h"
-#include "JSONObject.h"
 #include "CTranslate.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -44,14 +44,15 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 	string strTTS;
 	string strLocation;
 	string strTranslate;
+	string strLang;
 	map<string, int>::const_iterator it_map;
 	int nYear, nMonth, nDay, nHour, nMinute, nSecond;
+	CResponsePacket respPacket;
 
 	strWord = szInput;
 	if(strWord.empty())
 		return FALSE;
 
-	jsonResp.put("type", TYPE_RESP_TTS);
 	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
 	{
 		if(string::npos != strWord.find(it_map->first))
@@ -60,6 +61,8 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 			break;
 		}
 	}
+
+	strLang = "zh";
 
 	switch(nService)
 	{
@@ -82,10 +85,11 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 	case SERVICE_TRANSLATE:
 		getTranslate(szInput, strTranslate);
 		strTTS = strTranslate;
+		strLang = "en";
 		break;
 	}
+	respPacket.setData("lang", strLang).setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
 
-	jsonResp.put("tts", strTTS);
 	return 0;
 }
 

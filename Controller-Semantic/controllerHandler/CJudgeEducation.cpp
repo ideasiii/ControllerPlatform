@@ -7,12 +7,12 @@
 
 #include <string>
 #include "CJudgeEducation.h"
-#include "JSONObject.h"
 #include "config.h"
 #include "dictionary.h"
 #include "common.h"
 #include "CFileHandler.h"
 #include "utility.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -35,28 +35,32 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 {
 	int nRand;
 	string strWord;
+	string strTTS;
+	CResponsePacket respPacket;
+	map<string, string>::iterator iter;
 
 	strWord = szInput;
 	if(strWord.empty())
 		return FALSE;
 
-	jsonResp.put("type", TYPE_RESP_TTS);
-
-	for(map<string, string>::iterator iter = mapEducation.begin(); mapEducation.end() != iter; ++iter)
+	for(iter = mapEducation.begin(); mapEducation.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
-			jsonResp.put("tts", iter->second);
-			return TRUE;
+			strTTS = iter->second;
+			break;
 		}
 	}
 
-	for(map<string, string>::iterator iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
+	if(strTTS.empty())
 	{
-		if(string::npos != strWord.find(iter->first))
+		for(iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
 		{
-			jsonResp.put("tts", iter->second);
-			return TRUE;
+			if(string::npos != strWord.find(iter->first))
+			{
+				strTTS = iter->second;
+				break;
+			}
 		}
 	}
 
@@ -68,10 +72,10 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 		for(int i = 0; i < nRand; ++i)
 			++iter;
 
-		jsonResp.put("tts", iter->second);
-		return TRUE;
+		strTTS = iter->second;
 	}
 
+	respPacket.setData("lang", "zh").setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
 	return TRUE;
 }
 
@@ -79,6 +83,7 @@ int CJudgeEducation::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;
+	map<string, string>::iterator iter;
 
 	nScore = 0;
 	strWord = szWord;
@@ -91,7 +96,7 @@ int CJudgeEducation::evaluate(const char *szWord, map<string, string> &mapMatch)
 		++nScore;
 
 	//======== 評估字典檔 ==========//
-	for(map<string, string>::iterator iter = mapEducation.begin(); mapEducation.end() != iter; ++iter)
+	for(iter = mapEducation.begin(); mapEducation.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
@@ -100,7 +105,7 @@ int CJudgeEducation::evaluate(const char *szWord, map<string, string> &mapMatch)
 		}
 	}
 
-	for(map<string, string>::iterator iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
+	for(iter = mapEducationPoetry.begin(); mapEducationPoetry.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{

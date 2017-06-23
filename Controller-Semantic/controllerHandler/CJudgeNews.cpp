@@ -7,6 +7,7 @@
 
 #include "CJudgeNews.h"
 #include "common.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 

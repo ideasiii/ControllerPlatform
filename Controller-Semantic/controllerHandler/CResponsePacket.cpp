@@ -9,7 +9,6 @@
 #include "config.h"
 #include "LogHandler.h"
 
-
 CResponsePacket::CResponsePacket()
 {
 	jsonRoot.create();
@@ -22,20 +21,25 @@ CResponsePacket::~CResponsePacket()
 
 void CResponsePacket::format(int nType, JSONObject &jResp)
 {
+	jResp.put("type", nType);
+
 	switch(nType)
 	{
 	case TYPE_RESP_UNKNOW:
 		break;
 	case TYPE_RESP_MUSIC_SPOTIFY:
-		jResp.put("type", TYPE_RESP_MUSIC_SPOTIFY);
 		jResp.put("music", jsonRoot);
 		break;
 	case TYPE_RESP_STORY:
+		jResp.put("story", jsonRoot);
 		break;
 	case TYPE_RESP_TTS:
+		jResp.put("tts", jsonRoot);
 		break;
 	case TYPE_RESP_MUSIC_LOCAL:
 		break;
+	default:
+		jResp.put("type", TYPE_RESP_UNKNOW);
 	}
 }
 
