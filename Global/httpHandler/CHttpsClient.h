@@ -12,9 +12,9 @@ class CHttpsClient
 public:
 	explicit CHttpsClient();
 	virtual ~CHttpsClient();
-	int GET(const char *szURL, std::string &strData, std::set<std::string> &setHead);
-	int POST(const char *szURL, std::string &strData, std::set<std::string> &setHead,
-			std::set<std::string> &setParameter);
+	int GET(const char *szURL, std::string &strData, const std::set<std::string> &setHead);
+	int POST(const char *szURL, std::string &strData, const std::set<std::string> &setHead,
+		const std::set<std::string> &setParameter);
 
 };
 

@@ -38,9 +38,8 @@ CHttpsClient::~CHttpsClient()
 
 size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-	// buf is a pointer to the data that curl has for us
 	// size*nmemb is the size of the buffer
-	string* data = reinterpret_cast<string *>(userdata);
+	string *data = reinterpret_cast<string *>(userdata);
 
 	for(unsigned int c = 0; c < size * nmemb; c++)
 	{
@@ -49,14 +48,13 @@ size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
 	return size * nmemb; //tell curl how many bytes we handled
 }
 
-int CHttpsClient::GET(const char *szURL, string &strData, set<string> &setHead)
+int CHttpsClient::GET(const char *szURL, string &strData, const set<string> &setHead)
 {
 	CURL *curl;
 	CURLcode res;
 	struct curl_slist *chunk = NULL;
 	string data;
 
-	//curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
 
 	if(curl)
@@ -80,13 +78,10 @@ int CHttpsClient::GET(const char *szURL, string &strData, set<string> &setHead)
 		//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 		//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
-		/* Check for errors */
 		if(res != CURLE_OK)
 			fprintf(stderr, "[CHttpsClient] GET curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 
-		/* always cleanup */
 		curl_easy_cleanup(curl);
 		if (NULL != chunk)
 		{
@@ -96,12 +91,11 @@ int CHttpsClient::GET(const char *szURL, string &strData, set<string> &setHead)
 		strData = data;
 	}
 
-	//curl_global_cleanup();
 	return 1;
 }
 
-int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::string> &setHead,
-		std::set<std::string> &setParameter)
+int CHttpsClient::POST(const char *szURL, std::string &strData, const std::set<std::string> &setHead,
+	const std::set<std::string> &setParameter)
 {
 	CURL *curl;
 	CURLcode res;
@@ -110,7 +104,6 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 	string strParameter;
 	set<string>::const_iterator it;
 
-	//curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
 
 	if(curl)
@@ -143,11 +136,6 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 		}
 
 		_log("[CHttpsClient] POST URL: %s", szURL);
-		/* First set the URL that is about to receive our POST. This URL can
-		 just as well be a https:// URL if that is what should receive the
-		 data. */
-		//curl_easy_setopt(curl, CURLOPT_URL, "http://postit.example.com/moo.cgi");
-		/* Now specify the POST data */
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, strParameter.c_str());
 		curl_easy_setopt(curl, CURLOPT_URL, szURL);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -156,13 +144,10 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 		//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 		//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
-		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
-		/* Check for errors */
 		if(res != CURLE_OK)
 			fprintf(stderr, "[CHttpsClient] POST curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 
-		/* always cleanup */
 		curl_easy_cleanup(curl);
 		if (NULL != chunk)
 		{
@@ -172,7 +157,6 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, std::set<std::st
 		strData = data;
 	}
 
-	//curl_global_cleanup();
 	return 0;
 }
 

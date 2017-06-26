@@ -16,7 +16,7 @@ struct CachedTokenInfo
 	int64_t goodThrough;
 };
 
-// controller-amx 的 client, 主要接收來自 server 的 token 驗證請求 
+// controller-amx 的 client, 主要接收來自 server 的 token 驗證請求
 class CClientAmxController : public CCmpClient
 {
 public:
