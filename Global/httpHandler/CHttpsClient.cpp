@@ -15,13 +15,15 @@
 using namespace std;
 
 __attribute__((constructor))
-static void globalInit() {
+static void globalInit()
+{
 	_log("[CHttpsClient] curl_global_init(CURL_GLOBAL_ALL)");
 	curl_global_init(CURL_GLOBAL_ALL);
 }
 
 __attribute__((destructor))
-static void globalCleanup() {
+static void globalCleanup()
+{
 	_log("[CHttpsClient] curl_global_cleanup()");
 	curl_global_cleanup();
 }
