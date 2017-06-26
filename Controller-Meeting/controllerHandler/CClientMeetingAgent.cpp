@@ -358,9 +358,11 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		meetingDataJsonObj.put("OWNER_EMAIL", retRow["owner_email"]);
 
 		meetingDataJsonArr.add(meetingDataJsonObj);
+		meetingDataJsonObj.release();
 	}
 
 	respStr = respJson.toUnformattedString();
+	meetingDataJsonArr.release();
 	respJson.release();
 	return respStr;
 }
@@ -459,6 +461,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	HiddenUtility::execOnDb(LOG_TAG" doDigitalSignup()", strSQL);
 
 	respStr = respJson.toUnformattedString();
+	respMessageJson.release();
 	respJson.release();
 	return respStr;
 }
