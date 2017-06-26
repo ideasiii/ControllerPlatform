@@ -8,6 +8,7 @@
 #pragma once
 
 #include "container.h"
+#include "JSONArray.h"
 
 //=========================== Semantic ==========================================//
 /**
@@ -47,6 +48,7 @@ static map<string, string> mapMood = create_map<string, string>\
 
 //=========================== Story ==========================================//
 static map<string, string> mapStory;
+static map<string, JSONArray> mapStoryMood;
 
 //=========================== Education ==========================================//
 static map<string, string> mapEducation;

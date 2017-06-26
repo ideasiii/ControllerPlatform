@@ -28,6 +28,7 @@ typedef enum _CONTENT_TYPE
 #define TYPE_RESP_MUSIC_LOCAL		0x00000004
 
 #define STORY_PATH					"/data/opt/tomcat/webapps/story"
+#define PATH_STORY_MOOD				"/data/opt/tomcat/webapps/edubot/mood/"
 #define STORY_HOST					"https://iiideasmartbuilding.sytes.net/story/"
 #define MUSIC_LOCAL_HOST			"https://iiideasmartbuilding.sytes.net/music/local/"
 

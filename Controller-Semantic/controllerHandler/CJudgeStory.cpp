@@ -14,6 +14,8 @@
 #include "common.h"
 #include "CFileHandler.h"
 #include "CResponsePacket.h"
+#include "JSONObject.h"
+#include "JSONArray.h"
 
 using namespace std;
 
@@ -108,12 +110,21 @@ void CJudgeStory::loadStoryDictionary()
 	int nIndex;
 	CFileHandler fh;
 	set<string> setData;
+	set<string> setMood;
 	set<string>::const_iterator iter;
+	set<string>::const_iterator iter_set_mood;
 	string strFileType;
 	string strWord;
 	string strFile;
+	string strFileName;
+	string strPathMood;
+	string strTime;
+	string strMood;
+	JSONArray jArrayMood;
+	JSONObject jobjMood;
 
 	fh.readPath(STORY_PATH, setData);
+	mapStoryMood.clear();
 
 	for(iter = setData.begin(); setData.end() != iter; ++iter)
 	{
@@ -123,7 +134,32 @@ void CJudgeStory::loadStoryDictionary()
 			strFileType = iter->substr(nIndex + 1);
 			if(!strFileType.compare("mp3") || !strFileType.compare("MP3"))
 			{
-				mapStory[iter->substr(0, nIndex)] = iter->c_str();
+				strFileName = iter->substr(0, nIndex);
+				mapStory[strFileName] = iter->c_str();
+				setMood.clear();
+				strPathMood = PATH_STORY_MOOD + iter->substr(0, nIndex) + ".mood";
+				if(0 < fh.readAllLine(strPathMood.c_str(), setMood))
+				{
+					jArrayMood.create();
+					for(iter_set_mood = setMood.begin(); setMood.end() != iter_set_mood; ++iter_set_mood)
+					{
+						if(!iter_set_mood->empty())
+						{
+							nIndex = iter_set_mood->find(",");
+							strTime = iter_set_mood->substr(0, nIndex);
+							strMood = iter_set_mood->substr(nIndex + 1);
+							jobjMood.create();
+							jobjMood.put("time", strTime);
+							jobjMood.put("host", PATH_STORY_MOOD);
+							jobjMood.put("file", strMood);
+							jobjMood.put("description", strMood);
+							jArrayMood.add(jobjMood);
+							jobjMood.release();
+						}
+					}
+					mapStoryMood[strFileName] = jArrayMood;
+					jArrayMood.release();
+				}
 			}
 		}
 	}

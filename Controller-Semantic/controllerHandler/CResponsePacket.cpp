@@ -41,6 +41,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 	default:
 		jResp.put("type", TYPE_RESP_UNKNOW);
 	}
+	jsonRoot.release();
 }
 
 CResponsePacket &CResponsePacket::setData(const char *szKey, const char *szValue)
