@@ -102,7 +102,8 @@ void cJSON_Delete(cJSON *c)
 			cJSON_free(c->valuestring);
 		if(!(c->type & cJSON_StringIsConst) && c->string)
 			cJSON_free(c->string);
-		cJSON_free(c);
+		if(c)
+			cJSON_free(c);
 		c = next;
 	}
 }

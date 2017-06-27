@@ -8,6 +8,7 @@
 #include "CResponsePacket.h"
 #include "config.h"
 #include "LogHandler.h"
+#include "dictionary.h"
 
 CResponsePacket::CResponsePacket()
 {
@@ -21,6 +22,9 @@ CResponsePacket::~CResponsePacket()
 
 void CResponsePacket::format(int nType, JSONObject &jResp)
 {
+	extern map<string, string> mapStory;
+	extern map<string, JSONArray> mapStoryMood;
+
 	jResp.put("type", nType);
 
 	switch(nType)
@@ -31,7 +35,17 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		jResp.put("music", jsonRoot);
 		break;
 	case TYPE_RESP_STORY:
+	{
+		_log("[CResponsePacket] format Load Story: %d", mapStory.size());
+		_log("[CResponsePacket] format Story Mood: %d", mapStoryMood.size());
+		for(map<string, JSONArray>::iterator it = mapStoryMood.begin(); mapStoryMood.end() != it; ++it)
+			_log("%s - %s", it->first.c_str(), it->second.toString().c_str());
+		if(mapStoryMood.end() != mapStoryMood.find(jsonRoot.getString("story")))
+		{
+			jsonRoot.put("mood", mapStoryMood[jsonRoot.getString("story")]);
+		}
 		jResp.put("story", jsonRoot);
+	}
 		break;
 	case TYPE_RESP_TTS:
 		jResp.put("tts", jsonRoot);

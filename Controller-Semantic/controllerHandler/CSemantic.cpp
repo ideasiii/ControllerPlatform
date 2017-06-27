@@ -16,6 +16,8 @@ using namespace std;
 
 #define MAX_WORD_ATTR		7
 
+extern map<string, int> mapSubject;
+
 CSemantic::~CSemantic()
 {
 
@@ -26,6 +28,7 @@ int CSemantic::getVerb(const char *szWord, WORD_ATTR &wordAttr)
 	int nIndex = -1;
 	map<string, int>::iterator it;
 	string strWord = szWord;
+	extern map<string, int> mapVerb;
 
 	for(it = mapVerb.begin(); it != mapVerb.end(); ++it)
 	{
@@ -45,6 +48,8 @@ int CSemantic::getVerb(const char *szWord, WORD_ATTR &wordAttr)
 
 int CSemantic::getSubject(const char *szWord)
 {
+	extern map<string, int> mapSubject;
+
 	if(0 < szWord)
 	{
 		string strWord = szWord;

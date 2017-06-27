@@ -29,7 +29,7 @@ CJudgeStory::~CJudgeStory()
 
 }
 
-std::string CJudgeStory::toString()
+string CJudgeStory::toString()
 {
 	return "CJudgeStory";
 }
@@ -40,6 +40,7 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 	string strWord;
 	string strFile;
 	string strStory;
+	extern map<string, string> mapStory;
 
 	strWord = szInput;
 	if(strWord.empty())
@@ -70,6 +71,7 @@ int CJudgeStory::evaluate(const char *szWord, map<string, string> &mapMatch)
 {
 	int nScore;
 	string strWord;
+	extern map<string, string> mapStory;
 
 	nScore = 0;
 	strWord = szWord;
@@ -117,13 +119,14 @@ void CJudgeStory::loadStoryDictionary()
 	string strWord;
 	string strFile;
 	string strFileName;
-	string strPathMood;
 	string strTime;
 	string strMood;
-	JSONArray jArrayMood;
 	JSONObject jobjMood;
+	extern map<string, string> mapStory;
+	extern map<string, JSONArray> mapStoryMood;
 
 	fh.readPath(STORY_PATH, setData);
+	mapStory.clear();
 	mapStoryMood.clear();
 
 	for(iter = setData.begin(); setData.end() != iter; ++iter)
@@ -132,33 +135,35 @@ void CJudgeStory::loadStoryDictionary()
 		if((int) string::npos != nIndex)
 		{
 			strFileType = iter->substr(nIndex + 1);
-			if(!strFileType.compare("mp3") || !strFileType.compare("MP3"))
+			if(!strFileType.compare("mp3") || !strFileType.compare("MP3") || !strFileType.compare("mood"))
 			{
 				strFileName = iter->substr(0, nIndex);
-				mapStory[strFileName] = iter->c_str();
-				setMood.clear();
-				strPathMood = PATH_STORY_MOOD + iter->substr(0, nIndex) + ".mood";
-				if(0 < fh.readAllLine(strPathMood.c_str(), setMood))
+				if(strFileType.compare("mood"))
+					mapStory[strFileName] = iter->c_str();
+
+				if(!strFileType.compare("mood"))
 				{
-					jArrayMood.create();
-					for(iter_set_mood = setMood.begin(); setMood.end() != iter_set_mood; ++iter_set_mood)
+					setMood.clear();
+					if(0 < fh.readAllLine(string(STORY_PATH + (*iter)).c_str(), setMood))
 					{
-						if(!iter_set_mood->empty())
+						mapStoryMood[strFileName].create();
+						for(iter_set_mood = setMood.begin(); setMood.end() != iter_set_mood; ++iter_set_mood)
 						{
-							nIndex = iter_set_mood->find(",");
-							strTime = iter_set_mood->substr(0, nIndex);
-							strMood = iter_set_mood->substr(nIndex + 1);
-							jobjMood.create();
-							jobjMood.put("time", strTime);
-							jobjMood.put("host", PATH_STORY_MOOD);
-							jobjMood.put("file", strMood);
-							jobjMood.put("description", strMood);
-							jArrayMood.add(jobjMood);
-							jobjMood.release();
+							if(!iter_set_mood->empty())
+							{
+								nIndex = iter_set_mood->find(",");
+								strTime = iter_set_mood->substr(0, nIndex);
+								strMood = iter_set_mood->substr(nIndex + 1);
+								jobjMood.create();
+								jobjMood.put("time", strTime);
+								jobjMood.put("host", PATH_STORY_MOOD);
+								jobjMood.put("file", strMood);
+								jobjMood.put("description", strMood);
+								mapStoryMood[strFileName].add(jobjMood);
+								jobjMood.release();
+							}
 						}
 					}
-					mapStoryMood[strFileName] = jArrayMood;
-					jArrayMood.release();
 				}
 			}
 		}
@@ -178,8 +183,12 @@ void CJudgeStory::loadStoryDictionary()
 	}
 
 	_log("[CJudgeStory] loadStoryDictionary Load Story: %d", mapStory.size());
+	_log("[CJudgeStory] loadStoryDictionary Load Story Mood: %d", mapStoryMood.size());
 //	for(map<string, string>::const_iterator it = mapStory.begin(); mapStory.end() != it; ++it)
 //		_log("%s - %s", it->first.c_str(), it->second.c_str());
+
+//	for(map<string, JSONArray>::iterator it = mapStoryMood.begin(); mapStoryMood.end() != it; ++it)
+//		_log("%s - %s", it->first.c_str(), it->second.toString().c_str());
 
 }
 

@@ -21,6 +21,9 @@
 
 using namespace std;
 
+extern set<string> setLocation;
+extern map<string, int> mapService;
+
 CJudgeService::CJudgeService()
 {
 	loadServiceDictionary();

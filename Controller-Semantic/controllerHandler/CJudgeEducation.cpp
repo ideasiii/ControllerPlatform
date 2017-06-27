@@ -16,6 +16,9 @@
 
 using namespace std;
 
+extern map<string, string> mapEducation;
+extern map<string, string> mapEducationPoetry;
+
 CJudgeEducation::CJudgeEducation()
 {
 	loadEducationDictionary();

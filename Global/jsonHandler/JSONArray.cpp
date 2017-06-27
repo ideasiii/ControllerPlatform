@@ -10,6 +10,8 @@
 #include "JSONObject.h"
 #include "cJSON.h"
 
+using namespace std;
+
 JSONArray::JSONArray() :
 		cjsonArray(0), mnExtPointObj(0)
 {
@@ -32,7 +34,7 @@ void JSONArray::create()
 
 JSONArray::~JSONArray()
 {
-
+	release();
 }
 
 JSONArray &JSONArray::load(cJSON *pcJSON)
@@ -92,6 +94,8 @@ cJSON *JSONArray::getcJSON()
 
 int JSONArray::size()
 {
+	if(!cjsonArray)
+		return 0;
 	return cJSON_GetArraySize(cjsonArray);
 }
 
@@ -166,11 +170,12 @@ bool JSONArray::isNull(int index)
 
 string JSONArray::toString()
 {
+	JSONObject jsonItem;
 	string strOut = "[";
 
 	for(int i = 0; i < this->size(); ++i)
 	{
-		JSONObject jsonItem(this->getJsonObject(i));
+		jsonItem = this->getJsonObject(i);
 		strOut += jsonItem.toString();
 		if(i != this->size() - 1)
 		{
@@ -194,6 +199,7 @@ void JSONArray::release()
 
 void JSONArray::operator=(cJSON *c)
 {
+	mnExtPointObj = 1;
 	cjsonArray = c;
 }
 

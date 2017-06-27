@@ -23,36 +23,6 @@
  */
 #define VERB_LISTEN			1
 
-static map<string, int> mapSubject = create_map<string, int>\
-("我", SUBJECT_I)("你", SUBJECT_YOU)("他", SUBJECT_HE)("我們",
-SUBJECT_I)("你們", SUBJECT_YOU)("他們", SUBJECT_HE);
-
-static map<string, int> mapVerb = create_map<string, int>\
-("想要聽", VERB_LISTEN)("超想聽", VERB_LISTEN)("想聽", VERB_LISTEN)(
-		"要聽", VERB_LISTEN)("聽", VERB_LISTEN)("聽聽", VERB_LISTEN);
-
-//=========================== Absolutly ==========================================//
-static map<string, string> mapAbsolutly;
-
-//=========================== Spotify Music ==========================================//
-static set<string> setArtist;
-static set<string> setArtistMark = create_set<string>("Remix");
-static map<string, string> mapArtistMatch; // TW --> EN
-
-//=========================== Mood Music ==========================================//
-// ("歡喜" || "忿怒" || "哀傷" || "驚恐" || "愛情")
-static map<string, string> mapMood = create_map<string, string>\
-("歡喜", "happy.mp3")("忿怒", "angry.mp3")("憤怒",
-		"angry.mp3")("氣憤", "angry.mp3")("不爽", "angry.mp3")("哀傷", "sad.mp3")("悲傷", "sad.mp3")("傷感", "sad.mp3")("驚恐",
-		"shock.mp3")("愛情", "love.mp3");
-
-//=========================== Story ==========================================//
-static map<string, string> mapStory;
-static map<string, JSONArray> mapStoryMood;
-
-//=========================== Education ==========================================//
-static map<string, string> mapEducation;
-static map<string, string> mapEducationPoetry;
 
 //==================================== match_service ===========================================//
 
@@ -60,6 +30,5 @@ static map<string, string> mapEducationPoetry;
 #define SERVICE_WEATHER				2
 #define SERVICE_TRANSLATE			3
 
-static map<string, int> mapService;
-static set<string> setLocation;
+
 

@@ -14,6 +14,8 @@
 
 using namespace std;
 
+extern map<string, string> mapAbsolutly;
+
 CJudgeAbsolutely::CJudgeAbsolutely()
 {
 	loadAbsolutelyDictionary();

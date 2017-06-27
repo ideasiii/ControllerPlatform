@@ -20,6 +20,10 @@
 
 using namespace std;
 
+extern set<string> setArtist;
+extern map<string, string> mapArtistMatch;
+extern set<string> setArtistMark;
+
 CJudgeMusic::CJudgeMusic() :
 		spotify(0)
 {

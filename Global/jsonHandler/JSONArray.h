@@ -12,8 +12,6 @@
 struct cJSON;
 class JSONObject;
 
-using namespace std;
-
 class JSONArray
 {
 public:
@@ -22,7 +20,7 @@ public:
 	virtual ~JSONArray();
 	void add(JSONObject &jsonObject);
 	void add(JSONArray &jsonArray);
-	void add(string name);
+	void add(std::string name);
 	void add(const char * name);
 	void add(bool name);
 	void add(int name);
@@ -34,10 +32,10 @@ public:
 	int getInt(int index);
 	int getInt(int index, int defaultValue);
 	cJSON * getJsonArray(int index);
-	string getString(int index);
-	string getString(int index, string defaultValue);
+	std::string getString(int index);
+	std::string getString(int index, std::string defaultValue);
 	bool isNull(int index);
-	string toString();
+	std::string toString();
 	void release();
 	bool isValid();
 	JSONArray &load(cJSON *pcJSON);

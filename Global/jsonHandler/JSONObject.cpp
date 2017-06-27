@@ -52,16 +52,12 @@ JSONObject::JSONObject(cJSON *pcJSON) :
 
 JSONObject::~JSONObject()
 {
-
+	release();
 }
 
 void JSONObject::create()
 {
-	if(0 != cjsonObj)
-	{
-		cJSON_Delete(cjsonObj);
-		cjsonObj = 0;
-	}
+	release();
 	mnExtPointObj = 0;
 	cjsonObj = cJSON_CreateObject();
 }
@@ -71,6 +67,7 @@ JSONObject &JSONObject::load(std::string strJSON)
 	release();
 	if(!strJSON.empty())
 	{
+		mnExtPointObj = 0;
 		cjsonObj = cJSON_Parse(strJSON.c_str());
 		if(!cjsonObj)
 			printf("[JSONObject] load Invalid JSON Source: %s", strJSON.c_str());
@@ -246,5 +243,6 @@ cJSON *JSONObject::getJsonObject(std::string strName)
 
 void JSONObject::operator=(cJSON *c)
 {
+	mnExtPointObj = 1;
 	cjsonObj = c;
 }
