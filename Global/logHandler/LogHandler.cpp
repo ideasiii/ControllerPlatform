@@ -15,17 +15,20 @@
 
 using namespace std;
 
-static fstream fs;
-static string mstrLogPath;
-static string mstrLogDate = "2015-07-27";
+fstream fs;
+string mstrLogPath;
+string mstrLogDate;
 
 extern char *__progname;
 
 inline void writeLog(int nSize, const char *pLog)
 {
+	extern fstream fs;
+	extern string mstrLogPath;
+	extern string mstrLogDate;
 	string strCurrentDate = currentDate();
 
-	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty())
+	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty() || mstrLogDate.empty())
 	{
 		if(mstrLogPath.empty())
 			mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
@@ -35,6 +38,7 @@ inline void writeLog(int nSize, const char *pLog)
 		fs.open(strPath.c_str(), fstream::in | fstream::out | fstream::app);
 		fs.rdbuf()->pubsetbuf(0, 0);
 		fs << currentDateTime() + " : [LogHandler] Open File: " + strPath << endl;
+		printf("[LogHandler] Open File: %s\n", strPath.c_str());
 	}
 
 	if(fs.is_open())

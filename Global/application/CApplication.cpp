@@ -113,10 +113,11 @@ void runService(int nMsqKey)
 		controller->callback(MSG_ON_FINISH, &nControllerMsqKey);
 		CMessageHandler::release();
 	}
-	_close(); // close log file
+
 	delete controller;
 	_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
 	closelog();
+	_close(); // close log file
 }
 
 int main(int argc, char* argv[])

@@ -17,14 +17,14 @@ using namespace std;
 __attribute__((constructor))
 static void globalInit()
 {
-	_log("[CHttpsClient] curl_global_init(CURL_GLOBAL_ALL)");
+	printf("[CHttpsClient] curl_global_init(CURL_GLOBAL_ALL)\n");
 	curl_global_init(CURL_GLOBAL_ALL);
 }
 
 __attribute__((destructor))
 static void globalCleanup()
 {
-	_log("[CHttpsClient] curl_global_cleanup()");
+	printf("[CHttpsClient] curl_global_cleanup()\n");
 	curl_global_cleanup();
 }
 
@@ -85,7 +85,7 @@ int CHttpsClient::GET(const char *szURL, string &strData, const set<string> &set
 			fprintf(stderr, "[CHttpsClient] GET curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 
 		curl_easy_cleanup(curl);
-		if (NULL != chunk)
+		if(NULL != chunk)
 		{
 			curl_slist_free_all(chunk);
 		}
@@ -97,7 +97,7 @@ int CHttpsClient::GET(const char *szURL, string &strData, const set<string> &set
 }
 
 int CHttpsClient::POST(const char *szURL, std::string &strData, const std::set<std::string> &setHead,
-	const std::set<std::string> &setParameter)
+		const std::set<std::string> &setParameter)
 {
 	CURL *curl;
 	CURLcode res;
@@ -151,7 +151,7 @@ int CHttpsClient::POST(const char *szURL, std::string &strData, const std::set<s
 			fprintf(stderr, "[CHttpsClient] POST curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 
 		curl_easy_cleanup(curl);
-		if (NULL != chunk)
+		if(NULL != chunk)
 		{
 			curl_slist_free_all(chunk);
 		}
