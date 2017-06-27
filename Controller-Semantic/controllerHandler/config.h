@@ -31,6 +31,7 @@ typedef enum _CONTENT_TYPE
 #define PATH_STORY_MOOD				"/data/opt/tomcat/webapps/edubot/mood/"
 #define STORY_HOST					"https://iiideasmartbuilding.sytes.net/story/"
 #define MUSIC_LOCAL_HOST			"https://iiideasmartbuilding.sytes.net/music/local/"
+#define HOST_MOOD					"https://smabuild.sytes.net/edubot/mood/"
 
 //==================================== 字詞屬性定義 ========================================//
 #define UNKNOW						0x00000000

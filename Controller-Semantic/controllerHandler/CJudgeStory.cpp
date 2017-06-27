@@ -16,6 +16,7 @@
 #include "CResponsePacket.h"
 #include "JSONObject.h"
 #include "JSONArray.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -135,7 +136,7 @@ void CJudgeStory::loadStoryDictionary()
 		if((int) string::npos != nIndex)
 		{
 			strFileType = iter->substr(nIndex + 1);
-			if(!strFileType.compare("mp3") || !strFileType.compare("MP3") || !strFileType.compare("mood"))
+			if(!strFileType.compare("mp3") || !strFileType.compare("mood"))
 			{
 				strFileName = iter->substr(0, nIndex);
 				if(strFileType.compare("mood"))
@@ -146,7 +147,7 @@ void CJudgeStory::loadStoryDictionary()
 					setMood.clear();
 					if(0 < fh.readAllLine(string(STORY_PATH + (*iter)).c_str(), setMood))
 					{
-						mapStoryMood[strFileName].create();
+						mapStoryMood[strFileName + ".mp3"].create();
 						for(iter_set_mood = setMood.begin(); setMood.end() != iter_set_mood; ++iter_set_mood)
 						{
 							if(!iter_set_mood->empty())
@@ -156,10 +157,10 @@ void CJudgeStory::loadStoryDictionary()
 								strMood = iter_set_mood->substr(nIndex + 1);
 								jobjMood.create();
 								jobjMood.put("time", strTime);
-								jobjMood.put("host", PATH_STORY_MOOD);
+								jobjMood.put("host", HOST_MOOD);
 								jobjMood.put("file", strMood);
 								jobjMood.put("description", strMood);
-								mapStoryMood[strFileName].add(jobjMood);
+								mapStoryMood[trim(strFileName + ".mp3")].add(jobjMood);
 								jobjMood.release();
 							}
 						}

@@ -5,6 +5,7 @@
  *      Author: root
  */
 
+#include <syslog.h>
 #include <fstream>
 #include <stdio.h>
 #include <cstdarg> // for Variable-length argument
@@ -15,19 +16,21 @@
 using namespace std;
 
 static fstream fs;
-static string mstrLogPath = "./run.log";
+static string mstrLogPath;
 static string mstrLogDate = "2015-07-27";
+
+extern char *__progname;
 
 inline void writeLog(int nSize, const char *pLog)
 {
 	string strCurrentDate = currentDate();
 
-	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open())
+	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty())
 	{
 		if(mstrLogPath.empty())
-			mstrLogPath = "./run.log";
+			mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
 		mstrLogDate = strCurrentDate;
-		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
+		string strPath = format("%s.%s###", mstrLogPath.c_str(), mstrLogDate.c_str());
 		_close();
 		fs.open(strPath.c_str(), fstream::in | fstream::out | fstream::app);
 		fs.rdbuf()->pubsetbuf(0, 0);
@@ -68,12 +71,13 @@ void _setLogPath(const char *ppath)
 {
 	if(0 == ppath)
 	{
-		mstrLogPath = "./run.log";
+		mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
 	}
 	else
 	{
 		mstrLogPath = ppath;
-		mkdirp(mstrLogPath);
+		if(!mstrLogPath.empty())
+			mkdirp(mstrLogPath);
 	}
 }
 

@@ -20,6 +20,7 @@
 #include "CJudgeService.h"
 #include "CRankingHandler.cpp"
 #include "CSemantic.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -54,10 +55,11 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 	map<int, CSemantic*>::const_iterator iter;
 	CRankingHandler<int, int> ranking;
 	map<string, string> mapMatch;
+	CResponsePacket respPacket;
 
 	if(0 >= szInput)
 	{
-		jsonResp.put("type", 0);
+		respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
 		return TRUE;
 	}
 
@@ -86,8 +88,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 		_log("[CSemanticJudge] word: No Object to Access this work");
 	}
 
-	jsonResp.put("type", 3);
-	jsonResp.put("tts", WORD_UNKNOW);
+	respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
 
 	return TRUE;
 }

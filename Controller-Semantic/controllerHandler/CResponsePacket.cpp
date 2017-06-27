@@ -9,6 +9,7 @@
 #include "config.h"
 #include "LogHandler.h"
 #include "dictionary.h"
+#include "utility.h"
 
 CResponsePacket::CResponsePacket()
 {
@@ -36,13 +37,9 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		break;
 	case TYPE_RESP_STORY:
 	{
-		_log("[CResponsePacket] format Load Story: %d", mapStory.size());
-		_log("[CResponsePacket] format Story Mood: %d", mapStoryMood.size());
-		for(map<string, JSONArray>::iterator it = mapStoryMood.begin(); mapStoryMood.end() != it; ++it)
-			_log("%s - %s", it->first.c_str(), it->second.toString().c_str());
-		if(mapStoryMood.end() != mapStoryMood.find(jsonRoot.getString("story")))
+		if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot.getString("file"))))
 		{
-			jsonRoot.put("mood", mapStoryMood[jsonRoot.getString("story")]);
+			jsonRoot.put("mood", mapStoryMood[trim(jsonRoot.getString("file"))]);
 		}
 		jResp.put("story", jsonRoot);
 	}
