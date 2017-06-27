@@ -30,7 +30,7 @@ inline void writeLog(int nSize, const char *pLog)
 		if(mstrLogPath.empty())
 			mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
 		mstrLogDate = strCurrentDate;
-		string strPath = format("%s.%s###", mstrLogPath.c_str(), mstrLogDate.c_str());
+		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
 		_close();
 		fs.open(strPath.c_str(), fstream::in | fstream::out | fstream::app);
 		fs.rdbuf()->pubsetbuf(0, 0);
