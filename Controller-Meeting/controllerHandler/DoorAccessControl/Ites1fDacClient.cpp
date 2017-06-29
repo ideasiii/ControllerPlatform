@@ -47,11 +47,14 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 #ifdef ENCRYPT_REQUEST_PDU_BODY
 	AesCrypto crypto(aesKey);
 	uint8_t buf[MAX_DATA_LEN];
+
+	// 加密前的字串須以 '\0' 結尾，但加密後的內容不須以 '\0' 結尾
+	// 如果字串後面要加 padding，在加密之前就必須附加於其後，且中間至少以一個 '\0' 隔開
 	int bufSize = encryptRequestBody(crypto, reqBody, buf, sizeof(buf));
 
 	if (bufSize < 1)
 	{
-		errorDescription = "Encrypting request body failed";
+		errorDescription = "Request body encryption failed";
 		return false;
 	}
 #else
@@ -76,11 +79,9 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 
 	if (respPduSize < (int)sizeof(CMP_HEADER))
 	{
-		errorDescription.assign("Error sending request");
+		errorDescription = "Error sending request";
 		return false;
 	}
-
-
 
 #ifdef DECRYPT_RESPONSE_PDU_BODY
 	std::string respBodyStr = decryptRequestBody(crypto, &respPdu);
@@ -88,7 +89,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	if (respBodyStr.length() < 2)
 	{
 		_log(LOG_TAG" doorOpen() decrypt response body failed, raw response = %s", respPdu.cmpBody.cmpdata);
-		errorDescription.assign("Reading server response failed");
+		errorDescription = "Reading server response failed";
 		return false;
 	}
 	else
@@ -103,8 +104,8 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	JSONObject respJson(respBodyStr);
 	if (!respJson.isValid())
 	{
-		_log(LOG_TAG" doorOpen() respJson.isValid() = false");
-		errorDescription.assign("Reading server response failed");
+		_log(LOG_TAG" doorOpen() respJson.isValid() == false");
+		errorDescription = "Server failed to response";
 		return false;
 	}
 
@@ -119,20 +120,20 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 
 		if(granted)
 		{
-			errorDescription = "Permission granted by remote but action failed: " + message;
+			errorDescription = "Permission granted but action failed: " + message;
 		}
 		else
 		{
-			errorDescription = "Permission not granted by remote: " + message;
+			errorDescription = "Permission not granted: " + message;
 		}
-
-		respJson.release();
-		return false;
+	}
+	else
+	{
+		_log(LOG_TAG" doorOpen() request successful\n");
 	}
 
-	_log(LOG_TAG" doorOpen() request successful\n");
 	respJson.release();
-	return true;
+	return success;
 }
 
 /**

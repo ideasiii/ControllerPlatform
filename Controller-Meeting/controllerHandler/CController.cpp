@@ -18,6 +18,8 @@
 #include "HiddenUtility.hpp"
 #include "AppVersionHandler/AppVersionHandler.h"
 
+#include "CHttpsClient.h"
+
 using namespace std;
 
 #define LOG_TAG "[CController]"

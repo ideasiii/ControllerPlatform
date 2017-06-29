@@ -56,7 +56,6 @@ int CClientAmxController::startClient(int msqKey)
 	}
 
 	// enquireLinkYo starts in onResponse(), when binding response is received
-
 	return TRUE;
 }
 
@@ -73,14 +72,14 @@ void CClientAmxController::stopClient()
 		return;
 	}
 
+	// server don't response to unbind_request
+	// receiving unbind_response while destructing CCmpClient may cause segmentation fault
 	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
 	stop();
 }
 
 int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int nSequence, const void *szBody)
 {
-	//_DBG(LOG_TAG" onResponse() step in");
-
 	switch ((unsigned int)nCommand)
 	{
 	case enquire_link_response:
@@ -90,7 +89,6 @@ int CClientAmxController::onResponse(int nSocket, int nCommand, int nStatus, int
 	case bind_response:
 		_log(LOG_TAG" onResponse() bind_response; bind ok, start EnquireLinkYo");
 		enquireLinkYo->start();
-
 		break;
 	case unbind_response:
 		_log(LOG_TAG" onResponse() unbind_response");
@@ -131,7 +129,7 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 	bool authOk = validateToken(reqId, reqToken, now);
 
 	std::stringstream respSs;
-	respSs << "{\"ID\": \"" << reqId << "\", \"AUTH\": \"";
+	respSs << "{\"ID\":\"" << reqId << "\",\"AUTH\":\"";
 
 	if (authOk)
 	{
@@ -156,20 +154,17 @@ int CClientAmxController::onAuthenticationRequest(int nSocket, int nCommand, int
 // 'when' is the point we received the validation request, in unix epoch (milliseconds, UTC)
 bool CClientAmxController::validateToken(const std::string& reqId, const std::string& reqToken, const int64_t when)
 {
-	if (!HiddenUtility::RegexMatch(reqId, UUID_PATTERN))
+	if (!HiddenUtility::RegexMatch(reqId, UUID_PATTERN)
+		|| !HiddenUtility::RegexMatch(reqToken, UUID_PATTERN))
 	{
-		_log(LOG_TAG" validateToken() ID %s is not a valid UUID", reqId.c_str());
-		return false;
-	}
-	else if (!HiddenUtility::RegexMatch(reqToken, UUID_PATTERN))
-	{
-		_log(LOG_TAG" validateToken() Token %s is not a valid UUID", reqToken.c_str());
+		_log(LOG_TAG" validateToken() ID `%s` or token `%s` is not valid",
+			reqId.c_str(), reqToken.c_str());
 		return false;
 	}
 
 	if (tokenCache.find(reqToken) != tokenCache.end())
 	{
-		_log(LOG_TAG" validateToken() Token cache hit (%s)", reqToken.c_str());
+		_log(LOG_TAG" validateToken() Token `%s` hit cache", reqToken.c_str());
 		auto& hitRecord = tokenCache[reqToken];
 		return hitRecord.userUuid.compare(reqId) == 0
 			&& hitRecord.validFrom <= when
@@ -211,15 +206,12 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 
 void CClientAmxController::onServerDisconnect(unsigned long int nSocketFD)
 {
-	//_DBG(LOG_TAG" onServerDisconnect() step in");
 	CCmpClient::onServerDisconnect(nSocketFD);
 
 	// let CController decide what to do
 	_log(LOG_TAG" Server actively disconnected");
 	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_AMX,
 		0, 0, NULL);
-
-	//_DBG(LOG_TAG" onServerDisconnect() step out");
 }
 
 std::string CClientAmxController::getServerIp()

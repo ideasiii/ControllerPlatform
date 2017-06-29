@@ -6,6 +6,7 @@
 class CMysqlHandler;
 class CConfig;
 
+// 關於 MySQL 資料庫的連線參數
 class MysqlSource
 {
 public:

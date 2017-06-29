@@ -2,9 +2,9 @@
 # copy this file with name controller-meeting.conf before any editing
 # copy this file with name to controller-meeting.conf before any editing
 
-# put it together with controller-meeting
-# put it together with controller-meeting
-# put it together with controller-meeting
+# put it under the same directory of controller-meeting
+# put it under the same directory of controller-meeting
+# put it under the same directory of controller-meeting
 
 # config file for controller-meeting
 
@@ -20,6 +20,7 @@ host = 256.256.256.256
 # port setting is not used now
 port = 3306
 user = _user_
+# 密碼開頭及結尾不得包含空白，因為會被 CConfigHandler 吃掉
 password = _password_
 database = _database_
 

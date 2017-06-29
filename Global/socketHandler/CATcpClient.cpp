@@ -93,7 +93,6 @@ void CATcpClient::runMessageReceive()
 }
 
 int CATcpClient::connect(const char* cszAddr, short nPort, int nMsqKey)
-	
 {
 	return connectWithCallback(cszAddr, nPort, nMsqKey, NULL);
 }
@@ -160,7 +159,7 @@ int CATcpClient::connectWithCallback(const char* cszAddr, short nPort, int nMsqK
 		pthread_t pktRecvTid = createThread(aClientthreadTcpReceive, this);
 		_log("[CATcpClient] %s Socket connect success, FD: %d", strTaskName.c_str(), getSocketfd());
 
-		if (onReceiverThreadsCreated != NULL)
+		if (NULL != onReceiverThreadsCreated)
 		{
 			onReceiverThreadsCreated(this, msgRecvTid, pktRecvTid);
 		}

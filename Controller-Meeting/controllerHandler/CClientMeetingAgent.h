@@ -58,6 +58,10 @@ private:
 	// 初始化連線到 agent 需要的參數
 	int initMeetingAgentServerParams(std::unique_ptr<CConfig>& config);
 
+	// 解碼 QR code 並處理相應要求
+	// 回傳 JSON 字串
+	std::string handleQrCodeToken(const std::string& reqUserId, const std::string& qrcodeToken);
+
 	// 取得 user 的會議資訊
 	// 回傳 JSON 字串
 	std::string getMeetingsInfo(const std::string& userId);
@@ -73,6 +77,9 @@ private:
 	// 解碼 QR code 掃出來的字串
 	std::unique_ptr<JSONObject> decodeQRCodeString(const std::string& src);
 
+	// do not delete this or the whole world will collapse
+	CObject * const mpController;
+
 	std::string agentIp;
 	int agentPort;
 
@@ -80,7 +87,4 @@ private:
 	std::unique_ptr<AppVersionHandler> appVersionHandler;
 	std::unique_ptr<AmxControllerInfo> amxControllerInfo;
 	std::unique_ptr<EnquireLinkYo> enquireLinkYo;
-
-	// do not delete this or the whole world will collapse
-	CObject * const mpController;
 };

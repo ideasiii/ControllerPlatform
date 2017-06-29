@@ -34,7 +34,7 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	struct sockaddr_in server;
 	char respBuf[MAX_DATA_LEN];
 
-	_log(LOG_TAG" Enter sendOnlyOneRequest()");
+	//_log(LOG_TAG" Enter sendOnlyOneRequest()");
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1)
@@ -55,7 +55,7 @@ int FakeCmpClient::sendOnlyOneRequest(CMP_PACKET *requestPdu, int reqPduLen, CMP
 	}
 
 	ret = connect(sockfd, (struct sockaddr *)&server, sizeof(server));
-	_log(LOG_TAG" connect ret() = %d", ret);
+	//_log(LOG_TAG" connect ret() = %d", ret);
 
 	if (ret < 0)
 	{

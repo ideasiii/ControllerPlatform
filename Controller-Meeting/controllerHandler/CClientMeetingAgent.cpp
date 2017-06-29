@@ -27,10 +27,9 @@
 using namespace std;
 
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
-	mpController(controller)
+	mpController(controller), enquireLinkYo(new EnquireLinkYo("ClientAgent.ely", this,
+		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController))
 {
-	enquireLinkYo.reset(new EnquireLinkYo("ClientAgent.ely", this,
-		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController));
 }
 
 CClientMeetingAgent::~CClientMeetingAgent()
@@ -104,7 +103,7 @@ int CClientMeetingAgent::startClient(int msqKey)
 	nRet = request(getSocketfd(), bind_request, STATUS_ROK, getSequence(), NULL);
 	if (nRet < 0)
 	{
-		_log(LOG_TAG" startClient() Binding to agent FAILED");
+		_log(LOG_TAG" startClient() Send binding request to agent FAILED");
 		return FALSE;
 	}
 
@@ -128,12 +127,12 @@ void CClientMeetingAgent::stopClient()
 
 	if (!isValidSocketFD())
 	{
-		_log(LOG_TAG" stopClient() socket fd is not valid, quit stopping");
+		_log(LOG_TAG" stopClient() socket fd invalid, quit");
 		return;
 	}
 
-	// server will not response to unbind_request
-	// receiving unbind_response while destructing class may cause segmentation fault
+	// server don't response to unbind_request
+	// receiving unbind_response while destructing CCmpClient may cause segmentation fault
 	request(getSocketfd(), unbind_request, STATUS_ROK, getSequence(), NULL);
 	stop();
 }
@@ -164,69 +163,16 @@ int CClientMeetingAgent::onResponse(int nSocket, int nCommand, int nStatus, int 
 int CClientMeetingAgent::onSmartBuildingQrCodeTokenRequest(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
-	string strResponseBodyData = "";
 	_log(LOG_TAG" onSmartBuildingQrCodeToken() body: %s", charRequestBodyData);
 
 	JSONObject reqJson(charRequestBodyData);
 	string reqUserId = reqJson.getString("USER_ID", "");
 	string reqQrCodeToken = reqJson.getString("QRCODE_TOKEN", "");
-
-	std::unique_ptr<JSONObject> decodedQrCodeJson = decodeQRCodeString(reqQrCodeToken);
 	reqJson.release();
 
-	if (reqQrCodeToken.size() < 1 || decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
-	{
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-		return TRUE;
-	}
-
-	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE", "");
-	std::regex qrCodeTypePattern(QR_CODE_TYPE_PATTERN);
-
-	if (!regex_match(decStrQrCodeType, qrCodeTypePattern))
-	{
-		response(getSocketfd(), nCommand, STATUS_ROK, nSequence, JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE);
-		return TRUE;
-	}
-
-	int decQrCodeType;
-	convertFromString(decQrCodeType, decStrQrCodeType);
-
-	if (decQrCodeType == 1)
-	{
-		// 開會通知
-		if (reqUserId.compare("null") != 0)
-		{
-			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
-		}
-		else
-		{
-			// this type of QR code contains exactly the content to be sent back to user
-			strResponseBodyData = decodedQrCodeJson->toUnformattedString();
-		}
-	}
-	else if (decQrCodeType == 2)
-	{
-		// 數位簽到
-		strResponseBodyData = doDigitalSignup(reqUserId);
-	}
-	else if (decQrCodeType == 3)
-	{
-		// 門禁
-		string dstRoomId = decodedQrCodeJson->getString("DOOR_OPEN_ROOM_ID", "");
-		string resultMessage;
-		bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
-
-		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
-			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
-	}
-	else
-	{
-		strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
-	}
-
-	decodedQrCodeJson->release();
+	string strResponseBodyData = handleQrCodeToken(reqUserId, reqQrCodeToken);
 	response(getSocketfd(), nCommand, STATUS_ROK, nSequence, strResponseBodyData.c_str());
+
 	return TRUE;
 }
 
@@ -269,7 +215,7 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	const char *charRequestBodyData = reinterpret_cast<const char *>(szBody);
 	_log(LOG_TAG" onSmartBuildingAMXControlAccess() body: %s", charRequestBodyData);
 
-	// ROOM_ID is a descriptive string like "ITES_101", not a magic number
+	// ROOM_ID is a descriptive string like "ITES_101" instead of a magic number
 	JSONObject reqJson(charRequestBodyData);
 	string reqRoomId = reqJson.getString("ROOM_ID", "");
 	string reqUserId = reqJson.getString("USER_ID", "");
@@ -280,6 +226,63 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 	return TRUE;
 }
 
+string CClientMeetingAgent::handleQrCodeToken(const string& reqUserId, const string& reqQrCodeToken)
+{
+	std::unique_ptr<JSONObject> decodedQrCodeJson = decodeQRCodeString(reqQrCodeToken);
+
+	if (decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
+	{
+		return JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
+	}
+
+	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE", "");
+	if (!HiddenUtility::RegexMatch(decStrQrCodeType, QR_CODE_TYPE_PATTERN))
+	{
+		decodedQrCodeJson->release();
+		return JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
+	}
+
+	string strResponseBodyData;
+	int decQrCodeType;
+	convertFromString(decQrCodeType, decStrQrCodeType);
+
+	if (decQrCodeType == 1)
+	{
+		// 開會通知
+		if (reqUserId.compare("null") != 0)
+		{
+			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
+		}
+		else
+		{
+			// this type of QR code contains exactly the content to be sent back to user
+			strResponseBodyData = decodedQrCodeJson->toUnformattedString();
+		}
+	}
+	else if (decQrCodeType == 2)
+	{
+		// 數位簽到
+		strResponseBodyData = doDigitalSignup(reqUserId);
+	}
+	else if (decQrCodeType == 3)
+	{
+		// 門禁
+		string dstRoomId = decodedQrCodeJson->getString("DOOR_OPEN_ROOM_ID", "");
+		string resultMessage;
+		bool handlerRet = doorAccessHandler.doRequest(resultMessage, reqUserId, dstRoomId);
+
+		strResponseBodyData = "{\"QRCODE_TYPE\":\"3\",\"MESSAGE\":{\"RESULT\":"
+			+ string(handlerRet ? "true" : "false") + ",\"RESULT_MESSAGE\":\"" + resultMessage + "\"}}";
+	}
+	else
+	{
+		strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
+	}
+
+	decodedQrCodeJson->release();
+	return strResponseBodyData;
+}
+
 string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
@@ -287,12 +290,9 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
 	}
 
-	JSONArray meetingDataJsonArr;
-	JSONObject respJson;
-
 	list<map<string, string>> listRet;
 	string strSQL = "SELECT `u`.`id`, `u`.`uuid`, `u`.`name`, `u`.`email` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
-		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                   ";
+		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                                    ";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
 	if (!bRet)
@@ -301,6 +301,8 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
 	}
 
+	JSONArray meetingDataJsonArr;
+	JSONObject respJson;
 	meetingDataJsonArr.create();
 	respJson.create();
 
@@ -309,7 +311,6 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	respJson.put("USER_ID", retRow["uuid"]);
 	respJson.put("USER_NAME", retRow["name"]);
 	respJson.put("USER_EMAIL", retRow["email"]);
-	respJson.put("MEETING_DATA", meetingDataJsonArr);
 
 	listRet.clear();
 	strSQL = "SELECT meetings_candidate.* FROM meeting.meeting_members AS mm, "
@@ -328,7 +329,7 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	{
 		// 挑出 user 於今天明天後天進行的會議
 		strSQL += " AND mi.time_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
-			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 2 DAY) * 1000)";
+			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 3 DAY) * 1000)";
 	}
 
 	strSQL = strSQL + ") AS meetings_candidate WHERE mm.user_id = '"
@@ -338,8 +339,12 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	if (!bRet)
 	{
 		_log(LOG_TAG" getMeetingsInfo() ID %s have no meeting", userId.c_str());
+
+		respJson.put("MEETING_DATA", meetingDataJsonArr);
+		meetingDataJsonArr.release();
 		respStr = respJson.toUnformattedString();
 		respJson.release();
+
 		return respStr;
 	}
 
@@ -361,9 +366,11 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		meetingDataJsonObj.release();
 	}
 
-	respStr = respJson.toUnformattedString();
+	respJson.put("MEETING_DATA", meetingDataJsonArr);
 	meetingDataJsonArr.release();
+	respStr = respJson.toUnformattedString();
 	respJson.release();
+
 	return respStr;
 }
 
@@ -371,11 +378,10 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
-		_log(LOG_TAG" doDigitalSignup() ID %s is not a valid UUID", userId.c_str());
+		_log(LOG_TAG" doDigitalSignup() ID `%s` is not a valid UUID", userId.c_str());
 		return R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"Unknown user"}})";
 	}
 
-	JSONObject respJson, respMessageJson;
 	list<map<string, string>> listRet;
 	string strSQL = "SELECT `u`.`id` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
 		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                   ";
@@ -383,10 +389,11 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	if (!bRet)
 	{
-		_log(LOG_TAG" doDigitalSignup() ID %s not registered", userId.c_str());
+		_log(LOG_TAG" doDigitalSignup() ID `%s` not registered", userId.c_str());
 		return R"({"QRCODE_TYPE":"2","MESSAGE":{"RESULT":false,"RESULT_MESSAGE":"Unknown user"}})";
 	}
 
+	JSONObject respJson, respMessageJson;
 	respJson.create();
 	respMessageJson.create();
 	respJson.put("QRCODE_TYPE", "2");
@@ -397,8 +404,8 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 
 	// check if user has already signed today
 	strSQL = "SELECT id FROM meeting.signin_record WHERE user_id = " + strUserDbId + " "
-		"AND success = 1 AND time_when >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
-		"AND time_when < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000)";
+		"AND success = 1 AND time_when >= (UNIX_TIMESTAMP(CURDATE()) * 1000)           "
+		"AND time_when < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000)           ";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	if (bRet)
@@ -407,32 +414,30 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 		respMessageJson.put("RESULT_MESSAGE", "You have already signed up today");
 		respJson.put("MESSAGE", respMessageJson);
 
+		respMessageJson.release();
 		respStr = respJson.toUnformattedString();
 		respJson.release();
 		return respStr;
 	}
+
 	listRet.clear();
+	strSQL = "SELECT s.id, i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
+		"meeting.meeting_members as m, meeting.meeting_info as i "
+		"WHERE m.user_id = " + strUserDbId + " AND m.meeting_info_id = i.id "
+		"AND s.meeting_members_id = m.id ";
 
 	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// 從簽到表挑出測試 user 所屬的會議名稱，不管會議是否在今天開始
-		strSQL = "SELECT s.id, i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
-			"meeting.meeting_members as m, meeting.meeting_info as i "
-			"WHERE m.user_id = " + strUserDbId + " AND m.meeting_info_id = i.id "
-			"AND s.meeting_members_id = m.id "
-			"AND s.valid = 1 AND m.valid = 1 ORDER BY i.time_start ASC LIMIT 1";
 	}
 	else
 	{
 		// 從簽到表挑出 user 今天參加的第一場會議的名稱
-		strSQL = "SELECT s.id, i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
-			"meeting.meeting_members as m, meeting.meeting_info as i "
-			"WHERE m.user_id = " + strUserDbId + " AND m.meeting_info_id = i.id "
-			"AND s.meeting_members_id = m.id "
-			"AND s.time_meeting_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
-			"AND s.time_meeting_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) "
-			"AND s.valid = 1 AND m.valid = 1 ORDER BY i.time_start ASC LIMIT 1";
+		strSQL += "AND s.time_meeting_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
+			"AND s.time_meeting_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) ";
 	}
+
+	strSQL += " AND s.valid = 1 AND m.valid = 1 ORDER BY i.time_start ASC LIMIT 1";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	string strSheetId;
@@ -460,22 +465,18 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 		"                                                                                   ";
 	HiddenUtility::execOnDb(LOG_TAG" doDigitalSignup()", strSQL);
 
-	respStr = respJson.toUnformattedString();
 	respMessageJson.release();
+	respStr = respJson.toUnformattedString();
 	respJson.release();
 	return respStr;
 }
 
 string CClientMeetingAgent::getAMXControlToken(const string& userId, const string& roomId)
 {
-	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
+	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN)
+		|| !HiddenUtility::RegexMatch(roomId, MEETING_ROOM_ID_PATTERN))
 	{
-		_log(LOG_TAG" getAMXControlToken() ID %s is not a valid UUID", userId.c_str());
-		return R"({"USER_ID":")" + userId + R"(","RESULT":false,"ROOM_IP":"",ROOM_PORT:-1,"ROOM_TOKEN":""})";
-	}
-	else if (!HiddenUtility::RegexMatch(roomId, MEETING_ROOM_ID_PATTERN))
-	{
-		_log(LOG_TAG" getAMXControlToken() Room ID %s is not valid", roomId.c_str());
+		_log(LOG_TAG" getAMXControlToken() user ID `%s` or room ID `%s` is not valid", userId.c_str(), roomId.c_str());
 		return R"({"USER_ID":")" + userId + R"(","RESULT":false,"ROOM_IP":"",ROOM_PORT:-1,"ROOM_TOKEN":""})";
 	}
 
@@ -507,8 +508,7 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 	{
 		return nullptr;
 	}
-
-	if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
+	else if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// test user w/ AMX control permission
 		return make_unique<JSONObject>(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "00000000-ffff-0000-ffff-ffffffffffff"}})");
@@ -545,15 +545,12 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 
 void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)
 {
-	//_DBG(LOG_TAG" onServerDisconnect() step in");
 	CCmpClient::onServerDisconnect(nSocketFD);
 
 	// let CController decide what to do
 	_log(LOG_TAG" Server actively disconnected");
 	mpController->sendMessage(EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT,
 		0, 0, NULL);
-
-	//_DBG(LOG_TAG" onServerDisconnect() step out");
 }
 
 string CClientMeetingAgent::taskName()
