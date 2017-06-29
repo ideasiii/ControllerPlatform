@@ -14,23 +14,27 @@
 
 using namespace std;
 
-__attribute__((constructor))
-static void globalInit()
-{
-	printf("[CHttpsClient] curl_global_init(CURL_GLOBAL_ALL)\n");
-	curl_global_init(CURL_GLOBAL_ALL);
-}
+static bool haveDoneCurlInit = false;
 
 __attribute__((destructor))
 static void globalCleanup()
 {
-	printf("[CHttpsClient] curl_global_cleanup()\n");
-	curl_global_cleanup();
+	if (haveDoneCurlInit)
+	{
+		printf("[CHttpsClient] curl_global_cleanup()\n");
+		curl_global_cleanup();
+	}
 }
 
 CHttpsClient::CHttpsClient()
 {
-
+	static bool onlyOnce = []()
+	{
+		printf("[CHttpsClient] curl_global_init(CURL_GLOBAL_ALL)\n");
+		curl_global_init(CURL_GLOBAL_ALL);
+		haveDoneCurlInit = true;
+		return true;
+	}();
 }
 
 CHttpsClient::~CHttpsClient()
