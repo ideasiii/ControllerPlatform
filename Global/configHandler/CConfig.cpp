@@ -69,7 +69,7 @@ void CConfig::setConfig(string strSection, string strName, string strValue)
 	}
 }
 
-std::string CConfig::getValue(std::string strSection, std::string strName)
+std::string CConfig::getValue(std::string strSection, std::string strName) const
 {
 	string strValue;
 

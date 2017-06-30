@@ -83,5 +83,5 @@ protected:
 private:
 	CMessageHandler *messageHandler;
 	int mnTimerEventId;
-	int mnFilter __attribute__((unused));
+	int mnFilter;
 };

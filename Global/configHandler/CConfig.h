@@ -23,7 +23,7 @@ class CConfig
 		virtual ~CConfig();
 		int loadConfig(std::string strConf);
 		void setConfig(std::string strSection, std::string strName, std::string strValue);
-		std::string getValue(std::string strSection, std::string strName);
+		std::string getValue(std::string strSection, std::string strName) const;
 
 	private:
 		int readConfig(std::string strConf);
