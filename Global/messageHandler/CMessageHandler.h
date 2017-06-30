@@ -72,7 +72,7 @@ public:
 
 private:
 	int msqid;
-	MESSAGE_BUF message_buf;
+	MESSAGE_BUF message_buf __attribute__((unused));
 	int buf_length;
 	int m_nEvent;
 

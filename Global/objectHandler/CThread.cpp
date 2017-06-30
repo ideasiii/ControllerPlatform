@@ -81,7 +81,7 @@ pthread_t _CreateThread(void* (*entry)(void*), void* arg)
 
 void _ThreadJoin(pthread_t thdid)
 {
-	if(0 > thdid || (0 != pthread_join(thdid, 0)))
+	if(/*0 > thdid || */(0 != pthread_join(thdid, 0)))
 	{
 		_log("[_ThreadJoin] Thread Join Fail ID: %lu", thdid);
 	}
