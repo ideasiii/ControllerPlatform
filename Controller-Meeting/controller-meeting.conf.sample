@@ -17,7 +17,7 @@ log =/data/opt/tomcat/webapps/logs/Controller-Meeting.log
 # MySQL 資料庫資訊
 [MYSQL SOURCE]
 host = 256.256.256.256
-# port setting is not used now
+# port setting has no effect for now
 port = 3306
 user = _user_
 # 密碼開頭及結尾不得包含空白，因為會被 CConfigHandler 吃掉

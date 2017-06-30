@@ -332,7 +332,7 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 3 DAY) * 1000)";
 	}
 
-	strSQL = strSQL + ") AS meetings_candidate WHERE mm.user_id = '"
+	strSQL += ") AS meetings_candidate WHERE mm.user_id = '"
 		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
