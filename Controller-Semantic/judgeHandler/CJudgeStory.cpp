@@ -10,7 +10,6 @@
 #include <string>
 #include "CJudgeStory.h"
 #include "config.h"
-#include "dictionary.h"
 #include "common.h"
 #include "CFileHandler.h"
 #include "CResponsePacket.h"

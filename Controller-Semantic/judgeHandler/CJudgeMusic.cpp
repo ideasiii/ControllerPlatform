@@ -11,7 +11,6 @@
 #include <set>
 #include "CJudgeMusic.h"
 #include "common.h"
-#include "dictionary.h"
 #include "config.h"
 #include "CSpotify.h"
 #include "CFileHandler.h"

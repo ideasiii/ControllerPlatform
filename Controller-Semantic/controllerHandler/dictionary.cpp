@@ -5,7 +5,11 @@
  *      Author: Jugo
  */
 
-#include "dictionary.h"
+#include "config.h"
+#include "container.h"
+#include "JSONArray.h"
+
+using namespace std;
 
 map<string, int> mapSubject = create_map<string, int>\
 ("我", SUBJECT_I)("你", SUBJECT_YOU)("他", SUBJECT_HE)("我們",

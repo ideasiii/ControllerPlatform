@@ -9,7 +9,6 @@
 #include <string>
 #include "CSemantic.h"
 #include "config.h"
-#include "dictionary.h"
 #include "JSONObject.h"
 
 using namespace std;

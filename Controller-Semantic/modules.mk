@@ -1,4 +1,6 @@
-export MODULES=controllerHandler serviceHandler\
+export MODULES=controllerHandler \
+serviceHandler \
+judgeHandler \
 ../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\

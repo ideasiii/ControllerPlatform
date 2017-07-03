@@ -13,7 +13,6 @@
 #include "CFileHandler.h"
 #include "LogHandler.h"
 #include "utility.h"
-#include "dictionary.h"
 #include "config.h"
 #include "common.h"
 #include "CTranslate.h"
@@ -218,6 +217,7 @@ void CJudgeService::getLocation(const char *szWord, WEATHER &weather)
 
 void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
 {
+	string strWord;
 	CTranslate translate;
 	RESULT result;
 	map<string, int>::const_iterator it_map;
@@ -225,18 +225,22 @@ void CJudgeService::getTranslate(const char *szWord, std::string &strResult)
 	if(!szWord)
 		return;
 
+	strWord = szWord;
 	//翻譯,3
 	//中翻英,3
 
-	/*	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
-	 {
-	 if(string::npos != strWord.find(it_map->first))
-	 {
-	 nService = it_map->second;
-	 break;
-	 }
-	 }
-	 */
+	for(it_map = mapService.begin(); mapService.end() != it_map; ++it_map)
+	{
+		if(string::npos != strWord.find(it_map->first))
+		{
+			if(it_map->second)
+			{
+
+			}
+			break;
+		}
+	}
+
 	translate.translate(en, szWord, result);
 	strResult = result.strResult;
 }

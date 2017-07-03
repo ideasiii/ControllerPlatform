@@ -8,7 +8,6 @@
 #include <string>
 #include "CJudgeEducation.h"
 #include "config.h"
-#include "dictionary.h"
 #include "common.h"
 #include "CFileHandler.h"
 #include "utility.h"
@@ -51,6 +50,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 		if(string::npos != strWord.find(iter->first))
 		{
 			strTTS = iter->second;
+			_log("[CJudgeEducation] word mapEducation: %s - %s", iter->first.c_str(), strTTS.c_str());
 			break;
 		}
 	}
@@ -62,6 +62,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 			if(string::npos != strWord.find(iter->first))
 			{
 				strTTS = iter->second;
+				_log("[CJudgeEducation] word mapEducationPoetry: %s - %s", iter->first.c_str(), strTTS.c_str());
 				break;
 			}
 		}
@@ -76,6 +77,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 			++iter;
 
 		strTTS = iter->second;
+		_log("[CJudgeEducation] word getRand: %s - %s", iter->first.c_str(), strTTS.c_str());
 	}
 
 	respPacket.setData("lang", "zh").setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);

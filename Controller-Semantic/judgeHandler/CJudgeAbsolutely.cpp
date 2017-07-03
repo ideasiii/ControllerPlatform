@@ -8,7 +8,6 @@
 #include <string>
 #include "CJudgeAbsolutely.h"
 #include "CFileHandler.h"
-#include "dictionary.h"
 #include "common.h"
 #include "CResponsePacket.h"
 

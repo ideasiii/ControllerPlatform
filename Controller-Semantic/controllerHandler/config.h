@@ -46,3 +46,20 @@ typedef enum _CONTENT_TYPE
 //==================================== 固定回復 ===========================================//
 #define WORD_UNKNOW					"我不了解這句話的意思"
 
+//==================================== match_service ===========================================//
+#define SERVICE_CLOCK				1
+#define SERVICE_WEATHER				2
+#define SERVICE_TRANSLATE			3
+
+//=========================== Semantic ==========================================//
+/**
+ *  主詞
+ */
+#define SUBJECT_I			1
+#define SUBJECT_YOU			2
+#define SUBJECT_HE			3
+
+/**
+ *  動詞
+ */
+#define VERB_LISTEN			1

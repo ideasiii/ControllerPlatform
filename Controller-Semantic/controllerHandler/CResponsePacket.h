@@ -7,11 +7,9 @@
 
 #pragma once
 
-#include <map>
 #include <string>
-#include "JSONObject.h"
 
-using namespace std;
+class JSONObject;
 
 class CResponsePacket
 {
@@ -26,5 +24,5 @@ public:
 	void clear();
 
 private:
-	JSONObject jsonRoot;
+	JSONObject *jsonRoot;
 };
