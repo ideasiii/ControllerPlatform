@@ -109,6 +109,7 @@ int CJudgeStory::evaluate(const char *szWord, map<string, string> &mapMatch)
 
 void CJudgeStory::loadStoryDictionary()
 {
+	int nTime;
 	int nIndex;
 	CFileHandler fh;
 	set<string> setData;
@@ -155,7 +156,8 @@ void CJudgeStory::loadStoryDictionary()
 								strTime = iter_set_mood->substr(0, nIndex);
 								strMood = iter_set_mood->substr(nIndex + 1);
 								jobjMood.create();
-								jobjMood.put("time", strTime);
+								convertFromString(nTime, strTime);
+								jobjMood.put("time", nTime);
 								jobjMood.put("host", HOST_MOOD);
 								jobjMood.put("file", strMood);
 								jobjMood.put("description", strMood);

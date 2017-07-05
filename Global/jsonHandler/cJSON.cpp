@@ -485,7 +485,7 @@ static char *print_string_ptr(const char *str, printbuffer *p)
 			default:
 				sprintf(ptr2, "u%04x", token);
 				ptr2 += 5;
-				break; /* escape and print */
+				break; // escape and print
 			}
 		}
 	}
@@ -719,6 +719,16 @@ std::string ObjectToString(cJSON *item)
 	return strOut;
 }
 
+std::string ObjectToJSON(cJSON *item)
+{
+	std::string strOut;
+	char *out;
+	out = print_value(item, 0, 0, 0);
+	strOut = out;
+	free(out);
+	return strOut;
+}
+
 /* Build an array from input text. */
 static const char *parse_array(cJSON *item, const char *value)
 {
@@ -838,7 +848,6 @@ static char *print_array(cJSON *item)
 	*ptr++ = ']';
 	*ptr++ = 0;
 
-	printf("[cJSON] print_array ========== 866\n");
 	return out;
 }
 

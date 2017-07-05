@@ -179,6 +179,11 @@ string JSONObject::toString()
 	return ObjectToString(cjsonObj);
 }
 
+string JSONObject::toJSON()
+{
+
+}
+
 string JSONObject::toUnformattedString()
 {
 	if(cjsonObj == NULL)

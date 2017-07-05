@@ -35,6 +35,7 @@ public:
 	virtual ~JSONObject();
 	bool isValid();
 	std::string toString();
+	std::string toJSON();
 	std::string toUnformattedString();
 	void put(std::string strKey, std::string strValue);
 	void put(std::string strKey, const char* szrValue);
