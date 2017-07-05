@@ -46,7 +46,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		{
 			jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
 		}
-		jResp.put("story", jsonRoot->toString());
+		jResp.put("story", *jsonRoot);
 		break;
 	case TYPE_RESP_TTS:
 		jResp.put("tts", *jsonRoot);
