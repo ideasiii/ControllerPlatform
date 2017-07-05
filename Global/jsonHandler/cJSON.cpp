@@ -671,7 +671,7 @@ static char* print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 			out = print_object(item, depth, fmt, p);
 			break;
 		default:
-			printf("[cJSON] Unknow Item Type!!\n");
+			printf("[cJSON] Unknown Item Type!!\n");
 			break;
 		}
 	}
@@ -701,7 +701,7 @@ static char* print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 			out = print_object(item, depth, fmt, 0);
 			break;
 		default:
-			printf("[cJSON] Unknow Item Type!!\n");
+			printf("[cJSON] Unknown Item Type!!\n");
 			break;
 		}
 	}
