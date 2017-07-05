@@ -44,9 +44,10 @@ CController::~CController()
 
 int CController::onCreated(void* nMsqKey)
 {
+	// Use the msq key already defined
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_MEETING;
 
-	// I can't give any reason to use *nMsqKey instead of a predefined ID
+	// Use the msq key given
 	//mnMsqKey = *(reinterpret_cast<int*>(nMsqKey));
 
 	_log(LOG_TAG" onCreated() mnMsqKey = %d", mnMsqKey);
@@ -58,7 +59,7 @@ int CController::onInitial(void* szConfPath)
 	// We use the config lies under the same directory with process image
 	//string strConfPath = reinterpret_cast<const char*>(szConfPath);
 
-	std::string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
+	string strConfPath = HiddenUtility::getConfigPathInProcessImageDirectory();
 	_log(LOG_TAG" onInitial() Config path = `%s`", strConfPath.c_str());
 
 	if(strConfPath.empty())
@@ -66,7 +67,7 @@ int CController::onInitial(void* szConfPath)
 		return FALSE;
 	}
 
-	std::unique_ptr<CConfig> config = make_unique<CConfig>();
+	unique_ptr<CConfig> config = make_unique<CConfig>();
 	int nRet = config->loadConfig(strConfPath);
 	if(!nRet)
 	{
