@@ -73,7 +73,6 @@ extern cJSON *cJSON_Parse(const char *value);
 extern char *cJSON_Print(cJSON *item);
 extern char *cJSON_Print_Array(cJSON *item);
 extern std::string ObjectToString(cJSON *item);
-extern std::string ObjectToJSON(cJSON *item);
 
 /* Render a cJSON entity to text for transfer/storage without any formatting. Free the char* when finished. */
 extern char *cJSON_PrintUnformatted(cJSON *item);

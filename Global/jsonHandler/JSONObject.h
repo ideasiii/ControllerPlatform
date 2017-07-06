@@ -6,7 +6,6 @@
  */
 
 #pragma once
-#include <string>
 
 struct cJSON;
 class JSONArray;

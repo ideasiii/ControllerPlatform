@@ -6,11 +6,13 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
+#include <string>
 #include "JSONObject.h"
 #include "cJSON.h"
 #include "JSONArray.h"
 #include "common.h"
-
+#include "utility.h"
 using namespace std;
 
 JSONObject::JSONObject() :
@@ -182,7 +184,11 @@ string JSONObject::toString()
 
 string JSONObject::toJSON()
 {
-	return ObjectToJSON(cjsonObj);
+	string strJSON = trim(ObjectToString(cjsonObj));
+	strJSON = ReplaceAll(strJSON, "\"{", "{");
+	strJSON = ReplaceAll(strJSON, "}\"", "}");
+	strJSON = ReplaceAll(strJSON, "\\\"", "\"");
+	return strJSON;
 }
 
 string JSONObject::toUnformattedString()

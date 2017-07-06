@@ -512,13 +512,14 @@ static char *print_serialized_obj_val_ptr_as_is(const char *str, printbuffer *p)
 	// this function is clones a part of from print_string_ptr()
 	// but does not check if str contains any character that needs escape,
 	// and no double quote is added at the start and end
-	for (ptr = str; *ptr; ptr++);
+	for(ptr = str; *ptr; ptr++)
+		;
 	len = ptr - str;
-	if (p)
+	if(p)
 		out = ensure(p, len + 1/*3*/);
 	else
-		out = (char*)cJSON_malloc(len + 1/*3*/);
-	if (!out)
+		out = (char*) cJSON_malloc(len + 1/*3*/);
+	if(!out)
 		return 0;
 	ptr2 = out;
 	//*ptr2++ = '\"';
@@ -536,7 +537,6 @@ static char *print_serialized_obj_val_as_is(cJSON *item, printbuffer *p)
 /* Predeclare these prototypes. */
 static const char *parse_value(cJSON *item, const char *value);
 static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p);
-static char *print_json(cJSON *item, int depth, int fmt, printbuffer *p);
 static const char *parse_array(cJSON *item, const char *value);
 static char *print_array(cJSON *item);
 static char *print_array(cJSON *item, int depth, int fmt, printbuffer *p);
@@ -750,107 +750,11 @@ static char* print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 	return out;
 }
 
-static char *print_json(cJSON *item, int depth, int fmt, printbuffer *p)
-{
-	char *out = 0;
-
-	if(!item)
-	{
-		printf("[cJSON] Invalid Item!!\n");
-		return 0;
-	}
-
-	if(p)
-	{
-		switch((item->type) & 255)
-		{
-		case cJSON_NULL:
-		{
-			out = ensure(p, 5);
-			if(out)
-				strcpy(out, "null");
-			break;
-		}
-		case cJSON_False:
-		{
-			out = ensure(p, 6);
-			if(out)
-				strcpy(out, "false");
-			break;
-		}
-		case cJSON_True:
-		{
-			out = ensure(p, 5);
-			if(out)
-				strcpy(out, "true");
-			break;
-		}
-		case cJSON_Number:
-			out = print_number(item, p);
-			break;
-		case cJSON_String:
-			out = item->valuestring;
-			break;
-		case cJSON_Array:
-			out = print_array(item, depth, fmt, p);
-			break;
-		case cJSON_Object:
-			out = print_object(item, depth, fmt, p);
-			break;
-		default:
-			printf("[cJSON] Unknow Item Type!!\n");
-			break;
-		}
-	}
-	else
-	{
-		switch((item->type) & 255)
-		{
-		case cJSON_NULL:
-			out = cJSON_strdup("null");
-			break;
-		case cJSON_False:
-			out = cJSON_strdup("false");
-			break;
-		case cJSON_True:
-			out = cJSON_strdup("true");
-			break;
-		case cJSON_Number:
-			out = print_number(item, 0);
-			break;
-		case cJSON_String:
-			out = item->valuestring;
-			break;
-		case cJSON_Array:
-			out = print_array(item, depth, fmt, 0);
-			break;
-		case cJSON_Object:
-			out = print_object(item, depth, fmt, 0);
-			break;
-		default:
-			printf("[cJSON] Unknow Item Type!!\n");
-			break;
-		}
-	}
-
-	return out;
-}
-
 std::string ObjectToString(cJSON *item)
 {
 	std::string strOut;
 	char *out;
 	out = print_value(item, 0, 0, 0);
-	strOut = out;
-	free(out);
-	return strOut;
-}
-
-std::string ObjectToJSON(cJSON *item)
-{
-	std::string strOut;
-	char *out;
-	out = print_json(item, 0, 0, 0);
 	strOut = out;
 	free(out);
 	return strOut;
@@ -1590,7 +1494,7 @@ cJSON *cJSON_CreateObject(void)
 cJSON *cJSON_CreateSerializedObject(cJSON* obj)
 {
 	cJSON *item = cJSON_New_Item();
-	if (item)
+	if(item)
 	{
 		item->type = cJSON_Object_Serialized;
 		item->valuestring = cJSON_PrintUnformatted(obj);

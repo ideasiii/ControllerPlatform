@@ -20,6 +20,8 @@
 #include <cstdio>
 #include <string.h>
 #include <stdlib.h>
+#include <algorithm>
+#include <string>
 
 using namespace std;
 
@@ -195,4 +197,15 @@ __attribute__ ((unused)) static int getRand(int nMin, int nMax)
 	srand(time(NULL));
 	int x = rand() % (nMax - nMin + 1) + nMin;
 	return x;
+}
+
+__attribute__ ((unused)) static string ReplaceAll(string str, const string& from, const string& to)
+{
+	size_t start_pos = 0;
+	while((start_pos = str.find(from, start_pos)) != std::string::npos)
+	{
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+	return str;
 }

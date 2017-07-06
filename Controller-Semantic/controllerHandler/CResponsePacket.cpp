@@ -58,7 +58,6 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		jResp.put("type", TYPE_RESP_UNKNOW);
 	}
 	jsonRoot->release();
-	_log("XXXXXXXXXXXXXXXxx %s", jResp.toJSON().c_str());
 }
 
 CResponsePacket &CResponsePacket::setData(const char *szKey, const char *szValue)
