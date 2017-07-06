@@ -44,6 +44,11 @@ public:
 	void put(std::string strKey, double dValue);
 	void put(std::string strKey, JSONObject &jsonObject);
 	void put(std::string strKey, JSONArray &jsonArray);
+
+	// This function does not store the duplicate of, or the reference to jsonObject.
+	// Instead it converts jsonObject to string and puts that string into collection.
+	void putSerialized(std::string strKey, JSONObject &jsonObject);
+
 	cJSON * getcJSON();
 
 	void release();

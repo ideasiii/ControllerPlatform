@@ -499,6 +499,38 @@ static char *print_string(cJSON *item, printbuffer *p)
 	return print_string_ptr(item->valuestring, p);
 }
 
+/* Print weird form of string, this is only for cJSON whose type is cJSON_Object_Serialized */
+static char *print_serialized_obj_val_ptr_as_is(const char *str, printbuffer *p)
+{
+	const char *ptr;
+	char *ptr2, *out;
+	int len = 0, flag = 0;
+	unsigned char token;
+
+	// this function is clones a part of from print_string_ptr()
+	// but does not check if str contains any character that needs escape,
+	// and no double quote is added at the start and end
+	for (ptr = str; *ptr; ptr++);
+	len = ptr - str;
+	if (p)
+		out = ensure(p, len + 1/*3*/);
+	else
+		out = (char*)cJSON_malloc(len + 1/*3*/);
+	if (!out)
+		return 0;
+	ptr2 = out;
+	//*ptr2++ = '\"';
+	strcpy(ptr2, str);
+	//ptr2[len] = '\"';
+	ptr2[len/* + 1*/] = 0;
+	return out;
+}
+
+static char *print_serialized_obj_val_as_is(cJSON *item, printbuffer *p)
+{
+	return print_serialized_obj_val_ptr_as_is(item->valuestring, p);
+}
+
 /* Predeclare these prototypes. */
 static const char *parse_value(cJSON *item, const char *value);
 static char *print_value(cJSON *item, int depth, int fmt, printbuffer *p);
@@ -670,6 +702,9 @@ static char* print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 		case cJSON_Object:
 			out = print_object(item, depth, fmt, p);
 			break;
+		case cJSON_Object_Serialized:
+			out = print_serialized_obj_val_as_is(item, p);
+			break;
 		default:
 			printf("[cJSON] Unknown Item Type!!\n");
 			break;
@@ -699,6 +734,9 @@ static char* print_value(cJSON *item, int depth, int fmt, printbuffer *p)
 			break;
 		case cJSON_Object:
 			out = print_object(item, depth, fmt, 0);
+			break;
+		case cJSON_Object_Serialized:
+			out = print_serialized_obj_val_as_is(item, 0);
 			break;
 		default:
 			printf("[cJSON] Unknown Item Type!!\n");
@@ -1457,6 +1495,17 @@ cJSON *cJSON_CreateObject(void)
 	cJSON *item = cJSON_New_Item();
 	if(item)
 		item->type = cJSON_Object;
+	return item;
+}
+
+cJSON *cJSON_CreateSerializedObject(cJSON* obj)
+{
+	cJSON *item = cJSON_New_Item();
+	if (item)
+	{
+		item->type = cJSON_Object_Serialized;
+		item->valuestring = cJSON_PrintUnformatted(obj);
+	}
 	return item;
 }
 
