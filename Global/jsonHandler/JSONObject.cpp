@@ -9,6 +9,7 @@
 #include "JSONObject.h"
 #include "cJSON.h"
 #include "JSONArray.h"
+#include "common.h"
 
 using namespace std;
 
@@ -181,7 +182,7 @@ string JSONObject::toString()
 
 string JSONObject::toJSON()
 {
-
+	return ObjectToJSON(cjsonObj);
 }
 
 string JSONObject::toUnformattedString()

@@ -118,9 +118,9 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		return;
 	}
 	jsonResp.put("id", nId);
-	strResp = jsonResp.toString();
+	strResp = jsonResp.toJSON();
 	jsonResp.release();
-
+	_log("############## %s", strResp.c_str());
 	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence, strResp.c_str());
 }
 

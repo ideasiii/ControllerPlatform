@@ -11,6 +11,7 @@
 #include "utility.h"
 #include "JSONArray.h"
 #include "JSONObject.h"
+#include "common.h"
 #include <map>
 
 using namespace std;
@@ -46,7 +47,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		{
 			jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
 		}
-		jResp.put("story", *jsonRoot);
+		jResp.put("story", jsonRoot->toJSON());
 		break;
 	case TYPE_RESP_TTS:
 		jResp.put("tts", *jsonRoot);
@@ -57,6 +58,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		jResp.put("type", TYPE_RESP_UNKNOW);
 	}
 	jsonRoot->release();
+	_log("XXXXXXXXXXXXXXXxx %s", jResp.toJSON().c_str());
 }
 
 CResponsePacket &CResponsePacket::setData(const char *szKey, const char *szValue)
