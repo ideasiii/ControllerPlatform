@@ -237,6 +237,11 @@ void JSONObject::put(std::string strKey, JSONArray &jsonArray)
 	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonArray.getcJSON(), 1));
 }
 
+void JSONObject::putSerialized(std::string strKey, JSONObject &jsonObject)
+{
+	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateSerializedObject(jsonObject.getcJSON()));
+}
+
 cJSON *JSONObject::getJsonArray(std::string strName)
 {
 	return cJSON_GetObjectItem(cjsonObj, strName.c_str());
