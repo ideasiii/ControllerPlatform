@@ -1,6 +1,16 @@
+// this config json is created for ConfigFileAppVersionHandler
+// copy and rename this skeleton
+// remove comments before further editing
 {
+	// package name of the app
     "name": "package.name.of.app",
+
+    // VersionCode of the app
     "versionCode": 1,
+
+    // VersionName of the app
     "versionName": "1.0.9",
+
+    // download link of the app installation package
     "downloadLink": "https://your.domain/filename_of_app.apk"
 }

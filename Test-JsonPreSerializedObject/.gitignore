@@ -1,0 +1,13 @@
+/build/
+/libs/
+/Global/
+controllerHandler/CryptoKey.h
+controllerHandler/DoorAccessControllerParams.h
+.project
+.settings
+*.o
+controller-meeting.conf
+app_version_handler_config.json
+
+# dore dump
+core.*
