@@ -181,8 +181,8 @@ void EnquireLinkYo::informEnquireLinkFailure()
 {
 	//_log(LOG_TAG" %s informEnquireLinkFailure() step in", yoIdentifier.c_str());
 
-	auto dyingMessage = yoIdentifier + " disconnect (1)....";
-	mpController->sendMessage(commandOnDisconnect, 0, dyingMessage.length(), dyingMessage.c_str());
+	auto desc = yoIdentifier + " disconnect (1)....";
+	mpController->sendMessage(commandOnDisconnect, 0, desc.length(), desc.c_str());
 
 	sleep(1);
 	if (!isRunning)
@@ -192,8 +192,8 @@ void EnquireLinkYo::informEnquireLinkFailure()
 
 	// First event sometimes dropped by external receiver
 	// So send it twice!?
-	dyingMessage = yoIdentifier + " disconnect (2)....";
-	mpController->sendMessage(commandOnDisconnect, 0, dyingMessage.length(), dyingMessage.c_str());
+	desc = yoIdentifier + " disconnect (2)....";
+	mpController->sendMessage(commandOnDisconnect, 0, desc.length(), desc.c_str());
 }
 
 // this class does not receive events from message queue
