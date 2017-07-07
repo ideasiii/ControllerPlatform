@@ -10,7 +10,7 @@
 //==================================== 內容定義 =========================================//
 typedef enum _CONTENT_TYPE
 {
-	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION, CONTENT_SERVICE
+	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION, CONTENT_SERVICE,CONTENT_TRANSLATE
 } CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//

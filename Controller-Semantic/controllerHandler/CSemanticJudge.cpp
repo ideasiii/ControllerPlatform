@@ -18,6 +18,7 @@
 #include "CJudgeMusic.h"
 #include "CJudgeEducation.h"
 #include "CJudgeService.h"
+#include "CJudgeTranslate.h"
 #include "CRankingHandler.cpp"
 #include "CSemantic.h"
 #include "CResponsePacket.h"
@@ -32,6 +33,7 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mapSemanticObject[CONTENT_ABSOLUTELY] = new CJudgeAbsolutely;
 	mapSemanticObject[CONTENT_EDUCATION] = new CJudgeEducation;
 	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
+	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 }
 
 CSemanticJudge::~CSemanticJudge()

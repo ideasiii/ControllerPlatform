@@ -40,7 +40,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 	case TYPE_RESP_UNKNOW:
 		break;
 	case TYPE_RESP_MUSIC_SPOTIFY:
-		jResp.put("music", *jsonRoot);
+		jResp.put("music", jsonRoot->toJSON());
 		break;
 	case TYPE_RESP_STORY:
 		if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
@@ -50,7 +50,7 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		jResp.put("story", jsonRoot->toJSON());
 		break;
 	case TYPE_RESP_TTS:
-		jResp.put("tts", *jsonRoot);
+		jResp.put("tts", jsonRoot->toJSON());
 		break;
 	case TYPE_RESP_MUSIC_LOCAL:
 		break;
