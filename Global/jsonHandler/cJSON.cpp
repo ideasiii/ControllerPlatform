@@ -58,6 +58,9 @@ static void (*cJSON_free)(void *ptr) = free;
 
 static char* cJSON_strdup(const char* str)
 {
+	if(!str)
+		return 0;
+
 	size_t len;
 	char* copy;
 
@@ -755,8 +758,11 @@ std::string ObjectToString(cJSON *item)
 	std::string strOut;
 	char *out;
 	out = print_value(item, 0, 0, 0);
-	strOut = out;
-	free(out);
+	if(out)
+	{
+		strOut = out;
+		free(out);
+	}
 	return strOut;
 }
 
@@ -1468,6 +1474,8 @@ cJSON *cJSON_CreateNumber(double num)
 }
 cJSON *cJSON_CreateString(const char *string)
 {
+	if(!string)
+		string = "";
 	cJSON *item = cJSON_New_Item();
 	if(item)
 	{

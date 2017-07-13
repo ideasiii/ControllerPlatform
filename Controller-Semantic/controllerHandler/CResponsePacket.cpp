@@ -33,6 +33,10 @@ CResponsePacket::CResponsePacket()
 	jsonAnimation = new JSONObject;
 	jsonAnimation->create();
 	jsonAnimation->put("type", 0);
+
+	jsonText = new JSONObject;
+	jsonText->create();
+	jsonText->put("type", 0);
 }
 
 CResponsePacket::~CResponsePacket()
@@ -40,10 +44,12 @@ CResponsePacket::~CResponsePacket()
 	jsonRoot->release();
 	jsonDisplay->release();
 	jsonAnimation->release();
+	jsonText->release();
 	jsonAyShow->release();
 	delete jsonRoot;
 	delete jsonDisplay;
 	delete jsonAnimation;
+	delete jsonText;
 	delete jsonAyShow;
 }
 
@@ -75,8 +81,8 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 	}
 	jsonRoot->release();
 
-	jsonDisplay->put("show", jsonAyShow->toJSON());
-	jResp.put("display", jsonDisplay->toJSON());
+	jsonDisplay->put("show", *jsonAyShow);
+	jResp.put("display", *jsonDisplay);
 	jsonDisplay->release();
 	jsonAyShow->release();
 }
@@ -116,8 +122,27 @@ CResponsePacket &CResponsePacket::setData(const char *szKey, JSONObject &jsonObj
 	return (*this);
 }
 
+CResponsePacket &CResponsePacket::setAnimation(const int nType, const int nDuration, const int nRepeat,
+		const int nInterpolate)
+{
+	jsonAnimation->put("type", nType);
+	jsonAnimation->put("duration", nDuration);
+	jsonAnimation->put("repeat", nRepeat);
+	jsonAnimation->put("interpolate", nInterpolate);
+	return (*this);
+}
+
+CResponsePacket &CResponsePacket::setText(const int nType, const int nSize, const int nPosition, const char *szContain)
+{
+	jsonText->put("type", nType);
+	jsonText->put("size", nSize);
+	jsonText->put("position", nPosition);
+	jsonText->put("contain", szContain);
+	return (*this);
+}
+
 CResponsePacket &CResponsePacket::addShow(double fTime, const char *szHost, const char *szFile, const char *szColor,
-		const char *szDesc, JSONObject &jsonAnim)
+		const char *szDesc)
 {
 	JSONObject jsonShow;
 	jsonShow.create();
@@ -126,7 +151,25 @@ CResponsePacket &CResponsePacket::addShow(double fTime, const char *szHost, cons
 	jsonShow.put("file", szFile);
 	jsonShow.put("color", szColor);
 	jsonShow.put("description", szDesc);
-	jsonShow.put("animation", jsonAnim);
+	jsonShow.put("animation", *jsonAnimation);
+	jsonShow.put("text", *jsonText);
+	jsonAyShow->add(jsonShow);
+	jsonShow.release();
+	return (*this);
+}
+
+CResponsePacket &CResponsePacket::addShow(double fTime, const char *szHost, const char *szFile, const char *szColor,
+		const char *szDesc, JSONObject &jAnim, JSONObject &jText)
+{
+	JSONObject jsonShow;
+	jsonShow.create();
+	jsonShow.put("time", fTime);
+	jsonShow.put("host", szHost);
+	jsonShow.put("file", szFile);
+	jsonShow.put("color", szColor);
+	jsonShow.put("description", szDesc);
+	jsonShow.put("animation", jAnim);
+	jsonShow.put("text", jText);
 	jsonAyShow->add(jsonShow);
 	jsonShow.release();
 	return (*this);

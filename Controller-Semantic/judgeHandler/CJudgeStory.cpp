@@ -64,16 +64,14 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 
 	/*
 	 * if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
-		{
-			jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
-		}
-	*/
-	JSONObject jsonAnim;
-	jsonAnim.create();
-	jsonAnim.put("type", 0);
-	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).addShow(1000,
-			"175.98.119.121", "mp3", "#FFFFFF", "deasc", jsonAnim).format(TYPE_RESP_STORY, jsonResp);
-	jsonAnim.release();
+	 {
+	 jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
+	 }
+	 */
+
+	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).setAnimation(1, 1000, 1,
+			1).setText(0, 0, 0, 0).addShow(1000, "175.98.119.121", "mp3", "#FFFFFF", "deasc").format(TYPE_RESP_STORY,
+			jsonResp);
 	return TRUE;
 }
 
