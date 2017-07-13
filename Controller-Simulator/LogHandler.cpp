@@ -4,124 +4,118 @@
  *  Created on: 2016年5月12日
  *      Author: root
  */
-#include <string>
-#include <list>
-#include <iostream>
-#include <ctime>
+
+#include <syslog.h>
+#include <fstream>
 #include <stdio.h>
 #include <cstdarg> // for Variable-length argument
 #include "LogHandler.h"
-#include "CThreadHandler.h"
 #include "common.h"
 #include "utility.h"
 
 using namespace std;
 
-static LogHandler* mInstance = 0;
+fstream fs;
+string mstrLogPath;
+string mstrLogDate;
 
-void *threadExportLog(void *argv)
-{
-	LogHandler* ss = reinterpret_cast<LogHandler*>(argv);
-	ss->run();
-	return NULL;
-}
+extern char *__progname;
 
-LogHandler::LogHandler() :
-		tdExportLog(new CThreadHandler), mstrLogPath("run.log")
+inline void writeLog(int nSize, const char *pLog)
 {
-	tdExportLog->createThread(threadExportLog, this);
-}
+	extern fstream fs;
+	extern string mstrLogPath;
+	extern string mstrLogDate;
+	string strCurrentDate = currentDate();
 
-LogHandler::~LogHandler()
-{
-	tdExportLog->threadCancel(tdExportLog->getThreadID());
-	tdExportLog->threadJoin(tdExportLog->getThreadID());
-	delete tdExportLog;
-}
-
-LogHandler* LogHandler::getInstance()
-{
-	if (0 == mInstance)
+	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty() || mstrLogDate.empty())
 	{
-		mInstance = new LogHandler();
+		if(mstrLogPath.empty())
+			mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
+		mstrLogDate = strCurrentDate;
+		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
+		_close();
+		fs.open(strPath.c_str(), fstream::in | fstream::out | fstream::app);
+		fs.rdbuf()->pubsetbuf(0, 0);
+		fs << currentDateTime() + " : [LogHandler] Open File: " + strPath << endl;
+		printf("[LogHandler] Open File: %s\n", strPath.c_str());
 	}
-	return mInstance;
-}
 
-void LogHandler::setLogPath(std::string strPath)
-{
-	if (!strPath.empty() && 0 < strPath.length())
+	if(fs.is_open())
 	{
-		mstrLogPath = strPath;
-		mkdirp(mstrLogPath);
-		_log("[Log Agent] Create Log Path:%s", mstrLogPath.c_str());
-	}
-}
-
-void LogHandler::run()
-{
-	extern list<string> extListLog;
-	string strLog;
-	int nCount = 0;
-	int i = 0;
-	FILE *pstream;
-	char szPath[255];
-	std::time_t t;
-	char mbstr[16];
-
-	while (1)
-	{
-		tdExportLog->threadSleep(5);
-		nCount = extListLog.size();
-
-		if (0 >= nCount)
-			continue;
-
-		t = std::time( NULL);
-		memset(mbstr, 0, 100);
-		std::strftime(mbstr, 100, "%Y-%m-%d", std::localtime(&t));
-
-		memset(szPath, 0, 255);
-		sprintf(szPath, "%s.%s", mstrLogPath.c_str(), mbstr);
-		pstream = fopen(szPath, "a");
-
-		for (i = 0; i < nCount; ++i)
-		{
-			strLog = *(extListLog.begin());
-			extListLog.pop_front();
-
-			if ( NULL != pstream)
-			{
-				fprintf(pstream, "%s\n", strLog.c_str());
-				fflush(pstream);
-			}
-			else
-			{
-				printf("[Error] Log file path open fail!!\n");
-			}
-		}
-		fclose(pstream);
+		fs << pLog << endl;
 	}
 }
 
 void _log(const char* format, ...)
 {
-	char szLog[2048];
-	char dest[2000];
-	char mbstr[24];
+	va_list vl;
+	va_start(vl, format);
+	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');
+	va_end(vl);
 
-	std::time_t t = std::time(0);
-	std::strftime(mbstr, sizeof(mbstr), "%Y/%m/%d %T", std::localtime(&t));
+	char buffer[size];
 
-	va_list argptr;
-	va_start(argptr, format);
-	vsprintf(dest, format, argptr);
-	va_end(argptr);
-	sprintf(szLog, "%s : %-20s", mbstr, dest);
+	va_start(vl, format);
+	size = vsnprintf(buffer, size, format, vl);
+	va_end(vl);
 
-	extern list<string> extListLog;
-	extListLog.push_back(szLog);
+	string strLog = string(buffer, size);
 
-	cout << szLog << endl;
+	strLog = currentDateTime() + " : " + strLog;
+
+	//writeLog(strLog.length(), strLog.c_str());
+
+	//cout << strLog << endl;
+	printf("%s\n", strLog.c_str());
+
 }
 
+void _setLogPath(const char *ppath)
+{
+	if(0 == ppath)
+	{
+		mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
+	}
+	else
+	{
+		mstrLogPath = ppath;
+		if(!mstrLogPath.empty())
+			mkdirp(mstrLogPath);
+	}
+}
+
+void _close()
+{
+	if(fs.is_open())
+	{
+		string strPath = format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str());
+		fs << currentDateTime() + " : [LogHandler] Close File: " + strPath << endl;
+		fs.close();
+	}
+}
+
+void _error(const char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');
+	va_end(vl);
+
+	char buffer[size];
+
+	va_start(vl, format);
+	size = vsnprintf(buffer, size, format, vl);
+	va_end(vl);
+
+	string strLog = string(buffer, size);
+
+	strLog = currentDateTime() + " : " + strLog + "\n";
+
+	FILE *perr = fopen("error.log", "a+");
+	if(perr)
+	{
+		fwrite(strLog.c_str(), 1, strLog.length(), perr);
+		fclose(perr);
+	}
+}

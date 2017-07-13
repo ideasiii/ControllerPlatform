@@ -509,7 +509,7 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 
 	CMP_PACKET cmpPacket;
 	void* pHeader = &cmpPacket.cmpHeader;
-	void* pBody = &cmpPacket.cmpBody;
+	void* pBody;
 
 	CMP_HEADER cmpHeader;
 	void *pHeaderResp = &cmpHeader;
@@ -543,9 +543,11 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 				continue;
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
-
+			char buffer[nBodyLen];
 			if(0 < nBodyLen)
 			{
+				pBody = buffer;
+				memset(buffer, 0, sizeof(buffer));
 				result = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
 				if(result != nBodyLen)
 				{

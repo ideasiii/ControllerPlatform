@@ -62,8 +62,18 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 		strStory = "三隻小豬";
 	}
 
-	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).format(TYPE_RESP_STORY,
-			jsonResp);
+	/*
+	 * if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
+		{
+			jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
+		}
+	*/
+	JSONObject jsonAnim;
+	jsonAnim.create();
+	jsonAnim.put("type", 0);
+	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).addShow(1000,
+			"175.98.119.121", "mp3", "#FFFFFF", "deasc", jsonAnim).format(TYPE_RESP_STORY, jsonResp);
+	jsonAnim.release();
 	return TRUE;
 }
 

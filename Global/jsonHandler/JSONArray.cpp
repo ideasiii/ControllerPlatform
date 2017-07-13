@@ -9,6 +9,7 @@
 #include "JSONArray.h"
 #include "JSONObject.h"
 #include "cJSON.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -184,6 +185,26 @@ string JSONArray::toString()
 	}
 	strOut += "]";
 	return strOut;
+}
+
+string JSONArray::toJSON()
+{
+
+	JSONObject jsonItem;
+	string strOut = "[";
+
+	for(int i = 0; i < this->size(); ++i)
+	{
+		jsonItem = this->getJsonObject(i);
+		strOut += jsonItem.toJSON();
+		if(i != this->size() - 1)
+		{
+			strOut += ",";
+		}
+	}
+	strOut += "]";
+
+	return trim(strOut);
 }
 
 void JSONArray::release()

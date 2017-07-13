@@ -24,7 +24,7 @@ using namespace std;
 /*
  * CMP body data length
  */
-#define MAX_DATA_LEN	2048
+#define MAX_DATA_LEN	10240
 
 /*
  * this define socket packet for CMP

@@ -41,6 +41,7 @@ public:
 	JSONArray &load(cJSON *pcJSON);
 	void create();
 	void operator=(cJSON *c);
+	std::string toJSON();
 
 private:
 	cJSON * cjsonArray;

@@ -187,6 +187,8 @@ string JSONObject::toJSON()
 	string strJSON = trim(ObjectToString(cjsonObj));
 	strJSON = ReplaceAll(strJSON, "\"{", "{");
 	strJSON = ReplaceAll(strJSON, "}\"", "}");
+	strJSON = ReplaceAll(strJSON, "\"[", "[");
+	strJSON = ReplaceAll(strJSON, "]\"", "]");
 	strJSON = ReplaceAll(strJSON, "\\\"", "\"");
 	return strJSON;
 }
