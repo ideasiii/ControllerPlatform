@@ -2,7 +2,7 @@
  * LogHandler.cpp
  *
  *  Created on: 2016年5月12日
- *      Author: root
+ *      Author: Jugo
  */
 
 #include <syslog.h>
@@ -23,6 +23,9 @@ extern char *__progname;
 
 inline void writeLog(int nSize, const char *pLog)
 {
+	if(!pLog)
+		return;
+
 	extern fstream fs;
 	extern string mstrLogPath;
 	extern string mstrLogDate;
@@ -43,7 +46,8 @@ inline void writeLog(int nSize, const char *pLog)
 
 	if(fs.is_open())
 	{
-		fs << pLog << endl;
+		fs.write(pLog, nSize).flush();
+		//fs << pLog << endl;
 	}
 }
 
@@ -62,13 +66,11 @@ void _log(const char* format, ...)
 
 	string strLog = string(buffer, size);
 
-	strLog = currentDateTime() + " : " + strLog;
+	strLog = currentDateTime() + " : " + strLog + "\n";
 
 	writeLog(strLog.length(), strLog.c_str());
 
-	//cout << strLog << endl;
-	printf("%s\n", strLog.c_str());
-
+	printf("%s", strLog.c_str());
 }
 
 void _setLogPath(const char *ppath)

@@ -213,41 +213,65 @@ cJSON * JSONObject::getcJSON()
 
 void JSONObject::put(std::string strKey, std::string strValue)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateString(strValue.c_str()));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateString(strValue.c_str()));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateString(strValue.c_str()));
 }
 
 void JSONObject::put(std::string strKey, const char* szrValue)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateString(szrValue));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateString(szrValue));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateString(szrValue));
 }
 void JSONObject::put(std::string strKey, int nValue)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(nValue));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(nValue));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(nValue));
 }
 
 void JSONObject::put(std::string strKey, bool bValue)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateBool(bValue));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateBool(bValue));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateBool(bValue));
 }
 
 void JSONObject::put(std::string strKey, double dValue)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(dValue));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(dValue));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateNumber(dValue));
 }
 
 void JSONObject::put(std::string strKey, JSONObject &jsonObject)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonObject.getcJSON(), 1));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonObject.getcJSON(), 1));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonObject.getcJSON(), 1));
 }
 
 void JSONObject::put(std::string strKey, JSONArray &jsonArray)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonArray.getcJSON(), 1));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonArray.getcJSON(), 1));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_Duplicate(jsonArray.getcJSON(), 1));
 }
 
 void JSONObject::putSerialized(std::string strKey, JSONObject &jsonObject)
 {
-	cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateSerializedObject(jsonObject.getcJSON()));
+	if(isNull(strKey))
+		cJSON_AddItemToObject(cjsonObj, strKey.c_str(), cJSON_CreateSerializedObject(jsonObject.getcJSON()));
+	else
+		cJSON_ReplaceItemInObject(cjsonObj, strKey.c_str(), cJSON_CreateSerializedObject(jsonObject.getcJSON()));
 }
 
 cJSON *JSONObject::getJsonArray(std::string strName)

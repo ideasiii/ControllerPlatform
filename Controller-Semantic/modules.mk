@@ -1,4 +1,5 @@
 export MODULES=controllerHandler \
+semanticHandler \
 serviceHandler \
 judgeHandler \
 ../Global/application \
@@ -19,6 +20,7 @@ judgeHandler \
 ../Global/spotifyHandler \
 ../Global/fileHandler \
 ../Global/rssHandler \
-../Global/translateHandler
+../Global/translateHandler \
+../Global/weatherHandler
 			 
 #export EXT_MODULES=extInclude
