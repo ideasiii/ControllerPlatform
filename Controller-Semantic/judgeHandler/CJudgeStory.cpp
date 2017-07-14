@@ -70,8 +70,9 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 	 */
 
 	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).setAnimation(1, 1000, 1,
-			1).setText(0, 0, 0, 0).addShow(1000, "175.98.119.121", "mp3", "#FFFFFF", "deasc").format(TYPE_RESP_STORY,
-			jsonResp);
+			1).setText(1, 24, 0, "Happy").addShow(0, HOST_MOOD, "emotion_happy.gif", "#FFC2FF00", "happy").setAnimation(
+			2, 1000, 1, 1).setText(0, 0, 0, 0).addShow(3000, HOST_MOOD, "emotion_laugh.gif", "#FF74FF00", "laugh").format(
+	TYPE_RESP_STORY, jsonResp);
 	return TRUE;
 }
 

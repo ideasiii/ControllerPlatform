@@ -80,8 +80,11 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 		jResp.put("type", TYPE_RESP_UNKNOW);
 	}
 	jsonRoot->release();
-
-	jsonDisplay->put("show", *jsonAyShow);
+	if(jsonAyShow->size())
+	{
+		jsonDisplay->put("enable", 1);
+		jsonDisplay->put("show", *jsonAyShow);
+	}
 	jResp.put("display", *jsonDisplay);
 	jsonDisplay->release();
 	jsonAyShow->release();
