@@ -35,4 +35,9 @@ CREATE TABLE `music`.`song` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-  
+###########################################################
+#
+#	EDUBOT database
+#
+###########################################################
+CREATE SCHEMA `edubot` DEFAULT CHARACTER SET utf8 ; 

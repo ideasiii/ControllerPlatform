@@ -36,17 +36,19 @@ string CJudgeStory::toString()
 
 int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
+	int nRand;
 	CResponsePacket respPacket;
 	string strWord;
 	string strFile;
 	string strStory;
 	extern map<string, string> mapStory;
+	map<string, string>::iterator iter;
 
 	strWord = szInput;
 	if(strWord.empty())
 		return FALSE;
 
-	for(map<string, string>::iterator iter = mapStory.begin(); mapStory.end() != iter; ++iter)
+	for(iter = mapStory.begin(); mapStory.end() != iter; ++iter)
 	{
 		if(string::npos != strWord.find(iter->first))
 		{
@@ -58,16 +60,19 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 
 	if(strFile.empty())
 	{
-		strFile = "三隻小豬.mp3";
-		strStory = "三隻小豬";
+		// random
+		nRand = getRand(0, mapStory.size() - 1);
+		iter = mapStory.begin();
+		for(int i = 0; i < nRand; ++i)
+			++iter;
+		strFile = iter->second;
+		strStory = iter->first;
 	}
 
-	/*
-	 * if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
-	 {
-	 jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
-	 }
-	 */
+//	if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
+//	{
+//		jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
+//	}
 
 	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).setAnimation(1, 1000, 1,
 			1).setText(1, 24, 0, "Happy").addShow(0, HOST_MOOD, "emotion_happy.gif", "#FFC2FF00", "happy").setAnimation(
