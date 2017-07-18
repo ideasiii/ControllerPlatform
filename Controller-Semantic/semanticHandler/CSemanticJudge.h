@@ -10,6 +10,7 @@
 class JSONObject;
 class CObject;
 class CSemantic;
+class CAnalysisHandler;
 
 class CSemanticJudge
 {
@@ -22,4 +23,5 @@ public:
 private:
 	CObject *mpController;
 	std::map<int, CSemantic*> mapSemanticObject;
+	std::map<int, CAnalysisHandler*> mapAnalysis;
 };

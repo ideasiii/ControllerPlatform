@@ -22,8 +22,12 @@
 #include "CRankingHandler.cpp"
 #include "CSemantic.h"
 #include "CResponsePacket.h"
+#include "CAnalysisHandler.h"
+#include "CConfig.h"
+#include "utility.h"
 
 using namespace std;
+extern char *__progname;
 
 CSemanticJudge::CSemanticJudge(CObject *object)
 {
@@ -34,6 +38,32 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mapSemanticObject[CONTENT_EDUCATION] = new CJudgeEducation;
 	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
 	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
+
+	int nValue;
+	string strValue;
+	string strProcessName = __progname;
+	size_t found = strProcessName.find_last_of("/\\");
+	string strConf = strProcessName.substr(++found) + ".conf";
+
+	CConfig *config = new CConfig();
+	if(config->loadConfig(strConf))
+	{
+		strValue = config->getValue("ANALYSIS", "total");
+		convertFromString(nValue, strValue);
+		_log("[CSemanticJudge] CSemanticJudge get analysis total: %d", nValue);
+		for(int i = 1; i <= nValue; ++i)
+		{
+			strValue = config->getValue("ANALYSIS", ConvertToString(i));
+			_log("[CSemanticJudge] CSemanticJudge Get conf: %d conf file: %s", i, strValue.c_str());
+			mapAnalysis[i] = new CAnalysisHandler(strValue.c_str());
+		}
+	}
+	else
+	{
+		_log("[CSemanticJudge] CSemanticJudge Load Configure Fail, File: %s", strConf.c_str());
+	}
+
+	delete config;
 }
 
 CSemanticJudge::~CSemanticJudge()

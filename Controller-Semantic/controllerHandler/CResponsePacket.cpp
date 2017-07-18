@@ -67,8 +67,8 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 	case TYPE_RESP_STORY:
 		if(mapStoryMood.end() != mapStoryMood.find(trim(jsonRoot->getString("file"))))
 		{
-			//jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
-			jsonAyShow->a = &mapStoryMood[trim(jsonRoot->getString("file"))];
+			jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
+			//jsonAyShow->a = &mapStoryMood[trim(jsonRoot->getString("file"))];
 		}
 		jResp.put("story", jsonRoot->toJSON());
 		break;
