@@ -76,6 +76,7 @@ inline string getConfName(std::string strProcessName)
 	size_t found = strProcessName.find_last_of("/\\");
 	return (strProcessName.substr(++found) + ".conf");
 }
+
 inline string initLogPath()
 {
 	string strPath = "controller.log";

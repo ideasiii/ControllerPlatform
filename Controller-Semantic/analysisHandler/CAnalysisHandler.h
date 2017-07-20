@@ -9,6 +9,7 @@
 
 #include <map>
 #include <memory.h>
+#include "CSemantic.h"
 
 typedef struct _CONF_DICTIONARY
 {
@@ -56,7 +57,26 @@ typedef struct _LOCAL_DATA
 	}
 } LOCAL_DATA;
 
-class CAnalysisHandler
+typedef struct _DICTIONARY_DATA
+{
+
+} DICTIONARY_DATA;
+
+union U_DATA
+{
+	LOCAL_DATA localData;
+	DICTIONARY_DATA dictionaryData;
+	U_DATA()
+	{
+		memset(this, 0, sizeof(U));
+	}
+
+	~U_DATA()
+	{
+	}
+};
+
+class CAnalysisHandler: public CSemantic
 {
 	enum _CONF_TYPE
 	{
@@ -66,6 +86,7 @@ class CAnalysisHandler
 public:
 	CAnalysisHandler(const char *szConf);
 	virtual ~CAnalysisHandler();
+	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 
 private:
 	bool loadConf(const char *szConf);

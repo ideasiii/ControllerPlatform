@@ -27,7 +27,7 @@
 #include "utility.h"
 
 using namespace std;
-extern char *__progname;
+//extern char *__progname;
 
 CSemanticJudge::CSemanticJudge(CObject *object)
 {
@@ -39,14 +39,28 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
 	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 
+	loadConfig();
+}
+
+CSemanticJudge::~CSemanticJudge()
+{
+
+	for(map<int, CSemantic*>::const_iterator it_map = mapSemanticObject.begin(); mapSemanticObject.end() != it_map;
+			++it_map)
+	{
+		delete it_map->second;
+	}
+	mapSemanticObject.clear();
+}
+
+void CSemanticJudge::loadConfig()
+{
 	int nValue;
 	string strValue;
-	string strProcessName = __progname;
-	size_t found = strProcessName.find_last_of("/\\");
-	string strConf = strProcessName.substr(++found) + ".conf";
+	CConfig *config;
 
-	CConfig *config = new CConfig();
-	if(config->loadConfig(strConf))
+	config = new CConfig();
+	if(config->loadConfig(getConfigFile()))
 	{
 		strValue = config->getValue("ANALYSIS", "total");
 		convertFromString(nValue, strValue);
@@ -60,21 +74,10 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	}
 	else
 	{
-		_log("[CSemanticJudge] CSemanticJudge Load Configure Fail, File: %s", strConf.c_str());
+		_log("[CSemanticJudge] CSemanticJudge Load Configure Fail, File: %s", getConfigFile().c_str());
 	}
 
 	delete config;
-}
-
-CSemanticJudge::~CSemanticJudge()
-{
-
-	for(map<int, CSemantic*>::const_iterator it_map = mapSemanticObject.begin(); mapSemanticObject.end() != it_map;
-			++it_map)
-	{
-		delete it_map->second;
-	}
-	mapSemanticObject.clear();
 }
 
 int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)

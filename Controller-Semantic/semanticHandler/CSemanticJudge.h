@@ -21,6 +21,9 @@ public:
 	int word(const char *szInput, JSONObject& jsonResp);
 
 private:
+	void loadConfig();
+
+private:
 	CObject *mpController;
 	std::map<int, CSemantic*> mapSemanticObject;
 	std::map<int, CAnalysisHandler*> mapAnalysis;

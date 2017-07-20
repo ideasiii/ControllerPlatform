@@ -25,6 +25,8 @@
 
 using namespace std;
 
+extern char *__progname;
+
 template<class T>
 string ConvertToString(T value)
 {
@@ -208,4 +210,11 @@ __attribute__ ((unused)) static string ReplaceAll(string str, const string& from
 		start_pos += to.length();
 	}
 	return str;
+}
+
+__attribute__ ((unused)) static string getConfigFile()
+{
+	string strProcessName = __progname;
+	size_t found = strProcessName.find_last_of("/\\");
+	return strProcessName.substr(++found) + ".conf";
 }

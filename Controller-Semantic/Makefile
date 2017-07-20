@@ -50,6 +50,7 @@ endef
 all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
 	@cp $(DIR_APP_ROOT)dictionary/*.* $(DIR_APP_ROOT)bin/dictionary
+	@cp $(DIR_APP_ROOT)conf/*.* $(DIR_APP_ROOT)bin/conf
 	@echo -ne '|==================== All Application Build Done. ====================|  '
 	@echo `date`
 	@echo "\n"
@@ -80,6 +81,7 @@ checkdirs:
 	@mkdir -p bin
 	@mkdir -p libs
 	@mkdir -p bin/dictionary
+	@mkdir -p bin/conf
 	
 clean:
 	@for libName in ${MODULES} ; do \

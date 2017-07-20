@@ -122,3 +122,8 @@ void CAnalysisHandler::loadDictionary()
 
 }
 
+int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
+{
+	return 0;
+}
+
