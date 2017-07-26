@@ -37,4 +37,5 @@ private:
 	JSONArray *jsonAyShow;
 	JSONObject *jsonAnimation;
 	JSONObject *jsonText;
+	JSONObject *jsonActivity;
 };

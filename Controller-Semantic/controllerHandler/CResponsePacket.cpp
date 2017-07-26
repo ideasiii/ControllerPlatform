@@ -37,6 +37,9 @@ CResponsePacket::CResponsePacket()
 	jsonText = new JSONObject;
 	jsonText->create();
 	jsonText->put("type", 0);
+
+	jsonActivity = new JSONObject;
+	jsonActivity->create();
 }
 
 CResponsePacket::~CResponsePacket()
@@ -46,11 +49,14 @@ CResponsePacket::~CResponsePacket()
 	jsonAnimation->release();
 	jsonText->release();
 	jsonAyShow->release();
+	jsonActivity->release();
+
 	delete jsonRoot;
 	delete jsonDisplay;
 	delete jsonAnimation;
 	delete jsonText;
 	delete jsonAyShow;
+	delete jsonActivity;
 }
 
 void CResponsePacket::format(int nType, JSONObject &jResp)
@@ -89,6 +95,8 @@ void CResponsePacket::format(int nType, JSONObject &jResp)
 	jResp.put("display", *jsonDisplay);
 	jsonDisplay->release();
 	jsonAyShow->release();
+
+	jResp.put("activity", *jsonActivity);
 }
 
 CResponsePacket &CResponsePacket::setData(const char *szKey, const char *szValue)

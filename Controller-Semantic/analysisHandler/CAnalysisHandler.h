@@ -7,73 +7,51 @@
 
 #pragma once
 
+#include <set>
 #include <map>
 #include <memory.h>
 #include "CSemantic.h"
 
-typedef struct _CONF_DICTIONARY
+typedef struct _CONF
 {
 	std::string strPath;
-} CONF_DICTIONARY;
-
-typedef struct _CONF_FILE
-{
-	std::string strPath;
-	std::string strType;
-} CONF_FILE;
-
-union U
-{
-	_CONF_FILE conf_file;
-	_CONF_DICTIONARY conf_dictionary;
-	U()
-	{
-		memset(this, 0, sizeof(U));
-	}
-	;
-	~U()
-	{
-	}
-	;
-};
-
-typedef struct _CONFIG
-{
 	std::string strName;
+	std::string strFileType;
 	int nType;
-	U uConf;
 } CONF;
 
-typedef struct _LOCAL_DATA
+struct LOCAL_DATA
 {
 	std::string strName;
 	std::string strPath;
 	std::string strType;
-	void clear()
-	{
-		strName.clear();
-		strPath.clear();
-		strType.clear();
-	}
-} LOCAL_DATA;
+};
 
-typedef struct _DICTIONARY_DATA
+struct DICTIONARY
 {
+	std::string strName;
+	std::string strPath;
+	int nType;
+};
 
-} DICTIONARY_DATA;
-
-union U_DATA
+union UDATA
 {
 	LOCAL_DATA localData;
-	DICTIONARY_DATA dictionaryData;
-	U_DATA()
+	DICTIONARY dictionary;
+	UDATA()
 	{
-		memset(this, 0, sizeof(U));
 	}
+	~UDATA()
+	{
+	}
+};
 
-	~U_DATA()
-	{
-	}
+struct RESOURCE
+{
+	std::string strName;
+	std::string strPath;
+	std::string strType;
+	UDATA udata;
 };
 
 class CAnalysisHandler: public CSemantic
@@ -87,15 +65,20 @@ public:
 	CAnalysisHandler(const char *szConf);
 	virtual ~CAnalysisHandler();
 	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
+	int activity(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
+	std::string getName();
 
 private:
 	bool loadConf(const char *szConf);
 	void loadData();
 	void loadLocalFile();
 	void loadDictionary();
+	void loadKeyWord(const char *szWord);
 
 private:
 	bool mbValid;
 	CONF conf;
-	std::map<std::string, LOCAL_DATA> mapLocalData;
+	std::map<std::string, RESOURCE> mapData;
+	std::set<std::string> setKeyWord;
+	std::set<std::string> setDictionary;
 };

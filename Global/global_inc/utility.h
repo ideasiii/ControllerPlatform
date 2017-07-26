@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <string>
+#include <set>
 
 using namespace std;
 
@@ -54,6 +55,20 @@ __attribute__ ((unused)) static int spliteData(char *pData, const char * delim, 
 	}
 
 	return vData.size();
+}
+
+__attribute__ ((unused)) static int spliteData(char *pData, const char * delim, set<string> &setData)
+{
+	char * pch;
+
+	pch = strtok(pData, delim);
+	while(pch != NULL)
+	{
+		setData.insert(string(pch));
+		pch = strtok( NULL, delim);
+	}
+
+	return setData.size();
 }
 
 __attribute__ ((unused)) static bool mkdirp(string strPath)

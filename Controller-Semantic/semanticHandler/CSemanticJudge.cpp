@@ -27,7 +27,6 @@
 #include "utility.h"
 
 using namespace std;
-//extern char *__progname;
 
 CSemanticJudge::CSemanticJudge(CObject *object)
 {
@@ -51,6 +50,12 @@ CSemanticJudge::~CSemanticJudge()
 		delete it_map->second;
 	}
 	mapSemanticObject.clear();
+
+	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
+	{
+		delete mapAnalysis[i];
+	}
+	mapAnalysis.clear();
 }
 
 void CSemanticJudge::loadConfig()
@@ -109,6 +114,11 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
 	}
 
+	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
+	{
+		nScore = mapAnalysis[i]->evaluate(szInput, mapMatch);
+		_log("[CSemanticJudge] word Analysis - %s Get Score: %d", mapAnalysis[i]->getName().c_str(), nScore);
+	}
 //============== 積分比較 ================//
 	nValue = ranking.topValue();
 	if(0 < nValue)
