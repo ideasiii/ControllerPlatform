@@ -48,11 +48,20 @@ union UDATA
 
 struct RESOURCE
 {
-	std::string strName;
-	std::string strPath;
-	std::string strType;
+	std::set<std::string> setMatch;
 	UDATA udata;
 };
+
+typedef struct _VOCABULARY
+{
+	int nSubject;
+	int nVerb;
+	_VOCABULARY()
+	{
+		nSubject = 0;
+		nVerb = 0;
+	}
+} VOCABULARY;
 
 class CAnalysisHandler: public CSemantic
 {
@@ -74,6 +83,8 @@ private:
 	void loadLocalFile();
 	void loadDictionary();
 	void loadKeyWord(const char *szWord);
+	void loadVerb(const char *szWord);
+	void loadMatch(const char *szPath);
 
 private:
 	bool mbValid;
@@ -81,4 +92,6 @@ private:
 	std::map<std::string, RESOURCE> mapData;
 	std::set<std::string> setKeyWord;
 	std::set<std::string> setDictionary;
+	VOCABULARY vocabulary;
+	std::map<std::string, std::string> mapMatchWord;
 };

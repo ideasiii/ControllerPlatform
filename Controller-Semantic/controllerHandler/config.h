@@ -10,7 +10,13 @@
 //==================================== 內容定義 =========================================//
 typedef enum _CONTENT_TYPE
 {
-	CONTENT_STORY = 0, CONTENT_MUSIC_SPOTIFY, CONTENT_MUSIC_MOOD, CONTENT_ABSOLUTELY, CONTENT_EDUCATION, CONTENT_SERVICE,CONTENT_TRANSLATE
+	CONTENT_STORY = 0,
+	CONTENT_MUSIC_SPOTIFY,
+	CONTENT_MUSIC_MOOD,
+	CONTENT_ABSOLUTELY,
+	CONTENT_EDUCATION,
+	CONTENT_SERVICE,
+	CONTENT_TRANSLATE
 } CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//
@@ -55,11 +61,15 @@ typedef enum _CONTENT_TYPE
 /**
  *  主詞
  */
-#define SUBJECT_I			1
-#define SUBJECT_YOU			2
-#define SUBJECT_HE			3
+#define SUBJECT_I					1
+#define SUBJECT_YOU					2
+#define SUBJECT_HE					3
 
 /**
  *  動詞
  */
-#define VERB_LISTEN			1
+#define VERB_LISTEN					1
+#define VERB_SAY					2
+#define VERB_READ					3
+#define VERB_WRITE					4
+
