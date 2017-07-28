@@ -21,7 +21,8 @@ public:
 	int word(const char *szInput, JSONObject& jsonResp);
 
 private:
-	void loadConfig();
+	void loadAnalysis();
+	void runAnalysis(const char *szInput, JSONObject &jsonResp);
 
 private:
 	CObject *mpController;

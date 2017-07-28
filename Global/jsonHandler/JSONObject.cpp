@@ -286,6 +286,7 @@ cJSON *JSONObject::getJsonObject(std::string strName)
 
 void JSONObject::operator=(cJSON *c)
 {
+	release();
 	mnExtPointObj = 1;
 	cjsonObj = c;
 }

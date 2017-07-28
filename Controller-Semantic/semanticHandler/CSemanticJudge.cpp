@@ -38,7 +38,7 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
 	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 
-	loadConfig();
+	loadAnalysis();
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -58,7 +58,7 @@ CSemanticJudge::~CSemanticJudge()
 	mapAnalysis.clear();
 }
 
-void CSemanticJudge::loadConfig()
+void CSemanticJudge::loadAnalysis()
 {
 	int nValue;
 	string strValue;
@@ -114,11 +114,6 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
 	}
 
-	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
-	{
-		nScore = mapAnalysis[i]->evaluate(szInput, mapMatch);
-		_log("[CSemanticJudge] word Analysis - %s Get Score: %d", mapAnalysis[i]->getName().c_str(), nScore);
-	}
 //============== 積分比較 ================//
 	nValue = ranking.topValue();
 	if(0 < nValue)
@@ -136,4 +131,24 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 	respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
 
 	return TRUE;
+}
+
+void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
+{
+	int nScore;
+	map<string, string> mapMatch;
+	CRankingHandler<int, int> ranking;
+	CResponsePacket respPacket;
+
+	if(0 >= szInput)
+	{
+		respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
+		return;
+	}
+
+	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
+	{
+		nScore = mapAnalysis[i]->evaluate(szInput, mapMatch);
+		_log("[CSemanticJudge] runAnalysis - %s Get Score: %d", mapAnalysis[i]->getName().c_str(), nScore);
+	}
 }

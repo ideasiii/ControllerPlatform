@@ -240,6 +240,7 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 			strValue = iter_map->second;
 		}
 	}
+
 	if(!strValue.empty())
 	{
 		mapMatch["dictionary"] = strValue;

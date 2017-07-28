@@ -32,10 +32,13 @@ public:
 	void clear();
 
 private:
+	void init();
+
+private:
 	JSONObject *jsonRoot;
-	JSONObject *jsonDisplay;
-	JSONArray *jsonAyShow;
-	JSONObject *jsonAnimation;
-	JSONObject *jsonText;
-	JSONObject *jsonActivity;
+	//JSONObject *jsonDisplay;
+	//JSONArray *jsonAyShow;
+	//JSONObject *jsonAnimation;
+	//JSONObject *jsonText;
+	//JSONObject *jsonActivity;
 };
