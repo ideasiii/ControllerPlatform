@@ -319,7 +319,7 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		"FROM_UNIXTIME(mi.time_end/1000, '%Y-%m-%d %H:%i') AS end_time, "
 		"mr.room_id AS room_id, u.name as owner, u.email AS owner_email "
 		"FROM meeting.meeting_members AS mm, meeting.user AS u, meeting.meeting_info AS mi, meeting.meeting_room AS mr "
-		"WHERE mm.role = '1' AND mm.user_id = u.id AND mm.meeting_info_id = mi.id AND mi.room_id = mr.id";
+		"WHERE mm.user_id = u.id AND mm.meeting_info_id = mi.id AND mi.room_id = mr.id";
 
 	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
@@ -351,6 +351,31 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	for (auto iter = listRet.begin(); iter != listRet.end(); iter++)
 	{
 		auto &retRow = *iter;
+
+		// 因為同一個人在一場會議內可能同時為租借人 + 主持人 + 與會人員，
+		// 所以得過濾重複的會議
+		// 因為 AMX 控制權不包含在此清單中，所以可以簡單地忽略重複的 meeting_id
+		// 若之後此清單必須同時回傳 AMX 控制權、角色等參數時，找 hasDuplicate 的迴圈就不適用
+		bool hasDuplicate = false;
+		auto iter_2 = iter;
+		iter_2++;
+
+		for (; iter_2 != listRet.end(); iter_2++)
+		{
+			auto &retRow2 = *iter_2;
+			if (retRow["meeting_id"].compare(retRow2["meeting_id"]) == 0)
+			{
+				hasDuplicate = true;
+				break;
+			}
+		}
+
+		if (hasDuplicate)
+		{
+			// 若重複 meeting_id，只添加清單內最後出現的會議資訊
+			continue;
+		}
+
 		JSONObject meetingDataJsonObj;
 		meetingDataJsonObj.create();
 
