@@ -127,9 +127,9 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 						{
 							if(!strTrackUri.empty())
 							{
-								respPacket.setData("source", 2).setData("album", strAlbum).setData("artist", strArtist).setData(
-										"song", strTrack).setData("id", strTrackUri).setData("cover", strCover).format(
-								TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
+//								respPacket.setData("source", 2).setData("album", strAlbum).setData("artist", strArtist).setData(
+//										"song", strTrack).setData("id", strTrackUri).setData("cover", strCover).format(
+//								TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
 							}
 							mapAlbums.clear();
 							mapSong.clear();
@@ -149,10 +149,10 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 		strTrackUri = mapAllTrack[nRand].id;
 		if(!strTrackUri.empty())
 		{
-			respPacket.setData("source", 2).setData("album", mapAllTrack[nRand].album).setData("artist",
-					mapAllTrack[nRand].artist).setData("song", mapAllTrack[nRand].name).setData("id", strTrackUri).setData(
-					"cover", mapAllTrack[nRand].strCover).format(
-			TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
+//			respPacket.setData("source", 2).setData("album", mapAllTrack[nRand].album).setData("artist",
+//					mapAllTrack[nRand].artist).setData("song", mapAllTrack[nRand].name).setData("id", strTrackUri).setData(
+//					"cover", mapAllTrack[nRand].strCover).format(
+//			TYPE_RESP_MUSIC_SPOTIFY, jsonResp);
 		}
 	}
 
@@ -163,7 +163,7 @@ int CJudgeMusic::word(const char *szInput, JSONObject& jsonResp, map<string, str
 		else
 			strWord = format("歌手%s的歌曲因版權問題暫時無法播放", strArtist.c_str());
 
-		respPacket.setData("lang", "zh").setData("content", strWord).format(TYPE_RESP_TTS, jsonResp);
+//		respPacket.setData("lang", "zh").setData("content", strWord).format(TYPE_RESP_TTS, jsonResp);
 	}
 
 	mapAlbums.clear();

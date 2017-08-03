@@ -1,7 +1,6 @@
 export MODULES=controllerHandler \
 semanticHandler \
 serviceHandler \
-analysisHandler \
 judgeHandler \
 ../Global/application \
 ../Global/global_inc \

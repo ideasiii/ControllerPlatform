@@ -7,6 +7,7 @@
 
 #include <map>
 #include <string>
+#include <algorithm>
 #include "CSemanticJudge.h"
 #include "JSONObject.h"
 #include "config.h"
@@ -99,7 +100,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 
 	if(0 >= szInput)
 	{
-		respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
+//		respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
 		return TRUE;
 	}
 
@@ -128,7 +129,7 @@ int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
 		_log("[CSemanticJudge] word: No Object to Access this work");
 	}
 
-	respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
+//	respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
 
 	return TRUE;
 }
@@ -142,13 +143,29 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 
 	if(0 >= szInput)
 	{
-		respPacket.setData("lang", "zh").setData("content", WORD_UNKNOW).format(TYPE_RESP_TTS, jsonResp);
+		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
+				"tts",
+				WORD_UNKNOW).format(jsonResp);
 		return;
 	}
 
 	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
 	{
 		nScore = mapAnalysis[i]->evaluate(szInput, mapMatch);
+		ranking.add(i, nScore);
 		_log("[CSemanticJudge] runAnalysis - %s Get Score: %d", mapAnalysis[i]->getName().c_str(), nScore);
+	}
+
+	//============== 積分比較 ================//
+	if(0 < ranking.topValue())
+	{
+		_log("[CSemanticJudge] word Top Key is %s", mapAnalysis[ranking.topValueKey()]->getName().c_str());
+		mapAnalysis[ranking.topValueKey()]->activity(szInput, jsonResp, mapMatch);
+	}
+	else
+	{
+		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
+				"tts",
+				WORD_UNKNOW).format(jsonResp);
 	}
 }

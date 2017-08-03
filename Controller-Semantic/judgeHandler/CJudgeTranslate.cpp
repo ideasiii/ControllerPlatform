@@ -44,7 +44,7 @@ int CJudgeTranslate::word(const char *szInput, JSONObject& jsonResp, std::map<st
 	translate.translate(en, strWord.c_str(), result);
 	strWord = result.strResult;
 
-	respPacket.setData("lang", "en").setData("content", strWord).format(TYPE_RESP_TTS, jsonResp);
+//	respPacket.setData("lang", "en").setData("content", strWord).format(TYPE_RESP_TTS, jsonResp);
 
 	return 0;
 }

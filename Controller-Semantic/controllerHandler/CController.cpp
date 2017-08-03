@@ -20,9 +20,6 @@
 #include "Handler.h"
 #include "CObject.h"
 #include "CSemanticJudge.h"
-#include "CSemanticControl.h"
-#include "CSemanticTalk.h"
-#include "CSemanticRecord.h"
 #include "packet.h"
 #include "JSONObject.h"
 #include "config.h"
@@ -30,7 +27,7 @@
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0), semanticControl(0), semanticTalk(0), semanticRecord(0)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0)
 {
 
 }
@@ -44,9 +41,6 @@ int CController::onCreated(void* nMsqKey)
 {
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
 	semanticJudge = new CSemanticJudge(this);
-	semanticControl = new CSemanticControl(this);
-	semanticTalk = new CSemanticTalk(this);
-	semanticRecord = new CSemanticRecord(this);
 	cmpword = new CCmpWord(this);
 	return mnMsqKey;
 }
@@ -86,9 +80,6 @@ int CController::onFinish(void* nMsqKey)
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
-	delete semanticControl;
-	delete semanticTalk;
-	delete semanticRecord;
 	return TRUE;
 }
 
@@ -97,30 +88,25 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 {
 	JSONObject jsonResp;
 	jsonResp.create();
-	string strResp;
 
 	switch(nType)
 	{
 	case TYPE_REQ_NODEFINE: // 語意判斷
-		semanticJudge->word(szWord, jsonResp);
+		semanticJudge->runAnalysis(szWord, jsonResp);
 		break;
 	case TYPE_REQ_CONTROL:	// 控制
-		semanticControl->word(szWord, jsonResp);
 		break;
 	case TYPE_REQ_TALK: 	// 會話
-		semanticTalk->word(szWord, jsonResp);
 		break;
 	case TYPE_REQ_RECORD:	// 紀錄
-		semanticRecord->word(szWord, jsonResp);
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
 		return;
 	}
-	jsonResp.put("id", nId);
-	strResp = jsonResp.toJSON();
+	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
+			jsonResp.put("id", nId).toJSON().c_str());
 	jsonResp.release();
-	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence, strResp.c_str());
 }
 
 void CController::onHandleMessage(Message &message)

@@ -19,10 +19,10 @@ public:
 	explicit CSemanticJudge(CObject *object);
 	virtual ~CSemanticJudge();
 	int word(const char *szInput, JSONObject& jsonResp);
+	void runAnalysis(const char *szInput, JSONObject &jsonResp);
 
 private:
 	void loadAnalysis();
-	void runAnalysis(const char *szInput, JSONObject &jsonResp);
 
 private:
 	CObject *mpController;

@@ -80,7 +80,7 @@ int CJudgeEducation::word(const char *szInput, JSONObject& jsonResp, map<string,
 		_log("[CJudgeEducation] word getRand: %s - %s", iter->first.c_str(), strTTS.c_str());
 	}
 
-	respPacket.setData("lang", "zh").setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
+//	respPacket.setData("lang", "zh").setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
 	return TRUE;
 }
 

@@ -74,10 +74,12 @@ int CJudgeStory::word(const char *szInput, JSONObject& jsonResp, map<string, str
 //		jsonRoot->put("mood", mapStoryMood[trim(jsonRoot->getString("file"))]);
 //	}
 
-	respPacket.setData("host", STORY_HOST).setData("file", strFile).setData("story", strStory).setAnimation(1, 1000, 1,
-			1).setText(1, 24, 0, "Happy").addShow(0, HOST_MOOD, "emotion_happy.gif", "#FFC2FF00", "happy").setAnimation(
-			2, 1000, 1, 1).setText(0, 0, 0, 0).addShow(3000, HOST_MOOD, "emotion_laugh.gif", "#FF74FF00", "laugh").format(
-	TYPE_RESP_STORY, jsonResp);
+//	respPacket.setActivity("type", RESP_LOCAL).setActivity("host",STORY_HOST)
+//			respPacket.setData("host", STORY_HOST).setData("file", strFile).setData(
+//			"story", strStory).setAnimation(1, 1000, 1, 1).setText(1, 24, 0, "Happy").addShow(0, HOST_MOOD,
+//			"emotion_happy.gif", "#FFC2FF00", "happy").setAnimation(2, 1000, 1, 1).setText(0, 0, 0, 0).addShow(3000,
+//			HOST_MOOD, "emotion_laugh.gif", "#FF74FF00", "laugh").format(
+//	TYPE_RESP_STORY, jsonResp);
 	return TRUE;
 }
 

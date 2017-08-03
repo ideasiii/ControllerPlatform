@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 
+#include <dataStruct.h>
 #include "config.h"
 #include "container.h"
 #include "JSONArray.h"

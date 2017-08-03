@@ -90,7 +90,7 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 		strLang = "en";
 		break;
 	}
-	respPacket.setData("lang", strLang).setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
+//	respPacket.setData("lang", strLang).setData("content", strTTS).format(TYPE_RESP_TTS, jsonResp);
 
 	return 0;
 }

@@ -11,57 +11,7 @@
 #include <map>
 #include <memory.h>
 #include "CSemantic.h"
-
-typedef struct _CONF
-{
-	std::string strPath;
-	std::string strName;
-	std::string strFileType;
-	int nType;
-} CONF;
-
-struct LOCAL_DATA
-{
-	std::string strName;
-	std::string strPath;
-	std::string strType;
-};
-
-struct DICTIONARY
-{
-	std::string strName;
-	std::string strPath;
-	int nType;
-};
-
-union UDATA
-{
-	LOCAL_DATA localData;
-	DICTIONARY dictionary;
-	UDATA()
-	{
-	}
-	~UDATA()
-	{
-	}
-};
-
-struct RESOURCE
-{
-	std::set<std::string> setMatch;
-	UDATA udata;
-};
-
-typedef struct _VOCABULARY
-{
-	int nSubject;
-	int nVerb;
-	_VOCABULARY()
-	{
-		nSubject = 0;
-		nVerb = 0;
-	}
-} VOCABULARY;
+#include "dataStruct.h"
 
 class CAnalysisHandler: public CSemantic
 {
@@ -88,8 +38,8 @@ private:
 
 private:
 	bool mbValid;
-	CONF conf;
 	std::map<std::string, RESOURCE> mapData;
+	CONF conf;
 	std::set<std::string> setKeyWord;
 	std::set<std::string> setDictionary;
 	VOCABULARY vocabulary;

@@ -12,6 +12,8 @@
 #include "CFileHandler.h"
 #include "utility.h"
 #include "config.h"
+#include "dataStruct.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -52,6 +54,7 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 			case CONF_TYPE_LOCAL_FILE:
 				conf.strPath = config->getValue("FILE", "path");
 				conf.strFileType = config->getValue("FILE", "type");
+				conf.strHost = config->getValue("FILE", "host");
 				bResult = true;
 				break;
 			case CONF_TYPE_DICTIONARY:
@@ -141,22 +144,13 @@ void CAnalysisHandler::loadLocalFile()
 				mapData[strFileName].udata.localData.strName = strFileName;
 				mapData[strFileName].udata.localData.strPath = conf.strPath + (*iter_set);
 				mapData[strFileName].udata.localData.strType = conf.strFileType;
-				/*	for(iter_map = mapMatchWord.begin(); mapMatchWord.end() != iter_map; ++iter_map)
-				 {
-				 if(!strFileName.compare(trim(iter_map->second)))
-				 {
-				 _log("%s ------------------ %s", strFileName.c_str(), iter_map->second.c_str());
-				 setDictionary.insert(trim(iter_map->first));
-				 mapData[strFileName].setMatch.insert(iter_map->first);
-				 }
-				 } */
+				mapData[strFileName].udata.localData.strHost = conf.strHost + (*iter_set);
 			}
 		}
 	}
 
 	for(map<string, RESOURCE>::const_iterator it = mapData.begin(); mapData.end() != it; ++it)
-		_log("%s - %s %s %s", it->first.c_str(), it->second.udata.localData.strName.c_str(),
-				it->second.udata.localData.strPath.c_str(), it->second.udata.localData.strType.c_str());
+		_log("%s", it->second.udata.localData.strHost.c_str());
 
 }
 
@@ -264,6 +258,25 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 
 int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
+	string strFileName;
+	CResponsePacket respPacket;
+	switch(conf.nType)
+	{
+	case CONF_TYPE_LOCAL_FILE:
+		if(!mapMatch["dictionary"].empty() && (mapData.end() != mapData.find(mapMatch["dictionary"])))
+		{
+			strFileName = mapData[mapMatch["dictionary"]].udata.localData.strName + "."
+					+ mapData[mapMatch["dictionary"]].udata.localData.strType;
+			_log("[CAnalysisHandler] activity load local file: %s",
+					mapData[mapMatch["dictionary"]].udata.localData.strPath.c_str());
+			respPacket.setActivity("type", 1).setActivity("host", conf.strHost).setActivity("file", strFileName).format(
+					jsonResp);
+		}
+		break;
+	case CONF_TYPE_DICTIONARY:
+
+		break;
+	}
 	return 0;
 }
 

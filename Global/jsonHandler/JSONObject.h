@@ -36,17 +36,17 @@ public:
 	std::string toString();
 	std::string toJSON();
 	std::string toUnformattedString();
-	void put(std::string strKey, std::string strValue);
-	void put(std::string strKey, const char* szrValue);
-	void put(std::string strKey, int nValue);
-	void put(std::string strKey, bool bValue);
-	void put(std::string strKey, double dValue);
-	void put(std::string strKey, JSONObject &jsonObject);
-	void put(std::string strKey, JSONArray &jsonArray);
+	JSONObject& put(std::string strKey, std::string strValue);
+	JSONObject& put(std::string strKey, const char* szrValue);
+	JSONObject& put(std::string strKey, int nValue);
+	JSONObject& put(std::string strKey, bool bValue);
+	JSONObject& put(std::string strKey, double dValue);
+	JSONObject& put(std::string strKey, JSONObject &jsonObject);
+	JSONObject& put(std::string strKey, JSONArray &jsonArray);
 
 	// This function does not store the duplicate of, or the reference to jsonObject.
 	// Instead it converts jsonObject to string and puts that string into collection.
-	void putSerialized(std::string strKey, JSONObject &jsonObject);
+	JSONObject& putSerialized(std::string strKey, JSONObject &jsonObject);
 
 	cJSON * getcJSON();
 

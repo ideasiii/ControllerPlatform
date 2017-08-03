@@ -8,37 +8,39 @@
 #pragma once
 
 #include <string>
+#include "JSONObject.h"
 
-class JSONObject;
-class JSONArray;
+enum TYPE_RESP
+{
+	RESP_UNDEFINE = 0, RESP_LOCAL = 1, RESP_SPOTIFY = 2, RESP_TTS = 3
+};
+
+//class JSONObject;
+//class JSONArray;
 
 class CResponsePacket
 {
 public:
 	explicit CResponsePacket();
 	virtual ~CResponsePacket();
-	CResponsePacket &setData(const char *szKey, const char *szValue);
-	CResponsePacket &setData(const char *szKey, std::string strValue);
-	CResponsePacket &setData(const char *szKey, int nValue);
-	CResponsePacket &setData(const char *szKey, double fValue);
-	CResponsePacket &setData(const char *szKey, JSONObject &jsonObj);
-	CResponsePacket &setAnimation(const int nType, const int nDuration, const int nRepeat, const int nInterpolate);
-	CResponsePacket &setText(const int nType, const int nSize, const int nPosition, const char *szContain);
-	CResponsePacket &addShow(double fTime, const char *szHost, const char *szFile, const char *szColor,
-			const char *szDesc);
-	CResponsePacket &addShow(double fTime, const char *szHost, const char *szFile, const char *szColor,
-			const char *szDesc, JSONObject &jAnim, JSONObject &jText);
-	void format(int nType, JSONObject &jResp);
+	template<typename T> CResponsePacket &setActivity(const char *szKey, T tValue)
+	{
+		jsonActivity->put(szKey, tValue);
+		return (*this);
+	}
+	;
+	void format(JSONObject &jResp);
 	void clear();
 
 private:
 	void init();
 
 private:
-	JSONObject *jsonRoot;
-	//JSONObject *jsonDisplay;
+	//JSONObject *jsonRoot;
+	JSONObject *jsonDisplay;
+	JSONObject *jsonActivity;
 	//JSONArray *jsonAyShow;
 	//JSONObject *jsonAnimation;
 	//JSONObject *jsonText;
-	//JSONObject *jsonActivity;
+
 };
