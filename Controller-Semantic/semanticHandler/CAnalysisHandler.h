@@ -35,6 +35,7 @@ private:
 	void loadKeyWord(const char *szWord);
 	void loadVerb(const char *szWord);
 	void loadMatch(const char *szPath);
+	std::string getDisplay(const char *szFile);
 
 private:
 	bool mbValid;

@@ -55,6 +55,7 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 				conf.strPath = config->getValue("FILE", "path");
 				conf.strFileType = config->getValue("FILE", "type");
 				conf.strHost = config->getValue("FILE", "host");
+				conf.strDisplayPath = config->getValue("DISPLAY", "path");
 				bResult = true;
 				break;
 			case CONF_TYPE_DICTIONARY:
@@ -125,6 +126,7 @@ void CAnalysisHandler::loadLocalFile()
 {
 	int nIndex;
 	string strFileName;
+	string strDisplayFile;
 	CFileHandler fh;
 	set<string> setData;
 	set<string>::const_iterator iter_set;
@@ -145,12 +147,13 @@ void CAnalysisHandler::loadLocalFile()
 				mapData[strFileName].udata.localData.strPath = conf.strPath + (*iter_set);
 				mapData[strFileName].udata.localData.strType = conf.strFileType;
 				mapData[strFileName].udata.localData.strHost = conf.strHost + (*iter_set);
+				mapData[strFileName].udata.localData.strDisplayFile = conf.strDisplayPath + strFileName + ".display";
 			}
 		}
 	}
 
 	for(map<string, RESOURCE>::const_iterator it = mapData.begin(); mapData.end() != it; ++it)
-		_log("%s", it->second.udata.localData.strHost.c_str());
+		_log("%s - %s", it->second.udata.localData.strHost.c_str(), it->second.udata.localData.strDisplayFile.c_str());
 
 }
 
@@ -258,6 +261,7 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 
 int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
 {
+	string strDisplay;
 	string strFileName;
 	CResponsePacket respPacket;
 	switch(conf.nType)
@@ -269,8 +273,13 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 					+ mapData[mapMatch["dictionary"]].udata.localData.strType;
 			_log("[CAnalysisHandler] activity load local file: %s",
 					mapData[mapMatch["dictionary"]].udata.localData.strPath.c_str());
-			respPacket.setActivity("type", 1).setActivity("host", conf.strHost).setActivity("file", strFileName).format(
-					jsonResp);
+			strDisplay = getDisplay(mapData[mapMatch["dictionary"]].udata.localData.strDisplayFile.c_str());
+			respPacket.setActivity("type", 1).setActivity("host", conf.strHost).setActivity("file", strFileName);
+			if(!strDisplay.empty())
+			{
+				respPacket.setDisplay(strDisplay.c_str());
+			}
+			respPacket.format(jsonResp);
 		}
 		break;
 	case CONF_TYPE_DICTIONARY:
@@ -278,5 +287,17 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 		break;
 	}
 	return 0;
+}
+
+string CAnalysisHandler::getDisplay(const char *szFile)
+{
+	string strContent;
+	CFileHandler fh;
+
+	if(szFile)
+	{
+		fh.readContent(szFile, strContent);
+	}
+	return strContent;
 }
 

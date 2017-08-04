@@ -19,6 +19,7 @@ struct CONF
 	string strName;
 	string strFileType;
 	string strHost;
+	string strDisplayPath;
 	int nType;
 };
 
@@ -28,6 +29,7 @@ struct LOCAL_DATA
 	string strPath;
 	string strType;
 	string strHost;
+	string strDisplayFile;
 };
 
 struct DICTIONARY

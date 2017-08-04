@@ -32,7 +32,7 @@ CFileHandler::~CFileHandler()
 
 }
 
-unsigned int CFileHandler::readAllLine(const char *szFile, std::set<std::string> &setData)
+unsigned int CFileHandler::readAllLine(const char *szFile, set<string> &setData)
 {
 	if(szFile)
 	{
@@ -48,7 +48,23 @@ unsigned int CFileHandler::readAllLine(const char *szFile, std::set<std::string>
 	return setData.size();
 }
 
-unsigned int CFileHandler::readPath(const char *szPath, std::set<std::string> &setData)
+unsigned int CFileHandler::readContent(const char *szFile, string &strContent)
+{
+	if(szFile)
+	{
+		ifstream file(szFile);
+		string str;
+		if(file.is_open())
+		{
+			while(getline(file, str))
+				strContent.append(str);
+			file.close();
+		}
+	}
+	return strContent.length();
+}
+
+unsigned int CFileHandler::readPath(const char *szPath, set<string> &setData)
 {
 	DIR *dp;
 	struct dirent *dirp;

@@ -6,19 +6,10 @@
  */
 
 #include "CResponsePacket.h"
-#include "config.h"
 #include "LogHandler.h"
-#include "utility.h"
-//#include "JSONArray.h"
-//#include "JSONObject.h"
-#include "common.h"
-#include <map>
 
 #define DISPLAY				"display"
 #define ACTIVITY			"activity"
-#define SHOW				"show"
-#define ANIMATION			"animation"
-#define TEXT				"text"
 
 using namespace std;
 
@@ -67,11 +58,8 @@ void CResponsePacket::clear()
 	init();
 }
 
-/*
-template<typename T>
-CResponsePacket &CResponsePacket::setActivity(const char *szKey, T tValue)
+CResponsePacket &CResponsePacket::setDisplay(const char *szDisplayJSON)
 {
-	jsonActivity->put(szKey, tValue);
+	jsonDisplay->load(szDisplayJSON);
 	return (*this);
 }
-*/

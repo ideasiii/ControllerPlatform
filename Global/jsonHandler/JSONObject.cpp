@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
-#include <string>
+
 #include "JSONObject.h"
 #include "cJSON.h"
 #include "JSONArray.h"

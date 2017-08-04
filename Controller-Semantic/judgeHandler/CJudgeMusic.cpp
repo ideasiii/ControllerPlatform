@@ -2,7 +2,7 @@
  * CJudgeMusic.cpp
  *
  *  Created on: 2017年5月11日
- *      Author: root
+ *      Author: Jugo
  */
 
 #include <algorithm>
