@@ -20,11 +20,10 @@ typedef enum _CONTENT_TYPE
 } CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//
-#define TYPE_REQ_NODEFINE			0x00000000
-#define TYPE_REQ_CONTROL			0x00000001
-#define TYPE_REQ_TALK				0x00000002
-#define TYPE_REQ_RECORD				0x00000003
-#define TYPE_REQ_MAX				0x00000004
+enum
+{
+	TYPE_REQ_NODEFINE = 0, TYPE_REQ_CONTROL, TYPE_REQ_TALK, TYPE_REQ_RECORD, TYPE_REQ_STORY, TYPE_REQ_GAME, TYPE_REQ_MAX
+};
 
 //==================================== 封包 Response 內容定義 =========================================//
 #define TYPE_RESP_UNKNOW			0x00000000

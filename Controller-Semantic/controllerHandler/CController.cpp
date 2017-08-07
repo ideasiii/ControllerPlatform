@@ -72,6 +72,8 @@ int CController::onInitial(void* szConfPath)
 	}
 	delete config;
 
+	semanticJudge->loadAnalysis();
+
 	return nResult;
 }
 
@@ -99,6 +101,10 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_TALK: 	// 會話
 		break;
 	case TYPE_REQ_RECORD:	// 紀錄
+		break;
+	case TYPE_REQ_STORY:	// 故事
+		break;
+	case TYPE_REQ_GAME:		// 遊戲
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);

@@ -39,7 +39,7 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
 	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 
-	loadAnalysis();
+	//loadAnalysis();
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -74,8 +74,10 @@ void CSemanticJudge::loadAnalysis()
 		for(int i = 1; i <= nValue; ++i)
 		{
 			strValue = config->getValue("ANALYSIS", ConvertToString(i));
-			_log("[CSemanticJudge] CSemanticJudge Get conf: %d conf file: %s", i, strValue.c_str());
-			mapAnalysis[i] = new CAnalysisHandler(strValue.c_str());
+			_log("[CSemanticJudge] CSemanticJudge Get conf: %s conf file: %s", ConvertToString(i).c_str(),
+					strValue.c_str());
+			if(!strValue.empty())
+				mapAnalysis[i] = new CAnalysisHandler(strValue.c_str());
 		}
 	}
 	else

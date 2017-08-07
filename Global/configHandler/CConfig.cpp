@@ -5,7 +5,6 @@
  *      Author: Louis Ju
  */
 
-#include <string>
 #include "common.h"
 #include "CConfig.h"
 #include "utility.h"
@@ -26,9 +25,9 @@ CConfig::~CConfig()
 int CConfig::loadConfig(std::string strConf)
 {
 	int nRet = FALSE;
-	if (isValidStr(strConf.c_str(), 255))
+	if(isValidStr(strConf.c_str(), 255))
 	{
-		if (0 < readConfig(strConf))
+		if(0 < readConfig(strConf))
 			nRet = TRUE;
 	}
 	return nRet;
@@ -57,7 +56,7 @@ void CConfig::setConfig(string strSection, string strName, string strValue)
 	MAP_CONF_VALUE mapData;
 	mapData.insert(std::make_pair(strName, strValue));
 
-	if (mapConf.find(strSection) != mapConf.end())
+	if(mapConf.find(strSection) != mapConf.end())
 	{
 		mapConf[strSection].push_back(mapData);
 	}
@@ -69,18 +68,19 @@ void CConfig::setConfig(string strSection, string strName, string strValue)
 	}
 }
 
-std::string CConfig::getValue(std::string strSection, std::string strName) const
+string CConfig::getValue(string strSection, string strName)
 {
 	string strValue;
 
-	if (mapConf.find(strSection) != mapConf.end())
+	if(mapConf.find(strSection) != mapConf.end())
 	{
-		for (LIST_CONF_MAP::iterator i = mapConf[strSection].begin(); i != mapConf[strSection].end(); ++i)
+		for(LIST_CONF_MAP::const_iterator i = mapConf[strSection].begin(); i != mapConf[strSection].end(); ++i)
 		{
-			if ((*i).find(strName) != (*i).end())
+			auto find = (*i).find(trim(strName));
+			if(find != (*i).end())
 			{
-				strValue = (*i)[strName];
-				break;
+				//strValue = (*i)[trim(strName)];
+				return find->second;
 			}
 		}
 	}
