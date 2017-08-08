@@ -25,6 +25,7 @@ public:
 	virtual ~CAnalysisHandler();
 	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 	int activity(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
+	int service(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
 	std::string getName();
 
 private:
@@ -38,7 +39,6 @@ private:
 	std::string getDisplay(const char *szFile);
 
 private:
-	bool mbValid;
 	std::map<std::string, RESOURCE> mapData;
 	CONF conf;
 	std::set<std::string> setKeyWord;

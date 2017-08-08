@@ -14,12 +14,12 @@
 #include "common.h"
 #include "Handler.h"
 #include "CObject.h"
-#include "CJudgeAbsolutely.h"
-#include "CJudgeStory.h"
-#include "CJudgeMusic.h"
-#include "CJudgeEducation.h"
-#include "CJudgeService.h"
-#include "CJudgeTranslate.h"
+//#include "CJudgeAbsolutely.h"
+//#include "CJudgeStory.h"
+//#include "CJudgeMusic.h"
+//#include "CJudgeEducation.h"
+//#include "CJudgeService.h"
+//#include "CJudgeTranslate.h"
 #include "CRankingHandler.cpp"
 #include "CSemantic.h"
 #include "CResponsePacket.h"
@@ -32,12 +32,12 @@ using namespace std;
 CSemanticJudge::CSemanticJudge(CObject *object)
 {
 	mpController = object;
-	mapSemanticObject[CONTENT_STORY] = new CJudgeStory;
-	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = new CJudgeMusic;
-	mapSemanticObject[CONTENT_ABSOLUTELY] = new CJudgeAbsolutely;
-	mapSemanticObject[CONTENT_EDUCATION] = new CJudgeEducation;
-	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
-	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
+//	mapSemanticObject[CONTENT_STORY] = new CJudgeStory;
+//	mapSemanticObject[CONTENT_MUSIC_SPOTIFY] = new CJudgeMusic;
+//	mapSemanticObject[CONTENT_ABSOLUTELY] = new CJudgeAbsolutely;
+//	mapSemanticObject[CONTENT_EDUCATION] = new CJudgeEducation;
+//	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
+//	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 
 	//loadAnalysis();
 }
@@ -45,12 +45,12 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 CSemanticJudge::~CSemanticJudge()
 {
 
-	for(map<int, CSemantic*>::const_iterator it_map = mapSemanticObject.begin(); mapSemanticObject.end() != it_map;
-			++it_map)
-	{
-		delete it_map->second;
-	}
-	mapSemanticObject.clear();
+//	for(map<int, CSemantic*>::const_iterator it_map = mapSemanticObject.begin(); mapSemanticObject.end() != it_map;
+//			++it_map)
+//	{
+//		delete it_map->second;
+//	}
+//	mapSemanticObject.clear();
 
 	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
 	{

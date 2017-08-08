@@ -19,8 +19,7 @@ using namespace std;
 
 CAnalysisHandler::CAnalysisHandler(const char *szConf)
 {
-	mbValid = loadConf(szConf);
-	if(mbValid)
+	if(szConf && loadConf(szConf))
 	{
 		loadData();
 	}
@@ -47,8 +46,15 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 		if(config->loadConfig(szConf))
 		{
 			conf.strName = config->getValue("CONF", "name");
-			strValue = config->getValue("CONF", "type");
-			convertFromString(conf.nType, strValue);
+
+			if(!(strValue = config->getValue("CONF", "type")).empty())
+				convertFromString(conf.nType, strValue);
+
+			if(!(strValue = config->getValue("CONTENT", "service")).empty())
+				convertFromString(conf.nService, strValue);
+
+			_log("[CAnalysisHandler] loadConf type: %d  service: %d", conf.nType, conf.nService);
+
 			switch(conf.nType)
 			{
 			case CONF_TYPE_LOCAL_FILE:
@@ -59,6 +65,8 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 				bResult = true;
 				break;
 			case CONF_TYPE_DICTIONARY:
+				conf.strDictionary = config->getValue("DICTIONARY", "file");
+				bResult = true;
 				break;
 			default:
 				bResult = false;
@@ -152,8 +160,9 @@ void CAnalysisHandler::loadLocalFile()
 		}
 	}
 
-	for(map<string, RESOURCE>::const_iterator it = mapData.begin(); mapData.end() != it; ++it)
-		_log("%s - %s", it->second.udata.localData.strHost.c_str(), it->second.udata.localData.strDisplayFile.c_str());
+	_log("[CAnalysisHandler] loadLocalFile: %s file count: %d", conf.strName.c_str(), setDictionary.size());
+//	for(map<string, RESOURCE>::const_iterator it = mapData.begin(); mapData.end() != it; ++it)
+//		_log("%s - %s", it->second.udata.localData.strHost.c_str(), it->second.udata.localData.strDisplayFile.c_str());
 
 }
 
@@ -173,15 +182,27 @@ void CAnalysisHandler::loadMatch(const char *szPath)
 		if(!iter_set->empty())
 		{
 			mapMatchWord[iter_set->substr(0, iter_set->find(","))] = iter_set->substr(iter_set->find(",") + 1);
-			_log("[CAnalysisHandler] loadMatch %s <---> %s", iter_set->substr(0, iter_set->find(",")).c_str(),
-					mapMatchWord[iter_set->substr(0, iter_set->find(","))].c_str());
+//			_log("[CAnalysisHandler] loadMatch %s <---> %s", iter_set->substr(0, iter_set->find(",")).c_str(),
+//					mapMatchWord[iter_set->substr(0, iter_set->find(","))].c_str());
 		}
 	}
+
+	_log("[CAnalysisHandler] loadMatch: %s match count: %d", conf.strName.c_str(), mapMatchWord.size());
 }
 
 void CAnalysisHandler::loadDictionary()
 {
+	int nIndex;
+	string strFileName;
+	string strDisplayFile;
+	CFileHandler fh;
+	set<string>::const_iterator iter_set;
+	map<string, string>::const_iterator iter_map;
 
+	setDictionary.clear();
+	fh.readAllLine(conf.strDictionary.c_str(), setDictionary);
+
+	_log("[CAnalysisHandler] loadDictionary: %s dictionary count: %d", conf.strName.c_str(), setDictionary.size());
 }
 
 int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
@@ -264,6 +285,9 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 	string strDisplay;
 	string strFileName;
 	CResponsePacket respPacket;
+
+	_log("[CAnalysisHandler] activity mapMatch: %s", mapMatch["dictionary"].c_str());
+
 	switch(conf.nType)
 	{
 	case CONF_TYPE_LOCAL_FILE:
@@ -283,12 +307,22 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 		}
 		break;
 	case CONF_TYPE_DICTIONARY:
-
+		if(conf.nService)
+			service(szInput, jsonResp, mapMatch);
 		break;
 	}
 	return 0;
 }
 
+int CAnalysisHandler::service(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch)
+{
+	switch(conf.nService)
+	{
+	case SERVICE_SPOTIFY:
+		break;
+	}
+	return 0;
+}
 string CAnalysisHandler::getDisplay(const char *szFile)
 {
 	string strContent;

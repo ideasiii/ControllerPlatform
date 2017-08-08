@@ -74,13 +74,14 @@ string CConfig::getValue(string strSection, string strName)
 
 	if(mapConf.find(strSection) != mapConf.end())
 	{
-		for(LIST_CONF_MAP::const_iterator i = mapConf[strSection].begin(); i != mapConf[strSection].end(); ++i)
+		for(LIST_CONF_MAP::iterator i = mapConf[strSection].begin(); i != mapConf[strSection].end(); ++i)
 		{
-			auto find = (*i).find(trim(strName));
-			if(find != (*i).end())
+			//auto find = (*i).find(trim(strName));
+			if((*i).find(trim(strName)) != (*i).end())
 			{
-				//strValue = (*i)[trim(strName)];
-				return find->second;
+				strValue = (*i)[trim(strName)];
+				break;
+				//return trim(find->second);
 			}
 		}
 	}

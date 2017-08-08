@@ -5,9 +5,8 @@
  *      Author: Jugo
  */
 
-#include <set>
-#include <map>
-#include <string>
+
+
 #include "CSpotify.h"
 #include "CHttpsClient.h"
 #include "utility.h"

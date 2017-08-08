@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <string>
+#include <set>
+#include <map>
+
 #define ERROR_STATUS_ERROR		-1
 #define ERROR_STATUS_SUCCESS	0
 #define ERROR_STATUS_NO_TOKEN	401

@@ -20,7 +20,9 @@ struct CONF
 	string strFileType;
 	string strHost;
 	string strDisplayPath;
+	string strDictionary;
 	int nType;
+	int nService;
 };
 
 struct LOCAL_DATA

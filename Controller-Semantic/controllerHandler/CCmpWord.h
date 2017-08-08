@@ -2,7 +2,7 @@
  * CCmpWord.h
  *
  *  Created on: 2017年4月10日
- *      Author: root
+ *      Author: Jugo
  */
 
 #pragma once
