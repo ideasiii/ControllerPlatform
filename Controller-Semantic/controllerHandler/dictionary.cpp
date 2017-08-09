@@ -25,7 +25,7 @@ map<string, string> mapAbsolutly;
 
 //=========================== Spotify Music ==========================================//
 set<string> setArtist;
-set<string> setArtistMark = create_set<string>("Remix");
+set<string> setArtistMark = create_set<string>("Remix")(" - Live");
 map<string, string> mapArtistMatch; // TW --> EN
 
 //=========================== Mood Music ==========================================//

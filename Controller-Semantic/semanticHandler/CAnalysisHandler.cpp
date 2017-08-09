@@ -14,13 +14,16 @@
 #include "config.h"
 #include "dataStruct.h"
 #include "CResponsePacket.h"
+#include "CContentHandler.h"
 
 using namespace std;
 
-CAnalysisHandler::CAnalysisHandler(const char *szConf)
+CAnalysisHandler::CAnalysisHandler(const char *szConf) :
+		contentHandler(0)
 {
 	if(szConf && loadConf(szConf))
 	{
+		contentHandler = new CContentHandler;
 		loadData();
 	}
 }
@@ -28,6 +31,8 @@ CAnalysisHandler::CAnalysisHandler(const char *szConf)
 CAnalysisHandler::~CAnalysisHandler()
 {
 	mapData.clear();
+	if(contentHandler)
+		delete contentHandler;
 }
 
 bool CAnalysisHandler::loadConf(const char *szConf)
@@ -210,6 +215,7 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 	int nScore;
 	string strWord;
 	string strValue;
+	string strTmp;
 	set<string>::const_iterator it_set;
 	map<string, string>::const_iterator iter_map;
 
@@ -218,11 +224,14 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 		return 0;
 
 	nScore = 0;
+	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
 
 	//======== 評估關鍵字 ==========//
 	for(it_set = setKeyWord.begin(); setKeyWord.end() != it_set; ++it_set)
 	{
-		if(string::npos != strWord.find(*it_set))
+		strTmp = trim(*it_set);
+		transform(strTmp.begin(), strTmp.end(), strTmp.begin(), ::tolower);
+		if(string::npos != strWord.find(strTmp))
 		{
 			++nScore;
 			_log("[CAnalysisHandler] evaluate find key word: %s", it_set->c_str());
@@ -233,11 +242,13 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 	strValue.clear();
 	for(it_set = setDictionary.begin(); setDictionary.end() != it_set; ++it_set)
 	{
-		if(string::npos != strWord.find(*it_set))
+		strTmp = trim(*it_set);
+		transform(strTmp.begin(), strTmp.end(), strTmp.begin(), ::tolower);
+		if(string::npos != strWord.find(strTmp))
 		{
 			if(strValue.empty() || strValue.length() < it_set->length())
 			{
-				strValue = *it_set;
+				strValue = trim(*it_set);
 			}
 		}
 	}
@@ -253,9 +264,11 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 	strValue.clear();
 	for(iter_map = mapMatchWord.begin(); mapMatchWord.end() != iter_map; ++iter_map)
 	{
-		if(string::npos != strWord.find(iter_map->first))
+		strTmp = trim(iter_map->first);
+		transform(strTmp.begin(), strTmp.end(), strTmp.begin(), ::tolower);
+		if(string::npos != strWord.find(strTmp))
 		{
-			strValue = iter_map->second;
+			strValue = trim(iter_map->second);
 		}
 	}
 
@@ -316,13 +329,38 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 
 int CAnalysisHandler::service(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch)
 {
+
 	switch(conf.nService)
 	{
 	case SERVICE_SPOTIFY:
+		serviceSpotify(szInput, mapMatch["dictionary"].c_str(), jsonResp);
 		break;
 	}
 	return 0;
 }
+
+void CAnalysisHandler::serviceSpotify(const char *szWord, const char *szArtist, JSONObject& jsonResp)
+{
+	string strDisplay;
+	TRACK track;
+	CResponsePacket respPacket;
+	if(contentHandler->spotifyTrack(szWord, szArtist, track))
+	{
+		strDisplay =
+				"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"" + track.strCover
+						+ "\",\"file\":\"\",\"color\":\"#FFFFFFFF\",\"description\":\"Cover\",\"animation\":{\"type\":0,\"duration\":0,\"repeat\":0,\"interpolate\":0},\"text\":{\"type\":0}}]}";
+		respPacket.setActivity<int>("type", RESP_SPOTIFY).setActivity<const char*>("id", track.id.c_str()).setDisplay(
+				strDisplay.c_str()).format(jsonResp);
+	}
+	else
+	{
+		strDisplay =
+				"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://175.98.119.122/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
+		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
+				"tts", "無此歌手的樂曲或此歌手未授權播放").setDisplay(strDisplay.c_str()).format(jsonResp);
+	}
+}
+
 string CAnalysisHandler::getDisplay(const char *szFile)
 {
 	string strContent;

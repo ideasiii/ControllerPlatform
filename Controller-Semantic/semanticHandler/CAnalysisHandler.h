@@ -13,6 +13,8 @@
 #include "CSemantic.h"
 #include "dataStruct.h"
 
+class CContentHandler;
+
 class CAnalysisHandler: public CSemantic
 {
 	enum _CONF_TYPE
@@ -37,6 +39,7 @@ private:
 	void loadVerb(const char *szWord);
 	void loadMatch(const char *szPath);
 	std::string getDisplay(const char *szFile);
+	void serviceSpotify(const char *szWord, const char *szArtist, JSONObject& jsonResp);
 
 private:
 	std::map<std::string, RESOURCE> mapData;
@@ -45,4 +48,5 @@ private:
 	std::set<std::string> setDictionary;
 	VOCABULARY vocabulary;
 	std::map<std::string, std::string> mapMatchWord;
+	CContentHandler *contentHandler;
 };

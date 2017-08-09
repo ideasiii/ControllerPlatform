@@ -7,13 +7,14 @@
 
 #pragma once
 
-class CSpotify;
+#include "CSpotify.h"
 
 class CContentHandler
 {
 public:
 	CContentHandler();
 	virtual ~CContentHandler();
+	int spotifyTrack(const char *szInput, const char *szArtist, TRACK &track);
 
 private:
 	CSpotify *spotify;
