@@ -1,5 +1,6 @@
 #include "CClientMeetingAgent.h"
 
+#include <cryptopp/base64.h>
 #include "../enquireLinkYo/EnquireLinkYo.h"
 #include "common.h"
 #include "event.h"
@@ -68,8 +69,9 @@ int CClientMeetingAgent::initMeetingAgentServerParams(unique_ptr<CConfig> &confi
 {
 	string strServerIp = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "server_ip");
 	string strPort = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "port");
+	string strQrcodeKey = config->getValue(CONF_BLOCK_MEETING_AGENT_CLIENT, "qrcode_aes_key");
 
-	if (strServerIp.empty() || strPort.empty())
+	if (strServerIp.empty() || strPort.empty() || strQrcodeKey.empty())
 	{
 		_log(LOG_TAG" initMeetingAgentServerParams() 404");
 		return FALSE;
@@ -79,6 +81,11 @@ int CClientMeetingAgent::initMeetingAgentServerParams(unique_ptr<CConfig> &confi
 	convertFromString(nPort, strPort);
 	agentIp = strServerIp;
 	agentPort = nPort;
+
+	HiddenUtility::sha256(qrCodeKey, strQrcodeKey);
+	//_log(LOG_TAG" initMeetingAgentServerParams() plain qrCodeKey = %s", strQrcodeKey.c_str());
+	//auto hexQrCodeKey = HiddenUtility::getHexString(qrCodeKey, AesCrypto::KeyLength);
+	//_log(LOG_TAG" initMeetingAgentServerParams() hashed qrCodeKey = %s", hexQrCodeKey.c_str());
 
 	return TRUE;
 }
@@ -228,6 +235,9 @@ int CClientMeetingAgent::onSmartBuildingAMXControlAccessRequest(int nSocket, int
 
 string CClientMeetingAgent::handleQrCodeToken(const string& reqUserId, const string& reqQrCodeToken)
 {
+	//_log(LOG_TAG"handleQrCodeToken() reqUserId = `%s`, reqQrCodeToken = `%s`",
+	//	reqUserId.c_str(), reqQrCodeToken.c_str());
+
 	std::unique_ptr<JSONObject> decodedQrCodeJson = decodeQRCodeString(reqQrCodeToken);
 
 	if (decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
@@ -236,6 +246,8 @@ string CClientMeetingAgent::handleQrCodeToken(const string& reqUserId, const str
 	}
 
 	string decStrQrCodeType = decodedQrCodeJson->getString("QRCODE_TYPE", "");
+	_log(LOG_TAG"handleQrCodeToken() decStrQrCodeType = `%s`", decStrQrCodeType.c_str());
+
 	if (!HiddenUtility::RegexMatch(decStrQrCodeType, QR_CODE_TYPE_PATTERN))
 	{
 		decodedQrCodeJson->release();
@@ -454,6 +466,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// 從簽到表挑出測試 user 所屬的會議名稱，不管會議是否在今天開始
+		// do nothing here
 	}
 	else
 	{
@@ -527,7 +540,7 @@ string CClientMeetingAgent::getAMXControlToken(const string& userId, const strin
 		+ ",\"ROOM_TOKEN\":\"" + retToken + "\"}";
 }
 
-unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src)
+unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src) const
 {
 	if (src.size() < 1)
 	{
@@ -565,7 +578,30 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3"})");
 	}
 
-	return nullptr;
+	return decryptQRCodeString(src);
+}
+
+unique_ptr<JSONObject> CClientMeetingAgent::decryptQRCodeString(const string& src) const
+{
+	std::vector<uint8_t> srcDecoded = HiddenUtility::decodeBase64(src);
+	//printf("srcDecodedByte (%lu): ", srcDecoded.size());
+    //HiddenUtility::arrayToOneLineHex(srcDecoded.data(), srcDecoded.size());
+
+	if (srcDecoded.size() <= AesCrypto::IvLength)
+	{
+		return nullptr;
+	}
+
+    byte *iv = srcDecoded.data();
+    byte *cipherRaw = srcDecoded.data() + AesCrypto::IvLength;
+    uint cipherLen = srcDecoded.size() - AesCrypto::IvLength;
+	//AesCrypto::splitIvAndCipher(srcDecoded.data(), srcDecoded.size(), &iv, &cipherRaw);
+
+    unique_ptr<AesCrypto> crypto(AesCrypto::createCtrInstance(qrCodeKey));
+    string decryptedText = crypto->decrypt(cipherRaw, cipherLen, iv);
+	_log(LOG_TAG" decryptQRCodeString() decryptedText = %s", decryptedText.c_str());
+
+	return make_unique<JSONObject>(decryptedText);
 }
 
 void CClientMeetingAgent::onServerDisconnect(unsigned long int nSocketFD)

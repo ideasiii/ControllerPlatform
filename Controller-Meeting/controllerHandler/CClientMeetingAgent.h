@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include "AesCrypto.h"
 
 #include "CCmpClient.h"
 #include "DoorAccessControl/DoorAccessHandler.h"
@@ -75,13 +76,19 @@ private:
 	std::string getAMXControlToken(const std::string& userId, const std::string& roomId);
 
 	// 解碼 QR code 掃出來的字串
-	std::unique_ptr<JSONObject> decodeQRCodeString(const std::string& src);
+	std::unique_ptr<JSONObject> decodeQRCodeString(const std::string& src) const;
+
+	// 解密 QR code 掃出來的字串
+	std::unique_ptr<JSONObject> decryptQRCodeString(const std::string& src) const;
 
 	// do not delete this or the whole world will collapse
 	CObject * const mpController;
 
 	std::string agentIp;
 	int agentPort;
+
+	//  做過 SHA256 hash 的 QR code 解密金鑰
+	uint8_t qrCodeKey[AesCrypto::KeyLength];
 
 	DoorAccessHandler doorAccessHandler;
 	std::unique_ptr<AppVersionHandler> appVersionHandler;
