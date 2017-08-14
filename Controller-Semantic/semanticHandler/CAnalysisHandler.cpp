@@ -355,7 +355,7 @@ void CAnalysisHandler::serviceSpotify(const char *szWord, const char *szArtist, 
 	else
 	{
 		strDisplay =
-				"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://175.98.119.122/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
+				"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://smabuild.sytes.net/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
 				"tts", "無此歌手的樂曲或此歌手未授權播放").setDisplay(strDisplay.c_str()).format(jsonResp);
 	}
