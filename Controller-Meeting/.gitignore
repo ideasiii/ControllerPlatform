@@ -1,6 +1,7 @@
 /build/
 /libs/
 /Global/
+mysql_tables_bk
 controllerHandler/CryptoKey.h
 controllerHandler/DoorAccessControllerParams.h
 .project

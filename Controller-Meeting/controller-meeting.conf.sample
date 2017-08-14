@@ -20,7 +20,7 @@ host = 256.256.256.256
 # port setting has no effect for now
 port = 3306
 user = _user_
-# 密碼開頭及結尾不得包含空白，因為會被 CConfigHandler 吃掉
+# 密碼開頭或結尾皆不得包含空白，因為會被 CConfigHandler 吃掉
 password = _password_
 database = _database_
 
@@ -29,8 +29,8 @@ database = _database_
 [CLIENT MEETING_AGENT]
 # controller-meetingagent 的 IP
 server_ip = 256.256.256.256
-
 port = 2101
+qrcode_aes_key = 解碼key, 會先做 SHA256 hash 再拿來解密. 前後不得包含空白
 
 
 [CLIENT ITES 1F DOOR CONTROLLER]

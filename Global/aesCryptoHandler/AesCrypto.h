@@ -20,8 +20,8 @@ public:
 	// Length of key in bytes.
 	static const int KeyLength = 32;
 
-	// Instantiate with a key used for encryption and decryption.
-	AesCrypto(const uint8_t *key);
+	static AesCrypto *createCbcInstance(const uint8_t *key);
+	static AesCrypto *createCtrInstance(const uint8_t *key);
 
 	// 加密 plaintext
 	// @param  plaintext 要加密的字串，注意 plaintext 的 teminating null 也會被當做要加密的內容
@@ -29,14 +29,24 @@ public:
 	std::string encrypt(const std::string plaintext, const uint8_t *iv);
 	std::string decrypt(const uint8_t* ciphertext, int textLength, const uint8_t *iv);
 
-	// A handy function for generating random IV or (probably not) key.
-	static void getRandomBytes(uint8_t *outBuf, int bufLen);
+	// 將 src 的 IV 以及密文各別複製到 outIv 以及 outCipher
+	static void splitIvAndCipher(const uint8_t *src, uint srcLen, uint8_t **outIv, uint8_t **outCipher);
 
 private:
+	// Instantiate with a key used for encryption and decryption.
+	AesCrypto(int mode, const uint8_t *key);
+
+	std::string encryptCbc(const std::string plaintext, const uint8_t *iv);
+	std::string encryptCtr(const std::string plaintext, const uint8_t *iv);
+	std::string decryptCbc(const uint8_t* cipher, int length, const uint8_t *iv);
+	std::string decryptCtr(const uint8_t* cipher, int length, const uint8_t *iv);
+
 	const uint8_t *key;
+	const uint mode;
 };
 
-/** example of usage, adapted from official Crypto++ example using CBC mode
+/*
+example of usage, adapted from official Crypto++ example using CBC mode
 
 #include <string>
 void cryptoppTest() {

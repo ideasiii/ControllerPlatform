@@ -1,27 +1,59 @@
 #pragma once
 
 #include <chrono>
+#include <cryptopp/base64.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/sha.h>
 #include <ctime>
 #include <errno.h>
+#include <fcntl.h>
 #include <iomanip>
 #include <linux/limits.h>
 #include <regex>
 #include <sstream>
+#include <stdint.h>
 #include <string>
 #include <string.h>
 #include <sys/inotify.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include "common.h"
 #include "CMysqlHandler.h"
 #include "LogHandler.h"
 #include "MysqlSource.h"
 
+// Written and placed in the public domain by rrmmnn
+// Copyright assigned to the Crypto++ project.
+
+namespace CryptoPP
+{
+	class VectorSink : public Bufferless<Sink>
+	{
+	public:
+
+		VectorSink(std::vector<uint8_t>& out)
+			: _out(&out)
+		{
+		}
+
+		size_t Put2(const byte *inString, size_t length, int /*messageEnd*/, bool /*blocking*/)
+		{
+			_out->insert(_out->end(), inString, inString + length);
+			return 0;
+		}
+
+	private:
+		std::vector<uint8_t>* _out;
+	};
+}
+
 // Utility functions that may require C++11,
-// which means merge into Global is not possible (for now)
+// Lead to difficulty merging into Global (for now)
 class HiddenUtility
 {
 public:
-	// Returns Unix timestamp in milliseconds, UTC timezone
+	// Returns Unix timestamp in milliseconds, UTC
 	inline static int64_t unixTimeMilli()
 	{
 		return std::chrono::duration_cast<std::chrono::milliseconds>
@@ -163,6 +195,83 @@ public:
 		_log("%s run MYSQL Success: %s", callerDesc, strSQL.c_str());
 		mysql->close();
 		return true;
+	}
+
+	static void sha256(uint8_t *out, std::string data)
+	{
+		sha256(out, (const uint8_t *)data.data(), data.size());
+	}
+
+	// 對 data 做 SHA256 hash 並將結果放在 out
+	// 必須確保 out 的長度至少為 32 (CryptoPP::SHA256::DIGESTSIZE)
+	static void sha256(uint8_t *out, const uint8_t *data, uint dataLen)
+	{
+		CryptoPP::SHA256().CalculateDigest(out, data, dataLen);
+	}
+
+	static std::vector<byte> decodeBase64(std::string src)
+	{
+		std::vector<byte> srcDecoded;
+		CryptoPP::StringSource(
+			src,
+			true,
+			new CryptoPP::Base64Decoder(new CryptoPP::VectorSink(srcDecoded))
+		);
+
+	    return srcDecoded;
+	}
+
+	static void arrayToHex(const uint8_t *m, uint size,
+		const char *delimiter, uint bytesPerLine)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			printf("0x%02x%s", m[i], delimiter);
+			if (bytesPerLine && (i % bytesPerLine == 0) && i)
+			{
+				printf("\n");
+			}
+		}
+		printf("\n");
+	}
+
+	static void arrayToOneLineHex(const uint8_t *m, uint size)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			printf("%02x", m[i]);
+		}
+		printf("\n");
+	}
+
+	// Allocates a memory block and stores hex representation of src
+	// Remember to delete after use
+	static std::string getHexString(const uint8_t *src, uint srcSize)
+	{
+		static char hexconvtab[] = "0123456789abcdef";
+		char *pRaw = new char[srcSize * 2 + 1];
+		char *raw = pRaw;
+
+		for (uint i = 0; i < srcSize; i++)
+		{
+			uint8_t b = src[i];
+			*(pRaw++) = hexconvtab[b >> 4];
+			*(pRaw++) = hexconvtab[b & 15];
+		}
+
+		*pRaw = '\0';
+		std::string ret(raw);
+		delete[] raw;
+
+		return ret;
+	}
+
+	// A handy function for generating random IV.
+	static void getRandomBytes(uint8_t *outBuf, const int len)
+	{
+		int fd = open("/dev/urandom", O_RDONLY);
+		read(fd, outBuf, len);
+		close(fd);
 	}
 
 private:

@@ -4,33 +4,75 @@
 #include <cryptopp/aes.h>
 #include <cryptopp/filters.h>
 #include <cryptopp/config.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "LogHandler.h"
 
 #define LOG_TAG "[AesCrypto]"
+#define MODE_CBC 0
+#define MODE_CTR 1
 
-AesCrypto::AesCrypto(const uint8_t *key)
+AesCrypto *AesCrypto::createCbcInstance(const uint8_t *key)
 {
-	this->key = key;
+	return new AesCrypto(MODE_CBC, key);
+}
+
+AesCrypto *AesCrypto::createCtrInstance(const uint8_t *key)
+{
+	return new AesCrypto(MODE_CTR, key);
+}
+
+AesCrypto::AesCrypto(int mode, const uint8_t *key)
+	:mode(mode), key(key)
+{
 }
 
 std::string AesCrypto::encrypt(const std::string plaintext, const uint8_t *iv)
 {
+	switch (mode)
+	{
+	case MODE_CBC:
+		return encryptCbc(plaintext, iv);
+	case MODE_CTR:
+		return encryptCtr(plaintext, iv);
+	default:
+		return "";
+	}
+}
+
+std::string AesCrypto::encryptCbc(const std::string plaintext, const uint8_t *iv)
+{
 	std::string ciphertext;
 	CryptoPP::AES::Encryption aesEncryption(key, KeyLength);
-	CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+	CryptoPP::CBC_Mode_ExternalCipher::Encryption modeExternalCipher(aesEncryption, iv);
 
 	// Crypto++ will release the sink for us
-	CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new CryptoPP::StringSink(ciphertext));
+	CryptoPP::StreamTransformationFilter stfEncryptor(modeExternalCipher, new CryptoPP::StringSink(ciphertext));
 	stfEncryptor.Put(reinterpret_cast<const unsigned char*>(plaintext.c_str()), plaintext.size() + 1);
 	stfEncryptor.MessageEnd();
 
 	return ciphertext;
 }
 
-std::string AesCrypto::decrypt(const uint8_t *ciphertext, const int textLength, const uint8_t *iv)
+std::string AesCrypto::encryptCtr(const std::string plaintext, const uint8_t *iv)
+{
+	// not implemented
+	_log(LOG_TAG" encrypt() in CTR mode is not implemented");
+	return "";
+}
+
+std::string AesCrypto::decrypt(const uint8_t *cipher, const int length, const uint8_t *iv)
+{
+	switch (mode)
+	{
+	case MODE_CBC:
+		return decryptCbc(cipher, length, iv);
+	case MODE_CTR:
+		return decryptCtr(cipher, length, iv);
+	default:
+		return "";
+	}
+}
+
+std::string AesCrypto::decryptCbc(const uint8_t *cipher, const int length, const uint8_t *iv)
 {
 	std::string decryptedtext;
 	CryptoPP::AES::Decryption aesDecryption(key, KeyLength);
@@ -40,20 +82,67 @@ std::string AesCrypto::decrypt(const uint8_t *ciphertext, const int textLength, 
 	{
 		// Crypto++ will release the sink for us
 		CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink(decryptedtext));
-		stfDecryptor.Put(ciphertext, textLength);
+		stfDecryptor.Put(cipher, length);
 		stfDecryptor.MessageEnd();
 	}
-	catch (CryptoPP::Exception const &e)
+	catch (CryptoPP::Exception &e)
 	{
-		_log(LOG_TAG" decrypt failed: %s\n", e.what());
+		_log(LOG_TAG" decryptCbc() failed: %s\n", e.what());
 	}
 
 	return decryptedtext;
 }
 
-void AesCrypto::getRandomBytes(uint8_t *outBuf, const int len)
+std::string AesCrypto::decryptCtr(const uint8_t *cipher, const int length, const uint8_t *iv)
 {
-	int fd = open("/dev/urandom", O_RDONLY);
-	read(fd, outBuf, len);
-	close(fd);
+    std::string decryptedText;
+
+    try
+    {
+        CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
+        d.SetKeyWithIV(key, KeyLength, iv);
+
+        CryptoPP::StringSource(
+            cipher, length, true,
+            new CryptoPP::StreamTransformationFilter(
+                d, new CryptoPP::StringSink(decryptedText)
+            )
+        );
+    }
+    catch(CryptoPP::Exception &e)
+    {
+        _log(LOG_TAG" decryptCtr() failed: %s\n", e.what());
+    }
+
+    return decryptedText;
+}
+
+void AesCrypto::splitIvAndCipher(const uint8_t *src, uint srcLen, uint8_t **outIv, uint8_t **outCipher)
+{
+	if (srcLen < CryptoPP::AES::BLOCKSIZE)
+	{
+		*outIv = NULL;
+		*outCipher = NULL;
+		return;
+	}
+
+	*outIv = new uint8_t[CryptoPP::AES::BLOCKSIZE];
+	memcpy(*outIv, src, CryptoPP::AES::BLOCKSIZE);
+
+	//printf("iv (%lu): ", sizeof(iv));
+	//arrayToOneLineHex(iv, sizeof(iv));
+
+	uint cipherLen = srcLen-CryptoPP::AES::BLOCKSIZE;
+	if (cipherLen == 0)
+	{
+		*outCipher = NULL;
+	}
+	else
+	{
+	    *outCipher = new byte[cipherLen];
+	    memcpy(*outCipher, src+CryptoPP::AES::BLOCKSIZE, cipherLen);
+
+	    //printf("cipherRaw (%u): ", cipherLen);
+		//arrayToOneLineHex(cipherRaw, cipherLen);
+	}
 }

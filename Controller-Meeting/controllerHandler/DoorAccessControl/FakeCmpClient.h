@@ -5,7 +5,7 @@
 /**
 * 與「偽﹒CMP」(Fake CMP) server 溝通的客戶端
 * Fake CMP 與一般 CMP 的差異：
-*   - client 不先送 bind request, server 把 bind request 當亂碼
+*   - client 不送 bind request, server 會將 bind request 當做無效指令
 *   - client 一連上 server 就直接送要做的命令
 *   - server 在處理完第一通 request 後就主動斷線
 *   - PDU body 不一定以 '\0' 做結尾

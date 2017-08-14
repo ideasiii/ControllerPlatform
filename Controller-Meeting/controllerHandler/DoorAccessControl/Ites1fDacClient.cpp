@@ -1,10 +1,12 @@
 #include "Ites1fDacClient.h"
 
 #include <errno.h>
+#include <memory>
 #include <sstream>
 #include <string.h>
 #include "AesCrypto.h"
 #include "FakeCmpClient.h"
+#include "../HiddenUtility.hpp"
 #include "JSONObject.h"
 
 #define ENCRYPT_REQUEST_PDU_BODY
@@ -45,12 +47,12 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	_log(LOG_TAG" doorOpen() reqBody.size() = %d", reqBody.size());
 
 #ifdef ENCRYPT_REQUEST_PDU_BODY
-	AesCrypto crypto(aesKey);
+	unique_ptr<AesCrypto> crypto(AesCrypto::createCbcInstance(aesKey));
 	uint8_t buf[MAX_DATA_LEN];
 
 	// 加密前的字串須以 '\0' 結尾，但加密後的內容不須以 '\0' 結尾
 	// 如果字串後面要加 padding，在加密之前就必須附加於其後，且中間至少以一個 '\0' 隔開
-	int bufSize = encryptRequestBody(crypto, reqBody, buf, sizeof(buf));
+	int bufSize = encryptRequestBody(*(crypto.get()), reqBody, buf, sizeof(buf));
 
 	if (bufSize < 1)
 	{
@@ -84,7 +86,7 @@ bool Ites1fDacClient::doorOpen(std::string &errorDescription, std::string userUu
 	}
 
 #ifdef DECRYPT_RESPONSE_PDU_BODY
-	std::string respBodyStr = decryptRequestBody(crypto, &respPdu);
+	std::string respBodyStr = decryptRequestBody(*(crypto.get()), &respPdu);
 
 	if (respBodyStr.length() < 2)
 	{
@@ -145,7 +147,7 @@ int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody,
 	uint8_t *oBuf, int bufSize)
 {
 	uint8_t iv[AesCrypto::IvLength];
-	AesCrypto::getRandomBytes(iv, AesCrypto::IvLength);
+	HiddenUtility::getRandomBytes(iv, AesCrypto::IvLength);
 
 	std::string ciphertext = crypto.encrypt(reqBody, iv);
 	int outputSize = AesCrypto::IvLength + ciphertext.size();
@@ -169,13 +171,20 @@ int encryptRequestBody(AesCrypto& crypto, const std::string& reqBody,
 
 std::string decryptRequestBody(AesCrypto& crypto, CMP_PACKET* pdu)
 {
+	int respCipherLen = pdu->cmpHeader.command_length - sizeof(CMP_HEADER) - AesCrypto::IvLength;
+	if (respCipherLen < 0)
+	{
+		_log(LOG_TAG" decryptRequestBody() response ciphertext length invalid (%d)", respCipherLen);
+		return "";
+	}
+
+	_log(LOG_TAG" decryptRequestBody() response ciphertext length = %d", respCipherLen);
+
 	uint8_t *respIv = (uint8_t*)pdu->cmpBody.cmpdata;
 	uint8_t *respBody = ((uint8_t*)pdu->cmpBody.cmpdata) + AesCrypto::IvLength;
-	int respCipherLen = pdu->cmpHeader.command_length - sizeof(CMP_HEADER) - AesCrypto::IvLength;
-	_log(LOG_TAG" response ciphertext length = %d", respCipherLen);
 
 	std::string respBodyStr = crypto.decrypt(respBody, respCipherLen, respIv);
-	_log(LOG_TAG" decrypt.length = %d", respBodyStr.length());
+	_log(LOG_TAG" decryptRequestBody() decrypt.length = %d", respBodyStr.length());
 
 	return respBodyStr;
 }
