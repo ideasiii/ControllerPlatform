@@ -22,7 +22,14 @@ typedef enum _CONTENT_TYPE
 //==================================== 封包 Request 內容定義 =========================================//
 enum
 {
-	TYPE_REQ_NODEFINE = 0, TYPE_REQ_CONTROL, TYPE_REQ_TALK, TYPE_REQ_RECORD, TYPE_REQ_STORY, TYPE_REQ_GAME, TYPE_REQ_MAX
+	TYPE_REQ_NODEFINE = 0,
+	TYPE_REQ_CONTROL,
+	TYPE_REQ_TALK,
+	TYPE_REQ_RECORD,
+	TYPE_REQ_STORY,
+	TYPE_REQ_GAME,
+	TYPE_REQ_PEN,
+	TYPE_REQ_MAX
 };
 
 //==================================== Content Service =========================================//

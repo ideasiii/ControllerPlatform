@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 			{
 				JSONObject jsonWord;
 				jsonWord.put("id", 1);
-				jsonWord.put("type", 0);
+				jsonWord.put("type", 6);
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);

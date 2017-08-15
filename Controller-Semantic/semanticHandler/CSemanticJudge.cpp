@@ -39,7 +39,7 @@ CSemanticJudge::CSemanticJudge(CObject *object)
 //	mapSemanticObject[CONTENT_SERVICE] = new CJudgeService;
 //	mapSemanticObject[CONTENT_TRANSLATE] = new CJudgeTranslate;
 
-	//loadAnalysis();
+//loadAnalysis();
 }
 
 CSemanticJudge::~CSemanticJudge()
@@ -170,4 +170,32 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 				"tts",
 				WORD_UNKNOW).format(jsonResp);
 	}
+}
+
+void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, const char *szAnalysis)
+{
+	map<string, string> mapMatch;
+	CResponsePacket respPacket;
+
+	if(0 >= szInput)
+	{
+		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
+				"tts",
+				WORD_UNKNOW).format(jsonResp);
+		return;
+	}
+
+	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
+	{
+		if(!mapAnalysis[i]->getName().compare(szAnalysis))
+		{
+			_log("[CSemanticJudge] runAnalysis analysis: %s", szAnalysis);
+			mapAnalysis[i]->evaluate(szInput, mapMatch);
+			mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
+			return;
+		}
+	}
+
+	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
+	WORD_UNKNOW).format(jsonResp);
 }

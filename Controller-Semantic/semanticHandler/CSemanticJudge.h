@@ -20,6 +20,7 @@ public:
 	virtual ~CSemanticJudge();
 	int word(const char *szInput, JSONObject& jsonResp);
 	void runAnalysis(const char *szInput, JSONObject &jsonResp);
+	void runAnalysis(const char *szInput, JSONObject &jsonResp, const char *szAnalysis);
 	void loadAnalysis();
 
 private:

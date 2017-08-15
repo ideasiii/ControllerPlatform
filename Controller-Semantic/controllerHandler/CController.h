@@ -11,6 +11,7 @@
 
 class CSemanticJudge;
 class CCmpWord;
+class CPenReader;
 
 class CController: public CApplication
 {
@@ -30,4 +31,5 @@ private:
 	int mnMsqKey;
 	CCmpWord *cmpword;
 	CSemanticJudge *semanticJudge;
+	CPenReader *penreader;
 };

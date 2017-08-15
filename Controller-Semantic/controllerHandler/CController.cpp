@@ -23,11 +23,12 @@
 #include "packet.h"
 #include "JSONObject.h"
 #include "config.h"
+#include "CPenReader.h"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0)
 {
 
 }
@@ -42,6 +43,7 @@ int CController::onCreated(void* nMsqKey)
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
 	semanticJudge = new CSemanticJudge(this);
 	cmpword = new CCmpWord(this);
+	penreader = new CPenReader;
 	return mnMsqKey;
 }
 
@@ -82,6 +84,7 @@ int CController::onFinish(void* nMsqKey)
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
+	delete penreader;
 	return TRUE;
 }
 
@@ -103,8 +106,12 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_RECORD:	// 紀錄
 		break;
 	case TYPE_REQ_STORY:	// 故事
+		semanticJudge->runAnalysis(szWord, jsonResp, "story");
 		break;
 	case TYPE_REQ_GAME:		// 遊戲
+		break;
+	case TYPE_REQ_PEN:		// 點讀筆
+		penreader->activity(szWord, jsonResp);
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
