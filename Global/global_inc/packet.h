@@ -126,6 +126,8 @@ struct CMP_PACKET
 #define smart_building_door_control_response			0x80000056
 #define semantic_word_request							0x00000057
 #define semantic_word_response							0x80000057
+#define controller_die_request							0x000000FE
+#define controller_die_response							0x800000FE
 
 #define MAX_COMMAND								0x000000FF
 

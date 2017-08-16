@@ -121,6 +121,12 @@ protected:
 	}
 	;
 
+	virtual int onDie(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+
 	//=============== AMX Service ======================//
 	virtual int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
