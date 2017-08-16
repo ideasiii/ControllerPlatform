@@ -22,7 +22,7 @@
 #include "JSONObject.h"
 #include "LogHandler.h"
 
-#define ENQUIRE_LINK_TIME 10
+#define ENQUIRE_LINK_TIME 1800
 
 using namespace std;
 
@@ -177,7 +177,7 @@ int CController::startServerAccesslog(string strIP, const int nPort, const int n
 	{
 		if (cmpAccesslog->start(strIP.c_str(), nPort, nMKey))
 		{
-			cmpAccesslog->idleTimeout(true, 5);
+			cmpAccesslog->idleTimeout(true, 2);
 			return TRUE;
 		}
 	}
@@ -185,7 +185,7 @@ int CController::startServerAccesslog(string strIP, const int nPort, const int n
 	{
 		if (cmpAccesslog->start(0, nPort, nMKey))
 		{
-			cmpAccesslog->idleTimeout(true, 5);
+			cmpAccesslog->idleTimeout(true, 2);
 			return TRUE;
 		}
 	}
