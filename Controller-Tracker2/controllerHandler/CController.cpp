@@ -177,6 +177,7 @@ int CController::startServerAccesslog(string strIP, const int nPort, const int n
 	{
 		if (cmpAccesslog->start(strIP.c_str(), nPort, nMKey))
 		{
+			cmpAccesslog->idleTimeout(true, 5);
 			return TRUE;
 		}
 	}
@@ -184,6 +185,7 @@ int CController::startServerAccesslog(string strIP, const int nPort, const int n
 	{
 		if (cmpAccesslog->start(0, nPort, nMKey))
 		{
+			cmpAccesslog->idleTimeout(true, 5);
 			return TRUE;
 		}
 	}
