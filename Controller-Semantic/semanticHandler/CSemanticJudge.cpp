@@ -176,6 +176,7 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 {
 	map<string, string> mapMatch;
 	CResponsePacket respPacket;
+	string strDisplay;
 
 	if(0 >= szInput)
 	{
@@ -190,12 +191,16 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 		if(!mapAnalysis[i]->getName().compare(szAnalysis))
 		{
 			_log("[CSemanticJudge] runAnalysis analysis: %s", szAnalysis);
-			mapAnalysis[i]->evaluate(szInput, mapMatch);
-			mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
-			return;
+			if(mapAnalysis[i]->evaluate(szInput, mapMatch))
+			{
+				mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
+				return;
+			}
 		}
 	}
 
+	strDisplay =
+			"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://smabuild.sytes.net/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
-	WORD_UNKNOW).format(jsonResp);
+	WORD_UNKNOW).setDisplay(strDisplay.c_str()).format(jsonResp);
 }
