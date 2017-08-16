@@ -10,6 +10,9 @@
 #include "LogHandler.h"
 #include "packet.h"
 #include <string>
+#include <sys/prctl.h>
+#include <unistd.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -37,7 +40,14 @@ CDispatcher::~CDispatcher()
 
 }
 
-int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void *szData)
+int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
 	return response(nSocket, nCommand, STATUS_ROK, nSequence, RESP_DISPATCH);
+}
+
+int CDispatcher::onDie(int nSocket, int nCommand, int nSequence, const void *szBody)
+{
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	prctl(PR_SET_PDEATHSIG, SIGHUP);
+	return 0;
 }

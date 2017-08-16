@@ -16,7 +16,8 @@ public:
 	virtual ~CDispatcher();
 
 protected:
-	int onInitial(int nSocket, int nCommand, int nSequence, const void *szData);
+	int onInitial(int nSocket, int nCommand, int nSequence, const void *szBody);
+	int onDie(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
 	explicit CDispatcher();
