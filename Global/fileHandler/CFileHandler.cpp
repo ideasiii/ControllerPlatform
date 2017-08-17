@@ -50,6 +50,8 @@ unsigned int CFileHandler::readAllLine(const char *szFile, set<string> &setData)
 
 unsigned int CFileHandler::readContent(const char *szFile, string &strContent)
 {
+	strContent.clear();
+
 	if(szFile)
 	{
 		ifstream file(szFile);
