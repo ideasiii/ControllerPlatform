@@ -18,13 +18,14 @@
 #include <stdlib.h>
 #include <list>
 #include <string>
+#include "container.h"
 #include "LogHandler.h"
 
 using namespace std;
 /*
  * CMP body data length
  */
-#define MAX_DATA_LEN	10240
+#define MAX_DATA_LEN	2048
 
 /*
  * this define socket packet for CMP
@@ -125,6 +126,8 @@ struct CMP_PACKET
 #define smart_building_door_control_response			0x80000056
 #define semantic_word_request							0x00000057
 #define semantic_word_response							0x80000057
+#define controller_die_request							0x000000FE
+#define controller_die_response							0x800000FE
 
 #define MAX_COMMAND								0x000000FF
 
@@ -155,30 +158,6 @@ struct CMP_PACKET
 #define TYPE_TRACKER_APPLIENCE				5
 #define TYPE_TRACKER_TOY						6
 #define TYPE_TRACKER_IOT						7
-
-template<typename T, typename U>
-class create_map
-{
-private:
-	std::map<T, U> m_map;
-public:
-	create_map(const T& key, const U& val)
-	{
-		m_map[key] = val;
-	}
-
-	create_map<T, U>& operator()(const T& key, const U& val)
-	{
-		m_map[key] = val;
-		return *this;
-	}
-
-	operator std::map<T, U>()
-	{
-		return m_map;
-	}
-
-};
 
 static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack")( bind_request,
 		"bind_request")( bind_response, "bind_response")(

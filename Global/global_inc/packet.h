@@ -129,7 +129,7 @@ struct CMP_PACKET
 #define controller_die_request							0x000000FE
 #define controller_die_response							0x800000FE
 
-#define MAX_COMMAND								0x000000FF
+#define MAX_COMMAND										0x000000FF
 
 /*
  * CMP status set
@@ -153,11 +153,11 @@ struct CMP_PACKET
  */
 #define TYPE_MOBILE_SERVICE					1
 #define TYPE_POWER_CHARGE_SERVICE			2
-#define TYPE_SDK_SERVICE						3
-#define TYPE_TRACKER_SERVICE					4
+#define TYPE_SDK_SERVICE					3
+#define TYPE_TRACKER_SERVICE				4
 #define TYPE_TRACKER_APPLIENCE				5
-#define TYPE_TRACKER_TOY						6
-#define TYPE_TRACKER_IOT						7
+#define TYPE_TRACKER_TOY					6
+#define TYPE_TRACKER_IOT					7
 
 static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack")( bind_request,
 		"bind_request")( bind_response, "bind_response")(
@@ -196,7 +196,8 @@ smart_building_appversion_response, "smart_building_appversion_response")(smart_
 		"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
 		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
 		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
-semantic_word_response, "semantic_word_response");
+semantic_word_response, "semantic_word_response")(controller_die_request, "controller_die_request")(
+		controller_die_response, "controller_die_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

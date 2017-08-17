@@ -179,6 +179,7 @@ int cmpRequest(int nCommand, CCmpTest *cmpTest)
 	case smart_building_amx_control_access_request:
 	case smart_building_wireless_power_charge_request:
 	case semantic_word_request:
+	case controller_die_request:
 	case 1166:
 	case 27027:
 		cmpTest->sendRequest(nCommand, 0);

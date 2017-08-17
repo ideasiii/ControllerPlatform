@@ -235,7 +235,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	string strSBWirelessPowerCharge =
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
-
+	string strDie = "{\"key\":\"suicide\"}";
 	if(0 != szBody)
 	{
 		memcpy(pIndex, szBody, strlen(szBody));
@@ -427,6 +427,14 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			memcpy(pIndex, strSematicWord.c_str(), strSematicWord.size());
 			pIndex += strSematicWord.size();
 			nBody_len += strSematicWord.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case controller_die_request:
+			memcpy(pIndex, strDie.c_str(), strDie.size());
+			pIndex += strDie.size();
+			nBody_len += strDie.size();
 			memcpy(pIndex, "\0", 1);
 			pIndex += 1;
 			nBody_len += 1;

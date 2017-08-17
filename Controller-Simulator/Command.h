@@ -61,4 +61,4 @@ authentication_request)\
 ("amx control", amx_control_request)\
 ("amx status", amx_status_request)\
 ("semantic",
-semantic_request)("amx status2", 1166)("word", semantic_word_request);
+semantic_request)("amx status2", 1166)("word", semantic_word_request)("die", controller_die_request);

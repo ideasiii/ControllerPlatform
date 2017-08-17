@@ -47,7 +47,10 @@ int CDispatcher::onInitial(int nSocket, int nCommand, int nSequence, const void 
 
 int CDispatcher::onDie(int nSocket, int nCommand, int nSequence, const void *szBody)
 {
+	_log("[CDispatcher] onDie .....%s", szBody);
 	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
-	prctl(PR_SET_PDEATHSIG, SIGHUP);
+	kill(getpid(), SIGTERM);
+	kill(getppid(), SIGTERM);
+
 	return 0;
 }
