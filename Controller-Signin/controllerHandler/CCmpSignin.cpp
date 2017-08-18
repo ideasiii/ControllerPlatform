@@ -41,3 +41,17 @@ int CCmpSignin::onSignin(int nSocket, int nCommand, int nSequence, const void *s
 	}
 	return TRUE;
 }
+
+int CCmpSignin::onDie(int nSocket, int nCommand, int nSequence, const void *szBody)
+{
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	const char *pBody = reinterpret_cast<const char*>(szBody);
+	if(isValidStr(pBody, MAX_SIZE))
+	{
+		Message message;
+		message.what = controller_die_request;
+		message.strData = pBody;
+		mpController->sendMessage(message);
+	}
+	return TRUE;
+}

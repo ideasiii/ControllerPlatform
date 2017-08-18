@@ -151,5 +151,14 @@ void CController::onHandleMessage(Message &message)
 	case sign_up_request:
 		onSignin(message.strData.c_str());
 		break;
+	case controller_die_request:
+		JSONObject jsonData(message.strData);
+		_log("[CController] onHandleMessage get die request message: %s", message.strData.c_str());
+		if(!jsonData.getString("key").compare("suicide"))
+		{
+			_log("[CController] onHandleMessage ...主人 我要去死了.... 感謝您的關照 謝謝!!!");
+			terminateController();
+		}
+		break;
 	}
 }

@@ -21,6 +21,7 @@ public:
 
 protected:
 	int onSignin(int nSocket, int nCommand, int nSequence, const void *szBody);
+	int onDie(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
 	CObject * mpController;

@@ -19,6 +19,7 @@ public:
 	int callback(int nMsg, void* param);
 	void setConfPath(const char * szPath);
 	std::string getConfPath();
+	void terminateController();
 
 protected:
 	virtual void onReceiveMessage(int nEvent, int nCommand, unsigned long int nId, int nDataLen, const void* pData);

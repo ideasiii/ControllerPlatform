@@ -7,6 +7,8 @@
 
 #include <syslog.h>
 #include <string>
+#include <unistd.h>
+#include <signal.h>
 #include "CApplication.h"
 #include "CController.h"
 #include "CMessageHandler.h"
@@ -71,6 +73,13 @@ string CApplication::getConfPath()
 	return mstrConfPath;
 }
 
+void CApplication::terminateController()
+{
+//	kill(getpid(), 2);
+	CMessageHandler::release();
+	kill(getppid(), 2);
+}
+
 inline string getConfName(std::string strProcessName)
 {
 	size_t found = strProcessName.find_last_of("/\\");
@@ -126,3 +135,4 @@ int main(int argc, char* argv[])
 	return process(runService, clock());
 	terminate();
 }
+

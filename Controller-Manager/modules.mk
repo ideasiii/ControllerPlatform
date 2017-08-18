@@ -1,6 +1,5 @@
-export MODULES=main \
-controllerHandler \
-../Global/cmpHandler	\
+export MODULES=controllerHandler \
+../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\
 ../Global/messageHandler	\
@@ -8,11 +7,10 @@ controllerHandler \
 ../Global/socketHandler	\
 ../Global/threadHandler	\
 ../Global/dataHandler	\
-../Global/sqliteHandler	\
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/timerHandler \
-../Global/monitorHandler
+../Global/cmpHandler \
+../Global/protocolHandler
 			 
-#export EXT_MODULES=
+#export EXT_MODULES=extInclude

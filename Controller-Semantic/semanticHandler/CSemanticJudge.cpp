@@ -166,7 +166,7 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 		if(!mapAnalysis[i]->getName().compare(szAnalysis))
 		{
 			_log("[CSemanticJudge] runAnalysis analysis: %s", szAnalysis);
-			if(mapAnalysis[i]->evaluate(szInput, mapMatch))
+			if(mapAnalysis[i]->evaluate(szInput, mapMatch) && mapMatch.size())
 			{
 				mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
 				return;
