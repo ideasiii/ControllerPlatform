@@ -54,9 +54,27 @@ std::string AesCrypto::encryptCbc(const std::string plaintext, const uint8_t *iv
 
 std::string AesCrypto::encryptCtr(const std::string plaintext, const uint8_t *iv)
 {
-	// not implemented
-	_log(LOG_TAG" encrypt() in CTR mode is not implemented");
-	return "";
+	std::string ciphertext;
+
+	try
+	{
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption d;
+		d.SetKeyWithIV(key, KeyLength, iv);
+
+		// terminating zero of string will be encrypted as well
+		CryptoPP::StringSource(
+			(uint8_t *)plaintext.data(), plaintext.size() + 1, true,
+			new CryptoPP::StreamTransformationFilter(
+				d, new CryptoPP::StringSink(ciphertext)
+			)
+		);
+	}
+	catch (CryptoPP::Exception &e)
+	{
+		_log(LOG_TAG" encryptCtr() failed: %s\n", e.what());
+	}
+
+	return ciphertext;
 }
 
 std::string AesCrypto::decrypt(const uint8_t *cipher, const int length, const uint8_t *iv)

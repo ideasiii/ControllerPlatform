@@ -171,8 +171,9 @@ bool CClientAmxController::validateToken(const std::string& reqId, const std::st
 			&& hitRecord.goodThrough >= when;
 	}
 
+	// cache miss
 	list<map<string, string>> listRet;
-	string strSQL = "SELECT t.time_start, t.time_end FROM meeting.amx_control_token as t, meeting.user as u "
+	string strSQL = "SELECT t.time_start, t.time_end FROM amx_control_token as t, user as u "
 		"WHERE u.uuid = '" + reqId + "' AND t.user_id = u.id AND t.token = '" + reqToken + "' AND t.valid = 1 AND u.valid = 1;";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" validateToken()", strSQL, listRet);
