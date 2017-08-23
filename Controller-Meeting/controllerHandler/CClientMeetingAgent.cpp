@@ -48,14 +48,14 @@ int CClientMeetingAgent::initMember(unique_ptr<CConfig>& config)
 	auto appVerHandlerRet = AppVersionHandlerFactory::createFromConfig(config);
 	if (appVerHandlerRet == nullptr)
 	{
-		_log(LOG_TAG" onInitial(): AppVersionHandler cannot be instantiated");
+		_log(LOG_TAG" onInitial(): Cannot spawn AppVersionHandler");
 		return FALSE;
 	}
 
 	auto amxControllerInfoRet = CClientAmxControllerFactory::getServerInfoFromConfig(config);
 	if (amxControllerInfoRet == nullptr)
 	{
-		_log(LOG_TAG" onInitial(): AmxControllerInfo cannot be instantiated");
+		_log(LOG_TAG" onInitial(): Cannot spawn AmxControllerInfo");
 		return FALSE;
 	}
 
@@ -299,18 +299,18 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 {
 	if (!HiddenUtility::RegexMatch(userId, UUID_PATTERN))
 	{
-		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
+		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_STATUS_MSG":"Invalid user"})";
 	}
 
 	list<map<string, string>> listRet;
-	string strSQL = "SELECT `u`.`id`, `u`.`uuid`, `u`.`name`, `u`.`email` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
+	string strSQL = "SELECT `u`.`id`, `u`.`uuid`, `u`.`name`, `u`.`email` FROM `user` as `u` WHERE `u`.`uuid` = '"
 		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                                    ";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
 	if (!bRet)
 	{
 		_log(LOG_TAG" getMeetingsInfo() ID %s not registered", userId.c_str());
-		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_ERR_MESSAGE":"Unknown user"})";
+		return R"({"USER_ID":")" + userId + R"(","MEETING_DATA":[],"_STATUS_MSG":"Not registered"})";
 	}
 
 	JSONArray meetingDataJsonArr;
@@ -325,15 +325,15 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	respJson.put("USER_EMAIL", retRow["email"]);
 
 	listRet.clear();
-	strSQL = "SELECT meetings_candidate.* FROM meeting.meeting_members AS mm, "
+	strSQL = "SELECT meetings_candidate.* FROM meeting_members AS mm, "
 		"(SELECT mi.id AS mi_id, mi.uuid AS meeting_id, mi.subject AS supject, "
 		"FROM_UNIXTIME(mi.time_start/1000, '%Y-%m-%d %H:%i') AS start_time, "
 		"FROM_UNIXTIME(mi.time_end/1000, '%Y-%m-%d %H:%i') AS end_time, "
 		"mr.room_id AS room_id, u.name as owner, u.email AS owner_email "
-		"FROM meeting.meeting_members AS mm, meeting.user AS u, meeting.meeting_info AS mi, meeting.meeting_room AS mr "
+		"FROM meeting_members AS mm, user AS u, meeting_info AS mi, meeting_room AS mr "
 		"WHERE mm.user_id = u.id AND mm.meeting_info_id = mi.id AND mi.room_id = mr.id";
 
-	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
+	/*if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// 測試 user 挑出所有會議
 	}
@@ -342,15 +342,16 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		// 挑出 user 於今天明天後天進行的會議
 		strSQL += " AND mi.time_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
 			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 3 DAY) * 1000)";
-	}
+	}*/
 
-	strSQL += ") AS meetings_candidate WHERE mm.user_id = '"
-		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id";
+	strSQL += " AND mm.valid = 1 AND u.valid = 1 AND mi.valid = 1 AND mr.valid = 1"
+		") AS meetings_candidate WHERE mm.user_id = '"
+		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id AND mm.valid = 1";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
 	if (!bRet)
 	{
-		_log(LOG_TAG" getMeetingsInfo() ID %s have no meeting", userId.c_str());
+		_log(LOG_TAG" getMeetingsInfo() ID %s have no upcoming meetings", userId.c_str());
 
 		respJson.put("MEETING_DATA", meetingDataJsonArr);
 		meetingDataJsonArr.release();
@@ -363,18 +364,15 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	for (auto iter = listRet.begin(); iter != listRet.end(); iter++)
 	{
 		auto &retRow = *iter;
+		bool hasDuplicate = false;
 
 		// 因為同一個人在一場會議內可能同時為租借人 + 主持人 + 與會人員，
 		// 所以得過濾重複的會議
-		// 因為 AMX 控制權不包含在此清單中，所以可以簡單地忽略重複的 meeting_id
+		// 且因為 AMX 控制權不包含在此清單中，所以可以簡單地忽略重複的 meeting_id
 		// 若之後此清單必須同時回傳 AMX 控制權、角色等參數時，找 hasDuplicate 的迴圈就不適用
-		bool hasDuplicate = false;
-		auto iter_2 = iter;
-		iter_2++;
-
-		for (; iter_2 != listRet.end(); iter_2++)
+		for (auto iterFindDup = listRet.begin(); *iterFindDup != *iter; iterFindDup++)
 		{
-			auto &retRow2 = *iter_2;
+			auto &retRow2 = *iterFindDup;
 			if (retRow["meeting_id"].compare(retRow2["meeting_id"]) == 0)
 			{
 				hasDuplicate = true;
@@ -384,7 +382,7 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 
 		if (hasDuplicate)
 		{
-			// 若重複 meeting_id，只添加清單內最後出現的會議資訊
+			// 若有重複的 meeting_id，只添加清單內最先出現的會議資訊
 			continue;
 		}
 
@@ -420,7 +418,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	}
 
 	list<map<string, string>> listRet;
-	string strSQL = "SELECT `u`.`id` FROM `meeting`.`user` as `u` WHERE `u`.`uuid` = '"
+	string strSQL = "SELECT `u`.`id` FROM `user` as `u` WHERE `u`.`uuid` = '"
 		+ userId + "' AND `u`.`valid` = '1' LIMIT 1                                   ";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
@@ -440,7 +438,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	listRet.clear();
 
 	// check if user has already signed today
-	strSQL = "SELECT id FROM meeting.signin_record WHERE user_id = " + strUserDbId + " "
+	strSQL = "SELECT id FROM signin_record WHERE user_id = " + strUserDbId + " "
 		"AND success = 1 AND time_when >= (UNIX_TIMESTAMP(CURDATE()) * 1000)           "
 		"AND time_when < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000)           ";
 
@@ -458,8 +456,8 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	}
 
 	listRet.clear();
-	strSQL = "SELECT s.id, i.subject, i.time_start, i.time_end FROM meeting.attendance_sheet as s, "
-		"meeting.meeting_members as m, meeting.meeting_info as i "
+	strSQL = "SELECT s.id, i.subject, i.time_start, i.time_end FROM attendance_sheet as s, "
+		"meeting_members as m, meeting_info as i "
 		"WHERE m.user_id = " + strUserDbId + " AND m.meeting_info_id = i.id "
 		"AND s.meeting_members_id = m.id ";
 
@@ -475,7 +473,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 			"AND s.time_meeting_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 1 DAY) * 1000) ";
 	}
 
-	strSQL += " AND s.valid = 1 AND m.valid = 1 ORDER BY i.time_start ASC LIMIT 1";
+	strSQL += " AND s.valid = 1 AND m.valid = 1 AND i.valid = 1 ORDER BY i.time_start ASC LIMIT 1";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" doDigitalSignup()", strSQL, listRet);
 	string strSheetId;
@@ -497,7 +495,7 @@ string CClientMeetingAgent::doDigitalSignup(const string& userId)
 	}
 
 	// put record
-	strSQL = "INSERT INTO `meeting`.`signin_record` (`user_id`, `success`, `attendance_sheet_id`, `time_when`) VALUES ('"
+	strSQL = "INSERT INTO `signin_record` (`user_id`, `success`, `attendance_sheet_id`, `time_when`) VALUES ('"
 		+ strUserDbId + "', '" + (bRet ? "1" : "0") + "', '" + strSheetId  + "', '"
 		+ to_string(HiddenUtility::unixTimeMilli()) + "')                                   "
 		"                                                                                   ";
@@ -520,7 +518,7 @@ string CClientMeetingAgent::getAMXControlToken(const string& userId, const strin
 
 	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
 	list<map<string, string>> listRet;
-	string strSQL = "SELECT token FROM meeting.amx_control_token as t, meeting.user as u, meeting.meeting_room as m"
+	string strSQL = "SELECT token FROM amx_control_token as t, user as u, meeting_room as m"
 		" WHERE u.uuid = '" + userId + "' AND m.room_id = '" + roomId + "'"
 		+ " AND t.time_start <= " + to_string(unixTimeNow) + " AND t.time_end >= " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1";
@@ -558,15 +556,17 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 	}
 	else if (src.compare(QR_CODE_DIGITAL_CHECKIN_ITES) == 0)
 	{
-		// digital checkin
+		// test digital checkin
 		return make_unique<JSONObject>(R"({"DIGIT_SIGN_PLACE": "ITeS", "QRCODE_TYPE": "2"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_101_DUMMY) == 0)
 	{
+		// dry run for room 101 door open
 		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_101_DUMMY", "QRCODE_TYPE": "3"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_102_DUMMY) == 0)
 	{
+		// dry run for room 102 door open
 		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_102_DUMMY", "QRCODE_TYPE": "3"})");
 	}
 	else if (src.compare(QR_CODE_DOOR_101) == 0)

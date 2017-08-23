@@ -21,7 +21,7 @@ CCmpClient::CCmpClient() :
 	mapFunc[smart_building_appversion_request] = &CCmpClient::onSmartBuildingAppVersionRequest;
 	mapFunc[smart_building_getmeetingdata_request] = &CCmpClient::onSmartBuildingMeetingDataRequest;
 	mapFunc[smart_building_amx_control_access_request] = &CCmpClient::onSmartBuildingAMXControlAccessRequest;
-	
+
 	confCmpClient = new CONF_CMP_CLIENT;
 	confCmpClient->init();
 }
@@ -59,11 +59,11 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	cmpHeader.command_status = ntohl(pHeader->command_status);
 	cmpHeader.sequence_number = ntohl(pHeader->sequence_number);
 
-	_log("[CCmpClient] %s onReceive %u", taskName().c_str(), cmpHeader.command_id);
+	_log("[CCmpClient] onReceive %u", cmpHeader.command_id);
 
 	if (0 >= cmpHeader.command_length || MAX_SOCKET_READ < cmpHeader.command_length)
 	{
-		_log("[CCmpClient] %s onTcpReceive receive invaild packet", taskName().c_str());
+		_log("[CCmpClient] onTcpReceive receive invaild packet");
 		response(nSocketFD, cmpHeader.command_id, STATUS_RINVCMDLEN, cmpHeader.sequence_number, 0);
 		return;
 	}
@@ -78,7 +78,7 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	}
 	if ( generic_nack == (generic_nack & cmpHeader.command_id))
 	{
-		_log("[CCmpClient] %s onReceive Response", taskName().c_str());
+		_log("[CCmpClient] onReceive Response");
 
 		// This is response package.
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
@@ -88,7 +88,7 @@ void CCmpClient::onReceive(unsigned long int nSocketFD, int nDataLen, const void
 	}
 	else
 	{
-		_log("[CCmpClient] %s onReceive Request", taskName().c_str());
+		_log("[CCmpClient] onReceive Request");
 		printPacket(cmpHeader.command_id, cmpHeader.command_status, cmpHeader.sequence_number, cmpHeader.command_length,
 				"[CCmpClient] onReceive Request ", nSocketFD);
 	}
@@ -157,12 +157,12 @@ int CCmpClient::sendPacket(int nSocket, int nCommand, int nStatus, int nSequence
 	{
 		pIndex = buffer;
 		pIndex += sizeof(CMP_HEADER);
-		_log("[CCmpClient] %s sendPacket Body: %s", taskName().c_str(), pIndex);
+		_log("[CCmpClient] sendPacket Body: %s", pIndex);
 	}
 
 	if (0 >= nResult)
 	{
-		_log("[CCmpClient] %s CMP response Fail socket: %d", taskName().c_str(), nSocket);
+		_log("[CCmpClient] CMP response Fail socket: %d", nSocket);
 	}
 	else
 	{
@@ -195,7 +195,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
 
-	_log("[CCmpClient] %s onTcpReceive result = %d", taskName().c_str(), result);
+	_log("[CCmpClient] onTcpReceive result = %d", result);
 
 	if (0 >= result)
 		return 0;
@@ -205,7 +205,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 
 		if (0 >= nTotalLen || MAX_SOCKET_READ < nTotalLen)
 		{
-			_log("[CCmpClient] %s onTcpReceive receive invaild packet", taskName().c_str());
+			_log("[CCmpClient] onTcpReceive receive invaild packet");
 			return 0;
 		}
 
@@ -217,7 +217,7 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 		{
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
-				
+
 		map<int, MemFn>::iterator iter;
 		iter = mapFunc.find(nCommand);
 
@@ -238,8 +238,8 @@ int CCmpClient::onTcpReceive(unsigned long int nSocketFD)
 			if (result != nBodyLen)
 			{
 				response(nSocketFD, nCommand, STATUS_RSYSERR, nSequence, 0);
-				_log("[CCmpClient] %s onTcpReceive System Error, Body Length: %d Receive: %d data: %s", 
-					taskName().c_str(), nBodyLen, result, pBody);
+				_log("[CCmpClient] onTcpReceive System Error, Body Length: %d Receive: %d data: %s",
+					nBodyLen, result, pBody);
 				return 0;
 			}
 		}

@@ -71,7 +71,7 @@ bool DoorAccessHandler::doRequest(std::string& resultMessage, std::string const&
 
 	int64_t unixTimeNow = HiddenUtility::unixTimeMilli();
 	list<map<string, string>> listRet;
-	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM meeting.door_access_token as t, meeting.user as u, meeting.meeting_room as m "
+	string strSQL = "SELECT t.uuid, t.effective, t.expiry FROM door_access_token as t, user as u, meeting_room as m "
 		"WHERE u.uuid = '" + uuid + "' AND m.room_id = '" + meetingRoom
 		+ "' AND t.effective <= " + to_string(unixTimeNow) + " AND t.expiry >= " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1;";
