@@ -80,7 +80,7 @@ int CController::startSignin(const int nPort, const int nMsqId)
 {
 	if(cmpSignin->start(0, nPort, nMsqId))
 	{
-		cmpSignin->idleTimeout(true, 5);
+		cmpSignin->idleTimeout(true, 3);
 		return TRUE;
 	}
 	return FALSE;

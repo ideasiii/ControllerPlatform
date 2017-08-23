@@ -36,7 +36,7 @@ int CController::onInitial(void* szConfPath)
 {
 	int nRet;
 	int nPort;
-	string strPort;
+	string strValue;
 	CConfig *config;
 	string strConfPath;
 
@@ -49,11 +49,25 @@ int CController::onInitial(void* szConfPath)
 	config = new CConfig();
 	if(config->loadConfig(strConfPath))
 	{
-		strPort = config->getValue("SERVER DISPATCHER", "port");
-		if(!strPort.empty())
+		strValue = config->getValue("SERVER DISPATCHER", "port");
+		if(!strValue.empty())
 		{
-			convertFromString(nPort, strPort);
+			convertFromString(nPort, strValue);
 			nRet = startDispatcher(nPort, mnMsqKey);
+			if(nRet)
+			{
+				strValue = config->getValue("SERVER SIGNIN", "port");
+				convertFromString(nPort, strValue);
+				dispatcher->addServer(ID_SERVER_SIGNIN, config->getValue("SERVER SIGNIN", "name").c_str(),
+						config->getValue("SERVER SIGNIN", "ip").c_str(), nPort);
+
+				strValue = config->getValue("SERVER TRACKER", "port");
+				convertFromString(nPort, strValue);
+				dispatcher->addServer(ID_SERVER_TRACKER, config->getValue("SERVER TRACKER", "name").c_str(),
+						config->getValue("SERVER TRACKER", "ip").c_str(), nPort);
+
+				dispatcher->createResp();
+			}
 		}
 	}
 	delete config;
@@ -71,7 +85,7 @@ int CController::startDispatcher(const int nPort, int nMsqKey)
 {
 	if(dispatcher->start(0, nPort, nMsqKey))
 	{
-		dispatcher->idleTimeout(true, 5);
+		dispatcher->idleTimeout(true, 3);
 		return TRUE;
 	}
 	return FALSE;
