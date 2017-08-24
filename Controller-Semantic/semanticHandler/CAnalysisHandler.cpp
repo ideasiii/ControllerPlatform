@@ -15,6 +15,7 @@
 #include "dataStruct.h"
 #include "CResponsePacket.h"
 #include "CContentHandler.h"
+#include "CDisplayHandler.h"
 
 using namespace std;
 
@@ -316,6 +317,7 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 			{
 				respPacket.setDisplay(strDisplay.c_str());
 			}
+
 			respPacket.format(jsonResp);
 		}
 		break;
@@ -365,11 +367,16 @@ string CAnalysisHandler::getDisplay(const char *szFile)
 {
 	string strContent;
 	CFileHandler fh;
+	CDisplayHandler display;
 
 	if(szFile)
 	{
-		fh.readContent(szFile, strContent);
+		if(!fh.readContent(szFile, strContent))
+		{
+			strContent = display.getDefaultDisplay();
+		}
 	}
+
 	return strContent;
 }
 
