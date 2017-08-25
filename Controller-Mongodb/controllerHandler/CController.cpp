@@ -114,7 +114,7 @@ int CController::startTrackerServer(const int nPort, const int nMsqId)
 {
 	if(trackerServer->start(0, nPort, nMsqId))
 	{
-		trackerServer->idleTimeout(true, 3);
+		//	trackerServer->idleTimeout(true, 3);
 		return TRUE;
 	}
 	return FALSE;
