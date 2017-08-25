@@ -2,7 +2,7 @@
  * CTrackerServer.cpp
  *
  *  Created on: 2017年3月31日
- *      Author: root
+ *      Author: Jugo
  */
 
 #include <string>
