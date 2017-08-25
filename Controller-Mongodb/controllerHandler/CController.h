@@ -14,6 +14,11 @@ class CMongoDBHandler;
 
 class CController: public CApplication
 {
+	struct MONGODB_CONN
+	{
+		std::string strIP;
+		std::string strPort;
+	};
 public:
 	explicit CController();
 	virtual ~CController();
@@ -23,6 +28,7 @@ protected:
 	int onInitial(void* szConfPath);
 	int onFinish(void* nMsqKey);
 	void onHandleMessage(Message &message);
+	void onTimer(int nId);
 
 private:
 	int startTrackerServer(const int nPort, const int nMsqId);
@@ -33,4 +39,5 @@ private:
 	CTrackerServer *trackerServer;
 	CMongoDBHandler *mongodb;
 	int mnMsqKey;
+	MONGODB_CONN mongo_conn;
 };

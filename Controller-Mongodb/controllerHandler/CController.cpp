@@ -18,6 +18,8 @@
 
 using namespace std;
 
+#define ID_TIMER_MONGO_CONN			27017
+
 CController::CController() :
 		trackerServer(0), mongodb(0), mnMsqKey(-1)
 {
@@ -41,10 +43,9 @@ int CController::onInitial(void* szConfPath)
 {
 	int nRet;
 	int nPort;
-	string strIP;
-	string strPort;
 	CConfig *config;
 	string strConfPath;
+	string strValue;
 
 	nRet = FALSE;
 	strConfPath = reinterpret_cast<const char*>(szConfPath);
@@ -55,23 +56,40 @@ int CController::onInitial(void* szConfPath)
 	config = new CConfig();
 	if(config->loadConfig(strConfPath))
 	{
-		strIP = config->getValue("MONGODB", "ip");
-		strPort = config->getValue("MONGODB", "port");
-		nRet = startMongoClient(strIP.c_str(), strPort.c_str());
-
-		if(nRet)
+		mongo_conn.strIP = config->getValue("MONGODB", "ip");
+		mongo_conn.strPort = config->getValue("MONGODB", "port");
+		if(!startMongoClient(mongo_conn.strIP.c_str(), mongo_conn.strPort.c_str()))
 		{
-			strPort = config->getValue("SERVER TRACKER", "port");
-			if(!strPort.empty())
-			{
-				convertFromString(nPort, strPort);
-				nRet = startTrackerServer(nPort, mnMsqKey);
-			}
+			_log("[CController] onInitial MongoDB Connect Fail!!");
+			setTimer(ID_TIMER_MONGO_CONN, 5, 5);
+		}
+
+		strValue = config->getValue("SERVER TRACKER", "port");
+		if(!strValue.empty())
+		{
+			convertFromString(nPort, strValue);
+			nRet = startTrackerServer(nPort, mnMsqKey);
 		}
 	}
 
 	delete config;
 	return nRet;
+}
+
+void CController::onTimer(int nId)
+{
+	switch(nId)
+	{
+	case ID_TIMER_MONGO_CONN:
+		killTimer(ID_TIMER_MONGO_CONN);
+		_log("[CController] onTimer run MongoDB reconnect");
+		if(!startMongoClient(mongo_conn.strIP.c_str(), mongo_conn.strPort.c_str()))
+		{
+			_log("[CController] onInitial MongoDB Connect Fail!!");
+			setTimer(ID_TIMER_MONGO_CONN, 5, 5);
+		}
+		break;
+	}
 }
 
 int CController::onFinish(void* nMsqKey)
@@ -94,7 +112,12 @@ void CController::onHandleMessage(Message &message)
 
 int CController::startTrackerServer(const int nPort, const int nMsqId)
 {
-	return trackerServer->start(0, nPort, nMsqId);
+	if(trackerServer->start(0, nPort, nMsqId))
+	{
+		trackerServer->idleTimeout(true, 3);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 int CController::startMongoClient(const char *szIP, const char *szPort)
@@ -105,32 +128,41 @@ int CController::startMongoClient(const char *szIP, const char *szPort)
 string CController::insertLog(const int nType, string strData)
 {
 	string strOID;
-	switch(nType)
+
+	if(mongodb->isValid())
 	{
-	case TYPE_MOBILE_SERVICE:
-		strOID = mongodb->insert("access", "mobile", strData);
-		break;
-	case TYPE_POWER_CHARGE_SERVICE:
-		strOID = mongodb->insert("access", "power", strData);
-		break;
-	case TYPE_SDK_SERVICE:
-		strOID = mongodb->insert("access", "sdk", strData);
-		break;
-	case TYPE_TRACKER_SERVICE:
-		strOID = mongodb->insert("access", "tracker", strData);
-		break;
-	case TYPE_TRACKER_APPLIENCE:
-		strOID = mongodb->insert("access", "applience", strData);
-		break;
-	case TYPE_TRACKER_TOY:
-		strOID = mongodb->insert("access", "toy", strData);
-		break;
-	case TYPE_TRACKER_IOT:
-		strOID = mongodb->insert("access", "iot", strData);
-		break;
-	default:
-		_log("[Mongodb Controller] Insert Access log fail, unknow service type: %d", nType);
-		break;
+		switch(nType)
+		{
+		case TYPE_MOBILE_SERVICE:
+			strOID = mongodb->insert("access", "mobile", strData);
+			break;
+		case TYPE_POWER_CHARGE_SERVICE:
+			strOID = mongodb->insert("access", "power", strData);
+			break;
+		case TYPE_SDK_SERVICE:
+			strOID = mongodb->insert("access", "sdk", strData);
+			break;
+		case TYPE_TRACKER_SERVICE:
+			strOID = mongodb->insert("access", "tracker", strData);
+			break;
+		case TYPE_TRACKER_APPLIENCE:
+			strOID = mongodb->insert("access", "applience", strData);
+			break;
+		case TYPE_TRACKER_TOY:
+			strOID = mongodb->insert("access", "toy", strData);
+			break;
+		case TYPE_TRACKER_IOT:
+			strOID = mongodb->insert("access", "iot", strData);
+			break;
+		default:
+			_log("[CController] insertLog Insert Access log fail, unknow service type: %d", nType);
+			break;
+		}
+	}
+	else
+	{
+		_log("[CController] insertLog fail MongoDB Invalid");
+		setTimer(ID_TIMER_MONGO_CONN, 5, 5);
 	}
 	return strOID;
 }
