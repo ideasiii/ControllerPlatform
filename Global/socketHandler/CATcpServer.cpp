@@ -277,9 +277,13 @@ void CATcpServer::checkIdle()
 {
 	map<unsigned long int, SOCKET_CLIENT>::iterator it;
 	double diff;
+	long int lnNow;
+
 	for(it = mapClient.begin(); mapClient.end() != it; ++it)
 	{
-		diff = difftime(nowSecond(), it->second.ulAliveTime);
+		lnNow = nowSecond();
+		_log("[CATcpServer] checkIdle get now: %d", (int) lnNow);
+		diff = difftime(lnNow, it->second.ulAliveTime);
 		if(IDLE_TIMEOUT < (int) diff)
 		{
 			_log("[CATcpServer] %s Socket Client: %d idle: %d seconds", strTaskName.c_str(), it->first, (int) diff);
