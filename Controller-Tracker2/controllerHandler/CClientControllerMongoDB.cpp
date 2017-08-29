@@ -11,7 +11,7 @@ CClientControllerMongoDB::CClientControllerMongoDB(CObject * object) :
 		dynamicField(new DynamicField)
 {
 	mpController = object;
-	dynamicField->setMySQLInfo("175.98.119.121", "tracker", "ideas123!", "ideas", "field");
+	dynamicField->setMySQLInfo("127.0.0.1", "tracker", "ideas123!", "ideas", "field");
 }
 
 CClientControllerMongoDB::~CClientControllerMongoDB()
