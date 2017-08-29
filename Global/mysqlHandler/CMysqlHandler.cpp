@@ -25,7 +25,7 @@ CMysqlHandler::~CMysqlHandler()
 	close();
 }
 
-int CMysqlHandler::connect(string strHost, string strDB, string strUser, string strPassword)
+int CMysqlHandler::connect(string strHost, string strDB, string strUser, string strPassword, const char *szConnTimeout)
 {
 	close();
 	mpMySQL = mysql_init(NULL);
@@ -35,7 +35,8 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 		return FALSE;
 	}
 
-	mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, "60");
+	if(szConnTimeout)
+		mysql_options(mpMySQL, MYSQL_OPT_CONNECT_TIMEOUT, szConnTimeout);
 	mysql_options(mpMySQL, MYSQL_SET_CHARSET_NAME, "utf8");
 	mysql_options(mpMySQL, MYSQL_INIT_COMMAND, "SET NAMES utf8");
 
@@ -74,6 +75,7 @@ void CMysqlHandler::setError(string strMsg)
 	{
 		mstrLastError = mysql_error(mpMySQL);
 		mnLastErrorNo = mysql_errno(mpMySQL);
+		_log("[CMysqlHandler] setError Error:%s mysql_error:%s", strMsg.c_str(), mstrLastError.c_str());
 	}
 }
 
@@ -138,7 +140,7 @@ int CMysqlHandler::query(string strSQL, list<map<string, string> > &listRest)
 		string strItem;
 		string strField;
 
-		while((row = mysql_fetch_row(result)) )
+		while((row = mysql_fetch_row(result)))
 		{
 			// 獲取下一行
 			//row = mysql_fetch_row(result);

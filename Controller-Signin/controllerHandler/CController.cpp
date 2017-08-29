@@ -80,7 +80,7 @@ int CController::startSignin(const int nPort, const int nMsqId)
 {
 	if(cmpSignin->start(0, nPort, nMsqId))
 	{
-		cmpSignin->idleTimeout(true, 3);
+		cmpSignin->idleTimeout(true, 5);
 		return TRUE;
 	}
 	return FALSE;
@@ -103,7 +103,7 @@ void CController::runMysqlExec(std::string strSQL)
 	extern map<string, string> mapMysqlSetting;
 
 	int nRet = mysql->connect(mapMysqlSetting["host"], mapMysqlSetting["database"], mapMysqlSetting["user"],
-			mapMysqlSetting["password"]);
+			mapMysqlSetting["password"], "5");
 
 	if(FALSE == nRet)
 	{
