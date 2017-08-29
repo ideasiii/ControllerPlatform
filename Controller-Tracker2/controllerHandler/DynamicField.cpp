@@ -37,7 +37,7 @@ public:
 
 	bool operator ==(const DeviceField& rhs) const
 	{
-		if (this->device_id.compare(rhs.device_id) == 0 && this->field_name.compare(rhs.field_name) == 0)
+		if(this->device_id.compare(rhs.device_id) == 0 && this->field_name.compare(rhs.field_name) == 0)
 		{
 			return true;
 		}
@@ -69,7 +69,7 @@ bool DynamicField::isValidJSONFormat(string data)
 {
 	bool isValid = false;
 	JSONObject *jobjRoot = new JSONObject(data);
-	if (jobjRoot->isValid())
+	if(jobjRoot->isValid())
 	{
 		_log("[DynamicField] is Valid JSON Format %s", data.c_str());
 		isValid = true;
@@ -92,10 +92,10 @@ bool DynamicField::isValidJSONFormat(string data)
 bool DynamicField::updateCacheDeviceID()
 {
 
-	if (isConnectedIdeasDB == false)
+	if(isConnectedIdeasDB == false)
 	{
 		int status = connectDB(strHost, strIdeasDBName, strUser, strPassword);
-		if (status > 0)
+		if(status > 0)
 		{
 			isConnectedIdeasDB = true;
 			return updateCacheDeviceID();
@@ -112,7 +112,7 @@ bool DynamicField::updateCacheDeviceID()
 
 		string strSQL = "select app_id from app";
 		list<map<string, string> > listRest;
-		if (ideasDBHandler->query(strSQL, listRest) == FALSE)
+		if(ideasDBHandler->query(strSQL, listRest) == FALSE)
 		{
 			_log("[DynamicField] Cannot Query ideasDB query:%s", strSQL.c_str());
 			ideasDBHandler->close();
@@ -124,12 +124,12 @@ bool DynamicField::updateCacheDeviceID()
 			ideasDBHandler->close();
 			isConnectedIdeasDB = false;
 
-			if (!listRest.empty())
+			if(!listRest.empty())
 			{
 				list<map<string, string>>::iterator iterator;
 				cacheDeviceID->clear();
 
-				for (iterator = listRest.begin(); iterator != listRest.end(); ++iterator)
+				for(iterator = listRest.begin(); iterator != listRest.end(); ++iterator)
 				{
 
 					cacheDeviceID->push_back((*iterator)["app_id"]);
@@ -165,12 +165,12 @@ bool DynamicField::updateCacheDeviceID()
 void DynamicField::printAllCaches()
 {
 	_log("[DynamicField] ***********************print cacheDeviceID *******\n");
-	for (size_t i = 0; i < this->cacheDeviceID->size(); i++)
+	for(size_t i = 0; i < this->cacheDeviceID->size(); i++)
 	{
 		_log("[DynamicField] ***********************id: %s\n", cacheDeviceID->at(i).c_str());
 	}
 	_log("[DynamicField] ***********************print CacheDeviceFieldData *******\n");
-	for (size_t i = 0; i < this->cacheDeviceFieldData->size(); i++)
+	for(size_t i = 0; i < this->cacheDeviceFieldData->size(); i++)
 	{
 		_log("[DynamicField] ***********************id: %s field: %s",
 				cacheDeviceFieldData->at(i).getDeviceID().c_str(), cacheDeviceFieldData->at(i).getFieldName().c_str());
@@ -181,10 +181,10 @@ void DynamicField::printAllCaches()
 bool DynamicField::addCacheDeviceFieldData(string id, vector<string> &fieldData)
 {
 	bool isAddData = false;
-	for (size_t i = 0; i < fieldData.size(); i++)
+	for(size_t i = 0; i < fieldData.size(); i++)
 	{
 		DeviceField tmp = DeviceField(id, fieldData.at(i));
-		if (!(find(cacheDeviceFieldData->begin(), cacheDeviceFieldData->end(), tmp) != cacheDeviceFieldData->end()))
+		if(!(find(cacheDeviceFieldData->begin(), cacheDeviceFieldData->end(), tmp) != cacheDeviceFieldData->end()))
 		{
 			cacheDeviceFieldData->push_back(tmp);
 			isAddData = true;
@@ -201,12 +201,12 @@ void DynamicField::insertDynamicData(string data)
 	vector<string> fieldData;
 
 	string id = getJSONKeyAndID(data, fieldData);
-	if (!id.empty())
+	if(!id.empty())
 	{
 		string deviceID = compareDeviceIDExist(id);
-		if (!deviceID.empty())
+		if(!deviceID.empty())
 		{
-			if (addCacheDeviceFieldData(deviceID, fieldData) == true)
+			if(addCacheDeviceFieldData(deviceID, fieldData) == true)
 			{
 				updateCacheDeviceFieldData();
 			}
@@ -218,13 +218,13 @@ void DynamicField::insertDynamicData(string data)
 		else
 		{
 			//double check, update cache device ID
-			if (updateCacheDeviceID() > 0)
+			if(updateCacheDeviceID() > 0)
 			{
 				deviceID = compareDeviceIDExist(id);
 
-				if (!deviceID.empty())
+				if(!deviceID.empty())
 				{
-					if (addCacheDeviceFieldData(deviceID, fieldData) == true)
+					if(addCacheDeviceFieldData(deviceID, fieldData) == true)
 					{
 						updateCacheDeviceFieldData();
 					}
@@ -258,9 +258,9 @@ string DynamicField::compareDeviceIDExist(string id)
 {
 	string deviceID;
 
-	for (size_t i = 0; i < cacheDeviceID->size(); i++)
+	for(size_t i = 0; i < cacheDeviceID->size(); i++)
 	{
-		if (id.find(cacheDeviceID->at(i)) != string::npos)
+		if(id.find(cacheDeviceID->at(i)) != string::npos)
 		{
 			//found it!
 			deviceID = cacheDeviceID->at(i);
@@ -280,15 +280,15 @@ string DynamicField::getJSONKeyAndID(string data, vector<string> & fieldData)
 
 	cJSON *cJsonInputString = jobjRoot->getcJSON();
 
-	if (cJsonInputString)
+	if(cJsonInputString)
 	{
 		cJSON *cJsonData = cJsonInputString->child;
 		cJSON *next;
-		while (cJsonData)
+		while(cJsonData)
 		{
 			next = cJsonData->next;
 
-			if (strcmp(cJsonData->string, "ID") == 0)
+			if(strcmp(cJsonData->string, "ID") == 0)
 			{
 				deviceID = (cJsonData->valuestring);
 				fieldData.push_back(cJsonData->string);
@@ -312,10 +312,10 @@ string DynamicField::getJSONKeyAndID(string data, vector<string> & fieldData)
 
 bool DynamicField::updateCacheDeviceFieldData()
 {
-	if (isConnectedFieldDB == false)
+	if(isConnectedFieldDB == false)
 	{
 		int status = connectDB(strHost, strFieldDBName, strUser, strPassword);
-		if (status > 0)
+		if(status > 0)
 		{
 			isConnectedFieldDB = true;
 			return updateCacheDeviceFieldData();
@@ -329,7 +329,7 @@ bool DynamicField::updateCacheDeviceFieldData()
 	}
 	else
 	{
-		for (size_t i = 0; i < cacheDeviceFieldData->size(); i++)
+		for(size_t i = 0; i < cacheDeviceFieldData->size(); i++)
 		{
 
 			string strSQL = "insert into device_field (id,field) values('" + cacheDeviceFieldData->at(i).getDeviceID()
@@ -349,13 +349,13 @@ int DynamicField::connectDB(string strHost, string strDB, string strUser, string
 	_log("[DynamicField] now connect to:%s DB:%s User:%s Pwd:%s", strHost.c_str(), strDB.c_str(), strUser.c_str(),
 			strPassword.c_str());
 
-	if (!strDB.compare(this->strIdeasDBName))
+	if(!strDB.compare(this->strIdeasDBName))
 	{
-		return ideasDBHandler->connect(strHost, strDB, strUser, strPassword);
+		return ideasDBHandler->connect(strHost, strDB, strUser, strPassword, "10");
 	}
-	else if (!strDB.compare(this->strFieldDBName))
+	else if(!strDB.compare(this->strFieldDBName))
 	{
-		return fieldDBHandler->connect(strHost, strDB, strUser, strPassword);
+		return fieldDBHandler->connect(strHost, strDB, strUser, strPassword, "10");
 	}
 	else
 	{
