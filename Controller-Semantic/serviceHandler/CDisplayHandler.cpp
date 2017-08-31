@@ -51,27 +51,29 @@ string CDisplayHandler::getDefaultDisplay()
 
 	jsonRoot.put("enable", 1);
 
-	//=============== add json object to json array =============//
+	//=============== set json item object =============//
 	jsonItem.put("host", DISPLAY_HOST);
 	jsonItem.put("color", DISPLAY_COLOR);
 	jsonItem.put("description", "default");
-	for(int i = 0; i < 10; ++i)
-	{
-		jsonItem.put("time", 5 * i);
-		jsonItem.put("file", format("OCTOBO_Expressions-%d.png", getRand(21, 40)));
-		jsonArray.add(jsonItem);
-	}
 
-	//=============== set animation ================//
+	//=============== add animation json object to item ================//
 	jsonAnim.put("type", 5);
 	jsonAnim.put("duration", 1000);
 	jsonAnim.put("repeat", 1);
 	jsonAnim.put("interpolate", 1);
 	jsonItem.put("animation", jsonAnim);
 
-	//================ add text json object to array item ==========//
+	//================ add text json object to item ==========//
 	jsonText.put("type", 0);
 	jsonItem.put("text", jsonText);
+
+	//================ add json item object to array ==========//
+	for(int i = 0; i < 10; ++i)
+	{
+		jsonItem.put("time", 5 * i);
+		jsonItem.put("file", format("OCTOBO_Expressions-%d.png", getRand(21, 40)));
+		jsonArray.add(jsonItem);
+	}
 
 	//============== add jsonarray to json object =========//
 	jsonRoot.put("show", jsonArray);
