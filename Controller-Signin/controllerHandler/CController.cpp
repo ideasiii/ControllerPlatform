@@ -5,6 +5,12 @@
  *      Author: Jugo
  */
 
+#include <iostream>
+#include <utility>
+#include <thread>
+#include <chrono>
+#include <functional>
+#include <atomic>
 #include <string>
 #include <map>
 #include "common.h"
@@ -149,7 +155,9 @@ void CController::onHandleMessage(Message &message)
 	switch(message.what)
 	{
 	case sign_up_request:
-		onSignin(message.strData.c_str());
+		//onSignin(message.strData.c_str());
+		thread([=]
+		{	onSignin(message.strData.c_str());}).detach();
 		break;
 	case controller_die_request:
 		JSONObject jsonData(message.strData);
