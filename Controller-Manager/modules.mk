@@ -11,6 +11,8 @@ export MODULES=controllerHandler \
 ../Global/logHandler \
 ../Global/processHandler \
 ../Global/cmpHandler \
-../Global/protocolHandler
+../Global/protocolHandler \
+../Global/systemHandler \
+../Global/fileHandler
 			 
 #export EXT_MODULES=extInclude

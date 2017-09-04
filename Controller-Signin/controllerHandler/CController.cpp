@@ -155,9 +155,9 @@ void CController::onHandleMessage(Message &message)
 	switch(message.what)
 	{
 	case sign_up_request:
-		//onSignin(message.strData.c_str());
-		thread([=]
-		{	onSignin(message.strData.c_str());}).detach();
+		onSignin(message.strData.c_str());
+//		thread([=]
+//		{	onSignin(message.strData.c_str());}).detach();
 		break;
 	case controller_die_request:
 		JSONObject jsonData(message.strData);

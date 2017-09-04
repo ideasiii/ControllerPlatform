@@ -22,6 +22,7 @@ protected:
 	int onInitial(void* szConfPath);
 	int onFinish(void* nMsqKey);
 	void onHandleMessage(Message &message);
+	void onTimer(int nId);
 
 private:
 	int mnMsqKey;
