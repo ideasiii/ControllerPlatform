@@ -57,7 +57,7 @@ int CProcessManager::getPid(const char * szProcessName)
 	string strCommand;
 
 	if(!szProcessName)
-		return FALSE;
+		return 0;
 
 	nPid = -1;
 	strCommand = format("pidof -s %s", szProcessName);
@@ -130,7 +130,7 @@ void CProcessManager::psInstanceDump(const char * szProcessName, process_info &p
 	psInstanceDump(getPid(szProcessName), psinfo);
 }
 
-void CProcessManager::psStatus(const char * szPsName, std::map<std::string, std::string> &mapInfo)
+int CProcessManager::psStatus(const char * szPsName, std::map<std::string, std::string> &mapInfo)
 {
 	int nPid;
 	CFileHandler fh;
@@ -140,9 +140,12 @@ void CProcessManager::psStatus(const char * szPsName, std::map<std::string, std:
 	set<string> setData;
 	set<string>::const_iterator cit_set;
 	if(!szPsName)
-		return;
+		return FALSE;
 
 	nPid = getPid(szPsName);
+	if(0 >= nPid)
+		return FALSE;
+
 	strPsPath = format("/proc/%d/status", nPid);
 
 	fh.readAllLine(strPsPath.c_str(), setData);
@@ -153,6 +156,8 @@ void CProcessManager::psStatus(const char * szPsName, std::map<std::string, std:
 		spliteData(const_cast<char*>(cit_set->c_str()), ":", vData);
 		mapInfo[trim(vData.at(0))] = trim(vData.at(1));
 	}
+
+	return TRUE;
 }
 
 std::string CProcessManager::psOwner(int pid)

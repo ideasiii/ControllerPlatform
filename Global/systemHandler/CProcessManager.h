@@ -30,6 +30,6 @@ public:
 	int getPid(const char * szProcessName);
 	void psInstanceDump(int pid, process_info &psinfo);
 	void psInstanceDump(const char * szProcessName, process_info &psinfo);
-	void psStatus(const char * szPsName, std::map<std::string, std::string> &mapInfo);
+	int psStatus(const char * szPsName, std::map<std::string, std::string> &mapInfo);
 	std::string psOwner(int pid);
 };

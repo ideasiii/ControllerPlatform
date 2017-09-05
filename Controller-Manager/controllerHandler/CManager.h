@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+#include <set>
 #include "CCmpServer.h"
 
 class CProcessManager;
@@ -20,14 +22,21 @@ typedef struct _MONITOR
 	}
 } MONITOR;
 
+enum
+{
+	PROC_NOT_RUN = 0, PROC_THREAD_OVER
+};
+
 class CManager: public CCmpServer
 {
 public:
 	explicit CManager(CObject *object);
 	virtual ~CManager();
-	void checkProcess();
+	int checkProcess();
 	void psInstanceDump(int pid);
 	void setThreadMax(int nMax);
+	void addProcess(const char *szProcessName);
+	int getProcessCount();
 
 private:
 	CObject *mpController;
@@ -35,4 +44,5 @@ private:
 
 private:
 	MONITOR monitor;
+	std::set<std::string> setProcessName;
 };
