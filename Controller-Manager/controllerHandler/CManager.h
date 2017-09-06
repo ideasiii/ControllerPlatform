@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <set>
 #include "CCmpServer.h"
 
 class CProcessManager;
+class CMysqlHandler;
 
 typedef struct _MONITOR
 {
@@ -38,9 +40,18 @@ public:
 	void addProcess(const char *szProcessName);
 	int getProcessCount();
 
+protected:
+	void onTimer(int nId);
+
+private:
+	void insertDB(std::map<std::string, std::string> &mapData);
+	void clearDB();
+	bool connectDB();
+
 private:
 	CObject *mpController;
 	CProcessManager *processmanager;
+	CMysqlHandler *mysql;
 
 private:
 	MONITOR monitor;

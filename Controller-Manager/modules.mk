@@ -13,6 +13,7 @@ export MODULES=controllerHandler \
 ../Global/cmpHandler \
 ../Global/protocolHandler \
 ../Global/systemHandler \
-../Global/fileHandler
+../Global/fileHandler \
+../Global/mysqlHandler
 			 
 #export EXT_MODULES=extInclude

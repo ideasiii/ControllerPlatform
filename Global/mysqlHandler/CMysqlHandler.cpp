@@ -5,14 +5,11 @@
  *      Author: jugo
  */
 
-#include <mysql/mysql.h>
 #include "CMysqlHandler.h"
 #include "common.h"
 #include "LogHandler.h"
 
 using namespace std;
-
-MYSQL *mpMySQL;
 
 CMysqlHandler::CMysqlHandler() :
 		mnLastErrorNo(0)
@@ -25,6 +22,12 @@ CMysqlHandler::~CMysqlHandler()
 	close();
 }
 
+bool CMysqlHandler::isValid()
+{
+	if(mpMySQL)
+		return true;
+	return false;
+}
 int CMysqlHandler::connect(string strHost, string strDB, string strUser, string strPassword, const char *szConnTimeout)
 {
 	close();
@@ -44,16 +47,17 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
 //	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
 //			strPassword.c_str(), strDB.c_str());
-	mpMySQL = mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL,
-			0);
-	if( NULL == mpMySQL)
+	//mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL, 0);
+	if(!mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL, 0))
 	{
 		setError("MySQL Connect Fail");
+		close();
 		return FALSE;
 	}
 
 	_log("[CMysqlHandler] MySQL Connect Success!!");
 	return TRUE;
+
 }
 
 void CMysqlHandler::close()
@@ -71,12 +75,12 @@ void CMysqlHandler::close()
  */
 void CMysqlHandler::setError(string strMsg)
 {
-	if(NULL != mpMySQL)
-	{
-		mstrLastError = mysql_error(mpMySQL);
-		mnLastErrorNo = mysql_errno(mpMySQL);
-		_log("[CMysqlHandler] setError Error:%s mysql_error:%s", strMsg.c_str(), mstrLastError.c_str());
-	}
+//	if(NULL != mpMySQL)
+//	{
+	mstrLastError = mysql_error(mpMySQL);
+	mnLastErrorNo = mysql_errno(mpMySQL);
+	_log("[CMysqlHandler] setError Error:%s mysql_error:%s", strMsg.c_str(), mstrLastError.c_str());
+//	}
 }
 
 string CMysqlHandler::getLastError()

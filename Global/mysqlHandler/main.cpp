@@ -20,7 +20,7 @@ int main()
 	CMysqlHandler *pmysql = new CMysqlHandler();
 	string strSQL;
 
-	pmysql->connect("175.98.119.121", "tracker", "ideas", "tracker123!");
+	pmysql->connect("175.98.119.121", "tracker", "ideas", "tracker123!", "5");
 	//strSQL =
 	//		"insert into tracker_user(id,app_id,mac,os,phone,fb_id,fb_name,fb_email,fb_account,g_account,t_account,create_date) values('0123456789','414515787','AABBCCDD','Android','','','','','','','','2017-02-14 11:49:00')";
 	//pmysql->sqlExec(strSQL);
@@ -33,10 +33,10 @@ int main()
 	string strValue;
 	map<string, string> mapItem;
 	int nCount = 0;
-	for (list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
+	for(list<map<string, string> >::iterator i = listRest.begin(); i != listRest.end(); ++i, ++nCount)
 	{
 		mapItem = *i;
-		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+		for(map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
 		{
 			printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
 		}

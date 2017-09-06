@@ -116,7 +116,7 @@ void runService(int nMsqKey)
 	if(0 < controller->initMessage(nControllerMsqKey, "Controller"))
 	{
 		initLogPath();
-		_log("\n<============= (◕‿‿◕｡) ... Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n");
+		_log("\n<============= (◕‿‿◕｡) ... %s Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n", __progname);
 		controller->setConfPath(getConfName(__progname).c_str());
 		controller->callback(MSG_ON_INITIAL, (void*) getConfName(__progname).c_str());
 		controller->run(EVENT_FILTER_CONTROLLER, "Controller");
@@ -125,7 +125,7 @@ void runService(int nMsqKey)
 	}
 
 	delete controller;
-	_log("\n<============= ( #｀Д´) ... Service Stop Run ... (╬ ಠ 益ಠ) =============>\n");
+	_log("\n<============= ( #｀Д´) ... %s Service Stop Run ... (╬ ಠ 益ಠ) =============>\n", __progname);
 	closelog();
 	_close(); // close log file
 }

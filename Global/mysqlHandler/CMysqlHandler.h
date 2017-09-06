@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <mysql/mysql.h>
 #include <string>
 #include <list>
 #include <map>
@@ -25,6 +26,7 @@ public:
 	std::string getLastError();
 	int getLastErrorNo();
 	int getFields(std::string strTableName, std::set<std::string> &sFields);
+	bool isValid();
 
 private:
 	void setError(std::string strMsg);
@@ -32,5 +34,5 @@ private:
 private:
 	std::string mstrLastError;
 	int mnLastErrorNo;
-
+	MYSQL *mpMySQL;
 };
