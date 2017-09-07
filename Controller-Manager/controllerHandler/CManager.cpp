@@ -163,7 +163,7 @@ bool CManager::connectDB()
 {
 	if(!mysql->isValid())
 	{
-		if(mysql->connect("127.0.0.1", "process_status", "tracker", "ideas123!", "5"))
+		if(mysql->connect("127.0.0.1", "monitor", "tracker", "ideas123!", "5"))
 			return true;
 		_log("[CManager] connectDB connect fail: %s", mysql->getLastError().c_str());
 	}
