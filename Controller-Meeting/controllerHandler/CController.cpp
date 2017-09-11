@@ -252,10 +252,12 @@ void *threadStartRoutine_CController_connectToAgent(void *argv)
 	ctlr->agentConnectingThreadId = tid;
 	prctl(PR_SET_NAME, (unsigned long)"C_agentConnect");
 
-
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<> dist(RECONNECT_INTERVAL/2, RECONNECT_INTERVAL*2);
+
+	// hold before first try
+	sleep((RECONNECT_INTERVAL/2) + 1);
 
 	while (true)
 	{
@@ -304,10 +306,12 @@ void *threadStartRoutine_CController_connectToAmx(void *argv)
 	ctlr->amxConnectingThreadId = tid;
 	prctl(PR_SET_NAME, (unsigned long)"C_amxConnect");
 
-
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<> dist(RECONNECT_INTERVAL/2, RECONNECT_INTERVAL*2);
+
+	// hold before first try
+	sleep((RECONNECT_INTERVAL / 2) + 1);
 
 	while (true)
 	{

@@ -27,6 +27,8 @@
 
 using namespace std;
 
+unique_ptr<JSONObject> matchPredefinedQRCodeString(const string& src);
+
 CClientMeetingAgent::CClientMeetingAgent(CObject *controller) :
 	mpController(controller), enquireLinkYo(new EnquireLinkYo("ClientAgent.ely", this,
 		EVENT_COMMAND_SOCKET_SERVER_DISCONNECT_MEETING_AGENT, mpController))
@@ -239,7 +241,6 @@ string CClientMeetingAgent::handleQrCodeToken(const string& reqUserId, const str
 	//	reqUserId.c_str(), reqQrCodeToken.c_str());
 
 	std::unique_ptr<JSONObject> decodedQrCodeJson = decodeQRCodeString(reqQrCodeToken);
-
 	if (decodedQrCodeJson == nullptr || !decodedQrCodeJson->isValid())
 	{
 		return JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
@@ -260,14 +261,15 @@ string CClientMeetingAgent::handleQrCodeToken(const string& reqUserId, const str
 
 	if (decQrCodeType == 1)
 	{
-		// 開會通知
+		// 開會通知，不應該包含 user ID
 		if (reqUserId.compare("null") != 0)
 		{
 			strResponseBodyData = JSON_RESP_UNKNOWN_TYPE_OF_QR_CODE;
 		}
 		else
 		{
-			// this type of QR code contains exactly the content to be sent back to user
+			// decoded content is what should be sent back to user
+			// formatted in such form: {"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "__unique ID of user__"}}
 			strResponseBodyData = decodedQrCodeJson->toUnformattedString();
 		}
 	}
@@ -333,7 +335,7 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 		"FROM meeting_members AS mm, user AS u, meeting_info AS mi, meeting_room AS mr "
 		"WHERE mm.user_id = u.id AND mm.meeting_info_id = mi.id AND mi.room_id = mr.id";
 
-	/*if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
+	if (userId.compare(TEST_USER_CAN_OPEN_101) == 0 || userId.compare(TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// 測試 user 挑出所有會議
 	}
@@ -341,12 +343,13 @@ string CClientMeetingAgent::getMeetingsInfo(const string& userId)
 	{
 		// 挑出 user 於今天明天後天進行的會議
 		strSQL += " AND mi.time_start >= (UNIX_TIMESTAMP(CURDATE()) * 1000) "
-			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 3 DAY) * 1000)";
-	}*/
+			"AND mi.time_start < (UNIX_TIMESTAMP(CURDATE() + INTERVAL 14 DAY) * 1000)";
+	}
 
 	strSQL += " AND mm.valid = 1 AND u.valid = 1 AND mi.valid = 1 AND mr.valid = 1"
 		") AS meetings_candidate WHERE mm.user_id = '"
-		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id AND mm.valid = 1";
+		+ strUserDbId + "' AND mm.meeting_info_id = meetings_candidate.mi_id AND mm.valid = 1 "
+		"ORDER BY start_time";
 
 	bRet = HiddenUtility::selectFromDb(LOG_TAG" getMeetingsInfo()", strSQL, listRet);
 	if (!bRet)
@@ -520,7 +523,7 @@ string CClientMeetingAgent::getAMXControlToken(const string& userId, const strin
 	list<map<string, string>> listRet;
 	string strSQL = "SELECT token FROM amx_control_token as t, user as u, meeting_room as m"
 		" WHERE u.uuid = '" + userId + "' AND m.room_id = '" + roomId + "'"
-		+ " AND t.time_start <= " + to_string(unixTimeNow) + " AND t.time_end >= " + to_string(unixTimeNow)
+		+ " AND t.time_start <= " + to_string(unixTimeNow) + " AND t.time_end > " + to_string(unixTimeNow)
 		+ " AND t.user_id = u.id AND t.meeting_room_id = m.id AND t.valid = 1 AND u.valid = 1 AND m.valid = 1";
 
 	bool bRet = HiddenUtility::selectFromDb(LOG_TAG" getAMXControlToken()", strSQL, listRet);
@@ -544,7 +547,14 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 	{
 		return nullptr;
 	}
-	else if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
+
+	auto predefinedMatch = matchPredefinedQRCodeString(src);
+	return predefinedMatch != nullptr ? move(predefinedMatch) : decryptQRCodeString(src);
+}
+
+unique_ptr<JSONObject> matchPredefinedQRCodeString(const string& src)
+{
+	if (src.compare(QR_CODE_MEETING_NOTICE_TEST_USER_CAN_OPEN_101) == 0)
 	{
 		// test user w/ AMX control permission
 		return make_unique<JSONObject>(R"({"QRCODE_TYPE": "1","MESSAGE":{"USER_ID": "00000000-ffff-0000-ffff-ffffffffffff"}})");
@@ -578,7 +588,7 @@ unique_ptr<JSONObject> CClientMeetingAgent::decodeQRCodeString(const string& src
 		return make_unique<JSONObject>(R"({"DOOR_OPEN_ROOM_ID": "ITES_102", "QRCODE_TYPE": "3"})");
 	}
 
-	return decryptQRCodeString(src);
+	return nullptr;
 }
 
 unique_ptr<JSONObject> CClientMeetingAgent::decryptQRCodeString(const string& src) const

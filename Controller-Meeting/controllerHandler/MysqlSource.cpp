@@ -43,12 +43,13 @@ bool MysqlSource::initialize(std::unique_ptr<CConfig>& config)
 	string strMysqlUser = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "user");
 	string strMysqlPassword = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "password");
 	string strMysqlDatabase = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "database");
-
+	string strMysqlConnTimeout = config->getValue(CONF_BLOCK_MYSQL_SOURCE, "connection_timeout");
 	if (strMysqlHost.empty()
 		|| strMysqlPort.empty()
 		|| strMysqlUser.empty()
 		|| strMysqlPassword.empty()
-		|| strMysqlDatabase.empty())
+		|| strMysqlDatabase.empty()
+		|| strMysqlConnTimeout.empty())
 	{
 		_log(LOG_TAG" initialize(): config 404");
 		return false;
@@ -66,6 +67,7 @@ bool MysqlSource::initialize(std::unique_ptr<CConfig>& config)
 	user = strMysqlUser;
 	password = strMysqlPassword;
 	database = strMysqlDatabase;
+	connTimeout = strMysqlConnTimeout;
 
 	return true;
 }
@@ -73,7 +75,7 @@ bool MysqlSource::initialize(std::unique_ptr<CConfig>& config)
 std::unique_ptr<CMysqlHandler> MysqlSource::getMysqlHandler()
 {
 	CMysqlHandler* mysql = new CMysqlHandler();
-	int nRet = mysql->connect(host, database, user, password);
+	int nRet = mysql->connect(host, database, user, password, connTimeout.c_str());
 
 	if (FALSE == nRet)
 	{

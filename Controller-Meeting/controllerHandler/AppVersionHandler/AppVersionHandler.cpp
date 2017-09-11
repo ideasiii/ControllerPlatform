@@ -20,7 +20,7 @@ void *threadStartRoutine_AppVersionHandler_runWatcher(void *argv)
 	auto avh = reinterpret_cast<AppVersionHandler*>(argv);
 	_log(LOG_TAG" %s threadStartRoutine_AppVersionHandler_runWatcher() step in", avh->strTaskName.c_str());
 
-	pthread_detach(pthread_self());
+	//pthread_detach(pthread_self());
 	prctl(PR_SET_NAME, (unsigned long)avh->taskName().c_str());
 	avh->watcherThreadId = pthread_self();
 	avh->doLoop = true;
@@ -58,7 +58,7 @@ void AppVersionHandler::stop()
 
 	doLoop = false;
 
-	//threadJoin(watcherThreadId);
+	threadJoin(watcherThreadId);
 	watcherThreadId = 0;
 }
 
@@ -104,9 +104,9 @@ void AppVersionHandler::runWatcher()
 			int ret = select(maxFd, &readFdSet, NULL, NULL, &timeout);
 			//_log(LOG_TAG" %s select() stepped out, ret = %d", ret);
 
+			// timeout
 			if (ret == 0)
 			{
-				// timeout
 				if (!doLoop)
 				{
 					_log(LOG_TAG" %s runWatcher() doLoop = false, break loop", strTaskName.c_str());
