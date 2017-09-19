@@ -35,7 +35,7 @@ enum
 //==================================== Content Service =========================================//
 enum
 {
-	SERVICE_NO = 0, SERVICE_SPOTIFY = 1
+	SERVICE_NO = 0, SERVICE_SPOTIFY = 1, SERVICE_WEATHER = 2
 };
 
 //==================================== 封包 Response 內容定義 =========================================//
@@ -84,4 +84,5 @@ enum
 #define VERB_SAY					2
 #define VERB_READ					3
 #define VERB_WRITE					4
+#define VERB_REQUEST				5
 
