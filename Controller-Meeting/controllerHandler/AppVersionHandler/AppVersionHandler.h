@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <sys/inotify.h>
@@ -53,7 +54,7 @@ protected:
 
 private:
 	const int inotifyEventMask;
-	pthread_t watcherThreadId;
+	std::atomic<pthread_t> watcherThreadId;
 	bool doLoop;
 	std::string strTaskName;
 

@@ -37,7 +37,7 @@ AppVersionHandler* AppVersionHandlerFactory::createFromConfig(std::unique_ptr<CC
 			strAppDownloadLinkConfigDir, strAppDownloadLinkConfigName);
 	}
 
-	_log(LOG_TAG" init AppVersionHandler cannot be instantiated");
+	_log(LOG_TAG" createFromConfig() cannot spawn AppVersionHandler");
 	return nullptr;
 }
 

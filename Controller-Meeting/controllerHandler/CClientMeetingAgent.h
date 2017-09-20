@@ -71,23 +71,25 @@ private:
 	// 返回內容為要回應給 client 的 json 字串
 	std::string doDigitalSignup(const std::string& userId);
 
-	// 取得 AMX 裝置控制 token
+	// 取得 AMX 裝置控制 token。若 userId 在現在的時間有任何可控制 roomId 的 token，傳回之。
 	// 返回內容為要回應給 client 的 json 字串
 	std::string getAMXControlToken(const std::string& userId, const std::string& roomId);
 
 	// 解碼 QR code 掃出來的字串
+	// 若是預先定義的 QR code，直接回傳對應的結果，否則委派 decryptQRCodeString() 進行解密
 	std::unique_ptr<JSONObject> decodeQRCodeString(const std::string& src) const;
 
 	// 解密 QR code 掃出來的字串
 	std::unique_ptr<JSONObject> decryptQRCodeString(const std::string& src) const;
 
+	// parent of CClientMeetingAgent instance
 	// do not delete this or the whole world will collapse
 	CObject * const mpController;
 
 	std::string agentIp;
 	int agentPort;
 
-	//  做過 SHA256 hash 的 QR code 解密金鑰
+	// 做過 SHA256 hash 的 QR code 解密金鑰
 	uint8_t qrCodeKey[AesCrypto::KeyLength];
 
 	DoorAccessHandler doorAccessHandler;

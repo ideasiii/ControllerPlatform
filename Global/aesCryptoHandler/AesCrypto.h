@@ -41,11 +41,11 @@ private:
 	std::string decryptCbc(const uint8_t* cipher, int length, const uint8_t *iv);
 	std::string decryptCtr(const uint8_t* cipher, int length, const uint8_t *iv);
 
-	const uint8_t *key;
 	const uint mode;
+	const uint8_t *key;
 };
 
-/*
+/**
 example of usage, adapted from official Crypto++ example using CBC mode
 
 #include <string>

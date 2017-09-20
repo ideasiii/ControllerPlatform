@@ -29,6 +29,7 @@ private:
 	std::string user;
 	std::string password;
 	std::string database;
+	std::string connTimeout;
 
 	MysqlSource();
 };
