@@ -96,6 +96,14 @@ int CClientMeetingAgent::startClient(int msqKey)
 {
 	_log(LOG_TAG" Connecting to MeetingAgent %s:%d", agentIp.c_str(), agentPort);
 
+	/*_log(LOG_TAG" startClient() test: continuous start and stop ");
+	while (true)
+	{
+		appVersionHandler->start();
+		sleep(1);
+		appVersionHandler->stop();
+	}*/
+
 	int nRet = connectWithCallback(agentIp.c_str(), agentPort, msqKey,
 		[](CATcpClient *caller, pthread_t msgRecvTid, pthread_t pktRecvTid) -> void
 	{

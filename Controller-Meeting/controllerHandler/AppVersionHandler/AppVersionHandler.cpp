@@ -69,6 +69,12 @@ void AppVersionHandler::runWatcher()
 	_log(LOG_TAG" %s runWatcher() Initializing members once before going into watch loop", strTaskName.c_str());
 	reload();
 
+	/*_log(LOG_TAG" %s runWatcher() test: continuous reload to test memory leak", strTaskName.c_str());
+	while (true)
+	{
+		reload();
+	}*/
+
 	while(doLoop)
 	{
 		int inotifyFd, inotifyWd;
