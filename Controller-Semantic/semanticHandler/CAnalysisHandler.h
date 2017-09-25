@@ -40,6 +40,7 @@ private:
 	void loadMatch(const char *szPath);
 	std::string getDisplay(const char *szFile);
 	void serviceSpotify(const char *szWord, const char *szArtist, JSONObject& jsonResp);
+	void serviceWeather(const char *szWord, const char *szLocal, JSONObject& jsonResp);
 
 private:
 	std::map<std::string, RESOURCE> mapData;

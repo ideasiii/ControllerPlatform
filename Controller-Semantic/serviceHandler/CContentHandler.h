@@ -16,9 +16,7 @@ public:
 	CContentHandler();
 	virtual ~CContentHandler();
 	int spotifyTrack(const char *szInput, const char *szArtist, TRACK &track);
-
-private:
-	WEATHER weather;
+	void getWeather(const char *szLocation, WEATHER &weather);
 
 private:
 	CSpotify *spotify;

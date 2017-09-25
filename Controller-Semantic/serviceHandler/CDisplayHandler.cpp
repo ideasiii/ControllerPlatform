@@ -34,8 +34,9 @@ CDisplayHandler::~CDisplayHandler()
 
 }
 
-string CDisplayHandler::getDefaultDisplay()
+string CDisplayHandler::getDisplay(int nDisplay)
 {
+	int i;
 	string strJSON;
 	JSONObject jsonRoot;
 	JSONArray jsonArray;
@@ -54,7 +55,6 @@ string CDisplayHandler::getDefaultDisplay()
 	//=============== set json item object =============//
 	jsonItem.put("host", DISPLAY_HOST);
 	jsonItem.put("color", DISPLAY_COLOR);
-	jsonItem.put("description", "default");
 
 	//=============== add animation json object to item ================//
 	jsonAnim.put("type", 5);
@@ -67,12 +67,59 @@ string CDisplayHandler::getDefaultDisplay()
 	jsonText.put("type", 0);
 	jsonItem.put("text", jsonText);
 
-	//================ add json item object to array ==========//
-	for(int i = 0; i < 10; ++i)
+	switch(nDisplay)
 	{
-		jsonItem.put("time", 5 * i);
-		jsonItem.put("file", format("OCTOBO_Expressions-%d.png", getRand(21, 40)));
+	case DEFAULT:
+		jsonItem.put("description", "default");
+		//================ add json item object to array ==========//
+		for(i = 0; i < 10; ++i)
+		{
+			jsonItem.put("time", 3 * i);
+			jsonItem.put("file", format("OCTOBO_Expressions-%d.png", getRand(21, 40)));
+			jsonArray.add(jsonItem);
+		}
+		break;
+	case SAD:
+		jsonItem.put("description", "sad");
+		for(i = 0; i < 5; ++i)
+		{
+			if(i % 2)
+			{
+				jsonItem.put("time", 3 * i);
+				jsonItem.put("file", "OCTOBO_Expressions-05.png");
+				jsonArray.add(jsonItem);
+			}
+			else
+			{
+				jsonItem.put("time", 3 * i);
+				jsonItem.put("file", "OCTOBO_Expressions-06.png");
+				jsonArray.add(jsonItem);
+			}
+		}
+		break;
+	case HAPPY:
+		jsonItem.put("description", "happy");
+		for(i = 0; i < 5; ++i)
+		{
+			if(i % 2)
+			{
+				jsonItem.put("time", 3 * i);
+				jsonItem.put("file", "OCTOBO_Expressions-31.png");
+				jsonArray.add(jsonItem);
+			}
+			else
+			{
+				jsonItem.put("time", 3 * i);
+				jsonItem.put("file", "OCTOBO_Expressions-35.png");
+				jsonArray.add(jsonItem);
+			}
+		}
+		break;
+	default:
+		jsonItem.put("time", 0);
+		jsonItem.put("file", "OCTOBO_Expressions-14.png");
 		jsonArray.add(jsonItem);
+		break;
 	}
 
 	//============== add jsonarray to json object =========//
@@ -87,4 +134,19 @@ string CDisplayHandler::getDefaultDisplay()
 	jsonRoot.release();
 
 	return strJSON;
+}
+
+string CDisplayHandler::getDefaultDisplay()
+{
+	return getDisplay(DEFAULT);
+}
+
+string CDisplayHandler::getSadDisplay()
+{
+	return getDisplay(SAD);
+}
+
+string CDisplayHandler::getHappyDisplay()
+{
+	return getDisplay(HAPPY);
 }

@@ -337,6 +337,9 @@ int CAnalysisHandler::service(const char *szInput, JSONObject& jsonResp, std::ma
 	case SERVICE_SPOTIFY:
 		serviceSpotify(szInput, mapMatch["dictionary"].c_str(), jsonResp);
 		break;
+	case SERVICE_WEATHER:
+		serviceWeather(szInput, mapMatch["dictionary"].c_str(), jsonResp);
+		break;
 	}
 	return 0;
 }
@@ -346,6 +349,8 @@ void CAnalysisHandler::serviceSpotify(const char *szWord, const char *szArtist, 
 	string strDisplay;
 	TRACK track;
 	CResponsePacket respPacket;
+	CDisplayHandler display;
+
 	if(contentHandler->spotifyTrack(szWord, szArtist, track))
 	{
 		strDisplay =
@@ -356,11 +361,33 @@ void CAnalysisHandler::serviceSpotify(const char *szWord, const char *szArtist, 
 	}
 	else
 	{
-		strDisplay =
-				"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://smabuild.sytes.net/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
-				"tts", "無此歌手的樂曲或此歌手未授權播放").setDisplay(strDisplay.c_str()).format(jsonResp);
+				"tts", "無此歌手的樂曲或此歌手未授權播放").setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 	}
+}
+
+void CAnalysisHandler::serviceWeather(const char *szWord, const char *szLocal, JSONObject& jsonResp)
+{
+	string strLocal;
+	string strTTS;
+	WEATHER weather;
+	CResponsePacket respPacket;
+	CDisplayHandler display;
+
+	strLocal = szLocal;
+	if(strLocal.empty())
+		strLocal = "台灣";
+
+	contentHandler->getWeather(strLocal.c_str(), weather);
+
+	if(!weather.strLocation.empty())
+		strTTS = format("現在%s天氣，%s;氣溫%.02f度;溼度%.02f度", weather.strLocation.c_str(), weather.strWeather.c_str(),
+				weather.fTemperature, weather.fHumidity);
+	else
+		strTTS = format("目前無法取得 %s 的天氣資訊", strLocal.c_str());
+
+	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
+			strTTS.c_str()).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 }
 
 string CAnalysisHandler::getDisplay(const char *szFile)

@@ -28,6 +28,7 @@ LDLIBS    := $(LIB_LINK) \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-L/usr/lib/x86_64-linux-gnu \
 			-L/usr/include \
+			-L/usr/local/lib \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lpq \
@@ -44,7 +45,8 @@ LDLIBS    := $(LIB_LINK) \
 			-lcrypto++ \
 			-ltinyxml2 \
 			-lssl \
-			-lcrypto
+			-lcrypto \
+			-lxerces-c
 					
 vpath %.cpp $(SRC_DIR)
 
@@ -132,6 +134,7 @@ package-u:
 	apt-get -y install libcurl4-openssl-dev
 	apt-get -y install libcrypto++-dev
 	apt-get -y install libtinyxml2-dev
+	apt-get -y install libxerces-c3.1 libxerces-c-dev libicu-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
@@ -146,5 +149,9 @@ mongodb:
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
+	
+xerces:
+	$(MAKE) V=99 -C ../Packages/xerces-c-3.2.0
+	$(MAKE) install V=99 -C ../Packages/xerces-c-3.2.0
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

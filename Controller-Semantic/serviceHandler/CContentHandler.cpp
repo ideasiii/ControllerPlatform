@@ -148,3 +148,13 @@ int CContentHandler::spotifyTrack(const char *szInput, const char *szArtist, TRA
 	return FALSE;
 }
 
+void CContentHandler::getWeather(const char *szLocation, WEATHER &weather)
+{
+	CWeather wt;
+
+	if(szLocation)
+	{
+		wt.getWeather(szLocation, weather);
+	}
+}
+

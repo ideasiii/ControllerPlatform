@@ -39,6 +39,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 	JSONObject jItem;
 	int nYear, nMonth, nDay, nHour, nMin, nSec;
 
+	weather.strLocation.clear();
 	if(!szLocation)
 		return;
 
@@ -72,6 +73,7 @@ void CWeather::getWeather(const char *szLocation, WEATHER &weather)
 				weather.fPressure = jItem.getFloat("pressure");
 				weather.fHumidity = jItem.getFloat("humidity");
 				weather.fTemperature_max = jItem.getFloat("temp_max") - 273.15;
+				weather.strLocation = szLocation;
 			}
 			weather.fVisibility = jroot.getInt("visibility");
 			currentDateTimeNum(nYear, nMonth, nDay, nHour, nMin, nSec);
