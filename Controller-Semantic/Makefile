@@ -15,7 +15,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql -I /usr/include/curl
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/include/mysql -I /usr/include/curl -I /usr/local/include/xercesc
 CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -std=c++11 -g 
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
@@ -25,13 +25,15 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-L/usr/lib/x86_64-linux-gnu \
 			-L/usr/include \
+			-L/usr/local/lib \
 			-lpthread \
 			-lm -lrt -ldl \
 			-lmysqlclient \
 			-lcurl \
 			-lcryptopp \
 			-lssl \
-			-lcrypto
+			-lcrypto \
+			-lxerces-c
 					
 vpath %.cpp $(SRC_DIR) ../Global
 

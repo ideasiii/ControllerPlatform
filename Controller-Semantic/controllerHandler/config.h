@@ -8,16 +8,16 @@
 #pragma once
 
 //==================================== 內容定義 =========================================//
-typedef enum _CONTENT_TYPE
-{
-	CONTENT_STORY = 0,
-	CONTENT_MUSIC_SPOTIFY,
-	CONTENT_MUSIC_MOOD,
-	CONTENT_ABSOLUTELY,
-	CONTENT_EDUCATION,
-	CONTENT_SERVICE,
-	CONTENT_TRANSLATE
-} CONTENT_TYPE;
+//typedef enum _CONTENT_TYPE
+//{
+//	CONTENT_STORY = 0,
+//	CONTENT_MUSIC_SPOTIFY,
+//	CONTENT_MUSIC_MOOD,
+//	CONTENT_ABSOLUTELY,
+//	CONTENT_EDUCATION,
+//	CONTENT_SERVICE,
+//	CONTENT_TRANSLATE
+//} CONTENT_TYPE;
 
 //==================================== 封包 Request 內容定義 =========================================//
 enum
@@ -41,7 +41,7 @@ enum
 //==================================== Content Service =========================================//
 enum
 {
-	SERVICE_NO = 0, SERVICE_SPOTIFY = 1, SERVICE_WEATHER = 2
+	SERVICE_NO = 0, SERVICE_SPOTIFY = 1, SERVICE_WEATHER = 2, SERVICE_NEWS = 3
 };
 
 //==================================== 封包 Response 內容定義 =========================================//
@@ -51,11 +51,11 @@ enum
 #define TYPE_RESP_TTS				0x00000003
 #define TYPE_RESP_MUSIC_LOCAL		0x00000004
 
-#define STORY_PATH					"/data/opt/tomcat/webapps/story/"
-#define PATH_STORY_MOOD				"/data/opt/tomcat/webapps/edubot/mood/"
-#define STORY_HOST					"https://smabuild.sytes.net/story/"
-#define MUSIC_LOCAL_HOST			"https://smabuild.sytes.net/music/local/"
-#define HOST_MOOD					"https://smabuild.sytes.net/edubot/mood/"
+//#define STORY_PATH					"/data/opt/tomcat/webapps/story/"
+//#define PATH_STORY_MOOD				"/data/opt/tomcat/webapps/edubot/mood/"
+//#define STORY_HOST					"https://smabuild.sytes.net/story/"
+//#define MUSIC_LOCAL_HOST			"https://smabuild.sytes.net/music/local/"
+//#define HOST_MOOD					"https://smabuild.sytes.net/edubot/mood/"
 
 //==================================== 字詞屬性定義 ========================================//
 #define UNKNOW						0x00000000
@@ -69,11 +69,6 @@ enum
 
 //==================================== 固定回復 ===========================================//
 #define WORD_UNKNOW					"我不了解這句話的意思"
-
-//==================================== match_service ===========================================//
-#define SERVICE_CLOCK				1
-#define SERVICE_WEATHER				2
-#define SERVICE_TRANSLATE			3
 
 //=========================== Semantic ==========================================//
 /**

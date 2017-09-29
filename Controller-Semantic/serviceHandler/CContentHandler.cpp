@@ -158,3 +158,18 @@ void CContentHandler::getWeather(const char *szLocation, WEATHER &weather)
 	}
 }
 
+void CContentHandler::getNews(NEWS_DATE &newsDate)
+{
+	CNewsHandler news;
+
+	if(!newsDate.strDate.empty())
+	{
+		if(newsDate.strDate.compare(currentDate()))
+		{
+			news.getNewsToday(newsDate);
+		}
+	}
+	else
+		news.getNewsToday(newsDate);
+}
+

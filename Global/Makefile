@@ -17,7 +17,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql -I /usr/include/curl
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql -I /usr/include/curl -I /usr/local/include/xercesc
 CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
@@ -150,8 +150,5 @@ mongodb:
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	
-xerces:
-	$(MAKE) V=99 -C ../Packages/xerces-c-3.2.0
-	$(MAKE) install V=99 -C ../Packages/xerces-c-3.2.0
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <set>
+
 class CHttpsClient
 {
 public:
@@ -14,7 +16,7 @@ public:
 	virtual ~CHttpsClient();
 	int GET(const char *szURL, std::string &strData, const std::set<std::string> &setHead);
 	int POST(const char *szURL, std::string &strData, const std::set<std::string> &setHead,
-		const std::set<std::string> &setParameter);
+			const std::set<std::string> &setParameter);
 
 };
 

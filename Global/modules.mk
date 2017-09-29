@@ -21,6 +21,10 @@ mysqlHandler \
 protocolHandler \
 rankingHandler \
 spotifyHandler \
-translateHandler
+translateHandler \
+weatherHandler \
+newsHandler \
+systemHandler \
+fileHandler
 
 export EXT_MODULES=extInclude

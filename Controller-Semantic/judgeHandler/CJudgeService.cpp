@@ -68,7 +68,7 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 
 	switch(nService)
 	{
-	case SERVICE_CLOCK:
+	case 0:
 		currentDateTimeNum(nYear, nMonth, nDay, nHour, nMinute, nSecond);
 		strTTS = format("現在時刻，%d點，%d分，%d秒", nHour, nMinute, nSecond);
 		break;
@@ -84,7 +84,7 @@ int CJudgeService::word(const char *szInput, JSONObject& jsonResp, map<string, s
 		strTTS = format("現在%s天氣，%s;氣溫%.02f度;溼度%.02f度", weather.strLocation.c_str(), weather.strWeather.c_str(),
 				weather.fTemperature, weather.fHumidity);
 		break;
-	case SERVICE_TRANSLATE:
+	case 3:
 		getTranslate(szInput, strTranslate);
 		strTTS = strTranslate;
 		strLang = "en";

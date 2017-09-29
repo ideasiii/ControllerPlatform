@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 
 typedef struct _NEWS
 {
@@ -16,10 +17,16 @@ typedef struct _NEWS
 	std::string strLink;
 } NEWS;
 
+typedef struct _NEWS_DATE
+{
+	std::string strDate;
+	std::list<NEWS> listNews;
+} NEWS_DATE;
+
 class CNewsHandler
 {
 public:
 	explicit CNewsHandler();
 	virtual ~CNewsHandler();
-	int getNews()
+	int getNewsToday(NEWS_DATE &newDate);
 };

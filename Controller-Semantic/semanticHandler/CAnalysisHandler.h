@@ -19,7 +19,7 @@ class CAnalysisHandler: public CSemantic
 {
 	enum _CONF_TYPE
 	{
-		CONF_TYPE_LOCAL_FILE = 0, CONF_TYPE_DICTIONARY
+		CONF_TYPE_UNDEFINE = -1, CONF_TYPE_LOCAL_FILE = 0, CONF_TYPE_DICTIONARY = 1
 	};
 
 public:
@@ -41,6 +41,7 @@ private:
 	std::string getDisplay(const char *szFile);
 	void serviceSpotify(const char *szWord, const char *szArtist, JSONObject& jsonResp);
 	void serviceWeather(const char *szWord, const char *szLocal, JSONObject& jsonResp);
+	void serviceNews(const char *szWord, const char *szLocal, JSONObject& jsonResp);
 
 private:
 	std::map<std::string, RESOURCE> mapData;
@@ -50,4 +51,9 @@ private:
 	VOCABULARY vocabulary;
 	std::map<std::string, std::string> mapMatchWord;
 	CContentHandler *contentHandler;
+
+private:
+	// Service Function Pointer
+	typedef void (CAnalysisHandler::*MemFn)(const char *, const char *, JSONObject&);
+	std::map<int, MemFn> mapFunc;
 };

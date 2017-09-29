@@ -7,7 +7,6 @@
 
 #include <string.h>
 #include <string>
-#include <set>
 #include <curl/curl.h>
 #include "CHttpsClient.h"
 #include "LogHandler.h"
@@ -27,7 +26,7 @@ static bool globalInit()
 
 __attribute__((destructor)) static void globalCleanup()
 {
-	if (doneCurlInit)
+	if(doneCurlInit)
 	{
 		printf("[CHttpsClient] curl_global_cleanup()\n");
 		curl_global_cleanup();

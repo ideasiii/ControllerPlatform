@@ -18,7 +18,8 @@ SUBJECT_I)("你們", SUBJECT_YOU)("他們", SUBJECT_HE);
 
 map<string, int> mapVerb = create_map<string, int>\
 ("想要聽", VERB_LISTEN)("超想聽", VERB_LISTEN)("想聽", VERB_LISTEN)("要聽",
-VERB_LISTEN)("聽", VERB_LISTEN)("聽聽", VERB_LISTEN)("請問", VERB_REQUEST);
+VERB_LISTEN)("聽", VERB_LISTEN)("聽聽", VERB_LISTEN)("請問", VERB_REQUEST)("說", VERB_SAY)("講", VERB_SAY)("告訴", VERB_SAY)("唸",
+		VERB_SAY)("播放", VERB_SAY);
 
 //=========================== Absolutly ==========================================//
 map<string, string> mapAbsolutly;

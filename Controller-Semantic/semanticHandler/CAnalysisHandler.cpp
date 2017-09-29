@@ -6,6 +6,7 @@
  */
 
 #include <string>
+#include "common.h"
 #include "CAnalysisHandler.h"
 #include "LogHandler.h"
 #include "CConfig.h"
@@ -27,6 +28,10 @@ CAnalysisHandler::CAnalysisHandler(const char *szConf) :
 		contentHandler = new CContentHandler;
 		loadData();
 	}
+
+	mapFunc[SERVICE_SPOTIFY] = &CAnalysisHandler::serviceSpotify;
+	mapFunc[SERVICE_WEATHER] = &CAnalysisHandler::serviceWeather;
+	mapFunc[SERVICE_NEWS] = &CAnalysisHandler::serviceNews;
 }
 
 CAnalysisHandler::~CAnalysisHandler()
@@ -72,6 +77,9 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 				break;
 			case CONF_TYPE_DICTIONARY:
 				conf.strDictionary = config->getValue("DICTIONARY", "file");
+				bResult = true;
+				break;
+			case CONF_TYPE_UNDEFINE:
 				bResult = true;
 				break;
 			default:
@@ -236,6 +244,10 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 		{
 			++nScore;
 			_log("[CAnalysisHandler] evaluate find key word: %s", it_set->c_str());
+			if(CONF_TYPE_UNDEFINE == conf.nType)
+			{
+				mapMatch["dictionary"] = *it_set;
+			}
 		}
 	}
 
@@ -322,6 +334,7 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 		}
 		break;
 	case CONF_TYPE_DICTIONARY:
+	case CONF_TYPE_UNDEFINE:
 		if(conf.nService)
 			service(szInput, jsonResp, mapMatch);
 		break;
@@ -331,17 +344,26 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 
 int CAnalysisHandler::service(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch)
 {
-
-	switch(conf.nService)
+	if(mapFunc.end() == mapFunc.find(conf.nService))
 	{
-	case SERVICE_SPOTIFY:
-		serviceSpotify(szInput, mapMatch["dictionary"].c_str(), jsonResp);
-		break;
-	case SERVICE_WEATHER:
-		serviceWeather(szInput, mapMatch["dictionary"].c_str(), jsonResp);
-		break;
+		_log("[CAnalysisHandler] service Function pointer not found :%d", conf.nService);
+		return FALSE;
 	}
-	return 0;
+
+	(this->*this->mapFunc[conf.nService])(szInput, mapMatch["dictionary"].c_str(), jsonResp);
+
+//	switch(conf.nService)
+//	{
+//	case SERVICE_SPOTIFY:
+//		serviceSpotify(szInput, mapMatch["dictionary"].c_str(), jsonResp);
+//		break;
+//	case SERVICE_WEATHER:
+//		serviceWeather(szInput, mapMatch["dictionary"].c_str(), jsonResp);
+//		break;
+//	case SERVICE_NEWS:
+//		break;
+//	}
+	return TRUE;
 }
 
 void CAnalysisHandler::serviceSpotify(const char *szWord, const char *szArtist, JSONObject& jsonResp)
@@ -388,6 +410,12 @@ void CAnalysisHandler::serviceWeather(const char *szWord, const char *szLocal, J
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
 			strTTS.c_str()).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+}
+
+void CAnalysisHandler::serviceNews(const char *szWord, const char *szLocal, JSONObject& jsonResp)
+{
+	static NEWS_DATE newsDate;
+	contentHandler->getNews(newsDate);
 }
 
 string CAnalysisHandler::getDisplay(const char *szFile)
