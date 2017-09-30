@@ -25,6 +25,7 @@ translateHandler \
 weatherHandler \
 newsHandler \
 systemHandler \
-fileHandler
+fileHandler \
+stringHandler
 
 export EXT_MODULES=extInclude

@@ -40,7 +40,14 @@ CNewsHandler::~CNewsHandler()
 
 int CNewsHandler::getNewsToday(NEWS_DATE &newDate)
 {
+	string strData;
+	CHttpsClient httpsClient;
+	set<string> setHead;
+
+	httpsClient.GET(APPLE_NEWS, strData, setHead);
+
 	_log("[CNewsHandler] getNewsToday .......................");
+
 	return newDate.listNews.size();
 }
 
