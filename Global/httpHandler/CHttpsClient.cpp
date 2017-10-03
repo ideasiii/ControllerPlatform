@@ -24,7 +24,7 @@ static bool globalInit()
 	return true;
 }
 
-__attribute__((destructor)) static void globalCleanup()
+__attribute__ ((unused))__attribute__((destructor)) static void globalCleanup()
 {
 	if(doneCurlInit)
 	{

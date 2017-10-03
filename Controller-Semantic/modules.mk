@@ -22,6 +22,7 @@ judgeHandler \
 ../Global/rssHandler \
 ../Global/translateHandler \
 ../Global/weatherHandler \
-../Global/newsHandler
+../Global/newsHandler \
+../Global/stringHandler
 			 
 #export EXT_MODULES=extInclude

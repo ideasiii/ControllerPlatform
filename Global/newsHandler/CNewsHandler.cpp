@@ -46,7 +46,14 @@ int CNewsHandler::getNewsToday(NEWS_DATE &newDate)
 
 	httpsClient.GET(APPLE_NEWS, strData, setHead);
 
-	_log("[CNewsHandler] getNewsToday .......................");
+	if(!strData.empty())
+	{
+		_log("[CNewsHandler] getNewsToday :%s", strData.c_str());
+		newDate.strDate = currentDate();
+
+	}
+	else
+		_log("[CNewsHandler] getNewsToday get news Fail!!");
 
 	return newDate.listNews.size();
 }
