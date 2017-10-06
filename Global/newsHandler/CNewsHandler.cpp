@@ -9,6 +9,7 @@
 #include "CHttpsClient.h"
 #include "utility.h"
 #include "LogHandler.h"
+#include "CString.h"
 
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
@@ -22,6 +23,8 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 
+#include <stdexcept>
+
 #define GOOGLE_NEWS			"https://news.google.com/news/rss/settings/sections?ned=tw&hl=zh-TW"
 #define APPLE_NEWS			"http://www.appledaily.com.tw/rss/newcreate/kind/rnews/type/new"
 
@@ -30,6 +33,16 @@ using namespace std;
 
 CNewsHandler::CNewsHandler()
 {
+	try
+	{
+		XMLPlatformUtils::Initialize();  // Initialize Xerces infrastructure
+	}
+	catch(XMLException& e)
+	{
+		char* message = XMLString::transcode(e.getMessage());
+		_log("[CNewsHandler] CNewsHandler XML toolkit initialization error :%s", XMLString::transcode(e.getMessage()));
+		XMLString::release(&message);
+	}
 
 }
 
