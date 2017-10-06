@@ -324,6 +324,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 	{
 	case EVENT_COMMAND_SOCKET_ACCEPT:
 		mapClient[nId].ulReceiveThreadID = createThread(threadTcpReceive, this);
+		mapClient[nId].ulAliveTime = nowSecond();
 		if(0 >= mapClient[nId].ulReceiveThreadID)
 		{
 			eraseClient(nId);
