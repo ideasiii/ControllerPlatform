@@ -142,7 +142,7 @@ void CATcpServer::closeClient(int nClientFD)
 {
 	if(mapClient.end() != mapClient.find(nClientFD))
 	{
-		sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_CLIENT_COLSE, nClientFD, 0, 0);
+		sendMessage(CATCP_MSQ_EVENT_FILTER, EVENT_COMMAND_SOCKET_CLIENT_CLOSE, nClientFD, 0, 0);
 	}
 }
 
@@ -343,7 +343,7 @@ void CATcpServer::onReceiveMessage(int nEvent, int nCommand, unsigned long int n
 		eraseClient(nId);
 		_log("[CATcpServer] %s Socket Client Disconnect FD: %lu", strTaskName.c_str(), nId);
 		break;
-	case EVENT_COMMAND_SOCKET_CLIENT_COLSE: // Server close Client
+	case EVENT_COMMAND_SOCKET_CLIENT_CLOSE: // Server close Client
 		onClientDisconnect(nId);
 		ulThreadID = getClientThreadID(nId);
 		if(ulThreadID)
