@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+
 #ifdef _UNICODE
 //typedef wchar_t TCHAR;
 typedef char TCHAR;
@@ -33,6 +35,8 @@ public:
 	CString(LPCSTR lpsz);
 	// from unsigned char's
 	CString(const unsigned char* psz);
+	// from STL string
+	CString(std::string strString);
 
 	virtual ~CString();
 
@@ -58,6 +62,8 @@ public:
 	const CString& operator=(LPCSTR lpsz);
 	// copy string content from unsigned chars
 	const CString& operator=(const unsigned char* psz);
+	// copy string content from STL string
+	const CString& operator=(std::string strString);
 
 	// return pointer to const string
 	operator LPCTSTR();

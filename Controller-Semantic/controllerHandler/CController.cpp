@@ -24,11 +24,13 @@
 #include "JSONObject.h"
 #include "config.h"
 #include "CPenReader.h"
+#include "CMysqlHandler.h"
+#include "CString.h"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0), mysql(0)
 {
 
 }
@@ -44,6 +46,7 @@ int CController::onCreated(void* nMsqKey)
 	semanticJudge = new CSemanticJudge(this);
 	cmpword = new CCmpWord(this);
 	penreader = new CPenReader;
+	mysql = new CMysqlHandler();
 	return mnMsqKey;
 }
 
@@ -76,28 +79,42 @@ int CController::onInitial(void* szConfPath)
 
 	semanticJudge->loadAnalysis();
 
+	mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
+
 	return nResult;
 }
 
 int CController::onFinish(void* nMsqKey)
 {
+	mysql->close();
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
 	delete penreader;
+	delete mysql;
 	return TRUE;
 }
 
 void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence, const int nId, const int nType,
 		const char *szWord)
 {
+	CString strWord;
+	CString strDevice_id;
+	JSONObject jsonReq;
 	JSONObject jsonResp;
 	jsonResp.create();
+
+	jsonReq.load(szWord);
+	strWord = jsonReq.getString("word");
+	strDevice_id = jsonReq.getString("device_id");
+	jsonReq.release();
+
+	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
 	switch(nType)
 	{
 	case TYPE_REQ_NODEFINE: // 語意判斷
-		semanticJudge->runAnalysis(szWord, jsonResp);
+		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp);
 		break;
 	case TYPE_REQ_CONTROL:	// 控制
 		break;
@@ -106,20 +123,37 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_RECORD:	// 紀錄
 		break;
 	case TYPE_REQ_STORY:	// 故事
-		semanticJudge->runAnalysis(szWord, jsonResp, "story");
+		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp, "story");
 		break;
 	case TYPE_REQ_GAME:		// 遊戲
 		break;
 	case TYPE_REQ_PEN:		// 點讀筆
-		penreader->activity(szWord, jsonResp);
+		penreader->activity(strWord.getBuffer(), jsonResp);
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
+		jsonResp.release();
 		return;
 	}
 	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 			jsonResp.put("id", nId).toJSON().c_str());
+	recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
 	jsonResp.release();
+}
+
+void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int nType, const char * szData)
+{
+	CString strSQL;
+
+	if(!mysql->isValid())
+	{
+		_log("[CController] recordResponse mysql invalid, can't record response: %s", szData);
+		return;
+	}
+
+	strSQL.format("INSERT INTO response (device_id, semantic_id, type, response) VALUES ('%s', %d, %d,'%s')",
+			szDevice_id, nSemantic_id, nType, szData);
+	mysql->sqlExec(strSQL.getBuffer());
 }
 
 void CController::onHandleMessage(Message &message)

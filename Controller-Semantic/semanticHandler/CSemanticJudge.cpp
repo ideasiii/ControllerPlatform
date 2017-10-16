@@ -117,12 +117,13 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	map<string, string> mapMatch;
 	CRankingHandler<int, int> ranking;
 	CResponsePacket respPacket;
+	CDisplayHandler display;
 
 	if(0 >= szInput)
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
 				"tts",
-				WORD_UNKNOW).format(jsonResp);
+				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 		return;
 	}
 
@@ -143,7 +144,7 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
 				"tts",
-				WORD_UNKNOW).format(jsonResp);
+				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 	}
 }
 
@@ -151,13 +152,14 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 {
 	map<string, string> mapMatch;
 	CResponsePacket respPacket;
+	CDisplayHandler display;
 	string strDisplay;
 
 	if(0 >= szInput)
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
 				"tts",
-				WORD_UNKNOW).format(jsonResp);
+				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 		return;
 	}
 
@@ -174,8 +176,6 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 		}
 	}
 
-	strDisplay =
-			"{\"enable\":1,\"show\":[{\"time\":0,\"host\":\"https://smabuild.sytes.net/edubot/mood/\",\"file\":\"emotion_sad.gif\",\"color\":\"#FFC2FF00\",\"description\":\"emotion_sad\",\"animation\":{\"type\":5,\"duration\":1000,\"repeat\":1,\"interpolate\":1},\"text\":{\"type\":0}}]}";
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
-	WORD_UNKNOW).setDisplay(strDisplay.c_str()).format(jsonResp);
+	WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 }

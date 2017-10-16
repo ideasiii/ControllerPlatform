@@ -116,6 +116,13 @@ CString::CString(const unsigned char* psz)
 	*this = psz;
 }
 
+CString::CString(std::string strString)
+{
+	m_pchData = NULL;
+	m_iLen = 0;
+	*this = strString.c_str();
+}
+
 int CString::getLength() const
 {
 	if(!m_pchData)
@@ -190,6 +197,17 @@ const CString& CString::operator=(const unsigned char* psz)
 	int nSrcLen = strlen((char *) psz);
 	setAllocSize(nSrcLen + 1);
 	copyMem((void *) psz, nSrcLen + 1);
+	setLength(nSrcLen);
+	return *this;
+}
+
+const CString& CString::operator=(std::string strString)
+{
+	if(strString.empty())
+		return *this;
+	int nSrcLen = strlen((char *) strString.c_str());
+	setAllocSize(nSrcLen + 1);
+	copyMem((void *) strString.c_str(), nSrcLen + 1);
 	setLength(nSrcLen);
 	return *this;
 }

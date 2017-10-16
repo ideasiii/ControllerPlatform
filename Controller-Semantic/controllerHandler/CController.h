@@ -12,6 +12,7 @@
 class CSemanticJudge;
 class CCmpWord;
 class CPenReader;
+class CMysqlHandler;
 
 class CController: public CApplication
 {
@@ -28,8 +29,12 @@ protected:
 	void onHandleMessage(Message &message);
 
 private:
+	void recordResponse(const char * szDevice_id, int nSemantic_id, int nType, const char * szData);
+
+private:
 	int mnMsqKey;
 	CCmpWord *cmpword;
 	CSemanticJudge *semanticJudge;
 	CPenReader *penreader;
+	CMysqlHandler *mysql;
 };

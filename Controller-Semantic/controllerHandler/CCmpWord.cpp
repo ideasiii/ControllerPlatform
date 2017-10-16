@@ -61,7 +61,7 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 		message.arg[1] = nSequence;
 		message.arg[2] = wordRequest.nId;
 		message.arg[3] = wordRequest.nType;
-		message.strData = wordRequest.strWord;
+		message.strData = strBody; //wordRequest.strWord;
 		mpController->sendMessage(message);
 	}
 	else

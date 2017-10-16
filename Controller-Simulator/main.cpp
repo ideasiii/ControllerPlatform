@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);
+				jsonWord.put("device_id", "AJSB_8979_OIYG_1234");
 				if(mbPressure)
 				{
 					while(1)

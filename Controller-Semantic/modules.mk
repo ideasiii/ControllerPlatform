@@ -23,6 +23,7 @@ judgeHandler \
 ../Global/translateHandler \
 ../Global/weatherHandler \
 ../Global/newsHandler \
-../Global/stringHandler
+../Global/stringHandler \
+../Global/mysqlHandler
 			 
 #export EXT_MODULES=extInclude

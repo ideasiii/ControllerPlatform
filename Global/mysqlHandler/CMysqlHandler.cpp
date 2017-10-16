@@ -102,10 +102,10 @@ int CMysqlHandler::sqlExec(string strSQL)
 		return FALSE;
 	}
 
-	//如果查询成功，返回0。如果出现错误，返回非0值。
+	//如果執行成功，返回0。如果出现错误，返回非0值。
 	if(mysql_real_query(mpMySQL, strSQL.c_str(), strSQL.length()))
 	{
-		setError("Query Error");
+		setError("sqlExec Error");
 		return FALSE;
 	}
 
