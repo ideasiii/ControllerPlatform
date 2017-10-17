@@ -20,6 +20,8 @@
 #include "CAnalysisHandler.h"
 #include "CConfig.h"
 #include "utility.h"
+#include "CString.h"
+#include "CDisplayHandler.h"
 
 using namespace std;
 
@@ -66,50 +68,50 @@ void CSemanticJudge::loadAnalysis()
 	delete config;
 }
 
-int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
-{
-	int nTop;
-	int nScore;
-	int nIndex;
-	int nSubject;
-	int nValue;
-	map<int, CSemantic*>::const_iterator iter;
-	CRankingHandler<int, int> ranking;
-	map<string, string> mapMatch;
-	CResponsePacket respPacket;
-
-	if(0 >= szInput)
-	{
-		return TRUE;
-	}
-
-	_log("[CSemanticJudge] word input: %s", szInput);
-
-	nScore = 0;
-
-	for(iter = mapSemanticObject.begin(); mapSemanticObject.end() != iter; ++iter)
-	{
-		nScore = iter->second->_evaluate(szInput, mapMatch);
-		ranking.add(iter->first, nScore);
-		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
-	}
-
-//============== 積分比較 ================//
-	nValue = ranking.topValue();
-	if(0 < nValue)
-	{
-		nTop = ranking.topValueKey();
-		_log("[CSemanticJudge] word Top Key is %d", nTop);
-		if(mapSemanticObject.end() != mapSemanticObject.find(nTop))
-		{
-			mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
-			return TRUE;
-		}
-		_log("[CSemanticJudge] word: No Object to Access this work");
-	}
-
-	return TRUE;
-}
+//int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
+//{
+//	int nTop;
+//	int nScore;
+//	int nIndex;
+//	int nSubject;
+//	int nValue;
+//	map<int, CSemantic*>::const_iterator iter;
+//	CRankingHandler<int, int> ranking;
+//	map<string, string> mapMatch;
+//	CResponsePacket respPacket;
+//
+//	if(0 >= szInput)
+//	{
+//		return TRUE;
+//	}
+//
+//	_log("[CSemanticJudge] word input: %s", szInput);
+//
+//	nScore = 0;
+//
+//	for(iter = mapSemanticObject.begin(); mapSemanticObject.end() != iter; ++iter)
+//	{
+//		nScore = iter->second->_evaluate(szInput, mapMatch);
+//		ranking.add(iter->first, nScore);
+//		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
+//	}
+//
+////============== 積分比較 ================//
+//	nValue = ranking.topValue();
+//	if(0 < nValue)
+//	{
+//		nTop = ranking.topValueKey();
+//		_log("[CSemanticJudge] word Top Key is %d", nTop);
+//		if(mapSemanticObject.end() != mapSemanticObject.find(nTop))
+//		{
+//			mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
+//			return TRUE;
+//		}
+//		_log("[CSemanticJudge] word: No Object to Access this work");
+//	}
+//
+//	return TRUE;
+//}
 
 void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 {

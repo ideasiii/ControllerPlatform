@@ -17,6 +17,7 @@
 #include "CResponsePacket.h"
 #include "CContentHandler.h"
 #include "CDisplayHandler.h"
+#include "CStory.h"
 
 using namespace std;
 
@@ -32,6 +33,8 @@ CAnalysisHandler::CAnalysisHandler(const char *szConf) :
 	mapFunc[SERVICE_SPOTIFY] = &CAnalysisHandler::serviceSpotify;
 	mapFunc[SERVICE_WEATHER] = &CAnalysisHandler::serviceWeather;
 	mapFunc[SERVICE_NEWS] = &CAnalysisHandler::serviceNews;
+
+	mapSemanticService[0] = new CStory();
 }
 
 CAnalysisHandler::~CAnalysisHandler()
@@ -234,6 +237,7 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 
 	nScore = 0;
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
+	mapMatch["dictionary"].clear();
 
 	//======== 評估關鍵字 ==========//
 	for(it_set = setKeyWord.begin(); setKeyWord.end() != it_set; ++it_set)
@@ -303,6 +307,17 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 		}
 	}
 
+	//======== 評估特殊服務字詞 ===========//
+	if(mapMatch["dictionary"].empty())
+	{
+		for(unsigned int i = 0; i < mapSemanticService.size(); ++i)
+		{
+			_log("[CAnalysisHandler] evaluate 評估特殊服務字詞 service: %s", mapSemanticService[i]->name().getBuffer());
+			if(mapSemanticService[i]->evaluate(szWord, mapMatch))
+				++nScore;
+		}
+	}
+
 	return nScore;
 }
 
@@ -352,17 +367,6 @@ int CAnalysisHandler::service(const char *szInput, JSONObject& jsonResp, std::ma
 
 	(this->*this->mapFunc[conf.nService])(szInput, mapMatch["dictionary"].c_str(), jsonResp);
 
-//	switch(conf.nService)
-//	{
-//	case SERVICE_SPOTIFY:
-//		serviceSpotify(szInput, mapMatch["dictionary"].c_str(), jsonResp);
-//		break;
-//	case SERVICE_WEATHER:
-//		serviceWeather(szInput, mapMatch["dictionary"].c_str(), jsonResp);
-//		break;
-//	case SERVICE_NEWS:
-//		break;
-//	}
 	return TRUE;
 }
 

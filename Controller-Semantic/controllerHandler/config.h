@@ -87,3 +87,9 @@ enum
 #define VERB_WRITE					4
 #define VERB_REQUEST				5
 
+//=========================== Edubot Database ==========================================//
+#define EDUBOT_HOST		"127.0.0.1"
+#define EDUBOT_DB		"edubot"
+#define EDUBOT_ACCOUNT	"edubot"
+#define EDUBOT_PASSWD	"ideas123!"
+

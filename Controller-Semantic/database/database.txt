@@ -41,3 +41,153 @@ CREATE TABLE `music`.`song` (
 #
 ###########################################################
 CREATE SCHEMA `edubot` DEFAULT CHARACTER SET utf8 ; 
+
+CREATE TABLE `edubot`.`response` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `device_id` varchar(45) DEFAULT NULL,
+  `semantic_id` int(11) DEFAULT NULL,
+  `type` int(11) DEFAULT NULL,
+  `response` text,
+  `create_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `inx_device_id` (`device_id`),
+  KEY `inx_create_date` (`create_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `edubot`.`story` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `material` varchar(255) DEFAULT NULL,
+  `create_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `inx_material` (`material`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+  
+CREATE TABLE `story_material` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `material` varchar(45) NOT NULL,
+  `create_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `material_UNIQUE` (`material`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+
+###########################################################
+#
+#	EDUBOT database default data
+#
+###########################################################
+insert into edubot.story_material(material)values('公主');
+insert into edubot.story_material(material)values('城堡');
+insert into edubot.story_material(material)values('美女');
+insert into edubot.story_material(material)values('王子');
+insert into edubot.story_material(material)values('巫婆');
+insert into edubot.story_material(material)values('勵志');
+insert into edubot.story_material(material)values('悲傷');
+insert into edubot.story_material(material)values('可憐');
+insert into edubot.story_material(material)values('益智');
+insert into edubot.story_material(material)values('有趣');
+insert into edubot.story_material(material)values('趣味');
+insert into edubot.story_material(material)values('好笑');
+insert into edubot.story_material(material)values('爆笑');
+insert into edubot.story_material(material)values('無厘頭');
+insert into edubot.story_material(material)values('智障');
+insert into edubot.story_material(material)values('變態');
+insert into edubot.story_material(material)values('豬小弟');
+insert into edubot.story_material(material)values('森林');
+insert into edubot.story_material(material)values('沙漠');
+insert into edubot.story_material(material)values('死亡');
+insert into edubot.story_material(material)values('色情');
+insert into edubot.story_material(material)values('恐怖');
+insert into edubot.story_material(material)values('毒蘋果');
+insert into edubot.story_material(material)values('長髮');
+insert into edubot.story_material(material)values('玻璃鞋');
+insert into edubot.story_material(material)values('動物');
+insert into edubot.story_material(material)values('大野狼');
+insert into edubot.story_material(material)values('怪獸');
+insert into edubot.story_material(material)values('怪物');
+insert into edubot.story_material(material)values('小精靈');
+insert into edubot.story_material(material)values('可怕');
+insert into edubot.story_material(material)values('野狼');
+insert into edubot.story_material(material)values('白天鵝');
+insert into edubot.story_material(material)values('天鵝');
+insert into edubot.story_material(material)values('感人');
+insert into edubot.story_material(material)values('感動');
+insert into edubot.story_material(material)values('情誼');
+insert into edubot.story_material(material)values('友誼');
+insert into edubot.story_material(material)values('孝順');
+insert into edubot.story_material(material)values('女王');
+insert into edubot.story_material(material)values('國王');
+insert into edubot.story_material(material)values('大王');
+insert into edubot.story_material(material)values('皇后');
+insert into edubot.story_material(material)values('宮女');
+insert into edubot.story_material(material)values('旅人');
+insert into edubot.story_material(material)values('獵人');
+insert into edubot.story_material(material)values('糖果屋');
+insert into edubot.story_material(material)values('貓');
+insert into edubot.story_material(material)values('狗');
+insert into edubot.story_material(material)values('豬');
+insert into edubot.story_material(material)values('畜牲');
+insert into edubot.story_material(material)values('牛');
+insert into edubot.story_material(material)values('羊');
+insert into edubot.story_material(material)values('山羊');
+insert into edubot.story_material(material)values('大象');
+insert into edubot.story_material(material)values('獅子');
+insert into edubot.story_material(material)values('老虎');
+insert into edubot.story_material(material)values('野獸');
+insert into edubot.story_material(material)values('醜女');
+insert into edubot.story_material(material)values('小丑');
+insert into edubot.story_material(material)values('馬戲團');
+insert into edubot.story_material(material)values('木偶');
+insert into edubot.story_material(material)values('小木偶');
+insert into edubot.story_material(material)values('鴨子');
+insert into edubot.story_material(material)values('青蛙');
+insert into edubot.story_material(material)values('池塘');
+insert into edubot.story_material(material)values('外婆');
+insert into edubot.story_material(material)values('驚悚');
+insert into edubot.story_material(material)values('人魚');
+insert into edubot.story_material(material)values('愛情');
+insert into edubot.story_material(material)values('浪漫');
+insert into edubot.story_material(material)values('夢幻');
+insert into edubot.story_material(material)values('海');
+insert into edubot.story_material(material)values('大海');
+insert into edubot.story_material(material)values('船');
+insert into edubot.story_material(material)values('大船');
+insert into edubot.story_material(material)values('漁船');
+insert into edubot.story_material(material)values('妖怪');
+insert into edubot.story_material(material)values('後母');
+insert into edubot.story_material(material)values('繼母');
+insert into edubot.story_material(material)values('仙女');
+insert into edubot.story_material(material)values('仙子');
+insert into edubot.story_material(material)values('魔法');
+insert into edubot.story_material(material)values('魔幻');
+insert into edubot.story_material(material)values('魔女');
+insert into edubot.story_material(material)values('小矮人');
+insert into edubot.story_material(material)values('矮人');
+insert into edubot.story_material(material)values('白馬王子');
+insert into edubot.story_material(material)values('長統靴');
+insert into edubot.story_material(material)values('長靴');
+insert into edubot.story_material(material)values('魔鏡');
+
+
+
+
+insert into edubot.story(name,material)values('三隻小豬','動物,畜牲,勵志,豬小弟,動物,大野狼,野狼,有趣,趣味');
+insert into edubot.story(name,material)values('六隻白天鵝','城堡,巫婆,動物,畜牲,白天鵝,天鵝,情誼,感人,感動,王子,公主');
+insert into edubot.story(name,material)values('小紅帽','動物,畜牲,野狼,大野狼,外婆');
+insert into edubot.story(name,material)values('小美人魚','魔幻,美女,人魚,感人,感動,愛情,浪漫,夢幻,海,大海,船,大船,可憐');
+insert into edubot.story(name,material)values('森林裡的糖果屋','魔幻,糖果屋,巫婆,魔法,魔幻,益智');
+insert into edubot.story(name,material)values('灰姑娘','仙子,仙女,魔幻,王子,美女,後母,繼母,公主,城堡,玻璃鞋');
+insert into edubot.story(name,material)values('白雪公主','魔幻,魔女,皇后,美女,巫婆,公主,城堡,毒蘋果,魔鏡');
+insert into edubot.story(name,material)values('睡美人','仙子,仙女,魔幻,魔女,皇后,王子,美女,巫婆,公主,城堡');
+insert into edubot.story(name,material)values('穿長統靴的貓','動物,畜牲,魔幻,貓,長統靴,長靴');
+insert into edubot.story(name,material)values('美女與野獸','魔幻,美女,城堡,野獸,城堡,愛情');
+insert into edubot.story(name,material)values('虎姑婆','怪物,妖怪,老虎');
+insert into edubot.story(name,material)values('醜小鴨','動物,畜牲,鴨子,勵志');
+insert into edubot.story(name,material)values('青蛙王子','魔幻,王子,動物,畜牲,池塘,青蛙,可怕');
+
+
+
+  

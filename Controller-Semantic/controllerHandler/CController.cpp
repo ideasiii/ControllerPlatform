@@ -26,6 +26,7 @@
 #include "CPenReader.h"
 #include "CMysqlHandler.h"
 #include "CString.h"
+#include "CStory.h"
 
 using namespace std;
 
@@ -47,6 +48,7 @@ int CController::onCreated(void* nMsqKey)
 	cmpword = new CCmpWord(this);
 	penreader = new CPenReader;
 	mysql = new CMysqlHandler();
+
 	return mnMsqKey;
 }
 
@@ -92,6 +94,7 @@ int CController::onFinish(void* nMsqKey)
 	delete semanticJudge;
 	delete penreader;
 	delete mysql;
+
 	return TRUE;
 }
 
@@ -123,6 +126,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_RECORD:	// 紀錄
 		break;
 	case TYPE_REQ_STORY:	// 故事
+		//story->activity(strWord.getBuffer(), jsonResp);
 		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp, "story");
 		break;
 	case TYPE_REQ_GAME:		// 遊戲

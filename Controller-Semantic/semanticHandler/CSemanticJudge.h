@@ -18,13 +18,13 @@ class CSemanticJudge
 public:
 	explicit CSemanticJudge(CObject *object);
 	virtual ~CSemanticJudge();
-	int word(const char *szInput, JSONObject& jsonResp);
+//	int word(const char *szInput, JSONObject& jsonResp);
 	void runAnalysis(const char *szInput, JSONObject &jsonResp);
 	void runAnalysis(const char *szInput, JSONObject &jsonResp, const char *szAnalysis);
 	void loadAnalysis();
 
 private:
 	CObject *mpController;
-	std::map<int, CSemantic*> mapSemanticObject;
+//	std::map<int, CSemantic*> mapSemanticObject;
 	std::map<int, CAnalysisHandler*> mapAnalysis;
 };
