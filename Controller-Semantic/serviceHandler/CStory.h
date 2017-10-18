@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <set>
 #include "CSemanticService.h"
+
+class CMysqlHandler;
 
 class CStory: public CSemanticService
 {
@@ -19,6 +20,8 @@ public:
 	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 	int activity(const char *szInput, JSONObject& jsonResp);
 	CString name();
-	std::set<CString> setMaterial;
+
+private:
+	CMysqlHandler *mysql;
 
 };

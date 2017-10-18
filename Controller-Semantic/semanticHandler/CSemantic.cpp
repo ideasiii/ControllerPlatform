@@ -94,33 +94,33 @@ int CSemantic::getAttribute(const char *szWord, WORD_BODY &wordBody)
 	return 0;
 }
 
-int CSemantic::_word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
-{
-	return word(szInput, jsonResp, mapMatch);
-}
+//int CSemantic::_word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
+//{
+//	return word(szInput, jsonResp, mapMatch);
+//}
 
-int CSemantic::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
-{
-	return 0;
-}
+//int CSemantic::word(const char *szInput, JSONObject& jsonResp, map<string, string> &mapMatch)
+//{
+//	return 0;
+//}
 
-int CSemantic::_evaluate(const char *szWord, map<string, string> &mapMatch)
-{
-	return evaluate(szWord, mapMatch);
-}
+//int CSemantic::_evaluate(const char *szWord, map<string, string> &mapMatch)
+//{
+//	return evaluate(szWord, mapMatch);
+//}
 
-int CSemantic::evaluate(const char *szWord, map<string, string> &mapMatch)
-{
-	return 0;
-}
+//int CSemantic::evaluate(const char *szWord, map<string, string> &mapMatch)
+//{
+//	return 0;
+//}
 
-string CSemantic::_toString()
-{
-	return toString();
-}
+//string CSemantic::_toString()
+//{
+//	return toString();
+//}
 
-string CSemantic::toString()
-{
-	return "CSemantic";
-}
+//string CSemantic::toString()
+//{
+//	return "CSemantic";
+//}
 

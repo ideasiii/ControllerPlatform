@@ -7,12 +7,14 @@
 
 #pragma once
 
+#include "CObject.h"
+
 class JSONObject;
-class CObject;
+//class CObject;
 class CSemantic;
 class CAnalysisHandler;
 
-class CSemanticJudge
+class CSemanticJudge: public CObject
 {
 
 public:
@@ -23,6 +25,11 @@ public:
 	void runAnalysis(const char *szInput, JSONObject &jsonResp, const char *szAnalysis);
 	void loadAnalysis();
 
+protected:
+	void onReceiveMessage(int lFilter, int nCommand, unsigned long int nId, int nDataLen, const void* pData)
+	{
+	}
+	;
 private:
 	CObject *mpController;
 //	std::map<int, CSemantic*> mapSemanticObject;

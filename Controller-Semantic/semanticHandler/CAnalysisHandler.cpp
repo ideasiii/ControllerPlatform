@@ -21,9 +21,11 @@
 
 using namespace std;
 
-CAnalysisHandler::CAnalysisHandler(const char *szConf) :
+CAnalysisHandler::CAnalysisHandler(const char *szConf, CObject *object) :
 		contentHandler(0)
 {
+	m_pParent = object;
+
 	if(szConf && loadConf(szConf))
 	{
 		contentHandler = new CContentHandler;
@@ -35,6 +37,9 @@ CAnalysisHandler::CAnalysisHandler(const char *szConf) :
 	mapFunc[SERVICE_NEWS] = &CAnalysisHandler::serviceNews;
 
 	mapSemanticService[0] = new CStory();
+
+	for(unsigned int i = 0; i < mapSemanticService.size(); ++i)
+		mapSemanticService[i]->init();
 }
 
 CAnalysisHandler::~CAnalysisHandler()
@@ -237,7 +242,6 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 
 	nScore = 0;
 	transform(strWord.begin(), strWord.end(), strWord.begin(), ::tolower);
-	mapMatch["dictionary"].clear();
 
 	//======== 評估關鍵字 ==========//
 	for(it_set = setKeyWord.begin(); setKeyWord.end() != it_set; ++it_set)

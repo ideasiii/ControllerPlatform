@@ -5,25 +5,42 @@
  *      Author: jugo
  */
 
+#include <map>
+#include <set>
+#include <list>
 #include "CStory.h"
 #include "CResponsePacket.h"
 #include "LogHandler.h"
 #include "CMysqlHandler.h"
 #include "config.h"
 
-CStory::CStory()
-{
+using namespace std;
 
+set<CString> setMaterial;
+
+CStory::CStory() :
+		mysql(0)
+{
+	mysql = new CMysqlHandler();
 }
 
 CStory::~CStory()
 {
-
+	if(mysql->isValid())
+		mysql->close();
+	delete mysql;
 }
 
 void CStory::init()
 {
+	CString strSQL;
+	list<map<string, string> > listValue;
 
+	if(mysql->connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5"))
+	{
+		strSQL = "SELECT material FROM edubot.story_material";
+		mysql->query(strSQL.toString(), listValue);
+	}
 }
 
 int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
@@ -32,13 +49,8 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	int nScore;
 
 	nScore = 0;
-
-	CMysqlHandler *pmysql = new CMysqlHandler();
-	pmysql->connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5");
-
 	strSQL = "SELECT * FROM";
-	pmysql->close();
-	delete pmysql;
+
 	return nScore;
 }
 

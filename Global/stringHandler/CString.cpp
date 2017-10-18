@@ -752,3 +752,9 @@ void CString::setLength(int nLength)
 	m_iLen = nLength;
 }
 
+string CString::toString()
+{
+	strData = m_pchData;
+	return strData;
+}
+

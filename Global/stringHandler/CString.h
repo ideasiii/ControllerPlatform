@@ -167,9 +167,13 @@ public:
 	// release buffer, setting length to nNewLength (or to first nul if -1)
 	void releaseBuffer(int nNewLength = -1);
 
+	// return STL string
+	std::string toString();
+
 protected:
 	LPTSTR m_pchData;   // pointer to ref counted string data
 	int m_iLen;
+	std::string strData;
 
 private:
 	// get amount of allocated memory

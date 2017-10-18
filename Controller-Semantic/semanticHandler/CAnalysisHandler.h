@@ -13,6 +13,7 @@
 #include "CSemantic.h"
 #include "dataStruct.h"
 
+class CObject;
 class CContentHandler;
 class CSemanticService;
 
@@ -24,7 +25,7 @@ class CAnalysisHandler: public CSemantic
 	};
 
 public:
-	CAnalysisHandler(const char *szConf);
+	CAnalysisHandler(const char *szConf, CObject *object = 0);
 	virtual ~CAnalysisHandler();
 	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 	int activity(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
@@ -58,4 +59,5 @@ private:
 	typedef void (CAnalysisHandler::*MemFn)(const char *, const char *, JSONObject&);
 	std::map<int, MemFn> mapFunc;
 	std::map<int, CSemanticService*> mapSemanticService;
+	CObject *m_pParent;
 };
