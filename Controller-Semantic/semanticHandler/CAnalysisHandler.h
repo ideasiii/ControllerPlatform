@@ -15,7 +15,7 @@
 
 class CObject;
 class CContentHandler;
-class CSemanticService;
+
 
 class CAnalysisHandler: public CSemantic
 {
@@ -58,6 +58,5 @@ private:
 	// Service Function Pointer
 	typedef void (CAnalysisHandler::*MemFn)(const char *, const char *, JSONObject&);
 	std::map<int, MemFn> mapFunc;
-	std::map<int, CSemanticService*> mapSemanticService;
 	CObject *m_pParent;
 };

@@ -22,6 +22,7 @@
 #include "utility.h"
 #include "CString.h"
 #include "CDisplayHandler.h"
+#include "CStory.h"
 
 using namespace std;
 
@@ -57,7 +58,7 @@ void CSemanticJudge::loadAnalysis()
 			_log("[CSemanticJudge] CSemanticJudge Get conf: %s conf file: %s", ConvertToString(i).c_str(),
 					strValue.c_str());
 			if(!strValue.empty())
-				mapAnalysis[i] = new CAnalysisHandler(strValue.c_str());
+				mapAnalysis[i] = new CAnalysisHandler(strValue.c_str(), this);
 		}
 	}
 	else
@@ -66,55 +67,16 @@ void CSemanticJudge::loadAnalysis()
 	}
 
 	delete config;
-}
 
-//int CSemanticJudge::word(const char *szInput, JSONObject &jsonResp)
-//{
-//	int nTop;
-//	int nScore;
-//	int nIndex;
-//	int nSubject;
-//	int nValue;
-//	map<int, CSemantic*>::const_iterator iter;
-//	CRankingHandler<int, int> ranking;
-//	map<string, string> mapMatch;
-//	CResponsePacket respPacket;
-//
-//	if(0 >= szInput)
-//	{
-//		return TRUE;
-//	}
-//
-//	_log("[CSemanticJudge] word input: %s", szInput);
-//
-//	nScore = 0;
-//
-//	for(iter = mapSemanticObject.begin(); mapSemanticObject.end() != iter; ++iter)
-//	{
-//		nScore = iter->second->_evaluate(szInput, mapMatch);
-//		ranking.add(iter->first, nScore);
-//		_log("[CSemanticJudge] word - %s Get Score: %d", iter->second->_toString().c_str(), nScore);
-//	}
-//
-////============== 積分比較 ================//
-//	nValue = ranking.topValue();
-//	if(0 < nValue)
-//	{
-//		nTop = ranking.topValueKey();
-//		_log("[CSemanticJudge] word Top Key is %d", nTop);
-//		if(mapSemanticObject.end() != mapSemanticObject.find(nTop))
-//		{
-//			mapSemanticObject[nTop]->_word(szInput, jsonResp, mapMatch);
-//			return TRUE;
-//		}
-//		_log("[CSemanticJudge] word: No Object to Access this work");
-//	}
-//
-//	return TRUE;
-//}
+	mapSemanticService[0] = new CStory();
+
+	for(unsigned int i = 0; i < mapSemanticService.size(); ++i)
+		mapSemanticService[i]->init();
+}
 
 void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 {
+	unsigned int i;
 	int nScore;
 	map<string, string> mapMatch;
 	CRankingHandler<int, int> ranking;
@@ -129,11 +91,30 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		return;
 	}
 
-	for(unsigned int i = 1; i <= mapAnalysis.size(); ++i)
+	for(i = 1; i <= mapAnalysis.size(); ++i)
 	{
 		nScore = mapAnalysis[i]->evaluate(szInput, mapMatch);
 		ranking.add(i, nScore);
 		_log("[CSemanticJudge] runAnalysis - %s Get Score: %d", mapAnalysis[i]->getName().c_str(), nScore);
+	}
+
+	//======== 評估特殊關聯服務字詞 ===========//
+	if(mapMatch["dictionary"].empty())
+	{
+		for(i = 0; i < mapSemanticService.size(); ++i)
+		{
+			_log("[CSemanticJudge] runAnalysis 評估特殊關聯服務字詞 service: %s", mapSemanticService[i]->name().getBuffer());
+			if(mapSemanticService[i]->evaluate(szInput, mapMatch))
+			{
+				for(unsigned int j = 1; j <= mapAnalysis.size(); ++j)
+				{
+					nScore = mapAnalysis[j]->evaluate(szInput, mapMatch);
+					ranking.add(j, nScore);
+					_log("[CSemanticJudge] runAnalysis - %s Get Score: %d Match: %s", mapAnalysis[j]->getName().c_str(),
+							nScore, mapMatch["dictionary"].c_str());
+				}
+			}
+		}
 	}
 
 	//============== 積分比較 ================//
@@ -175,9 +156,32 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 				mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
 				return;
 			}
+
+			//======== 評估特殊關聯服務字詞 ===========//
+			if(mapMatch["dictionary"].empty())
+			{
+				for(unsigned int j = 0; j < mapSemanticService.size(); ++j)
+				{
+					_log("[CAnalysisHandler] evaluate 評估特殊關聯服務字詞 service: %s",
+							mapSemanticService[j]->name().getBuffer());
+					if(mapSemanticService[j]->evaluate(szInput, mapMatch))
+					{
+						if(mapAnalysis[i]->evaluate(szInput, mapMatch) && mapMatch.size())
+						{
+							mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
+							return;
+						}
+					}
+				}
+			}
 		}
 	}
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
 	WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+}
+
+void CSemanticJudge::onHandleMessage(Message &message)
+{
+
 }

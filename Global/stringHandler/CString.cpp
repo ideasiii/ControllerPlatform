@@ -44,7 +44,7 @@ inline void _strupr(char *p)
 	while(*p)
 	{
 		*p = toupper(*p);
-		p++;
+		++p;
 	}
 }
 
@@ -53,7 +53,7 @@ inline void _strlwr(char* p)
 	while(*p)
 	{
 		*p = tolower(*p);
-		p++;
+		++p;
 	}
 }
 
@@ -440,7 +440,7 @@ int CString::partBegin(char cDelimiter, int nIndex)
 
 CString& CString::makeUpper()
 {
-	setlocale(LC_ALL, "");
+//	setlocale(LC_ALL, "");
 	if(m_pchData)
 		_strupr(m_pchData);
 	return *this;
@@ -448,7 +448,7 @@ CString& CString::makeUpper()
 
 CString& CString::makeLower()
 {
-	setlocale(LC_ALL, "");
+//	setlocale(LC_ALL, "");
 	if(m_pchData)
 		_strlwr(m_pchData);
 	return *this;
@@ -456,7 +456,7 @@ CString& CString::makeLower()
 
 CString& CString::makeReverse()
 {
-	setlocale(LC_ALL, "");
+//	setlocale(LC_ALL, "");
 	if(m_pchData)
 		_strrev(m_pchData);
 	return *this;
@@ -641,19 +641,15 @@ int CString::find(LPCTSTR lpszSub)
 
 int CString::find(LPCTSTR lpszSub, int nStart)
 {
-	if(!lpszSub)
-		return -1;
-
-	int iPos;
-	int iLen = getLength();
-	int iSLen = strlen(lpszSub);
-	if(iSLen > iLen - nStart)
-		return -1;  // is substring longer than my string, return -1
-
-	for(iPos = nStart; iPos < iLen - iSLen; ++iPos)
+	int nIndex;
+	strData = m_pchData;
+	if(!strData.empty() && lpszSub)
 	{
-		if(mid(iPos, iSLen) == lpszSub)
-			return iPos;
+		nIndex = strData.find(lpszSub, nStart);
+		if((int) string::npos != nIndex)
+		{
+			return nIndex;
+		}
 	}
 	return -1;
 }
