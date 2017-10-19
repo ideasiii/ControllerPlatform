@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <set>
 #include <list>
 #include "CSemanticService.h"
 
@@ -26,4 +27,5 @@ private:
 	CMysqlHandler *mysql;
 	std::list<CString> listMaterial;
 	std::map<std::string, std::string> mapStoryMaterial;
+	std::set<std::string> setMaterial;
 };
