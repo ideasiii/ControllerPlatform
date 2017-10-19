@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <list>
 #include "CSemanticService.h"
 
 class CMysqlHandler;
@@ -23,5 +24,6 @@ public:
 
 private:
 	CMysqlHandler *mysql;
-
+	std::list<CString> listMaterial;
+	std::map<std::string, std::string> mapStoryMaterial;
 };

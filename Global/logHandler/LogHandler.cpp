@@ -5,6 +5,10 @@
  *      Author: Jugo
  */
 
+#include <sys/stat.h>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/locks.hpp>
 #include <syslog.h>
 #include <fstream>
 #include <stdio.h>
@@ -21,6 +25,18 @@ string mstrLogDate;
 
 extern char *__progname;
 
+boost::mutex the_mutex;
+
+inline bool fileExists(const string& filename)
+{
+	struct stat buf;
+	if(stat(filename.c_str(), &buf) != -1)
+	{
+		return true;
+	}
+	return false;
+}
+
 inline void writeLog(int nSize, const char *pLog)
 {
 	if(!pLog)
@@ -31,7 +47,8 @@ inline void writeLog(int nSize, const char *pLog)
 	extern string mstrLogDate;
 	string strCurrentDate = currentDate();
 
-	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty() || mstrLogDate.empty())
+	if(0 != mstrLogDate.compare(strCurrentDate) || !fs.is_open() || mstrLogPath.empty() || mstrLogDate.empty()
+			|| !fileExists(format("%s.%s", mstrLogPath.c_str(), mstrLogDate.c_str())))
 	{
 		if(mstrLogPath.empty())
 			mstrLogPath = format("/data/opt/tomcat/webapps/logs/%s.log", __progname);
@@ -53,6 +70,7 @@ inline void writeLog(int nSize, const char *pLog)
 
 void _log(const char* format, ...)
 {
+	boost::mutex::scoped_lock lock(the_mutex);
 	va_list vl;
 	va_start(vl, format);
 	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');

@@ -33,7 +33,12 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lcryptopp \
 			-lssl \
 			-lcrypto \
-			-lxerces-c
+			-lxerces-c \
+			-lboost_thread \
+			-lboost_system \
+			-lboost_filesystem \
+			-lboost_regex \
+			-lboost_program_options
 					
 vpath %.cpp $(SRC_DIR) ../Global
 

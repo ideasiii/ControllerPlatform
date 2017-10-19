@@ -26,6 +26,7 @@ weatherHandler \
 newsHandler \
 systemHandler \
 fileHandler \
-stringHandler
+stringHandler \
+queueHandler
 
 export EXT_MODULES=extInclude
