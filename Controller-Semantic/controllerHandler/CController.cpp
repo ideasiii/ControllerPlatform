@@ -126,7 +126,6 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_RECORD:	// 紀錄
 		break;
 	case TYPE_REQ_STORY:	// 故事
-		//story->activity(strWord.getBuffer(), jsonResp);
 		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp, "story");
 		break;
 	case TYPE_REQ_GAME:		// 遊戲

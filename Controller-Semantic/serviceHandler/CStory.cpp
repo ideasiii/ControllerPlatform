@@ -128,6 +128,7 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	{
 		nRand = getRand(0, mapStory.size() - 1);
 		mapMatch["dictionary"] = mapStory[nRand];
+		++nScore;
 		_log("[CStory] evaluate rand index: %d story: %s", nRand, mapMatch["dictionary"].c_str());
 	}
 	return nScore;
