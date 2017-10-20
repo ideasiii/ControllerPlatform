@@ -25,7 +25,12 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
 			-lpthread \
-			-lm -lrt -ldl
+			-lm -lrt -ldl \
+			-lboost_thread \
+			-lboost_system \
+			-lboost_filesystem \
+			-lboost_regex \
+			-lboost_program_options
 					
 vpath %.cpp $(SRC_DIR)
 
