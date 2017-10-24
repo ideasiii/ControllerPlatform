@@ -61,6 +61,11 @@ protected:
 		return 0;
 	}
 	;
+	virtual int onUpdate(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
 	virtual int onSignin(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
 		return 0;

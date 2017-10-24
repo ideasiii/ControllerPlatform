@@ -69,3 +69,15 @@ int CCmpWord::onSemanticWord(int nSocket, int nCommand, int nSequence, const voi
 	return TRUE;
 }
 
+int CCmpWord::onUpdate(int nSocket, int nCommand, int nSequence, const void *szBody)
+{
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
+	Message message;
+	message.clear();
+	message.what = semantic_word_request;
+	message.arg[0] = nSocket;
+	message.arg[1] = nSequence;
+	mpController->sendMessage(message);
+	return TRUE;
+}
+

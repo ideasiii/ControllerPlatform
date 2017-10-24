@@ -33,6 +33,7 @@ public:
 
 protected:
 	int onSemanticWord(int nSocket, int nCommand, int nSequence, const void *szBody);
+	int onUpdate(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
 	CObject *mpController;
