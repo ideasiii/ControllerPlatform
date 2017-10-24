@@ -16,12 +16,13 @@ public:
 	CRankingHandler();
 	virtual ~CRankingHandler();
 	std::multimap<VALUE, KEY> flip_map(std::map<KEY, VALUE> & src);
-	void add(KEY, VALUE);
+	void add(KEY key, VALUE value);
 	VALUE topValue();
 	VALUE lowValue();
 	KEY topValueKey();
 	KEY lowValueKey();
 	int size();
+	VALUE getValue(KEY key, VALUE defVal);
 
 private:
 	std::map<KEY, VALUE> mapData;

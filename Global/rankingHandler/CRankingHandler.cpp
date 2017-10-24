@@ -107,3 +107,13 @@ int CRankingHandler<KEY, VALUE>::size()
 	return mapData.size();
 }
 
+template<typename KEY, typename VALUE>
+VALUE CRankingHandler<KEY, VALUE>::getValue(KEY key, VALUE defVal)
+{
+	if(mapData.end() != mapData.find(key))
+	{
+		return mapData[key];
+	}
+	return defVal;
+}
+

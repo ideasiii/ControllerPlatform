@@ -14,6 +14,7 @@
 #include "config.h"
 #include "CString.h"
 #include "utility.h"
+#include "CRankingHandler.cpp"
 
 using namespace std;
 
@@ -41,27 +42,6 @@ void CStory::init()
 
 	if(mysql->connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5"))
 	{
-//		strSQL = "SELECT material FROM edubot.story_material";
-//		if(mysql->query(strSQL.toString(), listValue))
-//		{
-//			listMaterial.clear();
-//			for(it_list = listValue.begin(); listValue.end() != it_list; ++it_list)
-//			{
-//				mapItem.clear();
-//				mapItem = *it_list;
-//				for(map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
-//				{
-//					listMaterial.push_back((*j).second);
-//				}
-//			}
-//
-//			_log("[CStory] init Load story_material count: %d", listMaterial.size());
-//		for(list<CString>::iterator it = listMaterial.begin(); listMaterial.end() != it; ++it)
-//		{
-//			printf("%s\n", (*it).getBuffer());
-//		}
-//		}
-
 		listValue.clear();
 		strSQL = "SELECT name,material FROM edubot.story";
 		if(mysql->query(strSQL.toString(), listValue))
@@ -82,20 +62,21 @@ void CStory::init()
 				spliteData(const_cast<char*>(strMaterial.c_str()), ",", setMaterial);
 			}
 			_log("[CStory] init Load story count: %d", mapStoryMaterial.size());
-			for(map<string, string>::iterator it = mapStoryMaterial.begin(); mapStoryMaterial.end() != it; ++it)
-			{
-				printf("%s - %s\n", (*it).first.c_str(), (*it).second.c_str());
-			}
-			for(set<string>::iterator it_set = setMaterial.begin(); setMaterial.end() != it_set; ++it_set)
-			{
-				printf("%s\n", it_set->c_str());
-			}
+//			for(map<string, string>::iterator it = mapStoryMaterial.begin(); mapStoryMaterial.end() != it; ++it)
+//			{
+//				printf("%s - %s\n", (*it).first.c_str(), (*it).second.c_str());
+//			}
+//			for(set<string>::iterator it_set = setMaterial.begin(); setMaterial.end() != it_set; ++it_set)
+//			{
+//				printf("%s\n", it_set->c_str());
+//			}
 		}
 	}
 }
 
 int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
 {
+	CRankingHandler<string, int> ranking;
 	map<int, string> mapStory;
 	list<map<string, string> > listValue;
 	list<map<string, string> >::iterator it_list;
@@ -105,6 +86,7 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	int nScore;
 	int nIndex;
 	int nRand;
+	int nValue;
 
 	nScore = 0;
 	strWord = szWord;
@@ -121,18 +103,27 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 				{
 					_log("[CStory] evaluate find story: %s <-- %s", it_map->first.c_str(), it_set->c_str());
 					mapStory[nIndex++] = it_map->first;
+					nValue = ranking.getValue(it_map->first, 0);
+					ranking.add(it_map->first, ++nValue);
+					_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 				}
 			}
 		}
 	}
 
-	if(mapStory.size())
+	if(ranking.size())
 	{
-		nRand = getRand(0, mapStory.size() - 1);
-		mapMatch["dictionary"] = mapStory[nRand];
+		mapMatch["dictionary"] = ranking.topValueKey();
 		++nScore;
-		_log("[CStory] evaluate rand index: %d story: %s", nRand, mapMatch["dictionary"].c_str());
+		_log("[CStory] evaluate Top Score: %d story: %s", ranking.topValue(), mapMatch["dictionary"].c_str());
 	}
+//	if(mapStory.size())
+//	{
+//		nRand = getRand(0, mapStory.size() - 1);
+//		mapMatch["dictionary"] = mapStory[nRand];
+//		++nScore;
+//		_log("[CStory] evaluate rand index: %d story: %s", nRand, mapMatch["dictionary"].c_str());
+//	}
 	return nScore;
 }
 
