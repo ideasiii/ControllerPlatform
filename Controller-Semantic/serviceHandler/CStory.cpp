@@ -15,6 +15,9 @@
 #include "CString.h"
 #include "utility.h"
 #include "CRankingHandler.cpp"
+#include "CFileHandler.h"
+
+#define STORY_FILE_PATH			"/data/opt/tomcat/webapps/edubot/story/"
 
 using namespace std;
 
@@ -136,5 +139,48 @@ int CStory::activity(const char *szInput, JSONObject& jsonResp)
 CString CStory::name()
 {
 	return "Story Search by Material Service";
+}
+
+void CStory::storyAnalysis()
+{
+	int nIndex;
+	CFileHandler fh;
+	set<string> setData;
+	set<string>::const_iterator iter_set;
+	string strFileName;
+	CString strFilePath;
+	string strContent;
+	set<string> setDictionary;
+
+	fh.readAllLine("dictionary/story_material.txt", setDictionary);
+	fh.readAllLine("dictionary/animal.txt", setDictionary);
+
+	fh.readPath(STORY_FILE_PATH, setData);
+
+	for(iter_set = setData.begin(); setData.end() != iter_set; ++iter_set)
+	{
+		nIndex = iter_set->rfind(".");
+		if((int) string::npos != nIndex)
+		{
+			if(!iter_set->substr(nIndex + 1).compare("txt"))
+			{
+				strFileName = trim(iter_set->substr(0, nIndex));
+				_log("[CStory] storyAnalysis Start analysis story: %s", iter_set->c_str());
+				strFilePath.format("%s%s", STORY_FILE_PATH, iter_set->c_str());
+				fh.readContent(strFilePath.getBuffer(), strContent);
+				if(!strContent.empty())
+				{
+					_log("[CStory] storyAnalysis Start analysis story content: %s", strContent.c_str());
+					for(set<string>::iterator it_set = setDictionary.begin(); setDictionary.end() != it_set; ++it_set)
+					{
+						if(string::npos != strContent.find(trim(*it_set)))
+						{
+							_log("[CStory] storyAnalysis find material: %s", it_set->c_str());
+						}
+					}
+				}
+			}
+		}
+	}
 }
 

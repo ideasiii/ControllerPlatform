@@ -22,6 +22,7 @@ public:
 	int evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch);
 	int activity(const char *szInput, JSONObject& jsonResp);
 	CString name();
+	void storyAnalysis();
 
 private:
 	CMysqlHandler *mysql;

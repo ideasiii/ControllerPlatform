@@ -292,7 +292,7 @@ int CString::Compare(LPCTSTR lpsz)
 {
 	if(!lpsz)
 		return 0;
-	setlocale(LC_ALL, "");
+//	setlocale(LC_ALL, "");
 
 	int iLenMe = getLength();
 	int iLenYou = strlen(lpsz);
@@ -316,7 +316,7 @@ int CString::CompareNoCase(LPCTSTR lpsz)
 {
 	if(!lpsz)
 		return 0;
-	setlocale(LC_ALL, "");
+//	setlocale(LC_ALL, "");
 
 	int iLenMe = getLength();
 	int iLenYou = strlen(lpsz);

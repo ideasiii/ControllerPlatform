@@ -61,6 +61,11 @@ ipcrm -q [msq_id]
 %s/[A-Z]\[edit\]/\1/g
 %s/\[.*\]/\1/g
 %s/\(.*\)/\1/g
+删除行尾空格：:%s/\s+$//g
+删除行首多余空格：%s/^\s*// 或者 %s/^ *//
+删除沒有內容的空行：%s/^$// 或者 g/^$/d
+删除包含有空格组成的空行：%s/^\s*$// 或者 g/^\s*$/d
+删除以空格或TAB开头到结尾的空行：%s/^[ |\t]*$// 或者 g/^[ |\t]*$/d
 
 # Download Youtube (順安)
 youtube-dl --extract-audio --audio-format mp3 'https://www.youtube.com/watch?v=DdskNY5ayfc'
