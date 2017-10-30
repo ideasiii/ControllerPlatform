@@ -11,8 +11,6 @@
 #include <list>
 #include "CSemanticService.h"
 
-class CMysqlHandler;
-
 class CStory: public CSemanticService
 {
 public:
@@ -25,7 +23,6 @@ public:
 	void storyAnalysis();
 
 private:
-	CMysqlHandler *mysql;
 	std::list<CString> listMaterial;
 	std::map<std::string, std::string> mapStoryMaterial;
 	std::set<std::string> setMaterial;

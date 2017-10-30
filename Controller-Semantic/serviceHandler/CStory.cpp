@@ -21,17 +21,14 @@
 
 using namespace std;
 
-CStory::CStory() :
-		mysql(0)
+CStory::CStory()
 {
-	mysql = new CMysqlHandler();
+
 }
 
 CStory::~CStory()
 {
-	if(mysql->isValid())
-		mysql->close();
-	delete mysql;
+
 }
 
 void CStory::init()
@@ -42,6 +39,9 @@ void CStory::init()
 	list<map<string, string> > listValue;
 	list<map<string, string> >::iterator it_list;
 	map<string, string> mapItem;
+	CMysqlHandler *mysql;
+
+	mysql = new CMysqlHandler();
 
 	if(mysql->connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5"))
 	{
@@ -75,6 +75,10 @@ void CStory::init()
 //			}
 		}
 	}
+
+	if(mysql->isValid())
+		mysql->close();
+	delete mysql;
 }
 
 int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
@@ -151,11 +155,17 @@ void CStory::storyAnalysis()
 	CString strFilePath;
 	string strContent;
 	set<string> setDictionary;
+	CMysqlHandler mysql;
+	CString strMaterial;
+	CString strSQL;
 
 	fh.readAllLine("dictionary/story_material.txt", setDictionary);
 	fh.readAllLine("dictionary/animal.txt", setDictionary);
+	fh.readAllLine("dictionary/affect.txt", setDictionary);
 
 	fh.readPath(STORY_FILE_PATH, setData);
+
+	mysql.connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5");
 
 	for(iter_set = setData.begin(); setData.end() != iter_set; ++iter_set)
 	{
@@ -170,17 +180,35 @@ void CStory::storyAnalysis()
 				fh.readContent(strFilePath.getBuffer(), strContent);
 				if(!strContent.empty())
 				{
-					_log("[CStory] storyAnalysis Start analysis story content: %s", strContent.c_str());
+					//_log("[CStory] storyAnalysis Start analysis story content: %s", strContent.c_str());
+					strMaterial = "";
 					for(set<string>::iterator it_set = setDictionary.begin(); setDictionary.end() != it_set; ++it_set)
 					{
 						if(string::npos != strContent.find(trim(*it_set)))
 						{
-							_log("[CStory] storyAnalysis find material: %s", it_set->c_str());
+							//_log("[CStory] storyAnalysis find material: %s", it_set->c_str());
+							if(strMaterial.Compare(""))
+								strMaterial += ",";
+							strMaterial = strMaterial + *it_set;
+
 						}
+					}
+					_log("[CStory] storyAnalysis find material: %s", strMaterial.getBuffer());
+					if(strMaterial.getLength())
+					{
+						strSQL.format("DELETE FROM story WHERE name = '%s'", strFileName.c_str());
+						mysql.sqlExec(strSQL.toString());
+
+						strSQL.format("INSERT INTO story(name,material) VALUES('%s','%s')", strFileName.c_str(),
+								strMaterial.getBuffer());
+						mysql.sqlExec(strSQL.toString());
 					}
 				}
 			}
 		}
 	}
+
+	if(mysql.isValid())
+		mysql.close();
 }
 
