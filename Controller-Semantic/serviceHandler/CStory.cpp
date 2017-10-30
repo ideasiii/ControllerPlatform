@@ -17,7 +17,7 @@
 #include "CRankingHandler.cpp"
 #include "CFileHandler.h"
 
-#define STORY_FILE_PATH			"/data/opt/tomcat/webapps/edubot/story/"
+#define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
 using namespace std;
 
