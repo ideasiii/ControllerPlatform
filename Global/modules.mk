@@ -27,6 +27,7 @@ newsHandler \
 systemHandler \
 fileHandler \
 stringHandler \
-queueHandler
+queueHandler \
+machineLearning
 
 export EXT_MODULES=extInclude

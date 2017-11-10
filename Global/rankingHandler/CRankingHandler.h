@@ -20,6 +20,7 @@ public:
 	VALUE topValue();
 	VALUE lowValue();
 	KEY topValueKey();
+	void topValueKeys(std::vector<KEY> &keys);
 	KEY lowValueKey();
 	int size();
 	VALUE getValue(KEY key, VALUE defVal);

@@ -6,7 +6,7 @@
  */
 
 #include <map>
-
+#include <vector>
 #include "CStory.h"
 #include "CResponsePacket.h"
 #include "LogHandler.h"
@@ -16,6 +16,7 @@
 #include "utility.h"
 #include "CRankingHandler.cpp"
 #include "CFileHandler.h"
+#include "utility.h"
 
 #define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
@@ -90,6 +91,7 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	map<string, string>::iterator it_map;
 	CString strWord;
 	CString strMaterial;
+	vector<string> listTop;
 	int nScore;
 	int nIndex;
 	int nRand;
@@ -111,6 +113,9 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 					_log("[CStory] evaluate find story: %s <-- %s", it_map->first.c_str(), it_set->c_str());
 					mapStory[nIndex++] = it_map->first;
 					nValue = ranking.getValue(it_map->first, 0);
+					// find in story title
+					if(string::npos != it_map->first.find(*it_set))
+						++nValue;
 					ranking.add(it_map->first, ++nValue);
 					_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 				}
@@ -120,17 +125,13 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 
 	if(ranking.size())
 	{
-		mapMatch["dictionary"] = ranking.topValueKey();
+		ranking.topValueKeys(listTop);
+		nRand = getRand(0, listTop.size() - 1);
+		mapMatch["dictionary"] = listTop.at(nRand);
 		++nScore;
 		_log("[CStory] evaluate Top Score: %d story: %s", ranking.topValue(), mapMatch["dictionary"].c_str());
 	}
-//	if(mapStory.size())
-//	{
-//		nRand = getRand(0, mapStory.size() - 1);
-//		mapMatch["dictionary"] = mapStory[nRand];
-//		++nScore;
-//		_log("[CStory] evaluate rand index: %d story: %s", nRand, mapMatch["dictionary"].c_str());
-//	}
+
 	return nScore;
 }
 

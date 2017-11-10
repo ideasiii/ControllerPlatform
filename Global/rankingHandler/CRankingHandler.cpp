@@ -6,6 +6,7 @@
  */
 
 #include <map>
+#include <vector>
 #include "CRankingHandler.h"
 
 using namespace std;
@@ -84,6 +85,22 @@ KEY CRankingHandler<KEY, VALUE>::topValueKey()
 	typename multimap<VALUE, KEY>::const_reverse_iterator it = dst.rbegin();
 
 	return it->second;
+}
+
+template<typename KEY, typename VALUE>
+void CRankingHandler<KEY, VALUE>::topValueKeys(vector<KEY> &keys)
+{
+	VALUE topVal;
+
+	topVal = topValue();
+	for(typename map<KEY, VALUE>::iterator it_map = mapData.begin(); mapData.end() != it_map; ++it_map)
+	{
+		if(it_map->second == topVal)
+		{
+			keys.push_back(it_map->first);
+		}
+	}
+
 }
 
 template<typename KEY, typename VALUE>
