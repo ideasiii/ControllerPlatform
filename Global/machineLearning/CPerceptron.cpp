@@ -48,7 +48,6 @@ double CPerceptron::Net(map<int, double> &mapWeight, map<int, double> &mapXi, do
 		printf("神經元權重 %f * 輸入 %f 加總 %f\n", mapWeight[i], mapXi[i], net);
 	}
 	net += bias; //最後加偏權值
-	printf("最後加偏權值 %f\n", net);
 	return net;
 }
 
@@ -78,12 +77,15 @@ double CPerceptron::Iterate(map<int, double> &mapXi, double d, double learningRa
 {
 	//---前向傳遞
 	double net = Net(mapWeight, mapXi, bias);
+	printf("神經元狀態值 %f\n", net);
 
 	//---Sigmoid
 	double dY = Y(net);
+	printf("神經元輸出值 %f\n", dY);
 
 	//---誤差計算
 	double dD = D(d, dY);
+	printf("目標與實際數出差 %f\n", dD);
 
 	//---平方誤差(誤差函數)
 	double dE = E(dD);
@@ -101,6 +103,7 @@ double CPerceptron::Iterate(map<int, double> &mapXi, double d, double learningRa
 	double deltaBias = dD * dY * (1 - dY) * -1;	   //bias 修正量
 	bias = bias - learningRate * deltaBias;	       //更新
 	printf("神經元偏權組態 %f\n", bias);
+	printf("感知機的失誤度量 %f\n", dE);
 
 	return dE;
 }
