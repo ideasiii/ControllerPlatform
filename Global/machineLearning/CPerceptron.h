@@ -37,6 +37,7 @@ public:
 	double getWeight(int nDimension);
 	double getBias();
 	double Iterate(std::map<int, double> &mapXi, double d, double learningRate);	//一次迭代 ,輸入,期望輸出 回傳本次迭代誤差函數輸出
+	double Iterate(std::map<int, double> &mapXi, std::map<int, double> &mapWi, double d, double learningRate);
 
 private:
 	double Net(std::map<int, double> &mapWeight, std::map<int, double> &vecXi, double bias);	//神經元狀態
