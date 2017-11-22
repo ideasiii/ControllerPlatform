@@ -125,7 +125,13 @@ int CController::startMongoClient(const char *szIP, const char *szPort)
 string CController::insertLog(const int nType, string strData)
 {
 	string strOID;
-	string strJSON = ReplaceAll(strData, "\\", "");
+
+	string strJSON = trim(strData);
+	strJSON = ReplaceAll(strJSON, "\"{", "{");
+	strJSON = ReplaceAll(strJSON, "}\"", "}");
+	strJSON = ReplaceAll(strJSON, "\"[", "[");
+	strJSON = ReplaceAll(strJSON, "]\"", "]");
+	strJSON = ReplaceAll(strJSON, "\\\"", "\"");
 
 	if(mongodb->isValid())
 	{
