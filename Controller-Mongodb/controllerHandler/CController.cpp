@@ -125,31 +125,32 @@ int CController::startMongoClient(const char *szIP, const char *szPort)
 string CController::insertLog(const int nType, string strData)
 {
 	string strOID;
+	string strJSON = ReplaceAll(strData, "\\", "");
 
 	if(mongodb->isValid())
 	{
 		switch(nType)
 		{
 		case TYPE_MOBILE_SERVICE:
-			strOID = mongodb->insert("access", "mobile", strData);
+			strOID = mongodb->insert("access", "mobile", strJSON);
 			break;
 		case TYPE_POWER_CHARGE_SERVICE:
-			strOID = mongodb->insert("access", "power", strData);
+			strOID = mongodb->insert("access", "power", strJSON);
 			break;
 		case TYPE_SDK_SERVICE:
-			strOID = mongodb->insert("access", "sdk", strData);
+			strOID = mongodb->insert("access", "sdk", strJSON);
 			break;
 		case TYPE_TRACKER_SERVICE:
-			strOID = mongodb->insert("access", "tracker", strData);
+			strOID = mongodb->insert("access", "tracker", strJSON);
 			break;
 		case TYPE_TRACKER_APPLIENCE:
-			strOID = mongodb->insert("access", "applience", strData);
+			strOID = mongodb->insert("access", "applience", strJSON);
 			break;
 		case TYPE_TRACKER_TOY:
-			strOID = mongodb->insert("access", "toy", strData);
+			strOID = mongodb->insert("access", "toy", strJSON);
 			break;
 		case TYPE_TRACKER_IOT:
-			strOID = mongodb->insert("access", "iot", strData);
+			strOID = mongodb->insert("access", "iot", strJSON);
 			break;
 		default:
 			_log("[CController] insertLog Insert Access log fail, unknow service type: %d", nType);
