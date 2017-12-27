@@ -26,6 +26,9 @@
 
 using namespace std;
 
+#define MAX (a,b) (((a) > (b)) ? (a) : (b))
+#define MIN (a,b) (((a) < (b)) ? (a) : (b))
+
 extern char *__progname;
 
 template<class T>

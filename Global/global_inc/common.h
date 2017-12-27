@@ -32,13 +32,10 @@ extern "C"
 #define FAIL	-1
 #endif
 
-#ifndef ULONG
-#define ULONG	unsigned long
-#endif
-
-#ifndef UINT
-#define UINT	unsigned int
-#endif
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+typedef unsigned int UINT;
+typedef unsigned long ULONG;
 
 //=========== Debug ==============//
 #define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)

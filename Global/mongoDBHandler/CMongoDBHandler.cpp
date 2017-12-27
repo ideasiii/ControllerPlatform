@@ -181,10 +181,12 @@ string CMongoDBHandler::insert(std::string strDB, std::string strCollection, std
 		return strId;
 
 	string strCon = strDB + "." + strCollection;
-	BSONObj bson = mongo::fromjson(strJSON);
+
+	BSONObj bson;
 
 	try
 	{
+		bson = mongo::fromjson(strJSON);
 		BSONObjBuilder tempJson;
 		tempJson.genOID();
 		tempJson.appendElements(bson);
