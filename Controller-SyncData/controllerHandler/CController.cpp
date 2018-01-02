@@ -124,7 +124,7 @@ void CController::syncTrackerUser()
 
 	strSQL = "SELECT * FROM tracker_user WHERE create_date >= '" + strLastDate + "'";
 	nRet = mysql->connect(mapMysqlSource["host"], mapMysqlSource["database"], mapMysqlSource["user"],
-			mapMysqlSource["password"]);
+			mapMysqlSource["password"], "5");
 	if(FALSE == nRet)
 	{
 		_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
@@ -141,7 +141,7 @@ void CController::syncTrackerUser()
 	}
 
 	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
-			mapMysqlDestination["password"]);
+			mapMysqlDestination["password"], "5");
 	if(FALSE == nRet)
 	{
 		_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
@@ -226,7 +226,7 @@ int CController::getDestFields(std::string strTableName, std::set<std::string> &
 	int nRet;
 
 	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
-			mapMysqlDestination["password"]);
+			mapMysqlDestination["password"], "5");
 	if(TRUE == nRet)
 	{
 		mysql->getFields(strTableName, sFields);
@@ -244,7 +244,7 @@ int CController::getFields(std::string strAppId, std::set<std::string> &sFields)
 	extern map<string, string> mapMysqlSource;
 	list<map<string, string> > listRest;
 
-	nRet = mysql->connect(mapMysqlSource["host"], "field", mapMysqlSource["user"], mapMysqlSource["password"]);
+	nRet = mysql->connect(mapMysqlSource["host"], "field", mapMysqlSource["user"], mapMysqlSource["password"], "5");
 	if(FALSE == nRet)
 	{
 		_log("[CController] Mysql Error: %s", mysql->getLastError().c_str());
@@ -303,7 +303,7 @@ int CController::syncColume(std::string strTable, std::string strAppId)
 		{
 			strSQL = format("ALTER TABLE %s ADD COLUMN %s TEXT;", strTable.c_str(), trim(strValue).c_str());
 			nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"],
-					mapMysqlDestination["user"], mapMysqlDestination["password"]);
+					mapMysqlDestination["user"], mapMysqlDestination["password"], "5");
 			if(FALSE == nRet)
 			{
 				_log("[CController] syncColume Mysql Error: %s", mysql->getLastError().c_str());
@@ -349,7 +349,7 @@ int CController::syncData(string strTable, string strAppId)
 		return TRUE;
 
 	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
-			mapMysqlDestination["password"]);
+			mapMysqlDestination["password"], "5");
 
 	if(FALSE == nRet)
 	{
@@ -451,7 +451,7 @@ string CController::getMysqlLastDate(const char *szTable)
 
 	strTable = szTable;
 	nRet = mysql->connect(mapMysqlDestination["host"], mapMysqlDestination["database"], mapMysqlDestination["user"],
-			mapMysqlDestination["password"]);
+			mapMysqlDestination["password"], "5");
 	if(FALSE == nRet)
 	{
 		_log("[CController] getMysqlLastDate Mysql Error: %s", mysql->getLastError().c_str());

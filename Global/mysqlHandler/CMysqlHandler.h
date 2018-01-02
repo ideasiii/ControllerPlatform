@@ -19,7 +19,7 @@ public:
 	CMysqlHandler();
 	virtual ~CMysqlHandler();
 	int connect(std::string strHost, std::string strDB, std::string strUser, std::string strPassword,
-			const char *szConnTimeout);
+			const char *szConnTimeout = "5");
 	void close();
 	int sqlExec(std::string strSQL);
 	int query(std::string strSQL, std::list<std::map<std::string, std::string> > &listRest);
