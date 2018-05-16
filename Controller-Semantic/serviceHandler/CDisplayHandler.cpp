@@ -10,7 +10,7 @@
 #include "JSONArray.h"
 #include "utility.h"
 
-#define DISPLAY_HOST			"https://smabuild.sytes.net/edubot/OCTOBO_Expressions/"
+#define DISPLAY_HOST			"https://ryejuice.sytes.net/edubot/OCTOBO_Expressions/"
 #define DISPLAY_COLOR			"#FFA0C9EC"
 
 using namespace std;

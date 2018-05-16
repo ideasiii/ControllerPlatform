@@ -18,7 +18,7 @@
 #include "utility.h"
 
 #define STORY_PATH					"/data/opt/tomcat/webapps/story/"
-#define HOST_MOOD					"https://smabuild.sytes.net/edubot/mood/"
+#define HOST_MOOD					"https://ryejuice.sytes.net/edubot/mood/"
 
 using namespace std;
 

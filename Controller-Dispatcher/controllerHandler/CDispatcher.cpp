@@ -20,7 +20,7 @@
 using namespace std;
 
 //static const char* RESP_DISPATCH =
-//		"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"175.98.119.121\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"175.98.119.121\",\"port\": 2307}]}";
+//		"{\"server\": [{\"id\": 0,\"name\": \"startTrack\",\"ip\": \"54.199.198.94\",\"port\": 2306	},	{\"id\": 1,\"name\": \"tracker\",\"ip\": \"54.199.198.94\",\"port\": 2307}]}";
 
 static CDispatcher * dispatcher = 0;
 
