@@ -15,7 +15,7 @@
 #define HELP			777
 #define IO_PRESSURE		888
 #define EVIL			666
-#define WORD			2310
+#define WORD			0 //2310
 #define MONGO			27027
 
 using namespace std;

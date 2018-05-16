@@ -94,7 +94,6 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	vector<string> listTop;
 	int nScore;
 	int nIndex;
-	int nRand;
 	int nValue;
 
 	nScore = 0;
@@ -126,8 +125,7 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	if(ranking.size())
 	{
 		ranking.topValueKeys(listTop);
-		nRand = getRand(0, listTop.size() - 1);
-		mapMatch["dictionary"] = listTop.at(nRand);
+		mapMatch["dictionary"] = listTop.at(getRand(0, listTop.size() - 1));
 		++nScore;
 		_log("[CStory] evaluate Top Score: %d story: %s", ranking.topValue(), mapMatch["dictionary"].c_str());
 	}

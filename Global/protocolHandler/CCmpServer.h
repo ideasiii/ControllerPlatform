@@ -31,6 +31,11 @@ public:
 
 protected:
 	void onReceive(unsigned long int nSocketFD, int nDataLen, const void* pData);
+
+	/**
+	 *  Parent CATcpServer call child overload funcation.
+	 *  自行定義 TCP 接收層，須實作 socket recv
+	 */
 	int onTcpReceive(unsigned long int nSocketFD);
 
 	/**
