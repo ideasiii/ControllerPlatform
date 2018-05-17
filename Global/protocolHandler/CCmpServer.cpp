@@ -204,6 +204,8 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 	pHeader = &cmpHeader;
 	result = socketrecv(nSocketFD, nHeaderSize, &pHeader);
+	_TRACE("[CCmpServer] onTcpReceive socketrecv result: %d", result);
+
 	if(0 >= result)
 	{
 		_log("[CCmpServer] onTcpReceive socketrecv fail, result: %d", result);
@@ -225,8 +227,7 @@ int CCmpServer::onTcpReceive(unsigned long int nSocketFD)
 
 		if( enquire_link_request == nCommand)
 		{
-			printPacket(nCommand, nStatus, nSequence, nTotalLen,
-									"[CCmpServer] onTcpReceive Request", nSocketFD);
+			printPacket(nCommand, nStatus, nSequence, nTotalLen, "[CCmpServer] onTcpReceive Request", nSocketFD);
 			return response(nSocketFD, nCommand, STATUS_ROK, nSequence, 0);
 		}
 
