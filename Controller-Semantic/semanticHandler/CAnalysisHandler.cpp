@@ -18,7 +18,6 @@
 #include "CContentHandler.h"
 #include "CDisplayHandler.h"
 
-
 using namespace std;
 
 CAnalysisHandler::CAnalysisHandler(const char *szConf, CObject *object) :
@@ -326,14 +325,21 @@ int CAnalysisHandler::activity(const char *szInput, JSONObject& jsonResp, map<st
 					+ mapData[mapMatch["dictionary"]].udata.localData.strType;
 			_log("[CAnalysisHandler] activity load local file: %s",
 					mapData[mapMatch["dictionary"]].udata.localData.strPath.c_str());
-			strDisplay = getDisplay(mapData[mapMatch["dictionary"]].udata.localData.strDisplayFile.c_str());
 			respPacket.setActivity("type", 1).setActivity("host", conf.strHost).setActivity("file", strFileName);
-			if(!strDisplay.empty())
-			{
-				respPacket.setDisplay(strDisplay.c_str());
-			}
-
+			//strDisplay = getDisplay(mapData[mapMatch["dictionary"]].udata.localData.strDisplayFile.c_str());
+//			if(!strDisplay.empty())
+//			{
+//				respPacket.setDisplay(strDisplay.c_str());
+//			}
 			respPacket.format(jsonResp);
+		}
+		else
+		{
+			if(!conf.strName.compare("story"))
+			{
+				respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<
+						const char*>("tts", "無此相關情境與主題的故事喔").format(jsonResp);
+			}
 		}
 		break;
 	case CONF_TYPE_DICTIONARY:
