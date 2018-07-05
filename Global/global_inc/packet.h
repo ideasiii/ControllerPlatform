@@ -82,8 +82,8 @@ struct CMP_PACKET
 #define reboot_response									0x80000010
 #define config_request									0x00000011
 #define config_response									0x80000011
-#define power_port_set_request							0x00000012
-#define power_port_set_response							0x80000012
+#define wheelpies_request								0x00000012  // 虛擬運動教練
+#define wheelpies_response								0x80000012
 #define power_port_state_request						0x00000013
 #define power_port_state_response						0x80000013
 #define ser_api_signin_request							0x00000014
@@ -170,8 +170,7 @@ update_response, "update_response")(
 reboot_request, "reboot_request")( reboot_response, "reboot_response")(long_data_request, "long_data_request")(
 long_data_response, "long_data_response")(
 config_request, "config_request")(
-config_response, "config_response")( power_port_set_request, "power_port_request")( power_port_set_response,
-		"power_port_response")(
+config_response, "config_response")( wheelpies_request, "wheelpies_request")( wheelpies_response, "wheelpies_response")(
 power_port_state_request, "power_port_state_request")(
 power_port_state_response, "power_port_state_response")(
 initial_request, "initial_request")( initial_response, "initial_response")(
@@ -197,7 +196,7 @@ smart_building_appversion_response, "smart_building_appversion_response")(smart_
 		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
 		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
 semantic_word_response, "semantic_word_response")(controller_die_request, "controller_die_request")(
-		controller_die_response, "controller_die_response");
+controller_die_response, "controller_die_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

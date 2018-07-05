@@ -37,6 +37,7 @@ CCmpServer::CCmpServer() :
 	mapFunc[amx_status_request] = &CCmpServer::onAmxStatus;
 	mapFunc[controller_die_request] = &CCmpServer::onDie;
 	mapFunc[update_request] = &CCmpServer::onUpdate;
+	mapFunc[wheelpies_request] = &CCmpServer::onWheelpies;
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();

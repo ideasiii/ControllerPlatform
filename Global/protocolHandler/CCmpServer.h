@@ -137,6 +137,13 @@ protected:
 	}
 	;
 
+	// 虛擬運動教練
+	virtual int onWheelpies(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
+
 	//=============== AMX Service ======================//
 	virtual int onAmxControl(int nSocket, int nCommand, int nSequence, const void *szBody)
 	{
