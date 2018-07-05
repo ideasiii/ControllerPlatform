@@ -27,7 +27,7 @@ int CCmpWheelpies::onWheelpies(int nSocket, int nCommand, int nSequence, const v
 	if(!strBody.empty() && 0 < strBody.length())
 	{
 		_log("[CCmpWheelpies] onWheelpies Body: %s", szBody);
-		response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
+		response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 		return TRUE;
 	}
 	response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
