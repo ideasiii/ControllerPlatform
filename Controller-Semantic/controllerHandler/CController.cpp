@@ -114,7 +114,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
-	if(!strWord.Compare("分析故事"))
+	if(!strWord.Compare("分析垃圾"))
 	{
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());

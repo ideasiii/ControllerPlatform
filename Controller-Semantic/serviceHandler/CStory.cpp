@@ -161,7 +161,7 @@ void CStory::storyAnalysis()
 	fh.readAllLine("dictionary/story_material.txt", setDictionary);
 	fh.readAllLine("dictionary/animal.txt", setDictionary);
 	fh.readAllLine("dictionary/affect.txt", setDictionary);
-	fh.readAllLine("dictionary/whatever.txt", setDictionary);
+	//fh.readAllLine("dictionary/whatever.txt", setDictionary);
 
 	fh.readPath(STORY_FILE_PATH, setData);
 
