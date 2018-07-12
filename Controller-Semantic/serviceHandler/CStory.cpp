@@ -98,12 +98,12 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	CString strMaterial;
 	vector<string> listTop;
 	int nScore;
-	int nIndex;
+//	int nIndex;
 	int nValue;
 
 	nScore = 0;
 	strWord = szWord;
-	nIndex = 0;
+//	nIndex = 0;
 
 	for(set<string>::iterator it_set = setMaterial.begin(); setMaterial.end() != it_set; ++it_set)
 	{
