@@ -90,7 +90,6 @@ void CStory::init()
 int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
 {
 	CRankingHandler<string, int> ranking;
-	//map<int, string> mapStory;
 	list<map<string, string> > listValue;
 	list<map<string, string> >::iterator it_list;
 	map<string, string>::iterator it_map;
@@ -98,12 +97,10 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 	CString strMaterial;
 	vector<string> listTop;
 	int nScore;
-//	int nIndex;
 	int nValue;
 
 	nScore = 0;
 	strWord = szWord;
-//	nIndex = 0;
 
 	for(set<string>::iterator it_set = setMaterial.begin(); setMaterial.end() != it_set; ++it_set)
 	{
@@ -115,7 +112,7 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 				if(string::npos != it_map->first.find(*it_set) || string::npos != it_map->second.find(trim(*it_set)))
 				{
 					nValue = ranking.getValue(it_map->first, 0);
-					_log("[CStory] evaluate get Story score: %d", nValue);
+					_log("[CStory] evaluate get Story %s score: %d", it_map->first.c_str(), nValue);
 					// find in story title
 					if(string::npos != it_map->first.find(*it_set))
 					{
