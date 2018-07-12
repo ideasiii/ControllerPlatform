@@ -67,7 +67,7 @@ void CStory::init()
 						strMaterialTitle = j->second;
 				}
 				mapStoryMaterial.insert(pair<string, string>(strName, strMaterial));
-				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle));
+				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle)); // 暫時用不到
 				spliteData(const_cast<char*>(strMaterial.c_str()), ",", setMaterial);
 			}
 			_log("[CStory] init Load story count: %d", mapStoryMaterial.size());
@@ -112,25 +112,29 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 		{
 			for(it_map = mapStoryMaterial.begin(); mapStoryMaterial.end() != it_map; ++it_map)
 			{
-				nValue = ranking.getValue(it_map->first, 0);
-				_log("[CStory] evaluate get Story score: %d", nValue);
-				// find in story title
-				if(string::npos != it_map->first.find(*it_set))
+				if(string::npos != it_map->first.find(*it_set) || string::npos != it_map->second.find(trim(*it_set)))
 				{
-					_log("[CStory] evaluate find material in story title: %s <-- %s ( %d --> %d )",
-							it_map->first.c_str(), it_set->c_str(), nValue, nValue + 3);
-					nValue += 3;
-				}
+					nValue = ranking.getValue(it_map->first, 0);
+					_log("[CStory] evaluate get Story score: %d", nValue);
+					// find in story title
+					if(string::npos != it_map->first.find(*it_set))
+					{
+						_log("[CStory] evaluate find material in story title: %s <-- %s ( %d --> %d )",
+								it_map->first.c_str(), it_set->c_str(), nValue, nValue + 3);
+						nValue += 3;
+					}
 
-				if(string::npos != it_map->second.find(trim(*it_set)))
-				{
-					_log("[CStory] evaluate find material in story content: %s <-- %s ( %d --> %d )",
-							it_map->first.c_str(), it_set->c_str(), nValue, nValue + 1);
+					// find in story content
+					if(string::npos != it_map->second.find(trim(*it_set)))
+					{
+						_log("[CStory] evaluate find material in story content: %s <-- %s ( %d --> %d )",
+								it_map->first.c_str(), it_set->c_str(), nValue, nValue + 1);
 
-					++nValue;
+						++nValue;
+					}
+					ranking.add(it_map->first, nValue);
+					_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 				}
-				ranking.add(it_map->first, nValue);
-				_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 			}
 		}
 	}
