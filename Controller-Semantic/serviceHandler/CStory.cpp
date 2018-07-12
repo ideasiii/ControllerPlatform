@@ -69,6 +69,7 @@ void CStory::init()
 				mapStoryMaterial.insert(pair<string, string>(strName, strMaterial));
 				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle)); // 暫時用不到
 				spliteData(const_cast<char*>(strMaterial.c_str()), ",", setMaterial);
+				spliteData(const_cast<char*>(strMaterialTitle.c_str()), ",", setMaterial);
 			}
 			_log("[CStory] init Load story count: %d", mapStoryMaterial.size());
 //			for(map<string, string>::iterator it = mapStoryMaterial.begin(); mapStoryMaterial.end() != it; ++it)
