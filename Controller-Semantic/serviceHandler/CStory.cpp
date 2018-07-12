@@ -90,7 +90,7 @@ void CStory::init()
 int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &mapMatch)
 {
 	CRankingHandler<string, int> ranking;
-	map<int, string> mapStory;
+	//map<int, string> mapStory;
 	list<map<string, string> > listValue;
 	list<map<string, string> >::iterator it_list;
 	map<string, string>::iterator it_map;
@@ -112,22 +112,25 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 		{
 			for(it_map = mapStoryMaterial.begin(); mapStoryMaterial.end() != it_map; ++it_map)
 			{
+				nValue = ranking.getValue(it_map->first, 0);
+				_log("[CStory] evaluate get Story score: %d", nValue);
+				// find in story title
+				if(string::npos != it_map->first.find(*it_set))
+				{
+					_log("[CStory] evaluate find material in story title: %s <-- %s ( %d --> %d )",
+							it_map->first.c_str(), it_set->c_str(), nValue, nValue + 3);
+					nValue += 3;
+				}
+
 				if(string::npos != it_map->second.find(trim(*it_set)))
 				{
-					_log("[CStory] evaluate find material in story content: %s <-- %s", it_map->first.c_str(),
-							it_set->c_str());
-					mapStory[nIndex++] = it_map->first;
-					nValue = ranking.getValue(it_map->first, 0);
-					// find in story title
-					if(string::npos != it_map->first.find(*it_set))
-					{
-						nValue += 3;
-						_log("[CStory] evaluate find material in story title: %s <-- %s", it_map->first.c_str(),
-								it_set->c_str());
-					}
-					ranking.add(it_map->first, ++nValue);
-					_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
+					_log("[CStory] evaluate find material in story content: %s <-- %s ( %d --> %d )",
+							it_map->first.c_str(), it_set->c_str(), nValue, nValue + 1);
+
+					++nValue;
 				}
+				ranking.add(it_map->first, nValue);
+				_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 			}
 		}
 	}
