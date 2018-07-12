@@ -25,5 +25,6 @@ public:
 private:
 	std::list<CString> listMaterial;
 	std::map<std::string, std::string> mapStoryMaterial;
+	std::map<std::string, std::string> mapStoryMaterialTitle;
 	std::set<std::string> setMaterial;
 };

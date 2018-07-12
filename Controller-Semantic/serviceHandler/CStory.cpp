@@ -36,6 +36,7 @@ void CStory::init()
 {
 	string strName;
 	string strMaterial;
+	string strMaterialTitle;
 	CString strSQL;
 	list<map<string, string> > listValue;
 	list<map<string, string> >::iterator it_list;
@@ -47,10 +48,11 @@ void CStory::init()
 	if(mysql->connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5"))
 	{
 		listValue.clear();
-		strSQL = "SELECT name,material FROM edubot.story";
+		strSQL = "SELECT name,material,material_title FROM edubot.story";
 		if(mysql->query(strSQL.toString(), listValue))
 		{
 			mapStoryMaterial.clear();
+			mapStoryMaterialTitle.clear();
 			for(it_list = listValue.begin(); listValue.end() != it_list; ++it_list)
 			{
 				mapItem.clear();
@@ -61,8 +63,11 @@ void CStory::init()
 						strName = j->second;
 					if(!j->first.compare("material"))
 						strMaterial = j->second;
+					if(!j->first.compare("material_title"))
+						strMaterialTitle = j->second;
 				}
 				mapStoryMaterial.insert(pair<string, string>(strName, strMaterial));
+				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle));
 				spliteData(const_cast<char*>(strMaterial.c_str()), ",", setMaterial);
 			}
 			_log("[CStory] init Load story count: %d", mapStoryMaterial.size());
@@ -109,12 +114,17 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 			{
 				if(string::npos != it_map->second.find(trim(*it_set)))
 				{
-					_log("[CStory] evaluate find story: %s <-- %s", it_map->first.c_str(), it_set->c_str());
+					_log("[CStory] evaluate find material in story content: %s <-- %s", it_map->first.c_str(),
+							it_set->c_str());
 					mapStory[nIndex++] = it_map->first;
 					nValue = ranking.getValue(it_map->first, 0);
 					// find in story title
 					if(string::npos != it_map->first.find(*it_set))
-						++nValue;
+					{
+						nValue += 3;
+						_log("[CStory] evaluate find material in story title: %s <-- %s", it_map->first.c_str(),
+								it_set->c_str());
+					}
 					ranking.add(it_map->first, ++nValue);
 					_log("[CStory] evaluate ranking get %s value: %d", it_map->first.c_str(), nValue);
 				}
