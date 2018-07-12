@@ -50,7 +50,8 @@ void CResponsePacket::init()
 void CResponsePacket::format(JSONObject &jResp)
 {
 	jResp.put(ACTIVITY, *jsonActivity);
-	jResp.put(DISPLAY, *jsonDisplay);
+	// 臉部表情不需要了 過渡期的垃圾
+	//jResp.put(DISPLAY, *jsonDisplay);
 }
 
 void CResponsePacket::clear()

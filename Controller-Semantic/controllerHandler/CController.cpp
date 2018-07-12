@@ -46,7 +46,7 @@ int CController::onCreated(void* nMsqKey)
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_SEMANTIC;
 	semanticJudge = new CSemanticJudge(this);
 	cmpword = new CCmpWord(this);
-	penreader = new CPenReader;
+//	penreader = new CPenReader;
 	mysql = new CMysqlHandler();
 
 	return mnMsqKey;
@@ -92,7 +92,7 @@ int CController::onFinish(void* nMsqKey)
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
-	delete penreader;
+//	delete penreader;
 	delete mysql;
 
 	return TRUE;
@@ -141,7 +141,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	case TYPE_REQ_GAME:		// 遊戲
 		break;
 	case TYPE_REQ_PEN:		// 點讀筆
-		penreader->activity(strWord.getBuffer(), jsonResp);
+//		penreader->activity(strWord.getBuffer(), jsonResp);
 		break;
 	default:
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_RINVJSON, nSequence, 0);
@@ -160,8 +160,11 @@ void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int
 
 	if(!mysql->isValid())
 	{
-		_log("[CController] recordResponse mysql invalid, can't record response: %s", szData);
-		return;
+		if(!mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5"))
+		{
+			_log("[CController] recordResponse mysql invalid, can't record response: %s", szData);
+			return;
+		}
 	}
 
 	strSQL.format("INSERT INTO response (device_id, semantic_id, type, response) VALUES ('%s', %d, %d,'%s')",

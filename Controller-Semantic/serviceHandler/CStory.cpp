@@ -156,6 +156,7 @@ void CStory::storyAnalysis()
 	set<string> setDictionary;
 	CMysqlHandler mysql;
 	CString strMaterial;
+	CString strMaterialTitle;
 	CString strSQL;
 
 	fh.readAllLine("dictionary/story_material.txt", setDictionary);
@@ -182,8 +183,19 @@ void CStory::storyAnalysis()
 				{
 					//_log("[CStory] storyAnalysis Start analysis story content: %s", strContent.c_str());
 					strMaterial = "";
+					strMaterialTitle = "";
+
 					for(set<string>::iterator it_set = setDictionary.begin(); setDictionary.end() != it_set; ++it_set)
 					{
+						// 故事檔名分析比對
+						if(string::npos != strFileName.find(trim(*it_set)))
+						{
+							if(strMaterialTitle.Compare(""))
+								strMaterialTitle += ",";
+							strMaterialTitle = strMaterialTitle + *it_set;
+						}
+
+						// 故事內容分析比對
 						if(string::npos != strContent.find(trim(*it_set)))
 						{
 							//_log("[CStory] storyAnalysis find material: %s", it_set->c_str());
@@ -194,13 +206,14 @@ void CStory::storyAnalysis()
 						}
 					}
 					_log("[CStory] storyAnalysis find material: %s", strMaterial.getBuffer());
-					if(strMaterial.getLength())
+					_log("[CStory] storyAnalysis find material title: %s", strMaterialTitle.getBuffer());
+					if(strMaterial.getLength() || strMaterialTitle.getLength())
 					{
 						strSQL.format("DELETE FROM story WHERE name = '%s'", strFileName.c_str());
 						mysql.sqlExec(strSQL.toString());
 
-						strSQL.format("INSERT INTO story(name,material) VALUES('%s','%s')", strFileName.c_str(),
-								strMaterial.getBuffer());
+						strSQL.format("INSERT INTO story(name,material,material_title) VALUES('%s','%s','%s')",
+								strFileName.c_str(), strMaterial.getBuffer(), strMaterialTitle.getBuffer());
 						mysql.sqlExec(strSQL.toString());
 					}
 				}

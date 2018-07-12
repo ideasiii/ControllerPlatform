@@ -170,8 +170,6 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 						return;
 					}
 				}
-
-				//======== 歷史播放 ================//
 			}
 		}
 	}

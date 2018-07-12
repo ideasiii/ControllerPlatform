@@ -45,8 +45,8 @@ int CMysqlHandler::connect(string strHost, string strDB, string strUser, string 
 
 	// 函數mysql_real_connect建立一個數據庫連接
 	// 成功返回MYSQL*連接句柄，失敗返回NULL
-//	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
-//			strPassword.c_str(), strDB.c_str());
+	//	_DBG("[CMysqlHandler] connect: host=%s user=%s password=%s database=%s", strHost.c_str(), strUser.c_str(),
+	//			strPassword.c_str(), strDB.c_str());
 	//mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL, 0);
 	if(!mysql_real_connect(mpMySQL, strHost.c_str(), strUser.c_str(), strPassword.c_str(), strDB.c_str(), 0, NULL, 0))
 	{
