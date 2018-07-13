@@ -118,8 +118,8 @@ int CStory::evaluate(const char *szWord, std::map<std::string, std::string> &map
 					if(string::npos != it_map->first.find(*it_set))
 					{
 						_log("[CStory] evaluate find material in story title: %s <-- %s ( %d --> %d )",
-								it_map->first.c_str(), it_set->c_str(), nValue, nValue + 3);
-						nValue += 3;
+								it_map->first.c_str(), it_set->c_str(), nValue, nValue + 2);
+						nValue += 2;
 					}
 
 					// find in story content
