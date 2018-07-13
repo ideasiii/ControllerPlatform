@@ -21,6 +21,8 @@ struct CONF
 	string strHost;
 	string strDisplayPath;
 	string strDictionary;
+	string strWordUnknow;
+	string strWordError;
 	int nType;
 	int nService;
 };

@@ -16,12 +16,22 @@
 class CObject;
 class CContentHandler;
 
+enum enuWORD
+{
+	WORD_UNKNOW = 0, WORD_ERROR
+};
 
 class CAnalysisHandler: public CSemantic
 {
 	enum _CONF_TYPE
 	{
 		CONF_TYPE_UNDEFINE = -1, CONF_TYPE_LOCAL_FILE = 0, CONF_TYPE_DICTIONARY = 1
+	};
+
+	struct WORD
+	{
+		std::string WORD_UNKNOW;
+		std::string WORD_ERROR;
 	};
 
 public:
@@ -31,6 +41,7 @@ public:
 	int activity(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
 	int service(const char *szInput, JSONObject& jsonResp, std::map<std::string, std::string> &mapMatch);
 	std::string getName();
+	std::string getWord(enuWORD ew);
 
 private:
 	bool loadConf(const char *szConf);
@@ -59,4 +70,5 @@ private:
 	typedef void (CAnalysisHandler::*MemFn)(const char *, const char *, JSONObject&);
 	std::map<int, MemFn> mapFunc;
 	CObject *m_pParent;
+	WORD mWord;
 };

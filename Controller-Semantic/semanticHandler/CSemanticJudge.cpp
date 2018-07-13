@@ -86,8 +86,7 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	if(0 >= szInput)
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
-				"tts",
-				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+				"tts", GLOBAL_WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 		return;
 	}
 
@@ -126,8 +125,7 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	else
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
-				"tts",
-				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+				"tts", GLOBAL_WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 	}
 }
 
@@ -137,12 +135,12 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 	CResponsePacket respPacket;
 	CDisplayHandler display;
 	string strDisplay;
+	string strWordUnknow;
 
 	if(0 >= szInput)
 	{
 		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>(
-				"tts",
-				WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+				"tts", GLOBAL_WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 		return;
 	}
 
@@ -169,13 +167,23 @@ void CSemanticJudge::runAnalysis(const char *szInput, JSONObject &jsonResp, cons
 						mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
 						return;
 					}
+
+					if(!mapMatch["fuzzy"].empty())
+					{
+						if(mapSemanticService[j]->evaluate(mapMatch["fuzzy"].c_str(), mapMatch))
+						{
+							mapAnalysis[i]->activity(szInput, jsonResp, mapMatch);
+							return;
+						}
+					}
 				}
 			}
+			strWordUnknow = mapAnalysis[i]->getWord(WORD_UNKNOW);
 		}
 	}
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
-	WORD_UNKNOW).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
+			strWordUnknow.c_str()).setDisplay(display.getSadDisplay().c_str()).format(jsonResp);
 }
 
 void CSemanticJudge::onHandleMessage(Message &message)

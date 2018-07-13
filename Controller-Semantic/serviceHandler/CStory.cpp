@@ -67,7 +67,7 @@ void CStory::init()
 						strMaterialTitle = j->second;
 				}
 				mapStoryMaterial.insert(pair<string, string>(strName, strMaterial));
-				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle)); // 暫時用不到
+				mapStoryMaterialTitle.insert(pair<string, string>(strName, strMaterialTitle));
 				spliteData(const_cast<char*>(strMaterial.c_str()), ",", setMaterial);
 				spliteData(const_cast<char*>(strMaterialTitle.c_str()), ",", setMaterial);
 			}

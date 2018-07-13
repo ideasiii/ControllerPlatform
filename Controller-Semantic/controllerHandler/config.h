@@ -68,7 +68,7 @@ enum
 #define SPOTIFY_CLIENT				"MzgyOTVjMmY1ZDNjNDM3MWI4MTFkZGZiMDA3NWRlODE6MWI4OWQxN2QyNjg4NDRkZGIyNWUzMWRiZmE1NzQzZjE="
 
 //==================================== 固定回復 ===========================================//
-#define WORD_UNKNOW					"我不了解這句話的意思"
+#define GLOBAL_WORD_UNKNOW					"我不了解這句話的意思"
 
 //=========================== Semantic ==========================================//
 /**

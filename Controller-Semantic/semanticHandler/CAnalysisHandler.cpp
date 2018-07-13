@@ -59,7 +59,8 @@ bool CAnalysisHandler::loadConf(const char *szConf)
 		if(config->loadConfig(szConf))
 		{
 			conf.strName = config->getValue("CONF", "name");
-
+			conf.strWordUnknow = config->getValue("WORD", "unknow");
+			conf.strWordError = config->getValue("WORD", "error");
 			if(!(strValue = config->getValue("CONF", "type")).empty())
 				convertFromString(conf.nType, strValue);
 
@@ -283,7 +284,8 @@ int CAnalysisHandler::evaluate(const char *szWord, std::map<std::string, std::st
 		transform(strTmp.begin(), strTmp.end(), strTmp.begin(), ::tolower);
 		if(string::npos != strWord.find(strTmp))
 		{
-			strValue = trim(iter_map->second);
+			mapMatch["fuzzy"] = trim(iter_map->second);
+			_log("[CAnalysisHandler] evaluate fuzzy word: %s --> %s", strTmp.c_str(), mapMatch["fuzzy"].c_str());
 		}
 	}
 
@@ -431,5 +433,17 @@ string CAnalysisHandler::getDisplay(const char *szFile)
 	}
 
 	return strContent;
+}
+
+string CAnalysisHandler::getWord(enuWORD ew)
+{
+	switch(ew)
+	{
+	case WORD_UNKNOW:
+		return conf.strWordUnknow;
+	case WORD_ERROR:
+		return conf.strWordError;
+	}
+	return GLOBAL_WORD_UNKNOW;
 }
 
