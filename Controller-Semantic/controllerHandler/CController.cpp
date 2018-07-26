@@ -11,6 +11,7 @@
 #include <chrono>
 #include <functional>
 #include <atomic>
+#include <set>
 #include "CController.h"
 #include "CCmpWord.h"
 #include "common.h"
@@ -27,6 +28,7 @@
 #include "CMysqlHandler.h"
 #include "CString.h"
 #include "CStory.h"
+#include "CParticiple.h"
 
 using namespace std;
 
@@ -121,6 +123,18 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		CStory *story = new CStory;
 		story->storyAnalysis();
 		delete story;
+		return;
+	}
+
+	if(!strWord.Compare("emotion"))
+	{
+		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
+				jsonResp.put("id", nId).toJSON().c_str());
+		CParticiple *participle = new CParticiple;
+		set<string> smark;
+		smark.insert("。");
+		participle->splitter("xxxxxxxxxxx", smark);
+		delete participle;
 		return;
 	}
 
