@@ -13,12 +13,9 @@
 #include "CMysqlHandler.h"
 #include "config.h"
 #include "CString.h"
-#include "utility.h"
 #include "CRankingHandler.cpp"
 #include "CFileHandler.h"
 #include "utility.h"
-
-#define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
 using namespace std;
 
@@ -159,7 +156,7 @@ CString CStory::name()
 	return "Story Search by Material Service";
 }
 
-void CStory::storyAnalysis()
+void CStory::storyAnalysis(const char *szPath)
 {
 	int nIndex;
 	CFileHandler fh;
@@ -174,14 +171,29 @@ void CStory::storyAnalysis()
 	CString strMaterialTitle;
 	CString strSQL;
 
+	if(0 == szPath)
+		return;
+
 	fh.readAllLine("dictionary/story_material.txt", setDictionary);
 	fh.readAllLine("dictionary/animal.txt", setDictionary);
 	fh.readAllLine("dictionary/affect.txt", setDictionary);
-	//fh.readAllLine("dictionary/whatever.txt", setDictionary);
 
-	fh.readPath(STORY_FILE_PATH, setData);
+	fh.readPath(szPath, setData);
+
+	if(0 >= setData.size())
+	{
+		_log("[CStory] storyAnalysis Path: %s no story file", szPath);
+		return;
+	}
 
 	mysql.connect(EDUBOT_HOST, EDUBOT_DB, EDUBOT_ACCOUNT, EDUBOT_PASSWD, "5");
+	if(!mysql.isValid())
+	{
+		_log("[CStory] storyAnalysis MySQL invalid");
+		return;
+	}
+	strSQL = "DELETE FROM story";
+	mysql.sqlExec(strSQL.toString());
 
 	for(iter_set = setData.begin(); setData.end() != iter_set; ++iter_set)
 	{
@@ -192,7 +204,7 @@ void CStory::storyAnalysis()
 			{
 				strFileName = trim(iter_set->substr(0, nIndex));
 				_log("[CStory] storyAnalysis Start analysis story: %s", iter_set->c_str());
-				strFilePath.format("%s%s", STORY_FILE_PATH, iter_set->c_str());
+				strFilePath.format("%s%s", szPath, iter_set->c_str());
 				fh.readContent(strFilePath.getBuffer(), strContent);
 				if(!strContent.empty())
 				{
@@ -224,8 +236,8 @@ void CStory::storyAnalysis()
 					_log("[CStory] storyAnalysis find material title: %s", strMaterialTitle.getBuffer());
 					if(strMaterial.getLength() || strMaterialTitle.getLength())
 					{
-						strSQL.format("DELETE FROM story WHERE name = '%s'", strFileName.c_str());
-						mysql.sqlExec(strSQL.toString());
+						//	strSQL.format("DELETE FROM story WHERE name = '%s'", strFileName.c_str());
+						//	mysql.sqlExec(strSQL.toString());
 
 						strSQL.format("INSERT INTO story(name,material,material_title) VALUES('%s','%s','%s')",
 								strFileName.c_str(), strMaterial.getBuffer(), strMaterialTitle.getBuffer());

@@ -30,6 +30,8 @@
 #include "CStory.h"
 #include "CParticiple.h"
 
+#define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
+
 using namespace std;
 
 CController::CController() :
@@ -121,7 +123,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
 		CStory *story = new CStory;
-		story->storyAnalysis();
+		story->storyAnalysis(STORY_FILE_PATH);
 		delete story;
 		return;
 	}
@@ -133,7 +135,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		CParticiple *participle = new CParticiple;
 		set<string> smark;
 		smark.insert("。");
-		participle->splitter("xxxxxxxxxxx", smark);
+		participle->splitter(STORY_FILE_PATH, "。");
 		delete participle;
 		return;
 	}
