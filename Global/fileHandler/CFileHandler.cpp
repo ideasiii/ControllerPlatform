@@ -13,6 +13,7 @@
 #include <errno.h>
 #include "CFileHandler.h"
 #include "LogHandler.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ unsigned int CFileHandler::readAllLine(const char *szFile, set<string> &setData)
 	return setData.size();
 }
 
-unsigned int CFileHandler::readContent(const char *szFile, string &strContent)
+unsigned int CFileHandler::readContent(const char *szFile, string &strContent, bool bTrim)
 {
 	strContent.clear();
 
@@ -59,7 +60,19 @@ unsigned int CFileHandler::readContent(const char *szFile, string &strContent)
 		if(file.is_open())
 		{
 			while(getline(file, str))
-				strContent.append(str);
+			{
+				if(bTrim)
+				{
+					strContent.append(trim(str));
+					//_log("[CFileHandler] readContent line: %s", trim(str).c_str());
+				}
+				else
+				{
+					strContent.append(str);
+					//_log("[CFileHandler] readContent line: %s", str.c_str());
+				}
+			}
+			//_log("[CFileHandler] readContent Content: %s", strContent.c_str());
 			file.close();
 		}
 	}

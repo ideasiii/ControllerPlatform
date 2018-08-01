@@ -12,6 +12,7 @@
 #include "CFileHandler.h"
 #include "utility.h"
 #include "CMysqlHandler.h"
+#include <vector>
 
 using namespace std;
 
@@ -38,7 +39,9 @@ void CParticiple::splitter(const char *szContent, set<string> splitterMark)
 
 void CParticiple::splitter(const char *szPath, const char *szMark)
 {
+	int nTmp;
 	int nIndex;
+	int nIndexPhase;
 	CFileHandler fh;
 	set<string> setData;
 	CMysqlHandler mysql;
@@ -47,7 +50,7 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 	CString strFileName;
 	CString strFilePath;
 	string strContent;
-	set<string> setPhase;
+	vector<string> vecPhase;
 
 	fh.readPath(szPath, setData);
 
@@ -75,13 +78,30 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 				_log("[CParticiple] splitter Start analysis file: %s", iter_set->c_str());
 				strFilePath.format("%s%s", szPath, iter_set->c_str());
 				strContent.clear();
-				fh.readContent(strFilePath.getBuffer(), strContent);
-				setPhase.clear();
-				spliteData(const_cast<char*>(strContent.c_str()), szMark, setPhase);
+				fh.readContent(strFilePath.getBuffer(), strContent, true);
 
-				for(set<string>::iterator it = setPhase.begin(); it != setPhase.end(); ++it)
+				//======= 特殊符號替換 =======//
+				strContent = ReplaceAll(strContent, "。”", "”。");
+				_log("[CParticiple] splitter Content: %s", strContent.c_str());
+
+				//======= 字串分詞 ========//
+				int nIndex = 0;
+				int nLen = 0;
+				int nCount = 0;
+				CString strPart;
+
+				while(1)
 				{
-					_log("[CParticiple] splitter get File: %s Phase: %s", strFileName.getBuffer(), it->c_str());
+					if(nCount)
+						nIndex = nIndex + nLen + strlen(szMark);
+					nLen = strContent.find("。", nIndex);
+					if((int) string::npos == nLen)
+						break;
+					nLen = nLen - nIndex;
+					printf("index=%d , size=%d\n", nIndex, nLen);
+					strPart = strContent.substr(nIndex, nLen);
+					printf("part: %s\n", strPart.getBuffer());
+					++nCount;
 				}
 			}
 		}
