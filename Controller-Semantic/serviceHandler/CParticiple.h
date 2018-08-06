@@ -18,6 +18,5 @@ public:
 	virtual ~CParticiple();
 
 public:
-	void splitter(const char *szContent, std::set<std::string> splitterMark);
 	void splitter(const char *szPath, const char *szMark);
 };

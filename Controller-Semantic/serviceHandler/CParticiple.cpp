@@ -26,17 +26,6 @@ CParticiple::~CParticiple()
 
 }
 
-void CParticiple::splitter(const char *szContent, set<string> splitterMark)
-{
-	CString strContent;
-
-	if(!szContent || splitterMark.empty())
-		return;
-	strContent = szContent;
-
-	_log("[CParticiple] splitter Content: %s", szContent);
-}
-
 void CParticiple::splitter(const char *szPath, const char *szMark)
 {
 	int nTmp;
@@ -78,7 +67,12 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 				_log("[CParticiple] splitter Start analysis file: %s", iter_set->c_str());
 				strFilePath.format("%s%s", szPath, iter_set->c_str());
 				strContent.clear();
-				fh.readContent(strFilePath.getBuffer(), strContent, true);
+				if(!fh.readContent(strFilePath.getBuffer(), strContent, true))
+					continue;
+				strContent = strContent + "dddddd";
+
+				strSQL.format("DELETE FROM story_affective WHERE story = '%s'", strFileName.getBuffer());
+				mysql.sqlExec(strSQL.toString());
 
 				//======= 特殊符號替換 =======//
 				strContent = ReplaceAll(strContent, "。”", "”。");
@@ -106,5 +100,7 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 			}
 		}
 	}
+
+	mysql.close();
 }
 
