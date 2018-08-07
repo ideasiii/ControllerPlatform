@@ -35,6 +35,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lssl \
 			-lcrypto \
 			-lxerces-c \
+			-I/usr/include/mongo \
+			-lmongoclient \
 			-lboost_thread \
 			-lboost_system \
 			-lboost_filesystem \
@@ -85,6 +87,7 @@ lib:
 checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
+	@mkdir -p libs
 	
 clean:
 	@for libName in ${MODULES} ; do \
@@ -129,8 +132,17 @@ package-u:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
 	apt-get -y install libmysqld-dev
+	apt-get -y install scons
+	apt-get -y install libmongo-client-dev
 	@echo -ne '|==================== Package for Ubuntu install completed. ====================|  '
 	@echo `date`
+	@echo "\n"
+	
+mongoDB:
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
+	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
+	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
+	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

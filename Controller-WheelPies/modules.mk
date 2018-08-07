@@ -14,4 +14,7 @@ export MODULES=controllerHandler \
 ../Global/protocolHandler \
 ../Global/httpHandler \
 ../Global/fileHandler \
-../Global/stringHandler
+../Global/stringHandler \
+../Global/mongoDBHandler
+
+export EXT_MODULES=extInclude
