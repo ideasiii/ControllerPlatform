@@ -24,11 +24,12 @@
 #include "CMysqlHandler.h"
 #include "CString.h"
 #include "CCmpWheelpies.h"
+#include "CMongoDBHandler.h"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), mysql(0), cmpwheelpies(0)
+		mnMsqKey(-1), mysql(0), cmpwheelpies(0), mongodb(0)
 {
 
 }
@@ -43,6 +44,7 @@ int CController::onCreated(void* nMsqKey)
 	mnMsqKey = EVENT_MSQ_KEY_CONTROLLER_WHEELPIES;
 	mysql = new CMysqlHandler();
 	cmpwheelpies = new CCmpWheelpies(this);
+	mongodb = CMongoDBHandler::getInstance();
 	return mnMsqKey;
 }
 
@@ -74,7 +76,7 @@ int CController::onInitial(void* szConfPath)
 	delete config;
 
 //	mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
-
+	mongodb->connectDB("127.0.0.1", "27017");
 	return nResult;
 }
 
@@ -83,6 +85,7 @@ int CController::onFinish(void* nMsqKey)
 	mysql->close();
 	delete mysql;
 
+	delete mongodb;
 	return TRUE;
 }
 
@@ -91,8 +94,21 @@ void CController::onHandleMessage(Message &message)
 	switch(message.what)
 	{
 	case wheelpies_request:
-		// Lambda Expression
-
+		insertData(message.strData);
 		break;
 	}
+}
+
+void CController::insertData(std::string strData)
+{
+	string strOID;
+
+	string strJSON = trim(strData);
+	strJSON = ReplaceAll(strJSON, "\"{", "{");
+	strJSON = ReplaceAll(strJSON, "}\"", "}");
+	strJSON = ReplaceAll(strJSON, "\"[", "[");
+	strJSON = ReplaceAll(strJSON, "]\"", "]");
+	strJSON = ReplaceAll(strJSON, "\\\"", "\"");
+
+	strOID = mongodb->insert("sport", "wheelpies", strJSON);
 }

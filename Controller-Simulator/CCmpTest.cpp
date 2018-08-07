@@ -236,6 +236,8 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			"{\"APP_ID\": \"1484537462214\",\"USER_ID\": \"d56e0b12-db99-11e6-bf26-cec0c932ce01\",\"CHARGE_ PLACE\": \"ITES_FLOOR_1\"}";
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 	string strDie = "{\"key\":\"suicide\"}";
+	string strWheelPies = "";
+
 	if(0 != szBody)
 	{
 		memcpy(pIndex, szBody, strlen(szBody));
@@ -318,18 +320,11 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			pIndex += 4;
 			nBody_len += 4;
 			break;
-		case power_port_set_request:
-			nNum = htonl(1);
-			memcpy(pIndex, (const char*) &nNum, 4);
-			pIndex += 4;
-			nBody_len += 4;
-
-			nNum = htonl(1);
-			memcpy(pIndex, (const char*) &nNum, 4);
-			pIndex += 4;
-			nBody_len += 4;
-
-			memcpy(pIndex, "0", 1);
+		case wheelpies_request:
+			memcpy(pIndex, strSemantic.c_str(), strSemantic.size());
+			pIndex += strSemantic.size();
+			nBody_len += strSemantic.size();
+			memcpy(pIndex, "\0", 1);
 			pIndex += 1;
 			nBody_len += 1;
 			break;

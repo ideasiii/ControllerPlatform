@@ -165,7 +165,7 @@ int cmpRequest(int nCommand, CCmpTest *cmpTest)
 	case rdm_operate_request:
 	case rdm_logout_request:
 	case power_port_state_request:
-	case power_port_set_request:
+	case wheelpies_request:
 	case authentication_request:
 	case bind_request:
 	case unbind_request:

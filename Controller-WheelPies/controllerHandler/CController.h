@@ -11,6 +11,7 @@
 
 class CCmpWheelpies;
 class CMysqlHandler;
+class CMongoDBHandler;
 
 class CController: public CApplication
 {
@@ -25,7 +26,11 @@ protected:
 	void onHandleMessage(Message &message);
 
 private:
+	void insertData(std::string strData);
+
+private:
 	int mnMsqKey;
 	CMysqlHandler *mysql;
 	CCmpWheelpies *cmpwheelpies;
+	CMongoDBHandler *mongodb;
 };
