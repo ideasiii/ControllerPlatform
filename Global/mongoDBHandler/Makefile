@@ -2,7 +2,10 @@
 # cmp handler make file
 #######################
 
-CC = g++
+
+CC        := g++
+LD        := g++
+
 TARGET = mongoDBHandler
 
 DIR_APP_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))

@@ -76,6 +76,7 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 
 				//======= 特殊符號替換 =======//
 				strContent = ReplaceAll(strContent, "。”", "”。");
+				strContent = ReplaceAll(strContent, "。」", "」。");
 				_log("[CParticiple] splitter Content: %s", strContent.c_str());
 
 				//======= 字串分詞 ========//
@@ -95,6 +96,8 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 					printf("index=%d , size=%d\n", nIndex, nLen);
 					strPart = strContent.substr(nIndex, nLen);
 					printf("part: %s\n", strPart.getBuffer());
+					strSQL.format("INSERT INTO story_affective (story,numbering,sentence)VALUES('%s',%d,'%s')", strFileName.getBuffer(),nCount,strPart.getBuffer());
+					mysql.sqlExec(strSQL.toString());
 					++nCount;
 				}
 			}

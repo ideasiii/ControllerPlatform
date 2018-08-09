@@ -6,6 +6,10 @@
 
 export VERSION=v0.0.0.2
 export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+#export CC= g++-4.7 
+#export LD= g++-4.7
+#export C++=g++-4.7
+#export C=gcc-4.7
 
 #####################################
 # Running Version module controle

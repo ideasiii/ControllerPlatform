@@ -2,7 +2,8 @@
 # config handler make file
 #######################
 
-CC = g++
+CC        := g++
+LD        := g++
 TARGET = configHandler
 
 DIR_APP_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))

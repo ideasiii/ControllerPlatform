@@ -12,6 +12,11 @@ include libs.mk
 TARGET    := controller-module
 CC        := g++
 LD        := g++
+CXX       := g++
+
+#CC        := gcc-4.7 
+#CXX       := g++-4.7
+
 
 SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
@@ -62,6 +67,9 @@ endef
 .IGNORE: clean cleanAll
 
 all: checkdirs lib bin/$(TARGET)
+	@echo '##########################################################################################'
+	@g++ -v
+	@echo '##########################################################################################'
 	@echo -ne '\n###### All Application Build Done. ######\n'
 	@echo "\n"
 	
@@ -113,14 +121,9 @@ mk_debug:
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
 	@echo 'Libs:'${LIB_NAMES}"\n"
 	
-package-s:
-	yum -y install sqlite-devel.x86_64
-	yum -y install boost boost-devel
-	yum -y install gcc-c++
-	@echo -ne '\n###### Package for CentSO install completed. ######\n'
-	@echo "\n"
 	
-package-u:
+package:
+	apt-get -y install g++-4.7
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
@@ -135,6 +138,7 @@ package-u:
 	apt-get -y install libcrypto++-dev
 	apt-get -y install libtinyxml2-dev
 	apt-get -y install libxerces-c3.1 libxerces-c-dev libicu-dev
+	apt-get -y install libx11-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
@@ -144,6 +148,7 @@ debug:
 	@echo "\n"
 	
 mongodb:
+	@mkdir -p libs
 	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
 	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
 	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
