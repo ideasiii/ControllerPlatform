@@ -23,7 +23,7 @@ BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR)) $(LIB_INCLUDE) -I /usr/include/postgresql -I /usr/include/mysql -I /usr/include/curl -I /usr/local/include/xercesc
-CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing $(LOG)
+CXXFLAGS  := -Wall -Wno-unused-variable -g -fno-strict-aliasing -Wdeprecated-declarations $(LOG) -std=c++11
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES)))
 
 LDLIBS    := $(LIB_LINK) \

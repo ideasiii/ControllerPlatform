@@ -50,7 +50,6 @@ rdm_login_request)\
 ("io", IO_PRESSURE)\
 (
 		"cmp pwstate", power_port_state_request)\
-("cmp pwset", power_port_set_request)\
 ("cmp auth",
 authentication_request)\
 ("cmp bind", bind_request)\

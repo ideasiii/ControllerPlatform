@@ -75,7 +75,6 @@ string CApplication::getConfPath()
 
 void CApplication::terminateController()
 {
-//	kill(getpid(), 2);
 	CMessageHandler::release();
 	kill(getppid(), 2);
 }

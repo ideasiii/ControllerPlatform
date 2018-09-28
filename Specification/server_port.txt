@@ -22,5 +22,10 @@ port = 2310
 [SERVER AUTHENTICATION]
 port = 2311
 
+[SERVER TTS]
+port = 2312
+
 [WHEEL PIES]
 port = 2401
+
+

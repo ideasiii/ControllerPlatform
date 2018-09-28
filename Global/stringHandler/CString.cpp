@@ -15,7 +15,7 @@
 #include <sstream>
 #include <string.h>
 #include <cstdarg>
-
+#include <algorithm>		// for std::remove
 #include "CString.h"
 
 using namespace std;
@@ -654,6 +654,17 @@ int CString::find(LPCTSTR lpszSub, int nStart)
 	return -1;
 }
 
+int CString::FindOneOf(LPCTSTR lpszCharSet)
+{
+	string strSrc;
+	size_t found;
+
+	found = toString().find_first_of(lpszCharSet);
+	if(string::npos == found)
+		return -1;
+	return found;
+}
+
 void CString::format(const char *pcFormat, ...)
 {
 	va_list vl;
@@ -752,5 +763,19 @@ string CString::toString()
 {
 	strData = m_pchData;
 	return strData;
+}
+
+CString CString::SpanExcluding(LPCTSTR strExcluding)
+{
+	//replace(strExcluding, "");
+	string strCharsToRemove = strExcluding;
+	string str = toString();
+
+	str.erase(remove_if(str.begin(), str.end(), [&strCharsToRemove](const char& c)
+	{
+		return strCharsToRemove.find(c) != string::npos;
+	}), str.end());
+
+	return str;
 }
 
