@@ -11,6 +11,7 @@
 #include "CApplication.h"
 
 class CTextProcess;
+class CCmpTTS;
 
 class CController: public CApplication
 {
@@ -27,4 +28,5 @@ protected:
 private:
 	int mnMsqKey;
 	CTextProcess *textProcess;
+	CCmpTTS *cmpTTS;
 };

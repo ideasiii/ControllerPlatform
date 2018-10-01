@@ -1,18 +1,17 @@
 /*
  * CCmpWord.cpp
  *
- *  Created on: 2017年4月10日
+ *  Created on: 2018年10月01日
  *      Author: Jugo
  */
 
-#include "../controllerHandler/CCmpTTS.h"
+#include "CCmpTTS.h"
 
 #include <string>
 #include "packet.h"
 #include "utility.h"
 #include "common.h"
 #include "JSONObject.h"
-
 
 using namespace std;
 
@@ -44,16 +43,3 @@ int CCmpTTS::onTTS(int nSocket, int nCommand, int nSequence, const void *szBody)
 		response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 	return TRUE;
 }
-
-int CCmpTTS::onUpdate(int nSocket, int nCommand, int nSequence, const void *szBody)
-{
-	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
-	Message message;
-	message.clear();
-	message.what = semantic_word_request;
-	message.arg[0] = nSocket;
-	message.arg[1] = nSequence;
-	mpController->sendMessage(message);
-	return TRUE;
-}
-

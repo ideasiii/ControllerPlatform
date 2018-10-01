@@ -1,7 +1,7 @@
 /*
  * CCmpWord.h
  *
- *  Created on: 2017年4月10日
+ *  Created on: 2018年10月01日
  *      Author: Jugo
  */
 
@@ -11,29 +11,13 @@
 
 class CCmpTTS: public CCmpServer
 {
-	typedef struct _WORD_REQUEST
-	{
-		int nId;
-		int nType;
-		int nTotal;
-		int nNumber;
-		std::string strWord;
-		std::string strDeviceId;
-		_WORD_REQUEST()
-		{
-			nId = -1;
-			nType = -1;
-			nTotal = 0;
-			nNumber = 0;
-		}
-	} WORD_REQUEST;
+
 public:
 	explicit CCmpTTS(CObject *object);
 	virtual ~CCmpTTS();
 
 protected:
 	int onTTS(int nSocket, int nCommand, int nSequence, const void *szBody);
-	int onUpdate(int nSocket, int nCommand, int nSequence, const void *szBody);
 
 private:
 	CObject *mpController;
