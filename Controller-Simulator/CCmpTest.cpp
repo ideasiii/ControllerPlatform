@@ -237,6 +237,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 	string strDie = "{\"key\":\"suicide\"}";
 	string strWheelPies = "";
+	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態角色語音智慧平台\"}";
 
 	if(0 != szBody)
 	{
@@ -430,6 +431,14 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 			memcpy(pIndex, strDie.c_str(), strDie.size());
 			pIndex += strDie.size();
 			nBody_len += strDie.size();
+			memcpy(pIndex, "\0", 1);
+			pIndex += 1;
+			nBody_len += 1;
+			break;
+		case tts_request:
+			memcpy(pIndex, strTTS.c_str(), strTTS.size());
+			pIndex += strTTS.size();
+			nBody_len += strTTS.size();
 			memcpy(pIndex, "\0", 1);
 			pIndex += 1;
 			nBody_len += 1;

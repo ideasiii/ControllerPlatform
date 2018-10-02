@@ -82,7 +82,7 @@ struct CMP_PACKET
 #define reboot_response									0x80000010
 #define config_request									0x00000011
 #define config_response									0x80000011
-#define wheelpies_request								0x00000012
+#define wheelpies_request								0x00000012  // 虛擬運動教練
 #define wheelpies_response								0x80000012
 #define power_port_state_request						0x00000013
 #define power_port_state_response						0x80000013
@@ -126,10 +126,12 @@ struct CMP_PACKET
 #define smart_building_door_control_response			0x80000056
 #define semantic_word_request							0x00000057
 #define semantic_word_response							0x80000057
+#define tts_request										0x00000058
+#define tts_response									0x80000058
 #define controller_die_request							0x000000FE
 #define controller_die_response							0x800000FE
 
-#define MAX_COMMAND								0x000000FF
+#define MAX_COMMAND										0x000000FF
 
 /*
  * CMP status set
@@ -153,52 +155,51 @@ struct CMP_PACKET
  */
 #define TYPE_MOBILE_SERVICE					1
 #define TYPE_POWER_CHARGE_SERVICE			2
-#define TYPE_SDK_SERVICE						3
-#define TYPE_TRACKER_SERVICE					4
+#define TYPE_SDK_SERVICE					3
+#define TYPE_TRACKER_SERVICE				4
 #define TYPE_TRACKER_APPLIENCE				5
-#define TYPE_TRACKER_TOY						6
-#define TYPE_TRACKER_IOT						7
+#define TYPE_TRACKER_TOY					6
+#define TYPE_TRACKER_IOT					7
 
-static map<int, string> mapCommand =
-		create_map<int, string>( generic_nack, "generic_nack")( bind_request, "bind_request")( bind_response,
-				"bind_response")(
-		authentication_request, "authentication_request")( authentication_response, "authentication_response")(
-		access_log_request, "access_log_request")( access_log_response, "access_log_response")( enquire_link_request,
-				"enquire_link_request")(
-		enquire_link_response, "enquire_link_response")( unbind_request, "unbind_request")(
-		unbind_response, "unbind_response")( update_request, "update_request")(
-		update_response, "update_response")(
-		reboot_request, "reboot_request")( reboot_response, "reboot_response")(long_data_request, "long_data_request")(
-		long_data_response, "long_data_response")(
-		config_request, "config_request")(
-		config_response, "config_response")(wheelpies_response, "power_port_request")(wheelpies_response,
-				"power_port_response")(
-		power_port_state_request, "power_port_state_request")(
-		power_port_state_response, "power_port_state_response")(
-		initial_request, "initial_request")( initial_response, "initial_response")(
-		sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(
-		rdm_login_request, "rdm_login_request")(
-		rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
-				"rdm_operate_response")(
-		rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
-		semantic_request, "semantic_request")(semantic_response, "semantic_response")(
-		amx_control_request, "amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request,
-				"amx_status_request")(amx_status_response, "amx_status_response")(amx_broadcast_status_request,
-				"amx_broadcast_status_request")(amx_broadcast_status_response, "amx_broadcast_status_response")(
-		fcm_id_register_request, "fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(
-		facebook_token_client_request, "facebook_token_client_request")(facebook_token_client_response,
-				"facebook_token_client_response")(
-		smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
-				"smart_building_qrcode_tokn_response")(smart_building_appversion_request,
-				"smart_building_appversion_request")(
-		smart_building_appversion_response, "smart_building_appversion_response")(smart_building_getmeetingdata_request,
-				"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
-				"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
-				"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
-				"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
-				"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
-				"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
-		semantic_word_response, "semantic_word_response");
+static map<int, string> mapCommand = create_map<int, string>( generic_nack, "generic_nack")( bind_request,
+		"bind_request")( bind_response, "bind_response")(
+authentication_request, "authentication_request")( authentication_response, "authentication_response")(
+access_log_request, "access_log_request")( access_log_response, "access_log_response")( enquire_link_request,
+		"enquire_link_request")(
+enquire_link_response, "enquire_link_response")( unbind_request, "unbind_request")(
+unbind_response, "unbind_response")( update_request, "update_request")(
+update_response, "update_response")(
+reboot_request, "reboot_request")( reboot_response, "reboot_response")(long_data_request, "long_data_request")(
+long_data_response, "long_data_response")(
+config_request, "config_request")(
+config_response, "config_response")( wheelpies_request, "wheelpies_request")( wheelpies_response, "wheelpies_response")(
+power_port_state_request, "power_port_state_request")(
+power_port_state_response, "power_port_state_response")(
+initial_request, "initial_request")( initial_response, "initial_response")(
+sign_up_request, "sign_up_request")( sign_up_response, "sign_up_response")(
+rdm_login_request, "rdm_login_request")(
+rdm_login_response, "rdm_login_response")(rdm_operate_request, "rdm_operate_request")(rdm_operate_response,
+		"rdm_operate_response")(
+rdm_logout_request, "rdm_logout_request")(rdm_logout_response, "rdm_logout_response")(
+semantic_request, "semantic_request")(semantic_response, "semantic_response")(
+amx_control_request, "amx_control_request")(amx_control_response, "amx_control_response")(amx_status_request,
+		"amx_status_request")(amx_status_response, "amx_status_response")(amx_broadcast_status_request,
+		"amx_broadcast_status_request")(amx_broadcast_status_response, "amx_broadcast_status_response")(
+fcm_id_register_request, "fcm_id_register_request")(fcm_id_register_response, "fcm_id_register_response")(
+facebook_token_client_request, "facebook_token_client_request")(facebook_token_client_response,
+		"facebook_token_client_response")(
+smart_building_qrcode_tokn_request, "smart_building_qrcode_tokn_request")(smart_building_qrcode_tokn_response,
+		"smart_building_qrcode_tokn_response")(smart_building_appversion_request, "smart_building_appversion_request")(
+smart_building_appversion_response, "smart_building_appversion_response")(smart_building_getmeetingdata_request,
+		"smart_building_getmeetingdata_request")(smart_building_getmeetingdata_response,
+		"smart_building_getmeetingdata_response")(smart_building_amx_control_access_request,
+		"smart_building_amx_control_access_request")(smart_building_amx_control_access_response,
+		"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
+		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
+		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
+semantic_word_response, "semantic_word_response")(tts_request, "tts_request")(tts_response, "tts_response")(
+		controller_die_request, "controller_die_request")(
+controller_die_response, "controller_die_response");
 
 static map<int, string> mapStatus = create_map<int, string>\
 ( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,

@@ -38,6 +38,7 @@ CCmpServer::CCmpServer() :
 	mapFunc[controller_die_request] = &CCmpServer::onDie;
 	mapFunc[update_request] = &CCmpServer::onUpdate;
 	mapFunc[wheelpies_request] = &CCmpServer::onWheelpies;
+	mapFunc[tts_request] = &CCmpServer::onTTS;
 
 	confCmpServer = new CONF_CMP_SERVER;
 	confCmpServer->init();

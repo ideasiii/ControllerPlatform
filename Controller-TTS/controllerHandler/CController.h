@@ -18,6 +18,7 @@ class CController: public CApplication
 public:
 	CController();
 	virtual ~CController();
+	void onTTS(const int nSocketFD, const int nSequence, const char *szData);
 
 protected:
 	int onCreated(void* nMsqKey);

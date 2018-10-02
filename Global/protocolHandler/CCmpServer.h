@@ -158,6 +158,11 @@ protected:
 	}
 	;
 
+	virtual int onTTS(int nSocket, int nCommand, int nSequence, const void *szBody)
+	{
+		return 0;
+	}
+	;
 protected:
 	virtual std::string taskName();
 private:

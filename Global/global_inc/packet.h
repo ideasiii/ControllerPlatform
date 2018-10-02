@@ -126,6 +126,8 @@ struct CMP_PACKET
 #define smart_building_door_control_response			0x80000056
 #define semantic_word_request							0x00000057
 #define semantic_word_response							0x80000057
+#define tts_request										0x00000058
+#define tts_response									0x80000058
 #define controller_die_request							0x000000FE
 #define controller_die_response							0x800000FE
 
@@ -195,7 +197,8 @@ smart_building_appversion_response, "smart_building_appversion_response")(smart_
 		"smart_building_amx_control_access_response")(smart_building_wireless_power_charge_request,
 		"smart_building_wireless_power_charge_request")(smart_building_wireless_power_charge_response,
 		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
-semantic_word_response, "semantic_word_response")(controller_die_request, "controller_die_request")(
+semantic_word_response, "semantic_word_response")(tts_request, "tts_request")(tts_response, "tts_response")(
+		controller_die_request, "controller_die_request")(
 controller_die_response, "controller_die_response");
 
 static map<int, string> mapStatus = create_map<int, string>\

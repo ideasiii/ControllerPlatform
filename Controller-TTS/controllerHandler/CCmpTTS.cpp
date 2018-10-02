@@ -35,8 +35,10 @@ int CCmpTTS::onTTS(int nSocket, int nCommand, int nSequence, const void *szBody)
 
 		Message message;
 		message.clear();
-		message.what = semantic_word_request;
-		message.strData = strBody; //wordRequest.strWord;
+		message.what = tts_request;
+		message.arg[0] = nSocket;
+		message.arg[1] = nSequence;
+		message.strData = strBody;
 		mpController->sendMessage(message);
 	}
 	else

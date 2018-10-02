@@ -15,14 +15,12 @@
 
 using namespace std;
 
-int mnExtMsqKey;
-
-int CDomainServer::start(const char* szSocketFile, int nMsqKey = -1)
+int CDomainServer::start(const char* szSocketFile, int nMsqKey)
 {
 	static int nEventFilter = EVENT_FILTER_DOMAIN_SERVER;
 	int nMsgId = -1;
 	int nSocketFD;
-	mnExtMsqKey = FALSE;
+	//int mnExtMsqKey = FALSE;
 
 	DOMAIN_SERVER_MSQ_EVENT_FILTER = ++nEventFilter;
 	strTaskName = taskName();
@@ -30,7 +28,7 @@ int CDomainServer::start(const char* szSocketFile, int nMsqKey = -1)
 	if(-1 != nMsqKey)
 	{
 		mnMsqKey = nMsqKey;
-		mnExtMsqKey = TRUE;
+		//mnExtMsqKey = TRUE;
 	}
 	else
 		mnMsqKey = clock();

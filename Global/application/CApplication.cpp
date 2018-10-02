@@ -108,6 +108,8 @@ void runService(int nMsqKey)
 	int nInit = FALSE;
 	int nTmp = -1;
 	string strConfPath;
+
+	system("ipcrm -q 0");
 	openlog(__progname, LOG_PID, LOG_LOCAL0);
 	CController *controller = new CController();
 	nControllerMsqKey = controller->callback(MSG_ON_CREATED, &nMsqKey);
