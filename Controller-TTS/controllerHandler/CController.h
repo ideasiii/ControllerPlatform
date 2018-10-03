@@ -13,6 +13,14 @@
 class CTextProcess;
 class CCmpTTS;
 
+typedef struct _TTS_REQ
+{
+	std::string user_id;
+	int voice_id;
+	int emotion;
+	std::string text;
+} TTS_REQ;
+
 class CController: public CApplication
 {
 public:

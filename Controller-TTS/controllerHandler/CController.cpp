@@ -79,10 +79,24 @@ int CController::onFinish(void* nMsqKey)
 	return nKey;
 }
 
+/*
+ * "user_id":"",
+   "voice_id":0,
+   "emotion":0,
+   "text":"多型態角色語音智慧平台"
+ */
 void CController::onTTS(const int nSocketFD, const int nSequence, const char *szData)
 {
 	_log("[CController] onTTS socketFD: %d Data: %s", nSocketFD, szData);
+	JSONObject jsonReq;
 	JSONObject jsonResp;
+
+	jsonReq.load(szData);
+		strWord = jsonReq.getString("word");
+		strDevice_id = jsonReq.getString("device_id");
+		jsonReq.release();
+	//textProcess->processTheText("哈哈哈，嘻嘻嘻。喔喔喔喔喔!\n嗚嗚嗚嗚嗚嗚。");
+
 	jsonResp.create();
 	jsonResp.put("status", 0);
 	jsonResp.put("wave", "http://54.199.198.94/tts/Wate.wav");
