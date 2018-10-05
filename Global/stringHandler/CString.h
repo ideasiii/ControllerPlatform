@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #ifdef _UNICODE
 //typedef wchar_t TCHAR;
@@ -157,6 +158,8 @@ public:
 	int find(LPCTSTR lpszSub);
 	// find first instance of substring starting at zero-based index
 	int find(LPCTSTR lpszSub, int nStart);
+	// find string incloud on of...
+	int findOneOf(std::vector<std::string> vstr);
 
 	// formatting
 

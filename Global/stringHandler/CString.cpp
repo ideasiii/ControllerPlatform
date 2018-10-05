@@ -18,6 +18,7 @@
 #include <algorithm>		// for std::remove
 #include "CString.h"
 
+
 using namespace std;
 
 inline int memicmp(const void *s1, const void *s2, size_t n)
@@ -654,6 +655,19 @@ int CString::find(LPCTSTR lpszSub, int nStart)
 	return -1;
 }
 
+int CString::findOneOf(vector<string> vstr)
+{
+	int nIndex;
+	string strText = toString();
+	for(vector<string>::iterator it = vstr.begin(); vstr.end() != it; ++it)
+	{
+		nIndex = strText.find(*it);
+		if(string::npos != nIndex)
+			return nIndex;
+	}
+	return -1;
+}
+
 void CString::format(const char *pcFormat, ...)
 {
 	va_list vl;
@@ -756,7 +770,7 @@ string CString::toString()
 
 CString CString::SpanExcluding(LPCTSTR strExcluding)
 {
-	//replace(strExcluding, "");
+//replace(strExcluding, "");
 	string strCharsToRemove = strExcluding;
 	string str = toString();
 
