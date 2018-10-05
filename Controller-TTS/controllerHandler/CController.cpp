@@ -81,21 +81,25 @@ int CController::onFinish(void* nMsqKey)
 
 /*
  * "user_id":"",
-   "voice_id":0,
-   "emotion":0,
-   "text":"多型態角色語音智慧平台"
+ "voice_id":0,
+ "emotion":0,
+ "text":"多型態角色語音智慧平台"
  */
 void CController::onTTS(const int nSocketFD, const int nSequence, const char *szData)
 {
-	_log("[CController] onTTS socketFD: %d Data: %s", nSocketFD, szData);
 	JSONObject jsonReq;
 	JSONObject jsonResp;
+	TTS_REQ ttsReq;
 
 	jsonReq.load(szData);
-		strWord = jsonReq.getString("word");
-		strDevice_id = jsonReq.getString("device_id");
-		jsonReq.release();
-	//textProcess->processTheText("哈哈哈，嘻嘻嘻。喔喔喔喔喔!\n嗚嗚嗚嗚嗚嗚。");
+	ttsReq.user_id = jsonReq.getString("user_id");
+	ttsReq.voice_id = jsonReq.getInt("voice_id");
+	ttsReq.emotion = jsonReq.getInt("emotion");
+	ttsReq.text = jsonReq.getString("text");
+	jsonReq.release();
+	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d", nSocketFD, ttsReq.text.c_str(),
+			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion);
+	textProcess->processTheText(ttsReq.text.c_str());
 
 	jsonResp.create();
 	jsonResp.put("status", 0);

@@ -237,7 +237,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 	string strDie = "{\"key\":\"suicide\"}";
 	string strWheelPies = "";
-	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態角色語音智慧平台\"}";
+	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態角色語音智慧平台，我說一個故事給你們聽。\"}";
 
 	if(0 != szBody)
 	{

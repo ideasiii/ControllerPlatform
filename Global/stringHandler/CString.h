@@ -157,8 +157,6 @@ public:
 	int find(LPCTSTR lpszSub);
 	// find first instance of substring starting at zero-based index
 	int find(LPCTSTR lpszSub, int nStart);
-	// 搜尋字串相符 lpszCharSet 所包含的所有字元的第一個字元
-	int FindOneOf(LPCTSTR lpszCharSet);
 
 	// formatting
 

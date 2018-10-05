@@ -654,17 +654,6 @@ int CString::find(LPCTSTR lpszSub, int nStart)
 	return -1;
 }
 
-int CString::FindOneOf(LPCTSTR lpszCharSet)
-{
-	string strSrc;
-	size_t found;
-
-	found = toString().find_first_of(lpszCharSet);
-	if(string::npos == found)
-		return -1;
-	return found;
-}
-
 void CString::format(const char *pcFormat, ...)
 {
 	va_list vl;

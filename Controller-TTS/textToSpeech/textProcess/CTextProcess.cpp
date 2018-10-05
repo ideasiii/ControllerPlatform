@@ -24,7 +24,12 @@ CTextProcess::~CTextProcess()
 
 void CTextProcess::processTheText(const char *szText)
 {
+	int nIndex;
+	int nLen = 0;
+	int nCount = 0;
 	CString strInput;
+	CString strPart;
+
 	if(!szText)
 		return;
 
@@ -39,13 +44,37 @@ void CTextProcess::processTheText(const char *szText)
 	strResult = strTemp1;
 	_log("[CTextProcess] processTheText SpanExcluding: %s", strResult.getBuffer());
 
-	while(strResult.FindOneOf("。？！；，") != -1)
+	/**
+	 * 全形符號斷詞 。？！；，
+	 */
+	nIndex = 0;
+	string strText = strResult.getBuffer();
+	string strDot[5] = { "。", "？", "！", "；", "，" };
+	string strDotCur;
+	while(1)
 	{
-		CString temp;
-		i = strResult.FindOneOf("。？！；，");
-		temp = strResult.left(i);
-		strResult = strResult.right(strResult.getLength() - i - 2);
-		SentenceArray.push_back(temp);
+		for(int i = 0; i < 5; ++i)
+		{
+			_log("[CTextProcess] 全形符號: %s 斷詞", strDot[i].c_str());
+			if(nCount)
+				nIndex = nIndex + nLen + strDot[i].length(); //strlen("。");
+
+			nLen = strText.find(strDot[i], nIndex);
+			if((int) string::npos == nLen)
+			{
+				_log("no found %s..................", strDot[i].c_str());
+			}
+			else
+			{
+				nLen = nLen - nIndex;
+				printf("index=%d , size=%d\n", nIndex, nLen);
+				strPart = strText.substr(nIndex, nLen);
+				printf("part: %s\n", strPart.getBuffer());
+				++nCount;
+			}
+		}
+		if(nIndex >= strText.length())
+			break;
 	}
 
 	for(vector<CString>::iterator it = SentenceArray.begin(); SentenceArray.end() != it; ++it)

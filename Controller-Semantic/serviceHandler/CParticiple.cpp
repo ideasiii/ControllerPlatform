@@ -69,7 +69,6 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 				strContent.clear();
 				if(!fh.readContent(strFilePath.getBuffer(), strContent, true))
 					continue;
-				strContent = strContent + "dddddd";
 
 				strSQL.format("DELETE FROM story_affective WHERE story = '%s'", strFileName.getBuffer());
 				mysql.sqlExec(strSQL.toString());
@@ -89,7 +88,7 @@ void CParticiple::splitter(const char *szPath, const char *szMark)
 				{
 					if(nCount)
 						nIndex = nIndex + nLen + strlen(szMark);
-					nLen = strContent.find("。", nIndex);
+					nLen = strContent.find(szMark, nIndex);
 					if((int) string::npos == nLen)
 						break;
 					nLen = nLen - nIndex;
