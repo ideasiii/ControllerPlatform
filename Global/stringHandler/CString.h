@@ -159,7 +159,7 @@ public:
 	// find first instance of substring starting at zero-based index
 	int find(LPCTSTR lpszSub, int nStart);
 	// find string incloud on of...
-	int findOneOf(std::vector<std::string> vstr);
+	int findOneOf(std::vector<std::string> vstr, std::string &strFinded);
 
 	// formatting
 

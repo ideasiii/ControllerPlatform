@@ -47,47 +47,19 @@ void CTextProcess::processTheText(const char *szText)
 	/**
 	 * 全形符號斷詞 。？！；，
 	 */
-	vector<string> vs = {"。", "？", "！", "；", "，"};
-	while(strResult.findOneOf(vs) != -1)
+	vector<string> vs = {"。", "？", "！", "；", "，","!",",",".",";","?"};
+	string strFinded;
+	while(strResult.findOneOf(vs,strFinded) != -1)
 	{
 		CString temp;
-		i = strResult.findOneOf(vs);
+		i = strResult.findOneOf(vs,strFinded);
 		temp = strResult.left(i);
-		strResult = strResult.right(strResult.getLength() - i - 3);
+		strResult = strResult.right(strResult.getLength() - i - strFinded.length());
 		SentenceArray.push_back(temp);
+		_log("remain: %s finded: %s", strResult.getBuffer(),strFinded.c_str());
 	}
 
-	/*
-	 nIndex = 0;
-	 string strText = strResult.getBuffer();
-	 string strDot[5] = { "。", "？", "！", "；", "，" };
-	 string strDotCur;
-	 while(1)
-	 {
-	 for(int i = 0; i < 5; ++i)
-	 {
-	 _log("[CTextProcess] 全形符號: %s 斷詞", strDot[i].c_str());
-	 if(nCount)
-	 nIndex = nIndex + nLen + strDot[i].length(); //strlen("。");
 
-	 nLen = strText.find(strDot[i], nIndex);
-	 if((int) string::npos == nLen)
-	 {
-	 _log("no found %s..................", strDot[i].c_str());
-	 }
-	 else
-	 {
-	 nLen = nLen - nIndex;
-	 printf("index=%d , size=%d\n", nIndex, nLen);
-	 strPart = strText.substr(nIndex, nLen);
-	 printf("part: %s\n", strPart.getBuffer());
-	 ++nCount;
-	 }
-	 }
-	 if(nIndex >= strText.length())
-	 break;
-	 }
-	 */
 
 	for(vector<CString>::iterator it = SentenceArray.begin(); SentenceArray.end() != it; ++it)
 	{

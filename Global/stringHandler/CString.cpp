@@ -18,7 +18,6 @@
 #include <algorithm>		// for std::remove
 #include "CString.h"
 
-
 using namespace std;
 
 inline int memicmp(const void *s1, const void *s2, size_t n)
@@ -655,17 +654,24 @@ int CString::find(LPCTSTR lpszSub, int nStart)
 	return -1;
 }
 
-int CString::findOneOf(vector<string> vstr)
+int CString::findOneOf(vector<string> vstr, string &strFinded)
 {
-	int nIndex;
+	int nTmpIndex = 0;
+	int nIndex = -1;
 	string strText = toString();
 	for(vector<string>::iterator it = vstr.begin(); vstr.end() != it; ++it)
 	{
-		nIndex = strText.find(*it);
-		if(string::npos != nIndex)
-			return nIndex;
+		nTmpIndex = strText.find(*it);
+		if((int) string::npos != nTmpIndex)
+		{
+			if(-1 == nIndex || nTmpIndex < nIndex)
+			{
+				nIndex = nTmpIndex;
+				strFinded = *it;
+			}
+		}
 	}
-	return -1;
+	return nIndex;
 }
 
 void CString::format(const char *pcFormat, ...)
