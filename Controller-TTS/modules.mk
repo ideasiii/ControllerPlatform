@@ -1,6 +1,7 @@
 export MODULES=controllerHandler \
 textToSpeech/hts_engine \
 textToSpeech/textProcess \
+CART \
 ../Global/application \
 ../Global/global_inc \
 ../Global/configHandler	\

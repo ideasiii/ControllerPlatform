@@ -50,6 +50,7 @@ endef
 
 all: checkdirs bin/$(TARGET)
 	@cp $(DIR_APP_ROOT)$(TARGET).conf $(DIR_APP_ROOT)bin
+	@cp -R $(DIR_APP_ROOT)model $(DIR_APP_ROOT)bin
 	@echo -ne '|==================== All Application Build Done. ====================|  '
 	@echo `date`
 	@echo "\n"

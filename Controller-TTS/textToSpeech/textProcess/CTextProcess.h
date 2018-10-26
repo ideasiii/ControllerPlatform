@@ -12,6 +12,7 @@
 #include <vector>
 class CString;
 class CStringArray;
+class CWord;
 
 class CTextProcess
 {
@@ -25,7 +26,10 @@ private:
 			std::vector<int>& allPPCluster);
 	void GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2);
+	int SplitString( CString& input, CString& delimiter, CStringArray& results);
+	void GenerateBoundary(CString& csFileName, std::vector<int>& vecCluster, CString strModelName);
 private:
+	CWord *word;
 	int* gduration_s; // time cue
 	int* gduration_e; // time cue
 	int giSftIdx; // shift of cue idx for each sentence. word-based.

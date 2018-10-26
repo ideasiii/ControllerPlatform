@@ -10,11 +10,45 @@
 #include "common.h"
 #include "CString.h"
 #include "CStringArray.h"
+#include "Word.h"
+#include "CART.h"
 
 using namespace std;
 
+#define FEATURE_DIM			14
+#define CLUSTER				2
+#define CART_MODEL			"model/CART_Model.bin"
+#define CART_MODEL2			"model/CART_Model2.bin"
+
+const char *POStags[34] =
+		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
+				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
+struct thread_child_info
+{
+	BOOL* tPlayEnd;
+} THREAD_CHILD_INFO;
+
+typedef struct _SYLLABLE_ITEM_
+{
+	int nCID;
+	vector<int> valFeatureLW;
+	int Sen_Length;					// Sentence length
+	int F_PositionInSen;			// Position in sentence (Forward)
+	int B_PositionInSen;			// Position in sentence (Backward)
+	int PositionInWord;				// Position in lexicon word
+	vector<int> valFeaturePOS;
+} SYLLABLE_ITEM;
+
+typedef struct _SYLLABLE_ATT_
+{
+	int size;
+	int featureDim;
+	int nCluster;
+	vector<SYLLABLE_ITEM> syllable_item;
+} SYLLABLE_ATT;
+
 CTextProcess::CTextProcess() :
-		gduration_s(0), gduration_e(0), giSftIdx(0)
+		word(0), gduration_s(0), gduration_e(0), giSftIdx(0)
 {
 
 }
@@ -26,6 +60,10 @@ CTextProcess::~CTextProcess()
 
 void CTextProcess::processTheText(const char *szText)
 {
+	CART aCartObj;
+	aCartObj.LoadCARTModel(CART_MODEL);
+	return;
+
 	int nIndex;
 	int nLen = 0;
 	int nCount = 0;
@@ -114,26 +152,204 @@ void CTextProcess::processTheText(const char *szText)
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
 		vector<int>& allPPCluster)
 {
-	int featureDim = 14;
-	int nCluster = 2;
 	vector<int> wordpar;	// 當前的詞長
 	vector<int> syllpos;	// 當前的字在詞中位置
 	vector<int> cluster;	// 韻律詞結尾=1, otherwise 0
 	vector<int> pos;		// first: 幾字詞, second: POS tagging
 	vector<int> pwBoundary;
+
+	CString tempPOS = "";
+	CStringArray tempPOSArray;
+	CString cstemp = "";
+	CString FileTitle = "";
+	CString FileName = "";
+
+	int i, j, k;
+	int textNdx = 0;
+	SYLLABLE_ATT syllable_att;
+	int nCID;
+	SYLLABLE_ITEM *sylitem;
+	int valFeatureLW;
+	int valFeaturePOS;
+
+	/**************************************************/
+	/*    將資料全行文字轉換成半形 針對數字部份             */
+	/**************************************************/
+	word = new CWord();
+	word->GetSentence((unsigned char*) sentence.getBuffer(), &textNdx);
+	word->GetWord();
+	for(i = 0; i < word->wnum; ++i)
+	{
+		switch(word->w_info[i].wlen)
+		{
+		case 1:	//1字詞
+			wordpar.push_back(1);
+			syllpos.push_back(1);
+			break;
+		case 2: //2字詞
+			wordpar.push_back(2);
+			syllpos.push_back(2);
+			wordpar.push_back(2);
+			syllpos.push_back(3);
+			break;
+		case 3: //3字詞
+			wordpar.push_back(3);
+			syllpos.push_back(2);
+			wordpar.push_back(3);
+			syllpos.push_back(4);
+			wordpar.push_back(3);
+			syllpos.push_back(3);
+			break;
+		case 4:	//4字詞
+			wordpar.push_back(4);
+			syllpos.push_back(2);
+			wordpar.push_back(4);
+			syllpos.push_back(42);	//中前
+			wordpar.push_back(4);
+			syllpos.push_back(43);	//中後
+			wordpar.push_back(4);
+			syllpos.push_back(3);
+			break;
+		}
+		strBig5 = strBig5 + word->w_info[i].big5;
+		cstemp = cstemp + word->w_info[i].big5;
+		cstemp = cstemp + " ";
+	}
+
+	/**
+	 *  將文字分詞為 : 我們 來 做 垃圾
+	 *  透過Standfor將詞性加入，變成: 我們/X 來/X 做/X 垃圾/X
+	 *  將字詞屬性轉換成屬性標記
+	 */
+
+	CString strDelim = " ";
+	if(SplitString(tempPOS, strDelim, tempPOSArray) == 0)
+		tempPOSArray.add(tempPOS);
+
+	for(i = 0; i < tempPOSArray.getSize(); ++i)
+	{
+		int index = tempPOSArray[i].find("/", 0);
+		cstemp.format("%s", tempPOSArray[i].mid(index + 1, tempPOSArray[i].getLength()));
+		index /= 2;
+		bool bAdded = false;
+		for(j = 1; j < 34; ++j)
+		{
+			if(cstemp == POStags[j])
+			{
+				for(k = 0; k < index; k++)
+					pos.push_back(j);
+				bAdded = true;
+				break;
+			}
+		}
+		if(bAdded == false)
+			for(k = 0; k < index; k++)
+				pos.push_back(j);
+	}
+
+	/***********************************************************************
+	 * syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態
+	 ************************************************************************/
+	syllable_att.size = syllpos.size();
+	syllable_att.featureDim = FEATURE_DIM;
+	syllable_att.nCluster = CLUSTER;
+
+	for(i = 0; i < syllable_att.size; ++i)						// 每一次iteration處理一個syllable的attribute
+	{
+		sylitem = new SYLLABLE_ITEM;
+		sylitem->nCID = -1;
+
+		for(j = 2; j >= -2; --j)
+		{
+			valFeatureLW = 0;
+			valFeaturePOS = 0;
+			if(((i - j) >= 0) && ((i - j) < syllable_att.size))
+			{
+				valFeatureLW = wordpar[i - j];					// (LL/L/C/R/RR) syllable所在LW長度
+				valFeaturePOS = pos[i - j];						// (LL/L/C/R/RR) syllable所在POS tags
+			}
+			sylitem->valFeatureLW.push_back(valFeatureLW);
+			sylitem->valFeaturePOS.push_back(valFeaturePOS);
+		}
+
+		sylitem->Sen_Length = syllable_att.size;				// Sentence length
+		sylitem->F_PositionInSen = i;							// Position in sentence (Forward)
+		sylitem->B_PositionInSen = syllable_att.size - i;		// Position in sentence (Backward)
+		sylitem->PositionInWord = syllpos[i];					// Position in lexicon word
+
+		syllable_att.syllable_item.push_back(*sylitem);
+		delete sylitem;
+	}
+
+	/**
+	 * 載入CART模組
+	 */
+	GenerateBoundary(FileName, cluster, CART_MODEL);
+
+}
+
+void CTextProcess::GenerateBoundary(CString& csFileName, std::vector<int>& vecCluster, CString strModelName)
+{
+	CART aCartObj;
+	aCartObj.LoadCARTModel(strModelName);
+}
+
+int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
+{
+	int iPos = 0;
+	int newPos = -1;
+	int sizeS2 = delimiter.getLength();
+	int isize = input.getLength();
+
+	vector<int> positions;
+	newPos = input.find(delimiter, 0);
+	if(newPos < 0)
+	{
+		return 0;
+	}
+	int numFound = 0;
+
+	while(newPos > iPos)
+	{
+		++numFound;
+		positions.push_back(newPos);
+		iPos = newPos;
+		newPos = input.find(delimiter, iPos + sizeS2 + 1);
+	}
+
+	for(int i = 0; i <= (int) positions.size(); ++i)
+	{
+		CString s;
+		if(i == 0)
+			s = input.mid(i, positions[i]);
+		else
+		{
+			int offset = positions[i - 1] + sizeS2;
+			if(offset < isize)
+			{
+				if(i == (int) positions.size())
+					s = input.mid(offset);
+				else if(i > 0)
+					s = input.mid(positions[i - 1] + sizeS2, positions[i] - positions[i - 1] - sizeS2);
+			}
+		}
+		if(s.getLength() > 0)
+			results.add(s);
+	}
+	return numFound;
 }
 
 void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 		const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2)
 {
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
-	CString monostr; // ky add: store all lines for mono labels
+	CString monostr; // store all lines for mono labels
 	int sIndex, wIndex, pIndex; // syllable/word/phrase index for sBound/wBound/pBound
 	sIndex = wIndex = pIndex = 0;
 	fullstr = "";
 	monostr = "";
 
-	// ky add: output time information from cue. use timeinfo() to enable "outpu time information"
+	// output time information from cue. use timeinfo() to enable "outpu time information"
 	char timebuf[25]; // tag of time. calculated from cue and syllabel boundaries
 	if(gduration_s != NULL) // output time info for the first pause label
 	{
