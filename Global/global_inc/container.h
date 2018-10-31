@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 #include <set>
+#include <vector>
+
 using namespace std;
 
 template<typename T>
@@ -35,6 +37,30 @@ public:
 	}
 };
 // static set<string> setSample = create_set<string>("");
+
+template<typename T>
+class create_vector
+{
+private:
+	vector<T> m_vector;
+public:
+	create_vector(const T& key)
+	{
+		m_vector.push_back(key);
+	}
+
+	create_vector<T>& operator()(const T& key)
+	{
+		m_vector.push_back(key);
+		return *this;
+	}
+
+	operator vector<T>()
+	{
+		return m_vector;
+	}
+};
+// static vector<string> vecSample = create_vector<string>("");
 
 template<typename T, typename U>
 class create_map

@@ -28,34 +28,26 @@ struct thread_child_info
 	BOOL* tPlayEnd;
 } THREAD_CHILD_INFO;
 
-typedef struct _SYLLABLE_ITEM_
-{
-	int nCID;
-	vector<int> valFeatureLW;
-	int Sen_Length;					// Sentence length
-	int F_PositionInSen;			// Position in sentence (Forward)
-	int B_PositionInSen;			// Position in sentence (Backward)
-	int PositionInWord;				// Position in lexicon word
-	vector<int> valFeaturePOS;
-} SYLLABLE_ITEM;
-
-typedef struct _SYLLABLE_ATT_
-{
-	int size;
-	int featureDim;
-	int nCluster;
-	vector<SYLLABLE_ITEM> syllable_item;
-} SYLLABLE_ATT;
-
 CTextProcess::CTextProcess() :
-		word(0), gduration_s(0), gduration_e(0), giSftIdx(0)
+		CartModel(new CART()), word(0), gduration_s(0), gduration_e(0), giSftIdx(0)
 {
-
+	loadModel();
 }
 
 CTextProcess::~CTextProcess()
 {
 
+}
+
+void CTextProcess::loadModel()
+{
+	CartModel->LoadCARTModel();
+}
+
+void CTextProcess::releaseModel()
+{
+	if(CartModel)
+		delete CartModel;
 }
 
 void CTextProcess::processTheText(const char *szText)
@@ -284,14 +276,41 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	/**
 	 * 載入CART模組
 	 */
-	GenerateBoundary(FileName, cluster, CART_MODEL);
+	GenerateBoundary(syllable_att, cluster, 1);
 
 }
 
-void CTextProcess::GenerateBoundary(CString& csFileName, std::vector<int>& vecCluster, CString strModelName)
+void CTextProcess::GenerateBoundary(SYLLABLE_ATT& syllableAtt, std::vector<int>& vecCluster, int Model)
 {
-	CART aCartObj;
-	aCartObj.LoadCARTModel(strModelName);
+	double d = 0.0;
+	int i, j;
+	int nDataNum;
+	int Dim_Att_Catagory;
+	int Dim_Att_Ordered = 0;
+	int nClu;
+
+	nDataNum = syllableAtt.size;
+	Dim_Att_Catagory = syllableAtt.featureDim;
+	nClu = syllableAtt.nCluster;
+
+	for(i = 0; i < nDataNum; ++i)
+	{
+		int clu;
+		//	clu = syllableAtt.syllable_item[i].nCID;
+		unsigned int a;
+		CART_DATA *pcdData = new CART_DATA();
+		pcdData->clu = clu;
+		_log("............%d",syllableAtt.syllable_item[i].F_PositionInSen);
+		for(j = 0; j < Dim_Att_Catagory; j++)
+		{
+			//		csfFile.Read(&a, sizeof(unsigned int));
+			//		pcdData->Att_Catagory.add(a);
+		}
+		//	aCartObj.TEST(pcdData);
+		vecCluster.push_back(pcdData->clu);
+		delete pcdData; // ky add: release memory
+	}
+//	csfFile.Close();
 }
 
 int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)

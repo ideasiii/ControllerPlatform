@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "common.h"
+#include "CCartData.h"
 
 using namespace std;
 
@@ -93,12 +94,71 @@ bool CART::DeleteNode(CART_NODE *cnNode)
 	return true;
 }
 
+/**
+ *  使用預設的資料
+ */
+bool CART::LoadCARTModel()
+{
+	DeleteNode(cnRoot);
+	ConstructCART(1, cnRoot);
+	return true;
+}
+
+bool CART::ConstructCART(int nodeID, CART_NODE *pNode)
+{
+	int lid = nodeID * 2;
+	int rid = nodeID * 2 + 1;
+	int index;
+	CString strTmp = "";
+
+	for(index = 0; index < (int) vcartData.size(); ++index)
+	{
+		if(vcartData[index].nodeID == lid)
+		{
+			CART_NODE *node = new CART_NODE();
+			node->clu = vcartData[index].clu;
+			node->dim = vcartData[index].dim;
+			for(int i = 0; i < vcartData[index].size; ++i)
+			{
+				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+			}
+			pNode->Lchild = node;
+			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,
+					vcartData[index].size);
+			ConstructCART(lid, pNode->Lchild);
+			break;
+		}
+	}
+
+	for(index = 0; index < (int) vcartData.size(); ++index)
+	{
+		if(vcartData[index].nodeID == rid)
+		{
+			CART_NODE *node = new CART_NODE();
+			node->clu = vcartData[index].clu;
+			node->dim = vcartData[index].dim;
+			for(int i = 0; i < vcartData[index].size; ++i)
+			{
+				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+			}
+			pNode->Rchild = node;
+			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,
+					vcartData[index].size);
+			ConstructCART(rid, pNode->Rchild);
+			break;
+		}
+	}
+	return FALSE;
+}
+
+/**
+ * 讀取外部模組檔案
+ */
 bool CART::LoadCARTModel(CString csfile)
 {
 	DeleteNode(cnRoot);
 
 	int i, fend;
-	vector<CART_NODE*> nodeArray;
 	vector<int> nodeIDArray;
 
 	ifstream cf(csfile.getBuffer(), std::ifstream::binary);
@@ -106,6 +166,10 @@ bool CART::LoadCARTModel(CString csfile)
 	fend = cf.tellg();
 	cf.seekg(0, cf.beg);
 	_log("CART_Model size=%d", fend);
+	CString strData = "";
+	CString strQues;
+	CString strTmp;
+
 	while(cf.tellg() != fend)
 	{
 		CART_NODE *node = new CART_NODE();
@@ -115,28 +179,41 @@ bool CART::LoadCARTModel(CString csfile)
 		cf.read(reinterpret_cast<char *>(&node->clu), sizeof(int));
 		cf.read(reinterpret_cast<char *>(&node->dim), sizeof(int));
 		cf.read(reinterpret_cast<char *>(&size), sizeof(int));
-		_log("[CART] LoadCARTModel: nodeID=%d clu=%d dim=%d size=%d", nodeID, node->clu, node->dim, size);
+
+		strTmp.format("{ %d,%d,%d,%d,(int[])", nodeID, node->clu, node->dim, size);
+		strData += strTmp;
+		strQues = "{";
 		for(i = 0; i < size; ++i)
 		{
 			unsigned int t;
 			cf.read(reinterpret_cast<char *>(&t), sizeof(unsigned int));
 			node->cuiaQuestion.push_back(t);
-			_log("[CART] cuiaQuestion=%d", t);
+
+			if(0 == i)
+				strTmp.format("%d", t);
+			else
+				strTmp.format(",%d", t);
+			strQues += strTmp;
 		}
+		strQues += "}";
+		strData = strData + strQues + "},";
+
 		nodeIDArray.push_back(nodeID);
 		gnodeArray.push_back(node); // for avoiding lose of nodes that are not added to tree
-
 	}
 	cf.close();
+
+	//_log("CART NODE: %s", strData.getBuffer());
 
 	if(cnRoot != NULL) // cnRoot is assigned a new CART_NODE in constructor
 		delete cnRoot;
 	cnRoot = gnodeArray[0];
 	ConstructCART(1, nodeIDArray, gnodeArray, cnRoot);
+
 	return true;
 }
 
-bool CART::ConstructCART(int nodeID, std::vector<int>& IDArray, std::vector<CART_NODE*>& pNodeData, CART_NODE *pNode)
+bool CART::ConstructCART(int nodeID, vector<int>& IDArray, vector<CART_NODE*>& pNodeData, CART_NODE *pNode)
 {
 	int lid = nodeID * 2;
 	int rid = nodeID * 2 + 1;
@@ -160,5 +237,5 @@ bool CART::ConstructCART(int nodeID, std::vector<int>& IDArray, std::vector<CART
 			break;
 		}
 	}
-	return false;
+	return FALSE;
 }

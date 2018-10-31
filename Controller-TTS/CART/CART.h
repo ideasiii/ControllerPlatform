@@ -18,11 +18,11 @@ public:
 	CART_NODE();
 	~CART_NODE();
 
-	std::vector<CART_DATA*> caDataArray;	// 在這個node中的資料
+	std::vector<CART_DATA*> caDataArray;	    // 在這個node中的資料
 	// 若dim小於CART_DATA.Att_Catagory.GetSize(), 表是Questoin是Catagory的, 維度是dim
 	// 若dim大於CART_DATA.Att_Catagory.GetSize(), 表是Question是Ordered的, 維度是dim-CART_DATA.Att_Catagory.GetSize()
 	int dim;									// 此一question是在哪個維度上的
-	std::vector<unsigned int> cuiaQuestion;			// 所用的Catagory question
+	std::vector<unsigned int> cuiaQuestion;		// 所用的Catagory question
 	// Ordered question: a<=x<b
 	double a;									// 所用的Ordered question
 	double b;									// 所用的Ordered question
@@ -42,14 +42,16 @@ public:
 	CART();
 	~CART();
 	bool LoadCARTModel(CString csfile);
+	bool LoadCARTModel();
 	CART_NODE *cnRoot;
 
 	// test
 	void TEST(CART_DATA *cdData);
 
 private:
+	bool ConstructCART(int nodeID, CART_NODE *pNode);
+	bool ConstructCART(int nodeID, std::vector<int>& IDArray, std::vector<CART_NODE*>& pNodeData, CART_NODE *pNode);
 	std::vector<CART_NODE*> gnodeArray;
 	void TEST(CART_DATA *cdData, CART_NODE *cnNode);
 	bool DeleteNode(CART_NODE *cnNode);
-	bool ConstructCART(int nodeID,std::vector<int>& IDArray,std::vector<CART_NODE*>& pNodeData,CART_NODE *pNode);
 };
