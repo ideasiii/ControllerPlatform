@@ -37,6 +37,7 @@ CART::CART()
 {
 	// 初始化根節點
 	cnRoot = new CART_NODE();
+	cnRoot2 = new CART_NODE();
 }
 
 CART::~CART()
@@ -48,6 +49,11 @@ CART::~CART()
 void CART::TEST(CART_DATA *cdData)
 {
 	TEST(cdData, cnRoot);
+}
+
+void CART::TEST2(CART_DATA *cdData)
+{
+	TEST(cdData, cnRoot2);
 }
 
 void CART::TEST(CART_DATA *cdData, CART_NODE *cnNode)
@@ -100,11 +106,60 @@ bool CART::DeleteNode(CART_NODE *cnNode)
 bool CART::LoadCARTModel()
 {
 	DeleteNode(cnRoot);
+	DeleteNode(cnRoot2);
 	ConstructCART(1, cnRoot);
+	ConstructCART2(1, cnRoot2);
 	return true;
 }
 
 bool CART::ConstructCART(int nodeID, CART_NODE *pNode)
+{
+	int lid = nodeID * 2;
+	int rid = nodeID * 2 + 1;
+	int index;
+	CString strTmp = "";
+
+	for(index = 0; index < (int) vcartData.size(); ++index)
+	{
+		if(vcartData[index].nodeID == lid)
+		{
+			CART_NODE *node = new CART_NODE();
+			node->clu = vcartData[index].clu;
+			node->dim = vcartData[index].dim;
+			for(int i = 0; i < vcartData[index].size; ++i)
+			{
+				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+			}
+			pNode->Lchild = node;
+			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,
+					vcartData[index].size);
+			ConstructCART(lid, pNode->Lchild);
+			break;
+		}
+	}
+
+	for(index = 0; index < (int) vcartData.size(); ++index)
+	{
+		if(vcartData[index].nodeID == rid)
+		{
+			CART_NODE *node = new CART_NODE();
+			node->clu = vcartData[index].clu;
+			node->dim = vcartData[index].dim;
+			for(int i = 0; i < vcartData[index].size; ++i)
+			{
+				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+			}
+			pNode->Rchild = node;
+			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,
+					vcartData[index].size);
+			ConstructCART(rid, pNode->Rchild);
+			break;
+		}
+	}
+	return FALSE;
+}
+
+bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 {
 	int lid = nodeID * 2;
 	int rid = nodeID * 2 + 1;
@@ -203,7 +258,7 @@ bool CART::LoadCARTModel(CString csfile)
 	}
 	cf.close();
 
-	//_log("CART NODE: %s", strData.getBuffer());
+//	_log("CART NODE: %s", strData.getBuffer());
 
 	if(cnRoot != NULL) // cnRoot is assigned a new CART_NODE in constructor
 		delete cnRoot;

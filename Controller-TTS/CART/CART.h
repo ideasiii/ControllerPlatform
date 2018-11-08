@@ -43,13 +43,16 @@ public:
 	~CART();
 	bool LoadCARTModel(CString csfile);
 	bool LoadCARTModel();
-	CART_NODE *cnRoot;
+	CART_NODE *cnRoot;		// for model/CART_Model.bin
+	CART_NODE *cnRoot2;		// for model/CART_Model2.bin
 
 	// test
 	void TEST(CART_DATA *cdData);
+	void TEST2(CART_DATA *cdData);
 
 private:
 	bool ConstructCART(int nodeID, CART_NODE *pNode);
+	bool ConstructCART2(int nodeID, CART_NODE *pNode);
 	bool ConstructCART(int nodeID, std::vector<int>& IDArray, std::vector<CART_NODE*>& pNodeData, CART_NODE *pNode);
 	std::vector<CART_NODE*> gnodeArray;
 	void TEST(CART_DATA *cdData, CART_NODE *cnNode);

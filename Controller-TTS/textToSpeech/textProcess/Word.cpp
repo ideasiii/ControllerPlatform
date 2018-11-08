@@ -16,9 +16,11 @@ static int num = 33;
 static unsigned char tail_symbol[20] = "，。！？︰；"; //"．"
 
 CWord::CWord() :
-		m_word_data(0), m_word_index(0), txt_len(0), m_punctuation(0), wnum(1), best_score(0), m_init(false)
+		m_word_data(0), m_word_index(0), txt_len(0), m_punctuation(0), wnum(3), best_score(0), m_init(false)
 {
-
+	w_info[0].wlen = 2;
+	w_info[1].wlen = 3;
+	w_info[2].wlen = 2;
 }
 
 CWord::~CWord()
