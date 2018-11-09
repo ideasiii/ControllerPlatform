@@ -12,6 +12,7 @@
 #include "CStringArray.h"
 #include "Word.h"
 #include "CART.h"
+#include "Phone.h"
 
 using namespace std;
 
@@ -131,16 +132,41 @@ void CTextProcess::processTheText(const char *szText)
 			SentenceArray[lcount].Delete(i, strFinded.length());
 
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster);
+		vector<int> tmpIdx(PWCluster.size(), lcount);
+		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
+		AllBig5 += strBig5;
+		AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
+		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
+
+		k = l = 0;
+		for(i = 0; i < word->wnum; i++)
+		{
+			for(j = 0; j < word->w_info[i].wlen; j++)
+			{
+				SID2Phone((word->w_info[i].phone[j]), &s[0]);
+				SyllableTone[++sIndex] = (word->w_info[i].phone[j] % 10);
+				SplitString(Phone2Ph97(s, SyllableTone[sIndex]), " ", PhoneSeq);
+				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
+				if(PWCluster[k] == 1)
+				{
+					WordBound[++wIndex] = SyllableBound[sIndex];
+					if(PPCluster[l] == 2)
+						PhraseBound[++pIndex] = WordBound[wIndex];
+					++l;
+				}
+				++k;
+			}
+		}
 	}
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
 		vector<int>& allPPCluster)
 {
-	vector<int> wordpar;	// 當前的詞長
-	vector<int> syllpos;	// 當前的字在詞中位置
-	vector<int> cluster;	// 韻律詞結尾=1, otherwise 0
-	vector<int> pos;		// first: 幾字詞, second: POS tagging
+	vector<int> wordpar;			// 當前的詞長
+	vector<int> syllpos;			// 當前的字在詞中位置
+	vector<int> cluster, cluster2;	// 韻律詞結尾=1, otherwise 0
+	vector<int> pos;				// first: 幾字詞, second: POS tagging
 	vector<int> pwBoundary;
 
 	CString tempPOS = "";
@@ -233,6 +259,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	/***********************************************************************
 	 * syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態
 	 ************************************************************************/
+	// CART_Model
 	for(i = 0; i < syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
@@ -265,11 +292,47 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		delete pcdData;
 	}
 
+	// 取得PWCluster數據
 	for(i = 0; i < cluster.size(); ++i)
 	{
 		allPWCluster.push_back(cluster[i]);
 		if(cluster[i] == 1)
 			pwBoundary.push_back(i);
+	}
+	cluster.clear();
+
+	//============== CART_Model2 =================//
+	for(i = 0, k = 0; i < pwBoundary.size(); ++i, ++k)						// 每一次iteration處理一個syllable的attribute
+	{
+		CART_DATA *pcdData = new CART_DATA();
+		pcdData->clu = 1;
+		for(j = 2; j >= -2; j--)											// (LL/L/C/R/RR) syllable所在LW長度
+		{
+			valFeatureLW = 0;
+			if(((k - j - 1) >= 0) && ((k - j) < pwBoundary.size()))
+				valFeatureLW = abs(pwBoundary[k - j] - pwBoundary[k - j - 1]);
+			pcdData->Att_Catagory.push_back(valFeatureLW);
+		}
+		pcdData->Att_Catagory.push_back(pwBoundary.size());			// Sentence length
+		pcdData->Att_Catagory.push_back(k);							// Position in sentence (Forward)
+		pcdData->Att_Catagory.push_back(pwBoundary.size() - k);		// Position in sentence (Backward)
+		pcdData->Att_Catagory.push_back(syllpos[i]);				// Position in lexicon word
+
+		for(j = 2; j >= -2; j--)									// (LL/L/C/R/RR) syllable所在POS tags
+		{
+			valFeaturePOS = 0;
+			if(((k - j) >= 0) && ((k - j) < pwBoundary.size()))
+				valFeaturePOS = pos[pwBoundary[k - j]];
+			pcdData->Att_Catagory.push_back(valFeaturePOS);
+		}
+		CartModel->TEST2(pcdData);
+		cluster.push_back(pcdData->clu);
+		delete pcdData;
+	}
+
+	for(i = 0; i < cluster.size(); ++i)
+	{
+		allPPCluster.push_back(cluster[i]);
 	}
 
 }
@@ -343,6 +406,80 @@ int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& 
 			results.add(s);
 	}
 	return numFound;
+}
+
+// Ph97: Extended initial + final
+// 三個部分: part1: Extended initial
+//			 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
+CString CTextProcess::Phone2Ph97(CString phone,int tone)
+{
+	CString result, tmp, whatever;
+	result = tmp = "";
+	char *buffer;
+	int i,j,find;
+	find = 0;
+	j = 0;
+	buffer = phone.getBuffer(0);
+	int len = phone.getLength();  //一個字元2 bytes !!
+	if((len == 2) || ((len == 4)&&(tone != 1))) {	// 單獨母音或單獨子音
+		for(i=0; i<23; i++) {
+			if(memcmp(&buffer[j],Tonal[i],2) == 0) {
+				tmp.format("%s",Ph97Phoneme[i]);
+				result += tmp;
+//				tmp.Format(" %s",Ph97Phoneme[i]);
+//				result += tmp;
+				break;
+			}
+		}
+		i++;
+	} else if(((len == 4)&&(tone ==1)) || ((len == 6)&&(tone != 1))) {	// initial + final
+		for(i=0; (i<53) && (find !=1); i++)
+		{
+			if(memcmp(&buffer[j],ExtendedInitial[i],2) == 0) {
+				tmp.format("%s ",Ph97Phoneme[i+23]);
+				result += tmp;		// part 1
+				j += 2;
+				for(i = 0; i < 23; i++){
+					if(memcmp(&buffer[j],Tonal[i],2) == 0) {
+						result += Ph97Phoneme[i];
+						find = 1;
+						break;
+					}
+				}
+			}
+		}
+	} else	{
+		for(i=24; (i<53) && (find!=1); i++) {
+			if(memcmp(&buffer[j],ExtendedInitial[i],4) == 0) {
+				tmp.format("%s ",Ph97Phoneme[i+23]);
+				result += tmp;
+				j += 4;
+				for(i = 0; i < 23; i++)	{
+					if((memcmp(&buffer[j],Tonal[i],2)) == 0) {
+						result += Ph97Phoneme[i];
+						find = 1;
+						break;
+					}
+				}
+			}
+		}
+	}
+	i--;
+	if(tone != 5) {
+		if((tone == 1) || (tone == 4))		// part 2
+			result += "H ";
+		else
+			result += "L ";
+		result += Ph97Phoneme[i];
+		if((tone ==1) || (tone == 2))		// part 3
+			result += "H";
+		else
+			result += "L";
+	} else {
+		tmp.format("M %sM",Ph97Phoneme[i]);
+		result += tmp;
+	}
+	return result;
 }
 
 void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],

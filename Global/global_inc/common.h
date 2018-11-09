@@ -6,36 +6,11 @@
 #include <syslog.h>
 #include <stdexcept>
 #include "LogHandler.h"
+#include "dataType.h"
 
 #ifdef __cplusplus
 extern "C"
 {
-
-//===========Data Type ============//
-#ifndef NULL
-#define NULL	0
-#endif
-
-#ifndef BOOL
-#define BOOL	int
-#endif
-
-#ifndef TRUE
-#define TRUE	1
-#endif
-
-#ifndef FALSE
-#define FALSE	0
-#endif
-
-#ifndef FAIL
-#define FAIL	-1
-#endif
-
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
 
 //=========== Debug ==============//
 #define _DBG(msg, arg...) printf("[DEBUG] " msg"\n" , ##arg)

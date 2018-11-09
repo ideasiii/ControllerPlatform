@@ -49,8 +49,14 @@ private:
 	void GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2);
 	int SplitString(CString& input, CString& delimiter, CStringArray& results);
+	CString Phone2Ph97(CString phone, int tone);
+public:
+	std::vector<int> indexArray;
+	std::vector<int> AllPWCluster;
+	std::vector<int> AllPPCluster;
 
 private:
+	CString AllBig5;
 	CART *CartModel;
 	CWord *word;
 	int* gduration_s; // time cue
