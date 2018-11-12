@@ -11,7 +11,7 @@ typedef int (*CMPFUNC)(const void*, const void*);
 //(0xF9-0xA4)*157 + 0x80 = 13345 + 128 = 13473
 #define CHINESE_INDEX_NUM 13500
 
-extern char *PHONE_TABLE[NUM_PHONE];
+extern const char *PHONE_TABLE[NUM_PHONE];
 
 #define SD_BAD		0
 #define SD_SYSTEM	4110

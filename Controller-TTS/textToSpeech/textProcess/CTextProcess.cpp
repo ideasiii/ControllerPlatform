@@ -5,10 +5,10 @@
  *      Author: Jugo
  */
 
+#include <memory.h>
 #include <climits>
 #include "CTextProcess.h"
 #include "common.h"
-#include "CString.h"
 #include "CStringArray.h"
 #include "Word.h"
 #include "CART.h"
@@ -20,6 +20,30 @@ using namespace std;
 #define CLUSTER				2
 #define CART_MODEL			"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
+
+// ==================  注意順序不要改變!!!!  ==========================
+
+static const char* Tonal[] = { "ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ",	// 7*2 + 1 = 15 (tonal-initial)
+		"ㄧ", "ㄨ", "ㄩ", "ㄚ", "ㄛ", "ㄜ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄝ", "ㄦ" }; // 16*2 + 6 = 38	(tonal-final)
+
+static const char* ExtendedInitial[] = { "ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ", "ㄓ", "ㄔ",
+		"ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ", "ㄧ", "ㄨ", "ㄩ", "ㄅㄧ", "ㄆㄧ", "ㄇㄧ", "ㄉㄧ", "ㄊㄧ", "ㄋㄧ", "ㄌㄧ", "ㄐㄧ", "ㄑㄧ", "ㄒㄧ", "ㄓㄨ", "ㄔㄨ",
+		"ㄕㄨ", "ㄖㄨ", "ㄗㄨ", "ㄘㄨ", "ㄙㄨ", "ㄍㄨ", "ㄎㄨ", "ㄏㄨ", "ㄉㄨ", "ㄊㄨ", "ㄋㄨ", "ㄌㄨ", "ㄐㄩ", "ㄑㄩ", "ㄒㄩ", "ㄋㄩ", "ㄌㄩ" };	// 53
+
+//// 所以總共會有15 + 38 + 53 + 1(pau) = 107個sub-syllable model
+
+static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",	// 0~6	(for tonal-initial)
+		"yi", "wu", "yu", "a", "o", "e", "ai", "ei", "au", "ou", "an", "en", "ang", "ng", "eh", "er",// 7~22	(for toanl-final)
+		"b", "p", "m", "f", "d", "t", "n", "l", "g", "k",					// 23~32	(for extended-initial)
+		"h", "j", "ch", "sh", "jr", "chr", "shr", "r", "tz", "tsz",			// 33~42
+		"sz", "yi", "wu", "yu", "bi", "pi", "mi", "di", "ti", "ni",			// 43~52
+		"li", "ji", "chi", "shi", "ju", "chu", "shu", "ru", "tzu", "tsu",	// 53~62
+		"su", "gu", "ku", "hu", "du", "tu", "nu", "lu", "jiu", "chiu",		// 63~72
+		"shiu", "niu", "liu"											// 73~75
+		};
+
+// =====================================================================
+static int giCnt;
 
 const char *POStags[34] =
 		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
@@ -145,7 +169,9 @@ void CTextProcess::processTheText(const char *szText)
 			{
 				SID2Phone((word->w_info[i].phone[j]), &s[0]);
 				SyllableTone[++sIndex] = (word->w_info[i].phone[j] % 10);
-				SplitString(Phone2Ph97(s, SyllableTone[sIndex]), " ", PhoneSeq);
+				CString delimiter = " ";
+				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
+				SplitString(pph, delimiter, PhoneSeq);
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
 				if(PWCluster[k] == 1)
 				{
@@ -260,7 +286,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 * syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態
 	 ************************************************************************/
 	// CART_Model
-	for(i = 0; i < syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
+	for(i = 0; i < (int)syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = -1;
@@ -268,7 +294,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; --j)
 		{
 			valFeatureLW = 0;
-			if(((i - j) >= 0) && ((i - j) < syllpos.size()))
+			if(((i - j) >= 0) && ((i - j) < (int)syllpos.size()))
 			{
 				valFeatureLW = wordpar[i - j];					// (LL/L/C/R/RR) syllable所在LW長度
 			}
@@ -281,7 +307,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; --j)
 		{
 			valFeaturePOS = 0;
-			if(((i - j) >= 0) && ((i - j) < syllpos.size()))
+			if(((i - j) >= 0) && ((i - j) < (int)syllpos.size()))
 			{
 				valFeaturePOS = pos[i - j];						// (LL/L/C/R/RR) syllable所在POS tags
 			}
@@ -293,7 +319,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	}
 
 	// 取得PWCluster數據
-	for(i = 0; i < cluster.size(); ++i)
+	for(i = 0; i < (int)cluster.size(); ++i)
 	{
 		allPWCluster.push_back(cluster[i]);
 		if(cluster[i] == 1)
@@ -302,14 +328,14 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	cluster.clear();
 
 	//============== CART_Model2 =================//
-	for(i = 0, k = 0; i < pwBoundary.size(); ++i, ++k)						// 每一次iteration處理一個syllable的attribute
+	for(i = 0, k = 0; i < (int)pwBoundary.size(); ++i, ++k)						// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = 1;
 		for(j = 2; j >= -2; j--)											// (LL/L/C/R/RR) syllable所在LW長度
 		{
 			valFeatureLW = 0;
-			if(((k - j - 1) >= 0) && ((k - j) < pwBoundary.size()))
+			if(((k - j - 1) >= 0) && ((k - j) < (int)pwBoundary.size()))
 				valFeatureLW = abs(pwBoundary[k - j] - pwBoundary[k - j - 1]);
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
@@ -321,7 +347,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; j--)									// (LL/L/C/R/RR) syllable所在POS tags
 		{
 			valFeaturePOS = 0;
-			if(((k - j) >= 0) && ((k - j) < pwBoundary.size()))
+			if(((k - j) >= 0) && ((k - j) < (int)pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
@@ -330,7 +356,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		delete pcdData;
 	}
 
-	for(i = 0; i < cluster.size(); ++i)
+	for(i = 0; i < (int)cluster.size(); ++i)
 	{
 		allPPCluster.push_back(cluster[i]);
 	}
@@ -411,20 +437,23 @@ int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& 
 // Ph97: Extended initial + final
 // 三個部分: part1: Extended initial
 //			 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
-CString CTextProcess::Phone2Ph97(CString phone,int tone)
+CString CTextProcess::Phone2Ph97(CString phone, int tone)
 {
 	CString result, tmp, whatever;
 	result = tmp = "";
 	char *buffer;
-	int i,j,find;
+	int i, j, find;
 	find = 0;
 	j = 0;
 	buffer = phone.getBuffer(0);
 	int len = phone.getLength();  //一個字元2 bytes !!
-	if((len == 2) || ((len == 4)&&(tone != 1))) {	// 單獨母音或單獨子音
-		for(i=0; i<23; i++) {
-			if(memcmp(&buffer[j],Tonal[i],2) == 0) {
-				tmp.format("%s",Ph97Phoneme[i]);
+	if((len == 2) || ((len == 4) && (tone != 1)))
+	{	// 單獨母音或單獨子音
+		for(i = 0; i < 23; i++)
+		{
+			if(memcmp(&buffer[j], Tonal[i], 2) == 0)
+			{
+				tmp.format("%s", Ph97Phoneme[i]);
 				result += tmp;
 //				tmp.Format(" %s",Ph97Phoneme[i]);
 //				result += tmp;
@@ -432,15 +461,20 @@ CString CTextProcess::Phone2Ph97(CString phone,int tone)
 			}
 		}
 		i++;
-	} else if(((len == 4)&&(tone ==1)) || ((len == 6)&&(tone != 1))) {	// initial + final
-		for(i=0; (i<53) && (find !=1); i++)
+	}
+	else if(((len == 4) && (tone == 1)) || ((len == 6) && (tone != 1)))
+	{	// initial + final
+		for(i = 0; (i < 53) && (find != 1); i++)
 		{
-			if(memcmp(&buffer[j],ExtendedInitial[i],2) == 0) {
-				tmp.format("%s ",Ph97Phoneme[i+23]);
+			if(memcmp(&buffer[j], ExtendedInitial[i], 2) == 0)
+			{
+				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;		// part 1
 				j += 2;
-				for(i = 0; i < 23; i++){
-					if(memcmp(&buffer[j],Tonal[i],2) == 0) {
+				for(i = 0; i < 23; i++)
+				{
+					if(memcmp(&buffer[j], Tonal[i], 2) == 0)
+					{
 						result += Ph97Phoneme[i];
 						find = 1;
 						break;
@@ -448,14 +482,20 @@ CString CTextProcess::Phone2Ph97(CString phone,int tone)
 				}
 			}
 		}
-	} else	{
-		for(i=24; (i<53) && (find!=1); i++) {
-			if(memcmp(&buffer[j],ExtendedInitial[i],4) == 0) {
-				tmp.format("%s ",Ph97Phoneme[i+23]);
+	}
+	else
+	{
+		for(i = 24; (i < 53) && (find != 1); i++)
+		{
+			if(memcmp(&buffer[j], ExtendedInitial[i], 4) == 0)
+			{
+				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;
 				j += 4;
-				for(i = 0; i < 23; i++)	{
-					if((memcmp(&buffer[j],Tonal[i],2)) == 0) {
+				for(i = 0; i < 23; i++)
+				{
+					if((memcmp(&buffer[j], Tonal[i], 2)) == 0)
+					{
 						result += Ph97Phoneme[i];
 						find = 1;
 						break;
@@ -465,18 +505,21 @@ CString CTextProcess::Phone2Ph97(CString phone,int tone)
 		}
 	}
 	i--;
-	if(tone != 5) {
+	if(tone != 5)
+	{
 		if((tone == 1) || (tone == 4))		// part 2
 			result += "H ";
 		else
 			result += "L ";
 		result += Ph97Phoneme[i];
-		if((tone ==1) || (tone == 2))		// part 3
+		if((tone == 1) || (tone == 2))		// part 3
 			result += "H";
 		else
 			result += "L";
-	} else {
-		tmp.format("M %sM",Ph97Phoneme[i]);
+	}
+	else
+	{
+		tmp.format("M %sM", Ph97Phoneme[i]);
 		result += tmp;
 	}
 	return result;

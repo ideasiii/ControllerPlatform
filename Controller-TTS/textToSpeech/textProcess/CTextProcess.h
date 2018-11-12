@@ -10,7 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-class CString;
+#include "CString.h"
+
 class CStringArray;
 class CWord;
 class CART;
