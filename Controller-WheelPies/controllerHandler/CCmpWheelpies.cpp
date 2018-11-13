@@ -35,13 +35,12 @@ int CCmpWheelpies::onWheelpies(int nSocket, int nCommand, int nSequence, const v
 	{
 		return response(nSocket, nCommand, STATUS_RINVJSON, nSequence, 0);
 	}
-	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 
 	Message message;
 	message.what = wheelpies_request;
 	message.strData = pBody;
 	mpController->sendMessage(message);
-
+	response(nSocket, nCommand, STATUS_ROK, nSequence, 0);
 	return FALSE;
 }
 

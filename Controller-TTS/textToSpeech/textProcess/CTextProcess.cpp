@@ -183,6 +183,10 @@ void CTextProcess::processTheText(const char *szText)
 				++k;
 			}
 		}
+
+		// generate label for current sentence
+		ofstream csLabFile;
+		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL);
 	}
 }
 
@@ -286,7 +290,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 * syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態
 	 ************************************************************************/
 	// CART_Model
-	for(i = 0; i < (int)syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
+	for(i = 0; i < (int) syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = -1;
@@ -294,7 +298,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; --j)
 		{
 			valFeatureLW = 0;
-			if(((i - j) >= 0) && ((i - j) < (int)syllpos.size()))
+			if(((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
 			{
 				valFeatureLW = wordpar[i - j];					// (LL/L/C/R/RR) syllable所在LW長度
 			}
@@ -307,7 +311,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; --j)
 		{
 			valFeaturePOS = 0;
-			if(((i - j) >= 0) && ((i - j) < (int)syllpos.size()))
+			if(((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
 			{
 				valFeaturePOS = pos[i - j];						// (LL/L/C/R/RR) syllable所在POS tags
 			}
@@ -319,7 +323,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	}
 
 	// 取得PWCluster數據
-	for(i = 0; i < (int)cluster.size(); ++i)
+	for(i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPWCluster.push_back(cluster[i]);
 		if(cluster[i] == 1)
@@ -328,14 +332,14 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	cluster.clear();
 
 	//============== CART_Model2 =================//
-	for(i = 0, k = 0; i < (int)pwBoundary.size(); ++i, ++k)						// 每一次iteration處理一個syllable的attribute
+	for(i = 0, k = 0; i < (int) pwBoundary.size(); ++i, ++k)					// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = 1;
 		for(j = 2; j >= -2; j--)											// (LL/L/C/R/RR) syllable所在LW長度
 		{
 			valFeatureLW = 0;
-			if(((k - j - 1) >= 0) && ((k - j) < (int)pwBoundary.size()))
+			if(((k - j - 1) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeatureLW = abs(pwBoundary[k - j] - pwBoundary[k - j - 1]);
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
@@ -347,7 +351,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		for(j = 2; j >= -2; j--)									// (LL/L/C/R/RR) syllable所在POS tags
 		{
 			valFeaturePOS = 0;
-			if(((k - j) >= 0) && ((k - j) < (int)pwBoundary.size()))
+			if(((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
@@ -356,38 +360,12 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		delete pcdData;
 	}
 
-	for(i = 0; i < (int)cluster.size(); ++i)
+	for(i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPPCluster.push_back(cluster[i]);
 	}
 
 }
-
-//void CTextProcess::GenerateBoundary(SYLLABLE_ATT& syllableAtt, std::vector<int>& vecCluster, int Model)
-//{
-//	int i, j;
-//
-//	for(i = 0; i < syllableAtt.size; ++i)
-//	{
-//		CART_DATA *pcdData = new CART_DATA();
-//		pcdData->clu = syllableAtt.syllable_item[i].nCID;
-//		for(j = 0; j < 5; ++j)
-//		{
-//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeatureLW[j]);
-//		}
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].Sen_Length);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].F_PositionInSen);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].B_PositionInSen);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].PositionInWord);
-//		for(j = 0; j < 5; ++j)
-//		{
-//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeaturePOS[j]);
-//		}
-//		CartModel->TEST(pcdData);
-//		vecCluster.push_back(pcdData->clu);
-//		delete pcdData; // ky add: release memory
-//	}
-//}
 
 int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
 {
@@ -850,4 +828,30 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		//*pcsFile2.close();
 	}
 }
+
+//void CTextProcess::GenerateBoundary(SYLLABLE_ATT& syllableAtt, std::vector<int>& vecCluster, int Model)
+//{
+//	int i, j;
+//
+//	for(i = 0; i < syllableAtt.size; ++i)
+//	{
+//		CART_DATA *pcdData = new CART_DATA();
+//		pcdData->clu = syllableAtt.syllable_item[i].nCID;
+//		for(j = 0; j < 5; ++j)
+//		{
+//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeatureLW[j]);
+//		}
+//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].Sen_Length);
+//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].F_PositionInSen);
+//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].B_PositionInSen);
+//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].PositionInWord);
+//		for(j = 0; j < 5; ++j)
+//		{
+//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeaturePOS[j]);
+//		}
+//		CartModel->TEST(pcdData);
+//		vecCluster.push_back(pcdData->clu);
+//		delete pcdData; // ky add: release memory
+//	}
+//}
 
