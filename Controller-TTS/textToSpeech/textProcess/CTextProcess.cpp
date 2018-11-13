@@ -13,6 +13,7 @@
 #include "Word.h"
 #include "CART.h"
 #include "Phone.h"
+#include "HTS_engine.h"
 
 using namespace std;
 
@@ -43,7 +44,6 @@ static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",
 		};
 
 // =====================================================================
-static int giCnt;
 
 const char *POStags[34] =
 		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
@@ -113,7 +113,7 @@ void CTextProcess::processTheText(const char *szText)
 	{
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
-
+return;
 	/*********************************************************************
 	 *   以sentence為單位合成
 	 *********************************************************************/
@@ -186,8 +186,36 @@ void CTextProcess::processTheText(const char *szText)
 
 		// generate label for current sentence
 		ofstream csLabFile;
+		csLabFile.open("gen/dlg.lab", ios::trunc);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL);
+		csLabFile.close();
+
+		// 合成
+		Synthesize("gen/dlg.lab", lcount);
 	}
+}
+
+void CTextProcess::Synthesize(CString name, int c)
+{
+	/* hts_engine API */
+	HTS_Engine engine;
+
+	/* HTS voices */
+	size_t num_voices;
+	char **fn_voices;
+
+	/* input label file name */
+	char *labfn = NULL;
+
+	/* output file pointers */
+	FILE *durfp = NULL, *mgcfp = NULL, *lf0fp = NULL, *lpffp = NULL, *wavfp = NULL, *rawfp = NULL, *tracefp = NULL;
+
+	/* interpolation weights */
+	size_t num_interpolation_weights;
+
+	/* initialize hts_engine API */
+	HTS_Engine_initialize(&engine);
+
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,

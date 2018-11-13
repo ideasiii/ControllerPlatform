@@ -51,6 +51,7 @@ private:
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2);
 	int SplitString(CString& input, CString& delimiter, CStringArray& results);
 	CString Phone2Ph97(CString phone, int tone);
+	void Synthesize(CString name, int c);
 public:
 	std::vector<int> indexArray;
 	std::vector<int> AllPWCluster;

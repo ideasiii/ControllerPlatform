@@ -131,8 +131,7 @@ bool CART::ConstructCART(int nodeID, CART_NODE *pNode)
 				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
 			}
 			pNode->Lchild = node;
-			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,
-					vcartData[index].size);
+			//	_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,vcartData[index].size);
 			ConstructCART(lid, pNode->Lchild);
 			break;
 		}
@@ -150,8 +149,7 @@ bool CART::ConstructCART(int nodeID, CART_NODE *pNode)
 				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
 			}
 			pNode->Rchild = node;
-			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,
-					vcartData[index].size);
+//			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,vcartData[index].size);
 			ConstructCART(rid, pNode->Rchild);
 			break;
 		}
@@ -178,8 +176,7 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
 			}
 			pNode->Lchild = node;
-			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,
-					vcartData[index].size);
+//			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,vcartData[index].size);
 			ConstructCART(lid, pNode->Lchild);
 			break;
 		}
@@ -197,8 +194,7 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
 			}
 			pNode->Rchild = node;
-			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,
-					vcartData[index].size);
+//			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,vcartData[index].size);
 			ConstructCART(rid, pNode->Rchild);
 			break;
 		}

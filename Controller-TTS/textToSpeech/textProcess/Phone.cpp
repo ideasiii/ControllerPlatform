@@ -165,10 +165,8 @@ SNDID Phone2SID(UCHAR *phone)
 	static BOOL bInit = FALSE;
 	void* pv = NULL;
 	CString cs;
-	UCHAR tone, *phone_tmp;
+	UCHAR tone = 1;
 
-	tone = 1;
-	phone_tmp = phone;
 	while(*phone != 0)
 	{ //去掉空白
 		if(((phone[0] == 0xA3) && (phone[1] == 0xBC)) || ((phone[0] == 0xA1) && (phone[1] == 0x40)))
