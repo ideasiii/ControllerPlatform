@@ -123,7 +123,6 @@ mk_debug:
 	
 	
 package:
-	apt-get -y install g++-4.7
 	apt-get -y install sqlite3 libsqlite3-dev
 	apt-get -y install libboost-all-dev libboost-thread-dev
 	apt-get -y install build-essential
@@ -137,7 +136,7 @@ package:
 	apt-get -y install libcurl4-openssl-dev
 	apt-get -y install libcrypto++-dev
 	apt-get -y install libtinyxml2-dev
-	apt-get -y install libxerces-c3.1 libxerces-c-dev libicu-dev
+	apt-get -y install libxerces-c-dev libicu-dev
 	apt-get -y install libx11-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
@@ -155,5 +154,8 @@ mongodb:
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	
+xerces:
+	@mkdir -p libs
+	@cd $(DIR_APP_ROOT)extLibs/xerces-c-3.2.2 && ./configure && make all install
 	
 $(foreach bdir,$(BUILD_DIR),$(eval $(call make-goal,$(bdir))))

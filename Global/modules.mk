@@ -30,4 +30,5 @@ stringHandler \
 queueHandler \
 machineLearning
 
-export EXT_MODULES=extInclude
+export EXT_MODULES=extInclude \
+extLibs/xerces-c-3.2.2
