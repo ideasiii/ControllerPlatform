@@ -161,8 +161,8 @@ void CString::setAt(int nIndex, TCHAR ch)
 
 const CString& CString::operator=(const CString& strSrc)
 {
-	if(&strSrc == NULL)
-		return *this;
+//	if(&strSrc == NULL)
+//		return *this;
 	int nSrcLen = ((CString&) strSrc).getLength();
 	setAllocSize(nSrcLen + 1);
 	copyMem(((CString&) strSrc).getBuffer(), nSrcLen + 1);
@@ -219,8 +219,8 @@ CString::operator LPCTSTR()
 
 const CString& CString::operator+=(const CString& string)
 {
-	if(&string == NULL)
-		return *this;
+//	if(&string == NULL)
+//		return *this;
 	int nSrcLen = ((CString&) string).getLength();
 	setAllocSize(getLength() + nSrcLen + 1);
 	appendMem(((CString&) string).getBuffer(), nSrcLen + 1);

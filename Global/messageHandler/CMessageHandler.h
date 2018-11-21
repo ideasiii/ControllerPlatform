@@ -21,7 +21,7 @@ typedef struct _Message
 	void clear()
 	{
 		what = 0;
-		memset(arg, 0, ARG_LEN);
+		memset(arg, 0, sizeof(arg));
 		strData.clear();
 	}
 } Message;
@@ -46,7 +46,7 @@ struct MESSAGE_BUF
 		nDataLen = 0;
 		memset(cData, 0, DATA_LEN);
 		what = 0;
-		memset(arg, 0, ARG_LEN);
+		memset(arg, 0, sizeof(arg));
 	}
 };
 

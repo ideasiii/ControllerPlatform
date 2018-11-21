@@ -17,7 +17,7 @@ public:
 	virtual ~CStringArray();
 	int getSize();
 	int add(const CString& newElement);
-
+	void removeAll();
 	// return single CString Referenceat zero-based index
 	CString& operator[](int nIndex);
 

@@ -14,6 +14,8 @@
 #include "CART.h"
 #include "Phone.h"
 #include "HTS_engine.h"
+#include "CString.h"
+#include "HTS_engine.h"
 
 using namespace std;
 
@@ -21,6 +23,7 @@ using namespace std;
 #define CLUSTER				2
 #define CART_MODEL			"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
+#define HMM_MODEL			"model/hmm.htsvoice"
 
 // ==================  注意順序不要改變!!!!  ==========================
 
@@ -35,11 +38,11 @@ static const char* ExtendedInitial[] = { "ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ
 
 static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",	// 0~6	(for tonal-initial)
 		"yi", "wu", "yu", "a", "o", "e", "ai", "ei", "au", "ou", "an", "en", "ang", "ng", "eh", "er",// 7~22	(for toanl-final)
-		"b", "p", "m", "f", "d", "t", "n", "l", "g", "k",					// 23~32	(for extended-initial)
-		"h", "j", "ch", "sh", "jr", "chr", "shr", "r", "tz", "tsz",			// 33~42
-		"sz", "yi", "wu", "yu", "bi", "pi", "mi", "di", "ti", "ni",			// 43~52
-		"li", "ji", "chi", "shi", "ju", "chu", "shu", "ru", "tzu", "tsu",	// 53~62
-		"su", "gu", "ku", "hu", "du", "tu", "nu", "lu", "jiu", "chiu",		// 63~72
+		"b", "p", "m", "f", "d", "t", "n", "l", "g", "k",	// 23~32	(for extended-initial)
+		"h", "j", "ch", "sh", "jr", "chr", "shr", "r", "tz", "tsz",		// 33~42
+		"sz", "yi", "wu", "yu", "bi", "pi", "mi", "di", "ti", "ni",		// 43~52
+		"li", "ji", "chi", "shi", "ju", "chu", "shu", "ru", "tzu", "tsu",		// 53~62
+		"su", "gu", "ku", "hu", "du", "tu", "nu", "lu", "jiu", "chiu",	// 63~72
 		"shiu", "niu", "liu"											// 73~75
 		};
 
@@ -54,7 +57,7 @@ struct thread_child_info
 } THREAD_CHILD_INFO;
 
 CTextProcess::CTextProcess() :
-		CartModel(new CART()), word(0), gduration_s(0), gduration_e(0), giSftIdx(0)
+		CartModel(new CART())
 {
 	loadModel();
 }
@@ -71,21 +74,47 @@ void CTextProcess::loadModel()
 
 void CTextProcess::releaseModel()
 {
-	if(CartModel)
+	if (CartModel)
 		delete CartModel;
 }
 
 void CTextProcess::processTheText(const char *szText)
 {
+	time_t rawtime;
+	time(&rawtime);
+
+	CString strWaveName;
+	CString strLabelName;
+
+	strWaveName.format("gen/%ld.wav", rawtime);
+	strLabelName.format("label/%ld.lab", rawtime);
+	Synthesize(HMM_MODEL, strWaveName);										//test
+
 	int nIndex;
 	int nLen = 0;
 	int nCount = 0;
 	CString strInput;
 	CString strPart;
+	char s[10];
+	int SyllableBound[100];		// syllable邊界
+	int SyllableTone[100];		// tone of syllable
+	int WordBound[100];			// word boundary, tts 斷詞結果
+	int PhraseBound[20];		// phrase boundary
+	SyllableTone[0] = 0;
+	int *gduration_s = NULL;
+	int *gduration_e = NULL;
+	int giSftIdx = 0;
+	int playcount = 0;
+	vector<int> indexArray;
+	vector<int> AllPWCluster;
+	vector<int> AllPPCluster;
+	CString AllBig5;
+	CWord *word = new CWord();
 
+	AllBig5 = "";
 	strInput = szText;
 	_log("[CTextProcess] processTheText Input Text: %s", strInput.getBuffer());
-	// 斷句. 先把input的文章存成sentence Array
+	_log("斷句. 先把input的文章存成sentence Array");
 	int i, j, k, l, lcount, sIndex, wIndex, pIndex;
 	CStringArray SentenceArray;
 	CString strTemp1, strResult;
@@ -93,13 +122,11 @@ void CTextProcess::processTheText(const char *szText)
 	strTemp1 = strTemp1.SpanExcluding("\r");
 	strResult = strTemp1;
 	_log("[CTextProcess] processTheText SpanExcluding: %s", strResult.getBuffer());
+	_log("全形符號斷詞 。？！；，與半形符號斷詞");
 
-	/**
-	 * 全形符號斷詞 。？！；，與半形符號斷詞
-	 */
 	vector<string> vs = { "。", "？", "！", "；", "，", "!", ",", ".", ";", "?" };
 	string strFinded;
-	while(strResult.findOneOf(vs, strFinded) != -1)
+	while (strResult.findOneOf(vs, strFinded) != -1)
 	{
 		CString temp;
 		i = strResult.findOneOf(vs, strFinded);
@@ -109,49 +136,37 @@ void CTextProcess::processTheText(const char *szText)
 		_log("Text: %s finded: %s", temp.getBuffer(), strFinded.c_str());
 	}
 
-	for(i = 0; i < SentenceArray.getSize(); ++i)
+	for (i = 0; i < SentenceArray.getSize(); ++i)
 	{
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
-return;
-	/*********************************************************************
-	 *   以sentence為單位合成
-	 *********************************************************************/
-	char s[10];
-	int SyllableBound[100];		// syllable邊界
-	int SyllableTone[100];		// tone of syllable
-	int WordBound[100];			// word boundary, tts 斷詞結果
-	int PhraseBound[20];		// phrase boundary
-	SyllableTone[0] = 0;
-	gduration_s = NULL;
-	gduration_e = NULL;
-	giSftIdx = 0;
-	int playcount = 0;
 
-	for(lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
+	_log("以sentence為單位合成");
+
+	for (lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
 	{
 		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
 		CString strBig5;
 		vector<int> PWCluster;
 		vector<int> PPCluster;
 
-		// initial boundaries and indexes for a sentence
+		_log("initial boundaries and indexes for a sentence");
 		sIndex = wIndex = pIndex = 0;
 		SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
-		for(i = 1; i < 100; i++)
+		for (i = 1; i < 100; i++)
 			SyllableBound[i] = WordBound[i] = 0;
-		for(i = 1; i < 20; i++)
+		for (i = 1; i < 20; i++)
 			PhraseBound[i] = 0;
 
-		// 簡單處理標點符號及分隔字符
+		_log("簡單處理標點符號及分隔字符");
 		SentenceArray[lcount].replace(" ", "");
 		SentenceArray[lcount].replace("\t", "");
 		vector<string> vs1 = { "：", "、", "（", "）", "「", "」" };
-		for(i = SentenceArray[lcount].findOneOf(vs1, strFinded); i != -1;
+		for (i = SentenceArray[lcount].findOneOf(vs1, strFinded); i != -1;
 				i = SentenceArray[lcount].findOneOf(vs1, strFinded))
 			SentenceArray[lcount].Delete(i, strFinded.length());
 		vector<string> vs2 = { ":", ";", "?", "!", "(", ")", "[", "]" };
-		for(i = SentenceArray[lcount].findOneOf(vs2, strFinded); i != -1;
+		for (i = SentenceArray[lcount].findOneOf(vs2, strFinded); i != -1;
 				i = SentenceArray[lcount].findOneOf(vs2, strFinded))
 			SentenceArray[lcount].Delete(i, strFinded.length());
 
@@ -159,24 +174,27 @@ return;
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
 		AllBig5 += strBig5;
+		_log("AllBig5: %s", AllBig5.getBuffer());
+
 		AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
 		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
 
 		k = l = 0;
-		for(i = 0; i < word->wnum; i++)
+		for (i = 0; i < word->wnum; ++i)
 		{
-			for(j = 0; j < word->w_info[i].wlen; j++)
+			for (j = 0; j < word->w_info[i].wlen; ++j)
 			{
 				SID2Phone((word->w_info[i].phone[j]), &s[0]);
+				_log("SID2Phone sound id: %d - sound: %s", word->w_info[i].phone[j], s);
 				SyllableTone[++sIndex] = (word->w_info[i].phone[j] % 10);
 				CString delimiter = " ";
 				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
 				SplitString(pph, delimiter, PhoneSeq);
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
-				if(PWCluster[k] == 1)
+				if (PWCluster[k] == 1)
 				{
 					WordBound[++wIndex] = SyllableBound[sIndex];
-					if(PPCluster[l] == 2)
+					if (PPCluster[l] == 2)
 						PhraseBound[++pIndex] = WordBound[wIndex];
 					++l;
 				}
@@ -184,38 +202,28 @@ return;
 			}
 		}
 
-		// generate label for current sentence
+		delete word;
+
+		_log("generate label for current sentence");
 		ofstream csLabFile;
 		csLabFile.open("gen/dlg.lab", ios::trunc);
-		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL);
+		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
+				gduration_s, gduration_e, giSftIdx);
 		csLabFile.close();
+		PhoneSeq.removeAll();
 
 		// 合成
-		Synthesize("gen/dlg.lab", lcount);
+		Synthesize(HMM_MODEL, strWaveName);
 	}
 }
 
-void CTextProcess::Synthesize(CString name, int c)
+void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName)
 {
-	/* hts_engine API */
-	HTS_Engine engine;
-
-	/* HTS voices */
-	size_t num_voices;
-	char **fn_voices;
-
-	/* input label file name */
-	char *labfn = NULL;
-
-	/* output file pointers */
-	FILE *durfp = NULL, *mgcfp = NULL, *lf0fp = NULL, *lpffp = NULL, *wavfp = NULL, *rawfp = NULL, *tracefp = NULL;
-
-	/* interpolation weights */
-	size_t num_interpolation_weights;
-
-	/* initialize hts_engine API */
-	HTS_Engine_initialize(&engine);
-
+	//hts_engine -m $1 -ow $2.wav $3.lab -fm 1 -b 0.3 -r 1.2
+	char* param[] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
+	param[2] = const_cast<char*>(szModelName);
+	param[4] = const_cast<char*>(szWaveName);
+	htsSynthesize(6, param);
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
@@ -238,16 +246,14 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	int valFeatureLW;
 	int valFeaturePOS;
 
-	/**************************************************/
-	/*    將資料全行文字轉換成半形 針對數字部份             */
-	/**************************************************/
+	_log("將資料全行文字轉換成半形 針對數字部份");
 
-	word = new CWord();
+	CWord *word = new CWord();
 	word->GetSentence((unsigned char*) sentence.getBuffer(), &textNdx);
 	word->GetWord();
-	for(i = 0; i < word->wnum; ++i)
+	for (i = 0; i < word->wnum; ++i)
 	{
-		switch(word->w_info[i].wlen)
+		switch (word->w_info[i].wlen)
 		{
 		case 1:	//1字詞
 			wordpar.push_back(1);
@@ -282,117 +288,128 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		cstemp = cstemp + word->w_info[i].big5;
 		cstemp = cstemp + " ";
 	}
-
+	_log("String Big5 : %s , cstemp : %s", strBig5, cstemp);
 	/**
 	 *  將文字分詞為 : 我們 來 做 垃圾
 	 *  透過Standfor將詞性加入，變成: 我們/X 來/X 做/X 垃圾/X
 	 *  將字詞屬性轉換成屬性標記
 	 */
+	_log("將文字分詞，將字詞屬性轉換成屬性標記");
 	tempPOS = "多型態角色語音智慧平台/X 我說一個故事給你們聽/X 要注意聽/X 千萬要注意聽/X 因為/X 如果沒聽到/X 你一定會問/X 你在說什麼/X"; // this is test............
 	CString strDelim = " ";
-	if(SplitString(tempPOS, strDelim, tempPOSArray) == 0)
+	if (SplitString(tempPOS, strDelim, tempPOSArray) == 0)
 		tempPOSArray.add(tempPOS);
 
-	for(i = 0; i < tempPOSArray.getSize(); ++i)
+	for (i = 0; i < tempPOSArray.getSize(); ++i)
 	{
 		int index = tempPOSArray[i].find("/", 0);
 		cstemp.format("%s", tempPOSArray[i].mid(index + 1, tempPOSArray[i].getLength()));
 		index /= 2;
 		bool bAdded = false;
-		for(j = 1; j < 34; ++j)
+		for (j = 1; j < 34; ++j)
 		{
-			if(cstemp == POStags[j])
+			if (cstemp == POStags[j])
 			{
-				for(k = 0; k < index; k++)
+				for (k = 0; k < index; k++)
 					pos.push_back(j);
 				bAdded = true;
 				break;
 			}
 		}
-		if(bAdded == false)
-			for(k = 0; k < index; k++)
+		if (bAdded == false)
+			for (k = 0; k < index; k++)
 				pos.push_back(j);
 	}
 
-	/***********************************************************************
-	 * syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態
-	 ************************************************************************/
-	// CART_Model
-	for(i = 0; i < (int) syllpos.size(); ++i)						// 每一次iteration處理一個syllable的attribute
+	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
+	_log("============== CART_Model =================");
+	for (i = 0; i < (int) syllpos.size(); ++i) // 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = -1;
 
-		for(j = 2; j >= -2; --j)
+		for (j = 2; j >= -2; --j)
 		{
 			valFeatureLW = 0;
-			if(((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
+			if (((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
 			{
-				valFeatureLW = wordpar[i - j];					// (LL/L/C/R/RR) syllable所在LW長度
+				valFeatureLW = wordpar[i - j];	// (LL/L/C/R/RR) syllable所在LW長度
 			}
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
-		pcdData->Att_Catagory.push_back(syllpos.size());			// Sentence length
-		pcdData->Att_Catagory.push_back(i);							// Position in sentence (Forward)
-		pcdData->Att_Catagory.push_back(syllpos.size() - i);		// Position in sentence (Backward)
-		pcdData->Att_Catagory.push_back(syllpos[i]);				// Position in lexicon word
-		for(j = 2; j >= -2; --j)
+		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,
+				syllpos[i]);
+		pcdData->Att_Catagory.push_back(syllpos.size());	// Sentence length
+		pcdData->Att_Catagory.push_back(i);	// Position in sentence (Forward)
+		pcdData->Att_Catagory.push_back(syllpos.size() - i);	// Position in sentence (Backward)
+		pcdData->Att_Catagory.push_back(syllpos[i]);	// Position in lexicon word
+		for (j = 2; j >= -2; --j)
 		{
 			valFeaturePOS = 0;
-			if(((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
+			if (((i - j) >= 0) && ((i - j) < (int) syllpos.size()))
 			{
-				valFeaturePOS = pos[i - j];						// (LL/L/C/R/RR) syllable所在POS tags
+				valFeaturePOS = pos[i - j];	// (LL/L/C/R/RR) syllable所在POS tags
 			}
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
+		_log("CART TEST");
 		CartModel->TEST(pcdData);
 		cluster.push_back(pcdData->clu);
+		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
-	// 取得PWCluster數據
-	for(i = 0; i < (int) cluster.size(); ++i)
+	_log("取得PWCluster數據");
+	for (i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPWCluster.push_back(cluster[i]);
-		if(cluster[i] == 1)
+		_log("PWCluster數據: %d", cluster[i]);
+		if (cluster[i] == 1)
 			pwBoundary.push_back(i);
 	}
 	cluster.clear();
 
-	//============== CART_Model2 =================//
-	for(i = 0, k = 0; i < (int) pwBoundary.size(); ++i, ++k)					// 每一次iteration處理一個syllable的attribute
+	_log("============== CART_Model2 =================");
+	for (i = 0, k = 0; i < (int) pwBoundary.size(); ++i, ++k)	// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
 		pcdData->clu = 1;
-		for(j = 2; j >= -2; j--)											// (LL/L/C/R/RR) syllable所在LW長度
+		for (j = 2; j >= -2; j--)				// (LL/L/C/R/RR) syllable所在LW長度
 		{
 			valFeatureLW = 0;
-			if(((k - j - 1) >= 0) && ((k - j) < (int) pwBoundary.size()))
+			if (((k - j - 1) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeatureLW = abs(pwBoundary[k - j] - pwBoundary[k - j - 1]);
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
-		pcdData->Att_Catagory.push_back(pwBoundary.size());			// Sentence length
-		pcdData->Att_Catagory.push_back(k);							// Position in sentence (Forward)
-		pcdData->Att_Catagory.push_back(pwBoundary.size() - k);		// Position in sentence (Backward)
-		pcdData->Att_Catagory.push_back(syllpos[i]);				// Position in lexicon word
+		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,
+				syllpos[i]);
+		pcdData->Att_Catagory.push_back(pwBoundary.size());	// Sentence length
+		pcdData->Att_Catagory.push_back(k);	// Position in sentence (Forward)
+		pcdData->Att_Catagory.push_back(pwBoundary.size() - k);	// Position in sentence (Backward)
+		pcdData->Att_Catagory.push_back(syllpos[i]);	// Position in lexicon word
 
-		for(j = 2; j >= -2; j--)									// (LL/L/C/R/RR) syllable所在POS tags
+		for (j = 2; j >= -2; j--)			// (LL/L/C/R/RR) syllable所在POS tags
 		{
 			valFeaturePOS = 0;
-			if(((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
+			if (((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
+			_log("valFeaturePOS: %d", valFeaturePOS);
 		}
+		_log("CART TEST2");
 		CartModel->TEST2(pcdData);
 		cluster.push_back(pcdData->clu);
+		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
-	for(i = 0; i < (int) cluster.size(); ++i)
+	_log("取得PPCluster數據");
+	for (i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPPCluster.push_back(cluster[i]);
+		_log("PPCluster數據: %d", cluster[i]);
 	}
-
+	cluster.clear();
 }
 
 int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
@@ -404,13 +421,13 @@ int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& 
 
 	vector<int> positions;
 	newPos = input.find(delimiter, 0);
-	if(newPos < 0)
+	if (newPos < 0)
 	{
 		return 0;
 	}
 	int numFound = 0;
 
-	while(newPos > iPos)
+	while (newPos > iPos)
 	{
 		++numFound;
 		positions.push_back(newPos);
@@ -418,23 +435,23 @@ int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& 
 		newPos = input.find(delimiter, iPos + sizeS2 + 1);
 	}
 
-	for(int i = 0; i <= (int) positions.size(); ++i)
+	for (int i = 0; i <= (int) positions.size(); ++i)
 	{
 		CString s;
-		if(i == 0)
+		if (i == 0)
 			s = input.mid(i, positions[i]);
 		else
 		{
 			int offset = positions[i - 1] + sizeS2;
-			if(offset < isize)
+			if (offset < isize)
 			{
-				if(i == (int) positions.size())
+				if (i == (int) positions.size())
 					s = input.mid(offset);
-				else if(i > 0)
+				else if (i > 0)
 					s = input.mid(positions[i - 1] + sizeS2, positions[i] - positions[i - 1] - sizeS2);
 			}
 		}
-		if(s.getLength() > 0)
+		if (s.getLength() > 0)
 			results.add(s);
 	}
 	return numFound;
@@ -453,11 +470,11 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 	j = 0;
 	buffer = phone.getBuffer(0);
 	int len = phone.getLength();  //一個字元2 bytes !!
-	if((len == 2) || ((len == 4) && (tone != 1)))
+	if ((len == 2) || ((len == 4) && (tone != 1)))
 	{	// 單獨母音或單獨子音
-		for(i = 0; i < 23; i++)
+		for (i = 0; i < 23; i++)
 		{
-			if(memcmp(&buffer[j], Tonal[i], 2) == 0)
+			if (memcmp(&buffer[j], Tonal[i], 2) == 0)
 			{
 				tmp.format("%s", Ph97Phoneme[i]);
 				result += tmp;
@@ -468,18 +485,18 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 		}
 		i++;
 	}
-	else if(((len == 4) && (tone == 1)) || ((len == 6) && (tone != 1)))
+	else if (((len == 4) && (tone == 1)) || ((len == 6) && (tone != 1)))
 	{	// initial + final
-		for(i = 0; (i < 53) && (find != 1); i++)
+		for (i = 0; (i < 53) && (find != 1); i++)
 		{
-			if(memcmp(&buffer[j], ExtendedInitial[i], 2) == 0)
+			if (memcmp(&buffer[j], ExtendedInitial[i], 2) == 0)
 			{
 				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;		// part 1
 				j += 2;
-				for(i = 0; i < 23; i++)
+				for (i = 0; i < 23; i++)
 				{
-					if(memcmp(&buffer[j], Tonal[i], 2) == 0)
+					if (memcmp(&buffer[j], Tonal[i], 2) == 0)
 					{
 						result += Ph97Phoneme[i];
 						find = 1;
@@ -491,16 +508,16 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 	}
 	else
 	{
-		for(i = 24; (i < 53) && (find != 1); i++)
+		for (i = 24; (i < 53) && (find != 1); i++)
 		{
-			if(memcmp(&buffer[j], ExtendedInitial[i], 4) == 0)
+			if (memcmp(&buffer[j], ExtendedInitial[i], 4) == 0)
 			{
 				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;
 				j += 4;
-				for(i = 0; i < 23; i++)
+				for (i = 0; i < 23; i++)
 				{
-					if((memcmp(&buffer[j], Tonal[i], 2)) == 0)
+					if ((memcmp(&buffer[j], Tonal[i], 2)) == 0)
 					{
 						result += Ph97Phoneme[i];
 						find = 1;
@@ -511,14 +528,14 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 		}
 	}
 	i--;
-	if(tone != 5)
+	if (tone != 5)
 	{
-		if((tone == 1) || (tone == 4))		// part 2
+		if ((tone == 1) || (tone == 4))		// part 2
 			result += "H ";
 		else
 			result += "L ";
 		result += Ph97Phoneme[i];
-		if((tone == 1) || (tone == 2))		// part 3
+		if ((tone == 1) || (tone == 2))		// part 3
 			result += "H";
 		else
 			result += "L";
@@ -532,7 +549,8 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 }
 
 void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
-		const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2)
+		const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2, int *gduration_s,
+		int *gduration_e, int giSftIdx)
 {
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
 	CString monostr; // store all lines for mono labels
@@ -543,10 +561,10 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 
 	// output time information from cue. use timeinfo() to enable "outpu time information"
 	char timebuf[25]; // tag of time. calculated from cue and syllabel boundaries
-	if(gduration_s != NULL) // output time info for the first pause label
+	if (gduration_s != NULL) // output time info for the first pause label
 	{
 		int tmp = 0;
-		if(gduration_s[1] - 1000000 > 0)
+		if (gduration_s[1] - 1000000 > 0)
 			tmp = gduration_s[1] - 1000000;
 		tempstr.format("%10d %10d ", tmp, gduration_s[1]);
 		fullstr += tempstr;
@@ -562,21 +580,21 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 	monostr += tempstr; // ky add: for mono
 	int anchor, anchor2;
 	anchor = anchor2 = 0;
-	while(sBound[anchor] != wBound[1]) 	// f2
+	while (sBound[anchor] != wBound[1]) 	// f2
 		anchor++;
 	tempstr.format("/F:%d/G:0_0/H:x=x@1=%d", anchor, pCount);
 	fullstr += tempstr;
-	if(pCount == 1)	// i1, i2
+	if (pCount == 1)	// i1, i2
 		tempstr.format("/I:%d=%d", sCount, wCount);
 	else
 	{
 		anchor = 0;
-		while(sBound[anchor] != pBound[1])	// i1
+		while (sBound[anchor] != pBound[1])	// i1
 			anchor++;
 		tempstr.format("/I:%d", anchor);
 		fullstr += tempstr;
 		anchor = 0;
-		while(wBound[anchor] != pBound[1])	// i2
+		while (wBound[anchor] != pBound[1])	// i2
 			anchor++;
 		tempstr.format("=%d", anchor);
 		fullstr += tempstr;
@@ -584,23 +602,23 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 	tempstr.format("/J:%d+%d-%d\n", sCount, wCount, pCount);
 	fullstr += tempstr;
 	int iMM = INT_MAX; //index mm: syllable_phone   phone index. since the mm is assigned from sylla_p[ll], the value is initialed as maximum value, and reassigned in the loop
-	for(int index = 0; index < sequence.getSize(); index++)	// index = current phone
+	for (int index = 0; index < sequence.getSize(); index++) // index = current phone
 	{
-		if(sBound[sIndex] < index)
+		if (sBound[sIndex] < index)
 			sIndex++;
-		if(wBound[wIndex] < index)
+		if (wBound[wIndex] < index)
 			wIndex++;
-		if(pBound[pIndex] < index)
+		if (pBound[pIndex] < index)
 			pIndex++;
 
 		// ky add: add time info for each line of label.
-		if(gduration_s != NULL)
+		if (gduration_s != NULL)
 		{
 			// simulate indexes in old version: window_synthesis_demo: textpross::labelgen()
-			int iLL = sIndex - 1;				// index ll: word_syllable   syllable index
+			int iLL = sIndex - 1;	// index ll: word_syllable   syllable index
 			int iSy_p_ll = sBound[iLL] + 1;			// sylla_p[ll]
 			int iSy_p_ll_1 = sBound[iLL + 1] + 1;		// sylla_p[ll+1]
-			if(iMM >= iSy_p_ll_1 + 2)			// index mm: syllable_phone   phone index. simulate the loop of index mm
+			if (iMM >= iSy_p_ll_1 + 2)		// index mm: syllable_phone   phone index. simulate the loop of index mm
 				iMM = iSy_p_ll + 2;
 			else
 				iMM++;
@@ -621,31 +639,31 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		//
 
 		// p1~p5
-		if(index < 2)
+		if (index < 2)
 		{
-			if(index == 0)
+			if (index == 0)
 			{
-				if(sequence.getSize() == 1)
+				if (sequence.getSize() == 1)
 					tempstr.format("x^pau-%s+x=x", sequence[index]);
-				else if(sequence.getSize() == 2)
+				else if (sequence.getSize() == 2)
 					tempstr.format("x^pau-%s+%s=x", sequence[index], sequence[index + 1]);
 				else
 					tempstr.format("x^pau-%s+%s=%s", sequence[index], sequence[index + 1], sequence[index + 2]);
 			}
 			else	// index == 1
 			{
-				if(sequence.getSize() == 2)
+				if (sequence.getSize() == 2)
 					tempstr.format("pau^%s-%s+x=x", sequence[index - 1], sequence[index]);
-				else if(sequence.getSize() == 3)
+				else if (sequence.getSize() == 3)
 					tempstr.format("pau^%s-%s+%s=x", sequence[index - 1], sequence[index], sequence[index + 1]);
 				else
 					tempstr.format("pau^%s-%s+%s=%s", sequence[index - 1], sequence[index], sequence[index + 1],
 							sequence[index + 2]);
 			}
 		}
-		else if(index > sequence.getSize() - 3)
+		else if (index > sequence.getSize() - 3)
 		{
-			if(index == sequence.getSize() - 2)
+			if (index == sequence.getSize() - 2)
 				tempstr.format("%s^%s-%s+%s=pau", sequence[index - 2], sequence[index - 1], sequence[index],
 						sequence[index + 1]);
 			else
@@ -661,7 +679,7 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		fullstr += tempstr;
 
 		// a3, b3
-		if(sIndex == 1)
+		if (sIndex == 1)
 			tempstr.format("/A:0/B:%d", sBound[sIndex] - sBound[sIndex - 1]);
 		else
 			tempstr.format("/A:%d/B:%d", sBound[sIndex - 1] - sBound[sIndex - 2], sBound[sIndex] - sBound[sIndex - 1]);
@@ -669,100 +687,100 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 
 		// b4, b5
 		anchor = sIndex;
-		while(wBound[wIndex - 1] < sBound[anchor])
+		while (wBound[wIndex - 1] < sBound[anchor])
 			anchor--;
 		tempstr.format("@%d", sIndex - anchor);
 		fullstr += tempstr;
 		anchor = sIndex;
-		while(wBound[wIndex] > sBound[anchor])
+		while (wBound[wIndex] > sBound[anchor])
 			anchor++;
 		tempstr.format("-%d", anchor - sIndex + 1);
 		fullstr += tempstr;
 
 		// b6, b7
 		anchor = sIndex;
-		while(pBound[pIndex - 1] < sBound[anchor])
+		while (pBound[pIndex - 1] < sBound[anchor])
 			anchor--;
 		tempstr.format("&%d", sIndex - anchor);
 		fullstr += tempstr;
 		anchor = sIndex;
-		while(pBound[pIndex] > sBound[anchor])
+		while (pBound[pIndex] > sBound[anchor])
 			anchor++;
 		tempstr.format("-%d", anchor - sIndex + 1);
 		fullstr += tempstr;
 
 		// c3
-		if(sIndex == sCount)
+		if (sIndex == sCount)
 			tempstr.format("/C:0");
 		else
 			tempstr.format("/C:%d", sBound[sIndex + 1] - sBound[sIndex]);
 		fullstr += tempstr;
 
 		// d2
-		if(wIndex == 1)
+		if (wIndex == 1)
 			tempstr.format("/D:0");
 		else
 		{
 			anchor = sIndex;
-			while(sBound[anchor] != wBound[wIndex - 1])
+			while (sBound[anchor] != wBound[wIndex - 1])
 				anchor--;
 			anchor2 = anchor;
-			while(wBound[wIndex - 2] < sBound[anchor2])
+			while (wBound[wIndex - 2] < sBound[anchor2])
 				anchor2--;
 			tempstr.format("/D:%d", anchor - anchor2);
 		}
 		fullstr += tempstr;
 		// e2
 		anchor = sIndex;
-		while(wBound[wIndex - 1] < sBound[anchor])
+		while (wBound[wIndex - 1] < sBound[anchor])
 			anchor--;
 		anchor2 = sIndex;
-		while(wBound[wIndex] > sBound[anchor2])
+		while (wBound[wIndex] > sBound[anchor2])
 			anchor2++;
 		tempstr.format("/E:%d", anchor2 - anchor);
 		fullstr += tempstr;
 
 		// e3, e4
 		anchor = wIndex;
-		while(pBound[pIndex - 1] < wBound[anchor])
+		while (pBound[pIndex - 1] < wBound[anchor])
 			anchor--;
 		tempstr.format("@%d", wIndex - anchor);
 		fullstr += tempstr;
 		anchor = wIndex;
-		while(pBound[pIndex] > wBound[anchor])
+		while (pBound[pIndex] > wBound[anchor])
 			anchor++;
 		tempstr.format("+%d", anchor - wIndex + 1);
 		fullstr += tempstr;
 
 		// f2:  #of syllable in the next next word
 		anchor = sIndex;
-		while(sBound[anchor] < wBound[wIndex])
+		while (sBound[anchor] < wBound[wIndex])
 			anchor++;
 		anchor2 = anchor;	// anchor2: where the next word start
-		while(sBound[anchor] < wBound[wIndex + 1])
+		while (sBound[anchor] < wBound[wIndex + 1])
 			anchor++;
 		tempstr.format("/F:%d", anchor - anchor2);
 		fullstr += tempstr;
 
 		// g1:	#of syllables in the previous phrase
 		// g2:	#of words in the previous phrase
-		if(pIndex == 1)
+		if (pIndex == 1)
 			tempstr.format("/G:0_0");
 		else
 		{
 			anchor = sIndex;
-			while(sBound[anchor] > pBound[pIndex - 1])
+			while (sBound[anchor] > pBound[pIndex - 1])
 				anchor--;
 			anchor2 = anchor;
-			while(pBound[pIndex - 2] < sBound[anchor2])
+			while (pBound[pIndex - 2] < sBound[anchor2])
 				anchor2--;
 			tempstr.format("/G:%d", anchor - anchor2);
 			fullstr += tempstr;
 			anchor = wIndex;
-			while(wBound[anchor] > pBound[pIndex - 1])
+			while (wBound[anchor] > pBound[pIndex - 1])
 				anchor--;
 			anchor2 = anchor;
-			while(pBound[pIndex - 2] < wBound[anchor2])
+			while (pBound[pIndex - 2] < wBound[anchor2])
 				anchor2--;
 			tempstr.format("_%d", anchor - anchor2);
 		}
@@ -771,16 +789,16 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		// h1:	#of syllables in the current phrase
 		// h2:	#of words in the current phrase
 		anchor = anchor2 = sIndex;
-		while(pBound[pIndex - 1] < sBound[anchor])
+		while (pBound[pIndex - 1] < sBound[anchor])
 			anchor--;
-		while(pBound[pIndex] > sBound[anchor2])
+		while (pBound[pIndex] > sBound[anchor2])
 			anchor2++;
 		tempstr.format("/H:%d", anchor2 - anchor);
 		fullstr += tempstr;
 		anchor = anchor2 = wIndex;
-		while(pBound[pIndex - 1] < wBound[anchor])
+		while (pBound[pIndex - 1] < wBound[anchor])
 			anchor--;
-		while(pBound[pIndex] > wBound[anchor2])
+		while (pBound[pIndex] > wBound[anchor2])
 			anchor2++;
 		tempstr.format("=%d", anchor2 - anchor);
 		fullstr += tempstr;
@@ -788,23 +806,23 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		tempstr.format("@%d=%d", pIndex, pCount - pIndex + 1);	// h3, h4
 		fullstr += tempstr;
 		// i1, i2
-		if(pCount == 1)
+		if (pCount == 1)
 			tempstr.format("/I:0=0");
 		else
 		{
 			anchor = anchor2 = sIndex;
-			while(pBound[pIndex] > sBound[anchor])
+			while (pBound[pIndex] > sBound[anchor])
 				anchor++;
 			anchor2 = anchor;
-			while(pBound[pIndex + 1] > sBound[anchor])
+			while (pBound[pIndex + 1] > sBound[anchor])
 				anchor++;
 			tempstr.format("/I:%d", anchor - anchor2);
 			fullstr += tempstr;
 			anchor = anchor2 = wIndex;
-			while(pBound[pIndex] > wBound[anchor])
+			while (pBound[pIndex] > wBound[anchor])
 				anchor++;
 			anchor2 = anchor;
-			while(pBound[pIndex + 1] > wBound[anchor])
+			while (pBound[pIndex + 1] > wBound[anchor])
 				anchor++;
 			tempstr.format("=%d", anchor - anchor2);
 			fullstr += tempstr;
@@ -813,14 +831,14 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		fullstr += tempstr;
 	}
 	//	index--;
-	int index = sequence.getSize() - 1;		//20091211 rosy edit for .Net 取代上面那行 index --
+	int index = sequence.getSize() - 1;	//20091211 rosy edit for .Net 取代上面那行 index --
 
 	// ky add: add time info for pau at the end of the sentence
-	if(gduration_s != NULL)
+	if (gduration_s != NULL)
 	{
 		int tmp = 0;
 		int iCount_2 = sCount;  // simulate index for count[2]
-		giSftIdx += sCount;  // update global shift of syllable index for each sentence
+		giSftIdx += sCount; // update global shift of syllable index for each sentence
 		tmp = gduration_e[iCount_2] + 1000000;
 		tempstr.format("%10d %10d ", gduration_e[iCount_2], tmp);
 		fullstr += tempstr;
@@ -834,23 +852,23 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 	tempstr.format("pau\n");  // ky add
 	monostr += tempstr; // ky add
 	anchor = sIndex;
-	while(wBound[wIndex - 1] < sBound[anchor])	// d2 ~ f2
+	while (wBound[wIndex - 1] < sBound[anchor])	// d2 ~ f2
 		anchor--;
 	tempstr.format("/D:%d/E:x@x+x/F:0", sIndex - anchor);
 	fullstr += tempstr;
 	anchor = sIndex;	// g1 ~ j3
-	while(pBound[pIndex - 1] < sBound[anchor])
+	while (pBound[pIndex - 1] < sBound[anchor])
 		anchor--;
 	tempstr.format("/G:%d", sIndex - anchor);
 	fullstr += tempstr;
 	anchor = wIndex;
-	while(pBound[pIndex - 1] < wBound[anchor])
+	while (pBound[pIndex - 1] < wBound[anchor])
 		anchor--;
 	tempstr.format("_%d/H:x=x@%d=1/I:0=0/J:%d+%d-%d\n", wIndex - anchor, pCount, sCount, wCount, pCount);
 	fullstr += tempstr;
 	csFile << fullstr;	//fullstr即為輸出的Label內容
 	//csFile.close();
-	if(pcsFile2 != NULL)
+	if (pcsFile2 != NULL)
 	{	// ky add: write out mono labels if needed
 		(*pcsFile2) << monostr;
 		//*pcsFile2.close();

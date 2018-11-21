@@ -35,3 +35,8 @@ CString& CStringArray::operator[](int nIndex)
 	return vString[nIndex];
 }
 
+void CStringArray::removeAll()
+{
+	vString.clear();
+}
+

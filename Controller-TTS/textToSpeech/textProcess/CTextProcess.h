@@ -10,10 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "CString.h"
 
+class CString;
 class CStringArray;
-class CWord;
 class CART;
 
 //typedef struct _SYLLABLE_ITEM_
@@ -48,20 +47,13 @@ private:
 	void CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
 			std::vector<int>& allPPCluster);
 	void GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
-			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2);
+			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
+			int *gduration_s, int *gduration_e, int giSftIdx);
 	int SplitString(CString& input, CString& delimiter, CStringArray& results);
 	CString Phone2Ph97(CString phone, int tone);
-	void Synthesize(CString name, int c);
-public:
-	std::vector<int> indexArray;
-	std::vector<int> AllPWCluster;
-	std::vector<int> AllPPCluster;
+	void Synthesize(const char* szModelName, const char* szWaveName);
 
 private:
-	CString AllBig5;
 	CART *CartModel;
-	CWord *word;
-	int* gduration_s; // time cue
-	int* gduration_e; // time cue
-	int giSftIdx; // shift of cue idx for each sentence. word-based.
+
 };
