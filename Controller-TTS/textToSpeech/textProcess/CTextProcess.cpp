@@ -24,6 +24,7 @@ using namespace std;
 #define CART_MODEL			"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
 #define HMM_MODEL			"model/hmm.htsvoice"
+#define WORD_MODEL			"model/"
 
 // ==================  注意順序不要改變!!!!  ==========================
 
@@ -86,10 +87,6 @@ void CTextProcess::processTheText(const char *szText)
 	CString strWaveName;
 	CString strLabelName;
 
-	strWaveName.format("gen/%ld.wav", rawtime);
-	strLabelName.format("label/%ld.lab", rawtime);
-	Synthesize(HMM_MODEL, strWaveName);										//test
-
 	int nIndex;
 	int nLen = 0;
 	int nCount = 0;
@@ -111,6 +108,8 @@ void CTextProcess::processTheText(const char *szText)
 	CString AllBig5;
 	CWord *word = new CWord();
 
+	strWaveName.format("gen/%ld.wav", rawtime);
+	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 	strInput = szText;
 	_log("[CTextProcess] processTheText Input Text: %s", strInput.getBuffer());
@@ -206,7 +205,7 @@ void CTextProcess::processTheText(const char *szText)
 
 		_log("generate label for current sentence");
 		ofstream csLabFile;
-		csLabFile.open("gen/dlg.lab", ios::trunc);
+		csLabFile.open("gen/dlj.lab", ios::trunc);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
 				gduration_s, gduration_e, giSftIdx);
 		csLabFile.close();
@@ -220,10 +219,17 @@ void CTextProcess::processTheText(const char *szText)
 void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName)
 {
 	//hts_engine -m $1 -ow $2.wav $3.lab -fm 1 -b 0.3 -r 1.2
-	char* param[] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
+	//char* param[6] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
+	char** param = new char*[6];
+	param[0] = const_cast<char*>("hts_engine");
+	param[1] = const_cast<char*>("-m");
 	param[2] = const_cast<char*>(szModelName);
+	param[3] = const_cast<char*>("-ow");
 	param[4] = const_cast<char*>(szWaveName);
+	param[5] = const_cast<char*>("label/merge_story.lab");
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s", szModelName, szWaveName);
 	htsSynthesize(6, param);
+	delete param;
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
@@ -245,10 +251,11 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	int textNdx = 0;
 	int valFeatureLW;
 	int valFeaturePOS;
-
+	_log("[CTextProcess] CartPrediction sentence: %s strBig5: %s", sentence.getBuffer(), strBig5.getBuffer());
 	_log("將資料全行文字轉換成半形 針對數字部份");
 
 	CWord *word = new CWord();
+	word->InitWord(WORD_MODEL);
 	word->GetSentence((unsigned char*) sentence.getBuffer(), &textNdx);
 	word->GetWord();
 	for (i = 0; i < word->wnum; ++i)
@@ -288,6 +295,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		cstemp = cstemp + word->w_info[i].big5;
 		cstemp = cstemp + " ";
 	}
+	delete word;
 	_log("String Big5 : %s , cstemp : %s", strBig5, cstemp);
 	/**
 	 *  將文字分詞為 : 我們 來 做 垃圾
@@ -295,7 +303,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 *  將字詞屬性轉換成屬性標記
 	 */
 	_log("將文字分詞，將字詞屬性轉換成屬性標記");
-	tempPOS = "多型態角色語音智慧平台/X 我說一個故事給你們聽/X 要注意聽/X 千萬要注意聽/X 因為/X 如果沒聽到/X 你一定會問/X 你在說什麼/X"; // this is test............
+	//tempPOS = "多型態角色語音智慧平台/X 我說一個故事給你們聽/X 要注意聽/X 千萬要注意聽/X 因為/X 如果沒聽到/X 你一定會問/X 你在說什麼/X"; // this is test............
 	CString strDelim = " ";
 	if (SplitString(tempPOS, strDelim, tempPOSArray) == 0)
 		tempPOSArray.add(tempPOS);
@@ -875,29 +883,31 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 	}
 }
 
-//void CTextProcess::GenerateBoundary(SYLLABLE_ATT& syllableAtt, std::vector<int>& vecCluster, int Model)
-//{
-//	int i, j;
-//
-//	for(i = 0; i < syllableAtt.size; ++i)
-//	{
-//		CART_DATA *pcdData = new CART_DATA();
-//		pcdData->clu = syllableAtt.syllable_item[i].nCID;
-//		for(j = 0; j < 5; ++j)
-//		{
-//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeatureLW[j]);
-//		}
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].Sen_Length);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].F_PositionInSen);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].B_PositionInSen);
-//		pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].PositionInWord);
-//		for(j = 0; j < 5; ++j)
-//		{
-//			pcdData->Att_Catagory.push_back((const unsigned int) syllableAtt.syllable_item[i].valFeaturePOS[j]);
-//		}
-//		CartModel->TEST(pcdData);
-//		vecCluster.push_back(pcdData->clu);
-//		delete pcdData; // ky add: release memory
-//	}
-//}
+void CTextProcess::dumpWord()
+{
+	int fend;
+	fstream fs;
+	fs.open("word.txt", fstream::in | fstream::out | fstream::app);
+	ifstream cf(WORD_MODEL, std::ifstream::binary);
+	cf.seekg(0, cf.end);
+	fend = cf.tellg();
+	cf.seekg(0, cf.beg);
+	_log("Word Model size=%d", fend);
 
+	while (cf.tellg() != fend)
+	{
+		WORD_DB *worddb = new WORD_DB;
+		cf.read(reinterpret_cast<char *>(&worddb->byte), 1);
+		cf.read(reinterpret_cast<char *>(worddb->attr), 4);
+		memset(worddb->big5, 0, 20);
+		cf.read(reinterpret_cast<char *>(worddb->big5), 2);
+		fs << worddb->big5 << endl;
+		_log("big5: %s", worddb->big5);
+		cf.read(reinterpret_cast<char *>(worddb->big5), 18);
+		cf.read(reinterpret_cast<char *>(&worddb->counter), 4);
+		cf.read(reinterpret_cast<char *>(worddb->phone), 20);
+		delete worddb;
+	}
+	cf.close();
+	fs.close();
+}

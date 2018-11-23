@@ -52,6 +52,7 @@ private:
 	int SplitString(CString& input, CString& delimiter, CStringArray& results);
 	CString Phone2Ph97(CString phone, int tone);
 	void Synthesize(const char* szModelName, const char* szWaveName);
+	void dumpWord();
 
 private:
 	CART *CartModel;

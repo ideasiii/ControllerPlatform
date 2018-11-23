@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
 	};
 	printf("size of status2: %d\n", (int) sizeof(status2)); // a + b > 32 bits = 8bytes
 
+	unsigned char phone1[] = "ㄅ";
+	printf("size of ㄅ in UTF8 = %d", sizeof(phone1));
 	return 0;
 }
 

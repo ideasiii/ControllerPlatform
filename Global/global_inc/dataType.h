@@ -65,6 +65,7 @@ typedef unsigned short USHORT;
 typedef void VOID, *PVOID, *LPVOID;
 typedef wchar_t WCHAR, *PWCHAR;
 typedef unsigned short WORD, *PWORD, *LPWORD;
+typedef const char* LPCTSTR;		// const char* or const wchar_t* depending on _UNICODE
 
 #ifndef NULL
 #define NULL	0

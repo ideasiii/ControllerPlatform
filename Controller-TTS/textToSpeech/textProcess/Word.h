@@ -1,9 +1,13 @@
-#pragma once
+//1997.10.27
+#ifndef CWORD_H_
+#define CWORD_H_
 
 #include "WordInfo.h"
+#include <iostream>
 #include <fstream>
+#include "dataType.h"
 
-extern char* word_attr[];
+extern LPCTSTR word_attr[];
 
 #define SENTENCE_LEN 100
 
@@ -14,25 +18,27 @@ enum
 
 class CWord
 {
+// 啟峻修改的部分
 public:
 	// 以下這兩個變數是為了將斷詞系統所載入的詞庫輸出所設計
 	WORD_DB *m_word_data;			// 在InitWord中，會將其指向word_data靜態變數
 	unsigned short *m_word_index;	// 在InitWord中，會將其指向word_index靜態變數
-
+// 以下為陳昭宏學長原始的程式碼
 public:
 	CWord();
 	~CWord();
 
-	void InitWord(const char* dir);
+	void InitWord(LPCTSTR dir);
 	void GetWord();
 	void SetCharType();
 	unsigned GetPhone(int ptr);
 	void Score(int cur_ptr);
 	void ChangePhone();
-	int ReadText(std::ofstream* fp);
-	int GetSentence(unsigned char * from, int *textNdx);
+	int ReadText(FILE* fp);
+	int GetSentence(UCHAR * from, int *textNdx);
 	int IsNumberic(unsigned char *ch);
-	void SetTone(int word_ndx, int char_ndx, unsigned short new_tone);
+	void SetTone(int word_ndx, int char_ndx, USHORT new_tone);
+//	friend std::istream & operator >> (std::istream &in, WORD_DB* &obj);
 public:
 	int txt_len;
 	int m_punctuation;
@@ -51,5 +57,6 @@ public:
 
 	int best_score;
 	int char_type[SENTENCE_LEN + 1];
-	bool m_init;
+	BOOL m_init;
 };
+#endif
