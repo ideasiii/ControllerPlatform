@@ -16,6 +16,8 @@
 #include "HTS_engine.h"
 #include "CString.h"
 #include "HTS_engine.h"
+#include "CConvert.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -106,7 +108,8 @@ void CTextProcess::processTheText(const char *szText)
 	vector<int> AllPWCluster;
 	vector<int> AllPPCluster;
 	CString AllBig5;
-	CWord *word = new CWord();
+	CWord word;
+	word.InitWord(WORD_MODEL);
 
 	strWaveName.format("gen/%ld.wav", rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
@@ -169,7 +172,7 @@ void CTextProcess::processTheText(const char *szText)
 				i = SentenceArray[lcount].findOneOf(vs2, strFinded))
 			SentenceArray[lcount].Delete(i, strFinded.length());
 
-		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster);
+		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, word);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
 		AllBig5 += strBig5;
@@ -179,13 +182,13 @@ void CTextProcess::processTheText(const char *szText)
 		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
 
 		k = l = 0;
-		for (i = 0; i < word->wnum; ++i)
+		for (i = 0; i < word.wnum; ++i)
 		{
-			for (j = 0; j < word->w_info[i].wlen; ++j)
+			for (j = 0; j < word.w_info[i].wlen; ++j)
 			{
-				SID2Phone((word->w_info[i].phone[j]), &s[0]);
-				_log("SID2Phone sound id: %d - sound: %s", word->w_info[i].phone[j], s);
-				SyllableTone[++sIndex] = (word->w_info[i].phone[j] % 10);
+				SID2Phone((word.w_info[i].phone[j]), &s[0]);
+				_log("SID2Phone sound id: %d - sound: %s", word.w_info[i].phone[j], s);
+				SyllableTone[++sIndex] = (word.w_info[i].phone[j] % 10);
 				CString delimiter = " ";
 				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
 				SplitString(pph, delimiter, PhoneSeq);
@@ -200,8 +203,6 @@ void CTextProcess::processTheText(const char *szText)
 				++k;
 			}
 		}
-
-		delete word;
 
 		_log("generate label for current sentence");
 		ofstream csLabFile;
@@ -233,7 +234,7 @@ void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName)
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
-		vector<int>& allPPCluster)
+		vector<int>& allPPCluster, CWord &word)
 {
 	vector<int> wordpar;			// 當前的詞長
 	vector<int> syllpos;			// 當前的字在詞中位置
@@ -246,7 +247,11 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	CString cstemp = "";
 	CString FileTitle = "";
 	CString FileName = "";
+	CConvert convert;
 
+	unsigned long ulIndex;
+	unsigned long ulLength;
+	bool bAdded = false;
 	int i, j, k;
 	int textNdx = 0;
 	int valFeatureLW;
@@ -254,13 +259,19 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	_log("[CTextProcess] CartPrediction sentence: %s strBig5: %s", sentence.getBuffer(), strBig5.getBuffer());
 	_log("將資料全行文字轉換成半形 針對數字部份");
 
-	CWord *word = new CWord();
-	word->InitWord(WORD_MODEL);
-	word->GetSentence((unsigned char*) sentence.getBuffer(), &textNdx);
-	word->GetWord();
-	for (i = 0; i < word->wnum; ++i)
+	/************ UTF8 轉 Big5 **********************************/
+	char *big5 = 0;
+	char **pBig5 = &big5;
+	if (-1 == convert.UTF8toBig5((char*) sentence.getBuffer(), pBig5))
+		return;
+
+	word.GetSentence((unsigned char*) big5, &textNdx);
+	word.GetWord();
+	free(big5);
+	_log("[CTextProcess] CartPrediction word->wnum: %d", word.wnum);
+	for (i = 0; i < word.wnum; ++i)
 	{
-		switch (word->w_info[i].wlen)
+		switch (word.w_info[i].wlen)
 		{
 		case 1:	//1字詞
 			wordpar.push_back(1);
@@ -291,12 +302,20 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			syllpos.push_back(3);
 			break;
 		}
-		strBig5 = strBig5 + word->w_info[i].big5;
-		cstemp = cstemp + word->w_info[i].big5;
-		cstemp = cstemp + " ";
+
+		/************ Big5 轉 UTF8 **********************************/
+		char *utf8 = 0;
+		char **pUtf8 = &utf8;
+		if (-1 == convert.Big5toUTF8((char*) word.w_info[i].big5, pUtf8))
+			return;
+		//strBig5 = strBig5 + word.w_info[i].big5;
+		//cstemp = cstemp + word.w_info[i].big5;
+		strBig5 = strBig5 + utf8;
+		cstemp = cstemp + utf8;
+		cstemp = cstemp + "/X ";
+		free(utf8);
 	}
-	delete word;
-	_log("String Big5 : %s , cstemp : %s", strBig5, cstemp);
+	_log("String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
 	/**
 	 *  將文字分詞為 : 我們 來 做 垃圾
 	 *  透過Standfor將詞性加入，變成: 我們/X 來/X 做/X 垃圾/X
@@ -304,33 +323,48 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 */
 	_log("將文字分詞，將字詞屬性轉換成屬性標記");
 	//tempPOS = "多型態角色語音智慧平台/X 我說一個故事給你們聽/X 要注意聽/X 千萬要注意聽/X 因為/X 如果沒聽到/X 你一定會問/X 你在說什麼/X"; // this is test............
-	CString strDelim = " ";
-	if (SplitString(tempPOS, strDelim, tempPOSArray) == 0)
-		tempPOSArray.add(tempPOS);
-
-	for (i = 0; i < tempPOSArray.getSize(); ++i)
+//	CString strDelim = " ";
+//	if (SplitString(tempPOS, strDelim, tempPOSArray) == 0)
+//		tempPOSArray.add(tempPOS);
+	vector<string> vData;
+	spliteData(const_cast<char *>(cstemp.getBuffer()), " ", vData);
+	_log("字詞屬性轉換成Index");
+	for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
 	{
-		int index = tempPOSArray[i].find("/", 0);
-		cstemp.format("%s", tempPOSArray[i].mid(index + 1, tempPOSArray[i].getLength()));
-		index /= 2;
-		bool bAdded = false;
-		for (j = 1; j < 34; ++j)
+		_log("[CTextProcess] CartPrediction spliteData: %s", it->c_str());
+		ulIndex = it->find("/", 0);
+		ulLength = it->length();
+		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
+		_log("[CTextProcess] CartPrediction  POS String: %s", tempPOS.getBuffer());
+		ulIndex /= 2;
+		bAdded = false;
+		for (j = 1; 34 > j; ++j)
 		{
-			if (cstemp == POStags[j])
+			if (!tempPOS.Compare(POStags[j]))
 			{
-				for (k = 0; k < index; k++)
+				for (int k = 0; k < ulIndex; ++k)
+				{
 					pos.push_back(j);
-				bAdded = true;
-				break;
+					bAdded = true;
+					_log("[CTextProcess] CartPrediction pos : %d added", j);
+					break;
+				}
 			}
 		}
-		if (bAdded == false)
-			for (k = 0; k < index; k++)
+		if (!bAdded)
+		{
+			for (k = 0; k < ulIndex; ++k)
+			{
 				pos.push_back(j);
+				_log("[CTextProcess] CartPrediction pos : %d", j);
+			}
+		}
+
 	}
 
 	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
 	_log("============== CART_Model =================");
+	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
 	for (i = 0; i < (int) syllpos.size(); ++i) // 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
@@ -626,7 +660,7 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 			int iLL = sIndex - 1;	// index ll: word_syllable   syllable index
 			int iSy_p_ll = sBound[iLL] + 1;			// sylla_p[ll]
 			int iSy_p_ll_1 = sBound[iLL + 1] + 1;		// sylla_p[ll+1]
-			if (iMM >= iSy_p_ll_1 + 2)		// index mm: syllable_phone   phone index. simulate the loop of index mm
+			if (iMM >= iSy_p_ll_1 + 2)	// index mm: syllable_phone   phone index. simulate the loop of index mm
 				iMM = iSy_p_ll + 2;
 			else
 				iMM++;

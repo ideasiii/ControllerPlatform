@@ -23,6 +23,8 @@ typedef char* LPSTR;
 typedef const char* LPCSTR;
 typedef wchar_t* LPWSTR;
 
+
+
 class CString
 {
 public:

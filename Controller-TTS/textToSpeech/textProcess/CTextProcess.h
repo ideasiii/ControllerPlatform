@@ -14,7 +14,7 @@
 class CString;
 class CStringArray;
 class CART;
-
+class CWord;
 //typedef struct _SYLLABLE_ITEM_
 //{
 //	int nCID;
@@ -45,7 +45,7 @@ private:
 	void loadModel();
 	void releaseModel();
 	void CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
-			std::vector<int>& allPPCluster);
+			std::vector<int>& allPPCluster, CWord &word);
 	void GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int giSftIdx);

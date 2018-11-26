@@ -672,6 +672,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
 	ch[2] = 0;
 	while ((ch[0] = from[(*textNdx)++]) != 0)
 	{
+		_log("[CWord] GetSentence char: %x", ch[0]);
 		if (ch[0] == 0x1A)
 		{
 			if (len == 0)
@@ -799,15 +800,15 @@ BOOL CCsame(UCHAR * s, char* esi)
 {
 
 	/*
-	asm
-	(
-			"mov eax,dword ptr [esi]"
-			"mov eax,[eax]"
-			"and eax,0xffff"
-			"xchg ah,al"
-			"cmp eax,dword ptr [esi]"
-			"je same"
-	);*/
+	 asm
+	 (
+	 "mov eax,dword ptr [esi]"
+	 "mov eax,[eax]"
+	 "and eax,0xffff"
+	 "xchg ah,al"
+	 "cmp eax,dword ptr [esi]"
+	 "je same"
+	 );*/
 	return 0;
 	//same: return 1;
 }

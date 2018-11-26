@@ -14,6 +14,7 @@ CART \
 ../Global/logHandler \
 ../Global/processHandler \
 ../Global/protocolHandler \
-../Global/stringHandler
+../Global/stringHandler \
+../Global/convertHandler
 			 
 #export EXT_MODULES=extInclude
