@@ -67,7 +67,7 @@ int CController::onInitial(void* szConfPath)
 		delete config;
 	}
 	// test
-	//textProcess->processTheText("哈哈哈，嘻嘻嘻。喔喔喔喔喔!\n嗚嗚嗚嗚嗚嗚。");
+	textProcess->processTheText("憋魚酒氣了");
 	return nResult;
 }
 

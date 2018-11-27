@@ -60,7 +60,7 @@ struct thread_child_info
 } THREAD_CHILD_INFO;
 
 CTextProcess::CTextProcess() :
-		CartModel(new CART())
+		CartModel(new CART()), convert(new CConvert)
 {
 	loadModel();
 }
@@ -79,6 +79,8 @@ void CTextProcess::releaseModel()
 {
 	if (CartModel)
 		delete CartModel;
+	if (convert)
+		delete convert;
 }
 
 void CTextProcess::processTheText(const char *szText)
@@ -137,6 +139,10 @@ void CTextProcess::processTheText(const char *szText)
 		SentenceArray.add(temp);
 		_log("Text: %s finded: %s", temp.getBuffer(), strFinded.c_str());
 	}
+	if (0 >= SentenceArray.getSize())
+	{
+		SentenceArray.add(strResult);
+	}
 
 	for (i = 0; i < SentenceArray.getSize(); ++i)
 	{
@@ -187,12 +193,29 @@ void CTextProcess::processTheText(const char *szText)
 			for (j = 0; j < word.w_info[i].wlen; ++j)
 			{
 				SID2Phone((word.w_info[i].phone[j]), &s[0]);
-				_log("SID2Phone sound id: %d - sound: %s", word.w_info[i].phone[j], s);
+				_log("[CTextProcess] processTheText SID2Phone sound id: %d - sound: %s", word.w_info[i].phone[j], s);
 				SyllableTone[++sIndex] = (word.w_info[i].phone[j] % 10);
-				CString delimiter = " ";
+				//CString delimiter = " ";
+				/************ UTF8 轉 Big5 **********************************/
+				char *big5 = 0;
+				char **pBig5 = &big5;
+				if (-1 == convert->UTF8toBig5((char*) s, pBig5))
+					return;
 				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
-				SplitString(pph, delimiter, PhoneSeq);
+				free(big5);
+				_log("[CTextProcess] processTheText Phone2Ph97: %s", pph.getBuffer());
+
+				vector<string> vData;
+				spliteData(const_cast<char *>(pph.getBuffer()), " ", vData);
+				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
+				{
+					//_log("[CTextProcess] processTheText PH %s", it->c_str());
+					PhoneSeq.add(*it);
+				}
+
+				//	SplitString(pph, delimiter, PhoneSeq);
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
+				//SyllableBound[sIndex] = vData.size() - 1;
 				if (PWCluster[k] == 1)
 				{
 					WordBound[++wIndex] = SyllableBound[sIndex];
@@ -206,18 +229,18 @@ void CTextProcess::processTheText(const char *szText)
 
 		_log("generate label for current sentence");
 		ofstream csLabFile;
-		csLabFile.open("gen/dlj.lab", ios::trunc);
+		csLabFile.open(strLabelName, ios::trunc);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
 				gduration_s, gduration_e, giSftIdx);
 		csLabFile.close();
 		PhoneSeq.removeAll();
 
 		// 合成
-		Synthesize(HMM_MODEL, strWaveName);
+		Synthesize(HMM_MODEL, strWaveName, strLabelName);
 	}
 }
 
-void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName)
+void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
 {
 	//hts_engine -m $1 -ow $2.wav $3.lab -fm 1 -b 0.3 -r 1.2
 	//char* param[6] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
@@ -227,8 +250,8 @@ void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName)
 	param[2] = const_cast<char*>(szModelName);
 	param[3] = const_cast<char*>("-ow");
 	param[4] = const_cast<char*>(szWaveName);
-	param[5] = const_cast<char*>("label/merge_story.lab");
-	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s", szModelName, szWaveName);
+	param[5] = const_cast<char*>(szLabel);
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
 	htsSynthesize(6, param);
 	delete param;
 }
@@ -247,7 +270,6 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	CString cstemp = "";
 	CString FileTitle = "";
 	CString FileName = "";
-	CConvert convert;
 
 	unsigned long ulIndex;
 	unsigned long ulLength;
@@ -262,7 +284,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	/************ UTF8 轉 Big5 **********************************/
 	char *big5 = 0;
 	char **pBig5 = &big5;
-	if (-1 == convert.UTF8toBig5((char*) sentence.getBuffer(), pBig5))
+	if (-1 == convert->UTF8toBig5((char*) sentence.getBuffer(), pBig5))
 		return;
 
 	word.GetSentence((unsigned char*) big5, &textNdx);
@@ -306,7 +328,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		/************ Big5 轉 UTF8 **********************************/
 		char *utf8 = 0;
 		char **pUtf8 = &utf8;
-		if (-1 == convert.Big5toUTF8((char*) word.w_info[i].big5, pUtf8))
+		if (-1 == convert->Big5toUTF8((char*) word.w_info[i].big5, pUtf8))
 			return;
 		//strBig5 = strBig5 + word.w_info[i].big5;
 		//cstemp = cstemp + word.w_info[i].big5;
@@ -322,13 +344,8 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 *  將字詞屬性轉換成屬性標記
 	 */
 	_log("將文字分詞，將字詞屬性轉換成屬性標記");
-	//tempPOS = "多型態角色語音智慧平台/X 我說一個故事給你們聽/X 要注意聽/X 千萬要注意聽/X 因為/X 如果沒聽到/X 你一定會問/X 你在說什麼/X"; // this is test............
-//	CString strDelim = " ";
-//	if (SplitString(tempPOS, strDelim, tempPOSArray) == 0)
-//		tempPOSArray.add(tempPOS);
 	vector<string> vData;
 	spliteData(const_cast<char *>(cstemp.getBuffer()), " ", vData);
-	_log("字詞屬性轉換成Index");
 	for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
 	{
 		_log("[CTextProcess] CartPrediction spliteData: %s", it->c_str());
@@ -454,55 +471,56 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	cluster.clear();
 }
 
-int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
-{
-	int iPos = 0;
-	int newPos = -1;
-	int sizeS2 = delimiter.getLength();
-	int isize = input.getLength();
+/*
+ int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
+ {
+ int iPos = 0;
+ int newPos = -1;
+ int sizeS2 = delimiter.getLength();
+ int isize = input.getLength();
 
-	vector<int> positions;
-	newPos = input.find(delimiter, 0);
-	if (newPos < 0)
-	{
-		return 0;
-	}
-	int numFound = 0;
+ vector<int> positions;
+ newPos = input.find(delimiter, 0);
+ if (newPos < 0)
+ {
+ return 0;
+ }
+ int numFound = 0;
 
-	while (newPos > iPos)
-	{
-		++numFound;
-		positions.push_back(newPos);
-		iPos = newPos;
-		newPos = input.find(delimiter, iPos + sizeS2 + 1);
-	}
+ while (newPos > iPos)
+ {
+ ++numFound;
+ positions.push_back(newPos);
+ iPos = newPos;
+ newPos = input.find(delimiter, iPos + sizeS2 + 1);
+ }
 
-	for (int i = 0; i <= (int) positions.size(); ++i)
-	{
-		CString s;
-		if (i == 0)
-			s = input.mid(i, positions[i]);
-		else
-		{
-			int offset = positions[i - 1] + sizeS2;
-			if (offset < isize)
-			{
-				if (i == (int) positions.size())
-					s = input.mid(offset);
-				else if (i > 0)
-					s = input.mid(positions[i - 1] + sizeS2, positions[i] - positions[i - 1] - sizeS2);
-			}
-		}
-		if (s.getLength() > 0)
-			results.add(s);
-	}
-	return numFound;
-}
-
+ for (int i = 0; i <= (int) positions.size(); ++i)
+ {
+ CString s;
+ if (i == 0)
+ s = input.mid(i, positions[i]);
+ else
+ {
+ int offset = positions[i - 1] + sizeS2;
+ if (offset < isize)
+ {
+ if (i == (int) positions.size())
+ s = input.mid(offset);
+ else if (i > 0)
+ s = input.mid(positions[i - 1] + sizeS2, positions[i] - positions[i - 1] - sizeS2);
+ }
+ }
+ if (s.getLength() > 0)
+ results.add(s);
+ }
+ return numFound;
+ }
+ */
 // Ph97: Extended initial + final
 // 三個部分: part1: Extended initial
-//			 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
-CString CTextProcess::Phone2Ph97(CString phone, int tone)
+//			 		 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
+CString CTextProcess::Phone2Ph97(char* phone, int tone)
 {
 	CString result, tmp, whatever;
 	result = tmp = "";
@@ -510,35 +528,40 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 	int i, j, find;
 	find = 0;
 	j = 0;
-	buffer = phone.getBuffer(0);
-	int len = phone.getLength();  //一個字元2 bytes !!
+	buffer = phone;
+
+	/************ UTF8 轉 Big5 **********************************/
+	char *big5 = 0;
+	char **pBig5 = &big5;
+	convert->UTF8toBig5(phone, pBig5);
+	int len = strlen(big5);  //一個字元2 bytes !!
+	free(big5);
+
 	if ((len == 2) || ((len == 4) && (tone != 1)))
-	{	// 單獨母音或單獨子音
+	{
 		for (i = 0; i < 23; i++)
 		{
-			if (memcmp(&buffer[j], Tonal[i], 2) == 0)
+			if (memcmp(&buffer[j], Tonal[i], 3) == 0)
 			{
 				tmp.format("%s", Ph97Phoneme[i]);
 				result += tmp;
-//				tmp.Format(" %s",Ph97Phoneme[i]);
-//				result += tmp;
 				break;
 			}
 		}
 		i++;
 	}
 	else if (((len == 4) && (tone == 1)) || ((len == 6) && (tone != 1)))
-	{	// initial + final
+	{
 		for (i = 0; (i < 53) && (find != 1); i++)
 		{
-			if (memcmp(&buffer[j], ExtendedInitial[i], 2) == 0)
+			if (memcmp(&buffer[j], ExtendedInitial[i], 3) == 0)
 			{
 				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;		// part 1
-				j += 2;
+				j += 3;
 				for (i = 0; i < 23; i++)
 				{
-					if (memcmp(&buffer[j], Tonal[i], 2) == 0)
+					if (memcmp(&buffer[j], Tonal[i], 3) == 0)
 					{
 						result += Ph97Phoneme[i];
 						find = 1;
@@ -552,14 +575,14 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 	{
 		for (i = 24; (i < 53) && (find != 1); i++)
 		{
-			if (memcmp(&buffer[j], ExtendedInitial[i], 4) == 0)
+			if (memcmp(&buffer[j], ExtendedInitial[i], 6) == 0)
 			{
 				tmp.format("%s ", Ph97Phoneme[i + 23]);
 				result += tmp;
-				j += 4;
+				j += 6;
 				for (i = 0; i < 23; i++)
 				{
-					if ((memcmp(&buffer[j], Tonal[i], 2)) == 0)
+					if ((memcmp(&buffer[j], Tonal[i], 3)) == 0)
 					{
 						result += Ph97Phoneme[i];
 						find = 1;
@@ -572,6 +595,7 @@ CString CTextProcess::Phone2Ph97(CString phone, int tone)
 	i--;
 	if (tone != 5)
 	{
+		_log("tone != 5 result: %s", result.getBuffer());
 		if ((tone == 1) || (tone == 4))		// part 2
 			result += "H ";
 		else

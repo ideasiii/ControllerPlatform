@@ -15,6 +15,7 @@ class CString;
 class CStringArray;
 class CART;
 class CWord;
+class CConvert;
 //typedef struct _SYLLABLE_ITEM_
 //{
 //	int nCID;
@@ -49,12 +50,13 @@ private:
 	void GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int giSftIdx);
-	int SplitString(CString& input, CString& delimiter, CStringArray& results);
-	CString Phone2Ph97(CString phone, int tone);
-	void Synthesize(const char* szModelName, const char* szWaveName);
+	//int SplitString(CString& input, CString& delimiter, CStringArray& results);
+	CString Phone2Ph97(char* phone, int tone);
+	void Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
 	void dumpWord();
 
 private:
 	CART *CartModel;
+	CConvert *convert;
 
 };
