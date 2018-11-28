@@ -195,14 +195,9 @@ void CTextProcess::processTheText(const char *szText)
 				SID2Phone((word.w_info[i].phone[j]), &s[0]);
 				_log("[CTextProcess] processTheText SID2Phone sound id: %d - sound: %s", word.w_info[i].phone[j], s);
 				SyllableTone[++sIndex] = (word.w_info[i].phone[j] % 10);
-				//CString delimiter = " ";
-				/************ UTF8 轉 Big5 **********************************/
-				char *big5 = 0;
-				char **pBig5 = &big5;
-				if (-1 == convert->UTF8toBig5((char*) s, pBig5))
-					return;
+
 				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
-				free(big5);
+
 				_log("[CTextProcess] processTheText Phone2Ph97: %s", pph.getBuffer());
 
 				vector<string> vData;
@@ -234,22 +229,31 @@ void CTextProcess::processTheText(const char *szText)
 
 		_log("=============== 合成聲音檔 %s===============", strWaveName.getBuffer());
 		Synthesize(HMM_MODEL, strWaveName.getBuffer(), strLabelName.getBuffer());
+
 	}
+
 }
 
 void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
 {
 	//hts_engine -m $1 -ow $2.wav $3.lab -fm 1 -b 0.3 -r 1.2
 	//char* param[6] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
-	char** param = new char*[6];
+	char** param = new char*[12];
 	param[0] = const_cast<char*>("hts_engine");
 	param[1] = const_cast<char*>("-m");
 	param[2] = const_cast<char*>(szModelName);
 	param[3] = const_cast<char*>("-ow");
 	param[4] = const_cast<char*>(szWaveName);
 	param[5] = const_cast<char*>(szLabel);
+//	param[5] = const_cast<char*>("label/merge_story.lab");// test
+	param[6] = const_cast<char*>("-fm");
+	param[7] = const_cast<char*>("1");
+	param[8] = const_cast<char*>("-b");
+	param[9] = const_cast<char*>("0.3");
+	param[10] = const_cast<char*>("-r");
+	param[11] = const_cast<char*>("1.2");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
-	htsSynthesize(6, param);
+	htsSynthesize(12, param);
 	delete param;
 }
 
@@ -327,12 +331,13 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		char **pUtf8 = &utf8;
 		if (-1 == convert->Big5toUTF8((char*) word.w_info[i].big5, pUtf8))
 			return;
-		//strBig5 = strBig5 + word.w_info[i].big5;
-		//cstemp = cstemp + word.w_info[i].big5;
 		strBig5 = strBig5 + utf8;
 		cstemp = cstemp + utf8;
 		cstemp = cstemp + "/X ";
 		free(utf8);
+
+//		strBig5 = strBig5 + word.w_info[i].big5;
+//		cstemp = cstemp + word.w_info[i].big5;
 	}
 	_log("String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
 	/**
@@ -341,6 +346,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	 *  將字詞屬性轉換成屬性標記
 	 */
 	_log("將文字分詞，將字詞屬性轉換成屬性標記");
+
 	vector<string> vData;
 	spliteData(const_cast<char *>(cstemp.getBuffer()), " ", vData);
 	for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)

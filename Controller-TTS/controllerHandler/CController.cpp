@@ -68,6 +68,7 @@ int CController::onInitial(void* szConfPath)
 	}
 	// test
 	textProcess->processTheText("憋魚酒氣了");
+	_log("=====================憋魚酒氣了");
 	return nResult;
 }
 
