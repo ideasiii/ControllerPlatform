@@ -21,11 +21,11 @@
 
 using namespace std;
 
-#define FEATURE_DIM			14
-#define CLUSTER				2
-#define CART_MODEL			"model/CART_Model.bin"
+#define FEATURE_DIM				14
+#define CLUSTER						2
+#define CART_MODEL				"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
-#define HMM_MODEL			"model/hmm.htsvoice"
+#define HMM_MODEL				"model/hmm.htsvoice"
 #define WORD_MODEL			"model/"
 
 // ==================  注意順序不要改變!!!!  ==========================
@@ -221,16 +221,15 @@ void CTextProcess::processTheText(const char *szText)
 
 		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
 		ofstream csLabFile;
-		csLabFile.open(strLabelName.getBuffer(), ios::trunc);
+		csLabFile.open(strLabelName.getBuffer(), ios::app);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
 				gduration_s, gduration_e, giSftIdx);
 		csLabFile.close();
 		PhoneSeq.removeAll();
-
-		_log("=============== 合成聲音檔 %s===============", strWaveName.getBuffer());
-		Synthesize(HMM_MODEL, strWaveName.getBuffer(), strLabelName.getBuffer());
-
 	}
+
+	_log("=============== 合成聲音檔 %s===============", strWaveName.getBuffer());
+	Synthesize(HMM_MODEL, strWaveName.getBuffer(), strLabelName.getBuffer());
 
 }
 
@@ -362,7 +361,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		{
 			if (!tempPOS.Compare(POStags[j]))
 			{
-				for (int k = 0; k < ulIndex; ++k)
+				for (int k = 0; k < (int) ulIndex; ++k)
 				{
 					pos.push_back(j);
 					bAdded = true;
@@ -373,7 +372,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		}
 		if (!bAdded)
 		{
-			for (k = 0; k < ulIndex; ++k)
+			for (k = 0; k < (int) ulIndex; ++k)
 			{
 				pos.push_back(j);
 				_log("[CTextProcess] CartPrediction pos : %d", j);
@@ -571,9 +570,9 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 	return result;
 }
 
-void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
-		const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2, int *gduration_s,
-		int *gduration_e, int giSftIdx)
+CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[],
+		const int pBound[], const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
+		int *gduration_s, int *gduration_e, int giSftIdx)
 {
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
 	CString monostr; // store all lines for mono labels
@@ -900,6 +899,8 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 		(*pcsFile2) << monostr;
 		//*pcsFile2.close();
 	}
+
+	return fullstr;
 }
 
 void CTextProcess::dumpWord()
