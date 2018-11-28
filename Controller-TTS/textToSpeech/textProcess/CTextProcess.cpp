@@ -209,13 +209,10 @@ void CTextProcess::processTheText(const char *szText)
 				spliteData(const_cast<char *>(pph.getBuffer()), " ", vData);
 				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
 				{
-					//_log("[CTextProcess] processTheText PH %s", it->c_str());
 					PhoneSeq.add(*it);
 				}
 
-				//	SplitString(pph, delimiter, PhoneSeq);
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
-				//SyllableBound[sIndex] = vData.size() - 1;
 				if (PWCluster[k] == 1)
 				{
 					WordBound[++wIndex] = SyllableBound[sIndex];
@@ -227,16 +224,16 @@ void CTextProcess::processTheText(const char *szText)
 			}
 		}
 
-		_log("generate label for current sentence");
+		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
 		ofstream csLabFile;
-		csLabFile.open(strLabelName, ios::trunc);
+		csLabFile.open(strLabelName.getBuffer(), ios::trunc);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
 				gduration_s, gduration_e, giSftIdx);
 		csLabFile.close();
 		PhoneSeq.removeAll();
 
-		// 合成
-		Synthesize(HMM_MODEL, strWaveName, strLabelName);
+		_log("=============== 合成聲音檔 %s===============", strWaveName.getBuffer());
+		Synthesize(HMM_MODEL, strWaveName.getBuffer(), strLabelName.getBuffer());
 	}
 }
 
@@ -471,52 +468,6 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	cluster.clear();
 }
 
-/*
- int CTextProcess::SplitString(CString& input, CString& delimiter, CStringArray& results)
- {
- int iPos = 0;
- int newPos = -1;
- int sizeS2 = delimiter.getLength();
- int isize = input.getLength();
-
- vector<int> positions;
- newPos = input.find(delimiter, 0);
- if (newPos < 0)
- {
- return 0;
- }
- int numFound = 0;
-
- while (newPos > iPos)
- {
- ++numFound;
- positions.push_back(newPos);
- iPos = newPos;
- newPos = input.find(delimiter, iPos + sizeS2 + 1);
- }
-
- for (int i = 0; i <= (int) positions.size(); ++i)
- {
- CString s;
- if (i == 0)
- s = input.mid(i, positions[i]);
- else
- {
- int offset = positions[i - 1] + sizeS2;
- if (offset < isize)
- {
- if (i == (int) positions.size())
- s = input.mid(offset);
- else if (i > 0)
- s = input.mid(positions[i - 1] + sizeS2, positions[i] - positions[i - 1] - sizeS2);
- }
- }
- if (s.getLength() > 0)
- results.add(s);
- }
- return numFound;
- }
- */
 // Ph97: Extended initial + final
 // 三個部分: part1: Extended initial
 //			 		 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
@@ -640,7 +591,8 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 
 	// p1^p2-p3+p4=p5@p6_p7/A:a3/B:b3@b4-b5&b6-b7/C:c3/D:d2/E:e2@e3+e4
 	// /F:f2/G:g1_g2/H:h1=h2@h3=h4/I:i1=i2/J:j1+j2-j3
-	tempstr.format("x^x-pau+%s=%s@x_x/A:0/B:x@x-x&x-x/C:%d/D:0/E:x@x+x", sequence[0], sequence[1], sBound[1] + 1);// current phoneme = pause (pau);
+	tempstr.format("x^x-pau+%s=%s@x_x/A:0/B:x@x-x&x-x/C:%d/D:0/E:x@x+x", sequence[0].getBuffer(),
+			sequence[1].getBuffer(), sBound[1] + 1);	// current phoneme = pause (pau);
 	fullstr += tempstr; // ky modify: don't initial fullstr, since I'll do it myself.
 	tempstr.format("pau\n"); // ky add: for mono
 	monostr += tempstr; // ky add: for mono
@@ -699,7 +651,7 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 									/ (iSy_p_ll_1 - iSy_p_ll));
 			fullstr += tempstr;
 			monostr += tempstr;
-			tempstr.format("%s\n", sequence[index]);
+			tempstr.format("%s\n", sequence[index].getBuffer());
 			monostr += tempstr;
 		}
 		//
@@ -710,34 +662,37 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 			if (index == 0)
 			{
 				if (sequence.getSize() == 1)
-					tempstr.format("x^pau-%s+x=x", sequence[index]);
+					tempstr.format("x^pau-%s+x=x", sequence[index].getBuffer());
 				else if (sequence.getSize() == 2)
-					tempstr.format("x^pau-%s+%s=x", sequence[index], sequence[index + 1]);
+					tempstr.format("x^pau-%s+%s=x", sequence[index].getBuffer(), sequence[index + 1].getBuffer());
 				else
-					tempstr.format("x^pau-%s+%s=%s", sequence[index], sequence[index + 1], sequence[index + 2]);
+					tempstr.format("x^pau-%s+%s=%s", sequence[index].getBuffer(), sequence[index + 1].getBuffer(),
+							sequence[index + 2].getBuffer());
 			}
 			else	// index == 1
 			{
 				if (sequence.getSize() == 2)
-					tempstr.format("pau^%s-%s+x=x", sequence[index - 1], sequence[index]);
+					tempstr.format("pau^%s-%s+x=x", sequence[index - 1].getBuffer(), sequence[index].getBuffer());
 				else if (sequence.getSize() == 3)
-					tempstr.format("pau^%s-%s+%s=x", sequence[index - 1], sequence[index], sequence[index + 1]);
+					tempstr.format("pau^%s-%s+%s=x", sequence[index - 1].getBuffer(), sequence[index].getBuffer(),
+							sequence[index + 1].getBuffer());
 				else
-					tempstr.format("pau^%s-%s+%s=%s", sequence[index - 1], sequence[index], sequence[index + 1],
-							sequence[index + 2]);
+					tempstr.format("pau^%s-%s+%s=%s", sequence[index - 1].getBuffer(), sequence[index].getBuffer(),
+							sequence[index + 1].getBuffer(), sequence[index + 2].getBuffer());
 			}
 		}
 		else if (index > sequence.getSize() - 3)
 		{
 			if (index == sequence.getSize() - 2)
-				tempstr.format("%s^%s-%s+%s=pau", sequence[index - 2], sequence[index - 1], sequence[index],
-						sequence[index + 1]);
+				tempstr.format("%s^%s-%s+%s=pau", sequence[index - 2].getBuffer(), sequence[index - 1].getBuffer(),
+						sequence[index].getBuffer(), sequence[index + 1].getBuffer());
 			else
-				tempstr.format("%s^%s-%s+pau=x", sequence[index - 2], sequence[index - 1], sequence[index]);
+				tempstr.format("%s^%s-%s+pau=x", sequence[index - 2].getBuffer(), sequence[index - 1].getBuffer(),
+						sequence[index].getBuffer());
 		}
 		else
-			tempstr.format("%s^%s-%s+%s=%s", sequence[index - 2], sequence[index - 1], sequence[index],
-					sequence[index + 1], sequence[index + 2]);
+			tempstr.format("%s^%s-%s+%s=%s", sequence[index - 2].getBuffer(), sequence[index - 1].getBuffer(),
+					sequence[index].getBuffer(), sequence[index + 1].getBuffer(), sequence[index + 2].getBuffer());
 		fullstr += tempstr;
 
 		// p6, p7
@@ -912,8 +867,8 @@ void CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[],
 	}
 	//
 
-	tempstr.format("%s^%s-pau+x=x@x_x/A:%d/B:x@x-x&x-x/C:0", sequence[index - 1], sequence[index],
-			sBound[sIndex] - sBound[sIndex - 1]);
+	tempstr.format("%s^%s-pau+x=x@x_x/A:%d/B:x@x-x&x-x/C:0", sequence[index - 1].getBuffer(),
+			sequence[index].getBuffer(), sBound[sIndex] - sBound[sIndex - 1]);
 	fullstr += tempstr;
 	tempstr.format("pau\n");  // ky add
 	monostr += tempstr; // ky add
