@@ -22,7 +22,7 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	void processTheText(const char *szText);
+	int processTheText(const char *szText, CString &strWavePath);
 
 private:
 	void loadModel();
@@ -33,7 +33,7 @@ private:
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int giSftIdx);
 	CString Phone2Ph97(char* phone, int tone);
-	void Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
+	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
 	void dumpWord();
 
 private:

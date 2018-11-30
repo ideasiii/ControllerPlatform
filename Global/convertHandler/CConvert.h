@@ -14,4 +14,5 @@ public:
 	virtual ~CConvert();
 	int UTF8toBig5(char *szFrom, char **szTo);
 	int Big5toUTF8(char *szFrom, char **szTo);
+	int Big5toUTF8(char *szFrom, size_t nFrom, char **szTo);
 };

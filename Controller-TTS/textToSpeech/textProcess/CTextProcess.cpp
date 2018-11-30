@@ -27,6 +27,7 @@ using namespace std;
 #define CART_MODEL2			"model/CART_Model2.bin"
 #define HMM_MODEL				"model/hmm.htsvoice"
 #define WORD_MODEL			"model/"
+#define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
 
 // ==================  注意順序不要改變!!!!  ==========================
 
@@ -54,10 +55,6 @@ static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",
 const char *POStags[34] =
 		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
 				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
-struct thread_child_info
-{
-	BOOL* tPlayEnd;
-} THREAD_CHILD_INFO;
 
 CTextProcess::CTextProcess() :
 		CartModel(new CART()), convert(new CConvert)
@@ -83,12 +80,11 @@ void CTextProcess::releaseModel()
 		delete convert;
 }
 
-void CTextProcess::processTheText(const char *szText)
+int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 {
 	time_t rawtime;
 	time(&rawtime);
 
-	CString strWaveName;
 	CString strLabelName;
 
 	int nIndex;
@@ -113,7 +109,7 @@ void CTextProcess::processTheText(const char *szText)
 	CWord word;
 	word.InitWord(WORD_MODEL);
 
-	strWaveName.format("gen/%ld.wav", rawtime);
+	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 	strInput = szText;
@@ -228,15 +224,14 @@ void CTextProcess::processTheText(const char *szText)
 		PhoneSeq.removeAll();
 	}
 
-	_log("=============== 合成聲音檔 %s===============", strWaveName.getBuffer());
-	Synthesize(HMM_MODEL, strWaveName.getBuffer(), strLabelName.getBuffer());
+	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
+	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
 
 }
 
-void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
+int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
 {
-	//hts_engine -m $1 -ow $2.wav $3.lab -fm 1 -b 0.3 -r 1.2
-	//char* param[6] = { "hts_engine", "-m", "model/hmm.htsvoice", "-ow", "gen/test.wav", "label/merge_story.lab" };
+	int nResult;
 	char** param = new char*[12];
 	param[0] = const_cast<char*>("hts_engine");
 	param[1] = const_cast<char*>("-m");
@@ -244,7 +239,6 @@ void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, c
 	param[3] = const_cast<char*>("-ow");
 	param[4] = const_cast<char*>(szWaveName);
 	param[5] = const_cast<char*>(szLabel);
-//	param[5] = const_cast<char*>("label/merge_story.lab");// test
 	param[6] = const_cast<char*>("-fm");
 	param[7] = const_cast<char*>("1");
 	param[8] = const_cast<char*>("-b");
@@ -252,8 +246,9 @@ void CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, c
 	param[10] = const_cast<char*>("-r");
 	param[11] = const_cast<char*>("1.2");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
-	htsSynthesize(12, param);
+	nResult = htsSynthesize(12, param);
 	delete param;
+	return nResult;
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,

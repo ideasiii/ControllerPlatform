@@ -19,6 +19,7 @@
 #include "utility.h"
 #include "packet.h"
 #include "JSONObject.h"
+#include "CString.h"
 
 using namespace std;
 
@@ -52,13 +53,13 @@ int CController::onInitial(void* szConfPath)
 
 	strConfPath = reinterpret_cast<const char*>(szConfPath);
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
-	if(!strConfPath.empty())
+	if (!strConfPath.empty())
 	{
 		config = new CConfig();
-		if(config->loadConfig(strConfPath))
+		if (config->loadConfig(strConfPath))
 		{
 			strPort = config->getValue("SERVER", "port");
-			if(!strPort.empty())
+			if (!strPort.empty())
 			{
 				convertFromString(nPort, strPort);
 				nResult = cmpTTS->start(0, nPort, mnMsqKey);
@@ -67,8 +68,9 @@ int CController::onInitial(void* szConfPath)
 		delete config;
 	}
 	// test
-	textProcess->processTheText("憋魚酒氣了");
-	_log("=====================憋魚酒氣了");
+	//CString strWav;
+	//textProcess->processTheText("你在說什麼?多型態角色語音智慧平台，我說一個故事給你們聽。要注意聽!千萬要注意聽，因為；如果沒聽到，你一定會問，你在說什麼?", strWav);
+	//_log("=====================憋魚酒氣了");
 	return nResult;
 }
 
@@ -91,6 +93,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	JSONObject jsonReq;
 	JSONObject jsonResp;
 	TTS_REQ ttsReq;
+	CString strWave;
 
 	jsonReq.load(szData);
 	ttsReq.user_id = jsonReq.getString("user_id");
@@ -100,18 +103,26 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	jsonReq.release();
 	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d", nSocketFD, ttsReq.text.c_str(),
 			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion);
-	textProcess->processTheText(ttsReq.text.c_str());
 
 	jsonResp.create();
-	jsonResp.put("status", 0);
-	jsonResp.put("wave", "http://54.199.198.94/tts/Wate.wav");
+	if (-1 == textProcess->processTheText(ttsReq.text.c_str(), strWave))
+	{
+		jsonResp.put("status", 3);
+	}
+	else
+	{
+		strWave.replace("/data/opt/tomcat/webapps","http://54.199.198.94/tts");
+		jsonResp.put("status", 0);
+		jsonResp.put("wave", strWave.getBuffer());
+	}
+
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
 	jsonResp.release();
 }
 
 void CController::onHandleMessage(Message &message)
 {
-	switch(message.what)
+	switch (message.what)
 	{
 	case tts_request:
 		thread([=]

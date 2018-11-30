@@ -3,6 +3,8 @@
 #include "CString.h"
 #include "LogHandler.h"
 #include<cmath>
+#include "CConvert.h"
+
 using namespace std;
 
 int wordPitchNdx[4] = { 0, 5, 55, 430 }; //5, 5*5*2=50, 5*5*5*3=375
@@ -63,8 +65,6 @@ CWord::~CWord()
 
 void CWord::InitWord(LPCTSTR dir)
 {
-	//CCFile fp;
-	//std::ifstream fp_rd;
 	FILE* f;
 	CString cs;
 	int len;
@@ -79,11 +79,11 @@ void CWord::InitWord(LPCTSTR dir)
 	cs = cs + dir + WORD_FILE;
 
 	//open file called cs and store data in cs to word_data
-	int aa = sizeof(WORD_DB);
-	int bb = sizeof(char);
-	int cc = sizeof(UCHAR);
-	int dd = sizeof(UINT);
-	int ee = sizeof(short);
+//	int aa = sizeof(WORD_DB);
+//	int bb = sizeof(char);
+//	int cc = sizeof(UCHAR);
+//	int dd = sizeof(UINT);
+//	int ee = sizeof(short);
 
 	/**********************FILE* method**********************************/
 
@@ -98,11 +98,52 @@ void CWord::InitWord(LPCTSTR dir)
 
 	fclose(f);
 
-//checking...
-	//ASSERT(word_data->attr == word_data1->attr);
-	//ASSERT(word_data->byte == word_data1->byte);
-	//ASSERT(word_data->big5 == word_data1->big5);
-	//ASSERT(word_data->phone == word_data1->phone);
+	CConvert convert;
+	for (int k = 0; k < 100; ++k)
+	{
+		char *utf8 = 0;
+		char **pUtf8 = &utf8;
+		if (-1 == convert.Big5toUTF8((char*) word_data[k].big5, word_data[k].byte, pUtf8))
+			return;
+
+		_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", word_data[k].byte, utf8, word_data[k].counter,
+				word_data[k].phone[0]);
+		free(utf8);
+	}
+
+	//========= dump word data ===============//
+//	ifstream cf(cs.getBuffer(), std::ifstream::binary);
+//	cf.seekg(0, cf.end);
+//	int fend = cf.tellg();
+//	cf.seekg(0, cf.beg);
+//	_log("word data size=%d", fend);
+//
+//	char byte;				//詞的BYTE數 (1 byte)
+//	unsigned char attr[4];          //(4 bytes)
+//	unsigned char big5[20];  //big5,一字二占2 byte (20 bytes)
+//	unsigned int counter;          //字數*2 (1 byte)
+//	short phone[WORD_LEN];	//發音代碼 (10 bytes)
+//
+//	CConvert convert;
+//	while (cf.tellg() != fend)
+//	{
+//		WORD_DB *node = new WORD_DB();
+//
+//		cf.read(reinterpret_cast<char *>(&byte), 1);
+//		cf.read(reinterpret_cast<char *>(attr), 4);
+//		cf.read(reinterpret_cast<char *>(big5), 20);
+//		cf.read(reinterpret_cast<char *>(&counter), sizeof(int));
+//		cf.read(reinterpret_cast<char *>(phone), sizeof(short) * 10);
+//
+//		char *utf8 = 0;
+//		char **pUtf8 = &utf8;
+//		if (-1 == convert.Big5toUTF8((char*) big5, pUtf8))
+//			return;
+//
+//		//	_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", byte, utf8,  counter, phone[0]);
+//		delete node;
+//		free(utf8);
+//	}
 
 	/*******************************************************************/
 	cs.empty();
@@ -246,7 +287,7 @@ void CWord::GetWord()
 				int dsize = sizeof(*word_data);
 				int psize = sizeof(word_data);
 				int ssize = sizeof(word_data[i]);
-				std::cout << dsize << psize << ssize;
+				//std::cout << dsize << psize << ssize;
 				wdb = &word_data[i];
 				if (leading != NULL && (leading[0] != wdb->big5[0] || leading[1] != wdb->big5[1]))
 					break;
@@ -294,7 +335,7 @@ void CWord::GetWord()
 		//UCHAR uc=txt[ndx*2];
 		int dsize = sizeof(*word_data);
 		int psize = sizeof(word_data);
-		std::cout << dsize << psize;
+		//std::cout << dsize << psize;
 		if (ptrtab[start][best[start]] >= 0)
 		{
 			pwdb = &word_data[ptrtab[start][best[start]]];

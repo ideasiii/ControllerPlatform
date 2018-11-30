@@ -1,6 +1,4 @@
-//1997.10.27
-#ifndef CWORD_H_
-#define CWORD_H_
+#pragma once
 
 #include "WordInfo.h"
 #include <iostream>
@@ -59,4 +57,3 @@ public:
 	int char_type[SENTENCE_LEN + 1];
 	BOOL m_init;
 };
-#endif
