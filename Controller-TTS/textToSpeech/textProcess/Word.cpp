@@ -103,11 +103,11 @@ void CWord::InitWord(LPCTSTR dir)
 	{
 		char *utf8 = 0;
 		char **pUtf8 = &utf8;
-		if (-1 == convert.Big5toUTF8((char*) word_data[k].big5, word_data[k].byte, pUtf8))
-			return;
-
-		_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", word_data[k].byte, utf8, word_data[k].counter,
-				word_data[k].phone[0]);
+		if (-1 != convert.Big5toUTF8((char*) word_data[k].big5, word_data[k].byte, pUtf8))
+		{
+			_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", word_data[k].byte, utf8, word_data[k].counter,
+					word_data[k].phone[0]);
+		}
 		free(utf8);
 	}
 

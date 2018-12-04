@@ -25,12 +25,12 @@ inline int memicmp(const void *s1, const void *s2, size_t n)
 	size_t i;
 	int d;
 
-	for(i = 0; i < n; ++i)
+	for (i = 0; i < n; ++i)
 	{
 		d = tolower(((unsigned char *) s1)[i]) - tolower(((unsigned char *) s2)[i]);
-		if(d != 0)
+		if (d != 0)
 		{
-			if(d > 0)
+			if (d > 0)
 				return (1);
 			else
 				return (-1);
@@ -41,7 +41,7 @@ inline int memicmp(const void *s1, const void *s2, size_t n)
 
 inline void _strupr(char *p)
 {
-	while(*p)
+	while (*p)
 	{
 		*p = toupper(*p);
 		++p;
@@ -50,7 +50,7 @@ inline void _strupr(char *p)
 
 inline void _strlwr(char* p)
 {
-	while(*p)
+	while (*p)
 	{
 		*p = tolower(*p);
 		++p;
@@ -63,7 +63,7 @@ inline void _strrev(char *str)
 	int i = strlen(str) - 1, j = 0;
 
 	char ch;
-	while(i > j)
+	while (i > j)
 	{
 		ch = str[i];
 		str[i] = str[j];
@@ -82,7 +82,7 @@ CString::CString()
 
 CString::~CString()
 {
-	if(m_pchData)
+	if (m_pchData)
 		free(m_pchData);
 }
 
@@ -98,7 +98,7 @@ CString::CString(TCHAR ch, int nRepeat)
 	m_pchData = NULL;
 	m_iLen = 0;
 	*this = "";
-	while(nRepeat--)
+	while (nRepeat--)
 		*this += ch;
 }
 
@@ -125,7 +125,7 @@ CString::CString(std::string strString)
 
 int CString::getLength() const
 {
-	if(!m_pchData)
+	if (!m_pchData)
 		return 0;
 	return m_iLen;
 }
@@ -142,10 +142,16 @@ void CString::empty()
 
 TCHAR CString::getAt(int nIndex)
 {
-	if((nIndex >= 0) && (nIndex < getLength()))
+	if ((nIndex >= 0) && (nIndex < getLength()))
+	{
+//		printf("[CString] getAt  %c\n", m_pchData[nIndex]);
 		return m_pchData[nIndex];
+	}
 	else
+	{
+//		printf("[CString] getAt Error: nIndex: %d  length: %d\n", nIndex, getLength());
 		return 0;
+	}
 }
 
 TCHAR CString::operator[](int nIndex)
@@ -155,7 +161,7 @@ TCHAR CString::operator[](int nIndex)
 
 void CString::setAt(int nIndex, TCHAR ch)
 {
-	if((nIndex >= 0) && (nIndex < getLength()))
+	if ((nIndex >= 0) && (nIndex < getLength()))
 		m_pchData[nIndex] = ch;
 }
 
@@ -181,7 +187,7 @@ const CString& CString::operator=(TCHAR ch)
 
 const CString& CString::operator=(LPCSTR lpsz)
 {
-	if(!lpsz)
+	if (!lpsz)
 		return *this;
 	int nSrcLen = strlen(lpsz);
 	setAllocSize(nSrcLen + 1);
@@ -192,7 +198,7 @@ const CString& CString::operator=(LPCSTR lpsz)
 
 const CString& CString::operator=(const unsigned char* psz)
 {
-	if(!psz)
+	if (!psz)
 		return *this;
 	int nSrcLen = strlen((char *) psz);
 	setAllocSize(nSrcLen + 1);
@@ -203,7 +209,7 @@ const CString& CString::operator=(const unsigned char* psz)
 
 const CString& CString::operator=(std::string strString)
 {
-	if(strString.empty())
+	if (strString.empty())
 		return *this;
 	int nSrcLen = strlen((char *) strString.c_str());
 	setAllocSize(nSrcLen + 1);
@@ -239,7 +245,7 @@ const CString& CString::operator+=(TCHAR ch)
 
 const CString& CString::operator+=(const unsigned char* psz)
 {
-	if(!psz)
+	if (!psz)
 		return *this;
 	int nSrcLen = strlen((char *) psz);
 	setAllocSize(getLength() + nSrcLen + 1);
@@ -290,7 +296,7 @@ CString operator+(LPCTSTR lpsz, const CString& string)
 
 int CString::Compare(LPCTSTR lpsz)
 {
-	if(!lpsz)
+	if (!lpsz)
 		return 0;
 //	setlocale(LC_ALL, "");
 
@@ -298,15 +304,15 @@ int CString::Compare(LPCTSTR lpsz)
 	int iLenYou = strlen(lpsz);
 	int iLenComp = (iLenMe < iLenYou) ? iLenMe : iLenYou;
 	int iResult = memcmp(m_pchData, lpsz, iLenComp);
-	if(iResult)
+	if (iResult)
 		return iResult;
 	else
 	{
-		if(iLenMe == iLenYou)
+		if (iLenMe == iLenYou)
 			return 0;
-		if(iLenMe < iLenYou)
+		if (iLenMe < iLenYou)
 			return -1;
-		if(iLenMe > iLenYou)
+		if (iLenMe > iLenYou)
 			return 1;
 	}
 	return 0;  // never reached but to avoid c++ warning
@@ -314,7 +320,7 @@ int CString::Compare(LPCTSTR lpsz)
 
 int CString::CompareNoCase(LPCTSTR lpsz)
 {
-	if(!lpsz)
+	if (!lpsz)
 		return 0;
 //	setlocale(LC_ALL, "");
 
@@ -322,15 +328,15 @@ int CString::CompareNoCase(LPCTSTR lpsz)
 	int iLenYou = strlen(lpsz);
 	int iLenComp = (iLenMe < iLenYou) ? iLenMe : iLenYou;
 	int iResult = memicmp(m_pchData, lpsz, iLenComp);
-	if(iResult)
+	if (iResult)
 		return iResult;
 	else
 	{
-		if(iLenMe == iLenYou)
+		if (iLenMe == iLenYou)
 			return 0;
-		if(iLenMe < iLenYou)
+		if (iLenMe < iLenYou)
 			return -1;
-		if(iLenMe > iLenYou)
+		if (iLenMe > iLenYou)
 			return 1;
 	}
 	return 0;  // never reached but to avoid c++ warning
@@ -349,18 +355,18 @@ bool CString::operator!=(const char* psz)
 CString CString::mid(int nFirst, int nCount)
 {
 	// out-of-bounds requests return sensible things
-	if(nFirst < 0)
+	if (nFirst < 0)
 		nFirst = 0;
-	if(nCount < 0)
+	if (nCount < 0)
 		nCount = 0;
 
-	if(nFirst + nCount > getLength())
+	if (nFirst + nCount > getLength())
 		nCount = getLength() - nFirst;
-	if(nFirst > getLength())
+	if (nFirst > getLength())
 		nCount = 0;
 
 	// optimize case of returning entire string
-	if(nFirst == 0 && nFirst + nCount == getLength())
+	if (nFirst == 0 && nFirst + nCount == getLength())
 		return *this;
 
 	CString dest;
@@ -387,22 +393,22 @@ CString CString::right(int nCount)
 
 CString CString::part(char cDelimiter, int nIndex)
 {
-	if(this->find(cDelimiter, 0) == -1)
+	if (this->find(cDelimiter, 0) == -1)
 		return *this;
 
 	int iPos = 0;
 	int iEnd;
 	CString str;
 
-	while(nIndex--)
+	while (nIndex--)
 	{
 		iPos = this->find(cDelimiter, iPos) + 1;
-		if(!iPos)
+		if (!iPos)
 			return str;
 	}
 
 	iEnd = this->find(cDelimiter, iPos);
-	if(iEnd == -1)
+	if (iEnd == -1)
 		iEnd = getLength();
 
 	str = mid(iPos, iEnd - iPos);
@@ -412,7 +418,7 @@ CString CString::part(char cDelimiter, int nIndex)
 
 int CString::partCount(char cDelimiter)
 {
-	if(isEmpty())
+	if (isEmpty())
 		return 0;
 	CString str = *this;
 	return str.remove(cDelimiter) + 1;
@@ -420,18 +426,18 @@ int CString::partCount(char cDelimiter)
 
 int CString::partBegin(char cDelimiter, int nIndex)
 {
-	if(find(cDelimiter, 0) == -1)
+	if (find(cDelimiter, 0) == -1)
 		return 0;
-	if(isEmpty())
+	if (isEmpty())
 		return 0;
-	if(nIndex == 0)
+	if (nIndex == 0)
 		return 0;
 
 	int iPos = 0;
-	while(nIndex--)
+	while (nIndex--)
 	{
 		iPos = find(cDelimiter, iPos) + 1;
-		if(!iPos)
+		if (!iPos)
 			return iPos;
 	}
 
@@ -441,7 +447,7 @@ int CString::partBegin(char cDelimiter, int nIndex)
 CString& CString::makeUpper()
 {
 //	setlocale(LC_ALL, "");
-	if(m_pchData)
+	if (m_pchData)
 		_strupr(m_pchData);
 	return *this;
 }
@@ -449,7 +455,7 @@ CString& CString::makeUpper()
 CString& CString::makeLower()
 {
 //	setlocale(LC_ALL, "");
-	if(m_pchData)
+	if (m_pchData)
 		_strlwr(m_pchData);
 	return *this;
 }
@@ -457,7 +463,7 @@ CString& CString::makeLower()
 CString& CString::makeReverse()
 {
 //	setlocale(LC_ALL, "");
-	if(m_pchData)
+	if (m_pchData)
 		_strrev(m_pchData);
 	return *this;
 }
@@ -466,7 +472,7 @@ CString& CString::trimRight()
 {
 	// check chars from the end on for space
 	int iPos = getLength() - 1;
-	while(isspace(getAt(iPos)) && (iPos >= 0))
+	while (isspace(getAt(iPos)) && (iPos >= 0))
 		--iPos;
 	++iPos;
 	setLength(iPos);
@@ -478,7 +484,7 @@ CString& CString::trimLeft()
 	// check chars from the beginning on for space
 	int iPos = 0;
 	int iLen = getLength();
-	while(isspace(getAt(iPos)) && (iPos < iLen))
+	while (isspace(getAt(iPos)) && (iPos < iLen))
 		++iPos;
 	*this = mid(iPos);
 	return *this;
@@ -497,9 +503,9 @@ int CString::replace(TCHAR chOld, TCHAR chNew)
 	int iPos;
 	int iLen = getLength();
 	int iCount = 0;
-	for(iPos = 0; iPos < iLen; iPos++)
+	for (iPos = 0; iPos < iLen; iPos++)
 	{
-		if(getAt(iPos) == chOld)
+		if (getAt(iPos) == chOld)
 		{
 			setAt(iPos, chNew);
 			iCount++;
@@ -510,9 +516,9 @@ int CString::replace(TCHAR chOld, TCHAR chNew)
 
 int CString::replace(LPCTSTR lpszOld, LPCTSTR lpszNew)
 {
-	if(!lpszOld)
+	if (!lpszOld)
 		return -1;
-	if(!lpszNew)
+	if (!lpszNew)
 		return -1;
 
 	// check string from the beginning on
@@ -520,13 +526,13 @@ int CString::replace(LPCTSTR lpszOld, LPCTSTR lpszNew)
 	int iLenOld = strlen(lpszOld);
 	int iLen = getLength() - iLenOld;
 	int iCount = 0;
-	for(iPos = 0; iPos < iLen; iPos++)
+	for (iPos = 0; iPos < iLen; ++iPos)
 	{
-		if(mid(iPos, iLenOld) == lpszOld)
+		if (mid(iPos, iLenOld) == lpszOld)
 		{
 			Delete(iPos, iLenOld);
 			insert(iPos, lpszNew);
-			iCount++;
+			++iCount;
 		}
 	}
 	return iCount;
@@ -538,9 +544,9 @@ int CString::remove(TCHAR chRemove)
 	int iPos;
 	int iLen = getLength();
 	int iCount = 0;
-	for(iPos = 0; iPos < iLen; iPos++)
+	for (iPos = 0; iPos < iLen; ++iPos)
 	{
-		if(getAt(iPos) == chRemove)
+		if (getAt(iPos) == chRemove)
 		{
 			Delete(iPos);
 			iCount++;
@@ -551,9 +557,9 @@ int CString::remove(TCHAR chRemove)
 
 int CString::insert(int nIndex, TCHAR ch)
 {
-	if(nIndex < 0)
+	if (nIndex < 0)
 		nIndex = 0;
-	if(nIndex > getLength())
+	if (nIndex > getLength())
 		nIndex = getLength();
 
 	setAllocSize(getAllocSize() + 1);
@@ -561,7 +567,7 @@ int CString::insert(int nIndex, TCHAR ch)
 	// move anything right of new char to right
 	int iPos;
 	int iLen = getLength();
-	for(iPos = iLen; iPos >= nIndex; --iPos)
+	for (iPos = iLen; iPos >= nIndex; --iPos)
 		setAt(iPos + 1, getAt(iPos));
 	setLength(++iLen);
 	setAt(nIndex, ch);
@@ -571,18 +577,18 @@ int CString::insert(int nIndex, TCHAR ch)
 
 int CString::insert(int nIndex, LPCTSTR pstr)
 {
-	if(!pstr)
+	if (!pstr)
 		return -1;
-	if(nIndex < 0)
+	if (nIndex < 0)
 		nIndex = 0;
-	if(nIndex > getLength())
+	if (nIndex > getLength())
 		nIndex = getLength();
 
 	// TO-DO: do this like in Delete()
 	// insert new string char by char
 	int iPos;
 	int iLen = strlen(pstr);
-	for(iPos = 0; iPos < iLen; ++iPos)
+	for (iPos = 0; iPos < iLen; ++iPos)
 		insert(nIndex + iPos, pstr[iPos]);
 
 	return getLength();
@@ -590,15 +596,15 @@ int CString::insert(int nIndex, LPCTSTR pstr)
 
 int CString::Delete(int nIndex, int nCount)
 {
-	if(nIndex < 0)
+	if (nIndex < 0)
 		nIndex = 0;
-	if(nIndex > getLength())
+	if (nIndex > getLength())
 		nIndex = getLength();
 
 	// move anything right of nIndex to left
 	int iPos;
 	int iLen = getLength();
-	for(iPos = nIndex; iPos + nCount <= iLen; ++iPos)
+	for (iPos = nIndex; iPos + nCount <= iLen; ++iPos)
 		setAt(iPos, getAt(iPos + nCount));
 	setLength(iLen -= nCount);
 
@@ -614,9 +620,9 @@ int CString::reverseFind(TCHAR ch)
 {
 	int iPos;
 	int iLen = getLength();
-	for(iPos = iLen; iPos >= 0; iPos--)
+	for (iPos = iLen; iPos >= 0; --iPos)
 	{
-		if(getAt(iPos) == ch)
+		if (getAt(iPos) == ch)
 			return iPos;
 	}
 	return -1;
@@ -626,9 +632,9 @@ int CString::find(TCHAR ch, int nStart)
 {
 	int iPos;
 	int iLen = getLength();
-	for(iPos = nStart; iPos < iLen; ++iPos)
+	for (iPos = nStart; iPos < iLen; ++iPos)
 	{
-		if(getAt(iPos) == ch)
+		if (getAt(iPos) == ch)
 			return iPos;
 	}
 	return -1;
@@ -643,10 +649,10 @@ int CString::find(LPCTSTR lpszSub, int nStart)
 {
 	int nIndex;
 	strData = m_pchData;
-	if(!strData.empty() && lpszSub)
+	if (!strData.empty() && lpszSub)
 	{
 		nIndex = strData.find(lpszSub, nStart);
-		if((int) string::npos != nIndex)
+		if ((int) string::npos != nIndex)
 		{
 			return nIndex;
 		}
@@ -659,12 +665,12 @@ int CString::findOneOf(vector<string> vstr, string &strFinded)
 	int nTmpIndex = 0;
 	int nIndex = -1;
 	string strText = toString();
-	for(vector<string>::iterator it = vstr.begin(); vstr.end() != it; ++it)
+	for (vector<string>::iterator it = vstr.begin(); vstr.end() != it; ++it)
 	{
 		nTmpIndex = strText.find(*it);
-		if((int) string::npos != nTmpIndex)
+		if ((int) string::npos != nTmpIndex)
 		{
-			if(-1 == nIndex || nTmpIndex < nIndex)
+			if (-1 == nIndex || nTmpIndex < nIndex)
 			{
 				nIndex = nTmpIndex;
 				strFinded = *it;
@@ -693,7 +699,7 @@ void CString::format(const char *pcFormat, ...)
 
 LPTSTR CString::getBuffer(int nMinBufLength)
 {
-	if(nMinBufLength != -1)
+	if (nMinBufLength != -1)
 		setAllocSize(nMinBufLength);
 
 	return m_pchData;
@@ -701,7 +707,7 @@ LPTSTR CString::getBuffer(int nMinBufLength)
 
 void CString::releaseBuffer(int nNewLength)
 {
-	if(nNewLength != -1)
+	if (nNewLength != -1)
 		setLength(nNewLength);
 	else
 		setLength(strlen(m_pchData));
@@ -712,20 +718,20 @@ void CString::releaseBuffer(int nNewLength)
 
 int CString::getAllocSize()
 {
-	if(!m_pchData)
+	if (!m_pchData)
 		return 0;
 	return malloc_usable_size(m_pchData);
 }
 
 void CString::setAllocSize(int nSize)
 {
-	if(!m_pchData)
+	if (!m_pchData)
 	{
 		m_pchData = (char *) malloc(nSize);
 		return;
 	}
 
-	if(getAllocSize() != nSize)
+	if (getAllocSize() != nSize)
 	{
 		m_pchData = (char *) realloc(m_pchData, nSize);
 	}
@@ -733,25 +739,26 @@ void CString::setAllocSize(int nSize)
 
 void CString::copyMem(void *pBuffer, int nLength)
 {
-	if(!pBuffer)
+	if (!pBuffer)
 		return;
-	if(!m_pchData)
+	if (!m_pchData)
 		return;
-	if(nLength <= 0)
+	if (nLength <= 0)
 		return;
 
 	setAllocSize(nLength + 1);
 
 	memcpy(m_pchData, pBuffer, nLength);
+
 }
 
 void CString::appendMem(void *pBuffer, int nLength)
 {
-	if(!pBuffer)
+	if (!pBuffer)
 		return;
-	if(!m_pchData)
+	if (!m_pchData)
 		return;
-	if(nLength <= 0)
+	if (nLength <= 0)
 		return;
 
 	setAllocSize(getAllocSize() + nLength);
@@ -761,7 +768,7 @@ void CString::appendMem(void *pBuffer, int nLength)
 
 void CString::setLength(int nLength)
 {
-	if(!m_pchData)
+	if (!m_pchData)
 		return;
 	m_pchData[nLength] = 0;
 	setAllocSize(nLength + 1);

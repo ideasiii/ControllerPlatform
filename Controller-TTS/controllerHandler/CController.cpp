@@ -94,6 +94,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	JSONObject jsonResp;
 	TTS_REQ ttsReq;
 	CString strWave;
+	string strResponseWav;
 
 	jsonReq.load(szData);
 	ttsReq.user_id = jsonReq.getString("user_id");
@@ -111,9 +112,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	}
 	else
 	{
-		strWave.replace("/data/opt/tomcat/webapps","http://54.199.198.94/tts");
+		_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
+		strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), "http://54.199.198.94");
 		jsonResp.put("status", 0);
-		jsonResp.put("wave", strWave.getBuffer());
+		jsonResp.put("wave", strResponseWav.c_str());
 	}
 
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
