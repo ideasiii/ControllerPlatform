@@ -58,7 +58,7 @@ int CConvert::UTF8toBig5(char *szFrom, char **szTo)
 
 	iconv_close(cd);
 
-	_log("[CConvert] UTF8toBig5 Finish: %s --> %s", ibuf, *szTo);
+	//_log("[CConvert] UTF8toBig5 Finish: %s --> %s", ibuf, *szTo);
 	return 0;
 }
 
@@ -98,7 +98,7 @@ int CConvert::Big5toUTF8(char *szFrom, char **szTo)
 
 	iconv_close(cd);
 
-	_log("[CConvert] Big5toUTF8 Finish: %s --> %s", ibuf, *szTo);
+	//_log("[CConvert] Big5toUTF8 Finish: %s --> %s", ibuf, *szTo);
 	return 0;
 }
 
@@ -138,7 +138,7 @@ int CConvert::Big5toUTF8(char *szFrom, size_t nFrom, char **szTo)
 
 	iconv_close(cd);
 
-	_log("[CConvert] Big5toUTF8 Finish: %s --> %s", ibuf, *szTo);
+	//_log("[CConvert] Big5toUTF8 Finish: %s --> %s", ibuf, *szTo);
 	return 0;
 }
 

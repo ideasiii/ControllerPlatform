@@ -898,31 +898,49 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	return fullstr;
 }
 
-void CTextProcess::dumpWord()
+void CTextProcess::dumpWordData()
 {
-	int fend;
-	fstream fs;
-	fs.open("word.txt", fstream::in | fstream::out | fstream::app);
-	ifstream cf(WORD_MODEL, std::ifstream::binary);
-	cf.seekg(0, cf.end);
-	fend = cf.tellg();
-	cf.seekg(0, cf.beg);
-	_log("Word Model size=%d", fend);
+	ofstream csWordFile;
+	csWordFile.open("dumpWordData.txt", ios::app);
 
+	ifstream cf("model/WORD.DAT", std::ifstream::binary);
+	cf.seekg(0, cf.end);
+	int fend = cf.tellg();
+	cf.seekg(0, cf.beg);
+	_log("word data size=%d", fend);
+
+	char byte;				//詞的BYTE數 (1 byte)
+	unsigned char attr[4];          //(4 bytes)
+	unsigned char big5[20];  //big5,一字二占2 byte (20 bytes)
+	unsigned int counter;          //字數*2 (1 byte)
+	short phone[WORD_LEN];	//發音代碼 (10 bytes)
+	CString strData;
+
+	CConvert convert;
 	while (cf.tellg() != fend)
 	{
-		WORD_DB *worddb = new WORD_DB;
-		cf.read(reinterpret_cast<char *>(&worddb->byte), 1);
-		cf.read(reinterpret_cast<char *>(worddb->attr), 4);
-		memset(worddb->big5, 0, 20);
-		cf.read(reinterpret_cast<char *>(worddb->big5), 2);
-		fs << worddb->big5 << endl;
-		_log("big5: %s", worddb->big5);
-		cf.read(reinterpret_cast<char *>(worddb->big5), 18);
-		cf.read(reinterpret_cast<char *>(&worddb->counter), 4);
-		cf.read(reinterpret_cast<char *>(worddb->phone), 20);
-		delete worddb;
+		WORD_DB *node = new WORD_DB();
+
+		cf.read(reinterpret_cast<char *>(&byte), 1);
+		cf.read(reinterpret_cast<char *>(attr), 4);
+		cf.read(reinterpret_cast<char *>(big5), 20);
+		cf.read(reinterpret_cast<char *>(&counter), sizeof(int));
+		cf.read(reinterpret_cast<char *>(phone), sizeof(short) * 10);
+
+		char *utf8 = 0;
+		char **pUtf8 = &utf8;
+		if (-1 == convert.Big5toUTF8((char*) big5, byte, pUtf8))
+			return;
+
+		strData.format("byte: %d big5: %s counter: %d phone: %d-%d-%d-%d-%d-%d-%d-%d-%d-%d attr: %hhx %hhx %hhx %hhx",
+				byte, utf8, counter, phone[0], phone[1], phone[2], phone[3], phone[4], phone[5], phone[6], phone[7],
+				phone[8], phone[9], phone[10], attr[0], attr[1], attr[2], attr[3]);
+		delete node;
+		free(utf8);
+		csWordFile << strData.getBuffer() << endl;
+		_log("%s", strData.getBuffer());
 	}
+
 	cf.close();
-	fs.close();
+	csWordFile.close();
 }

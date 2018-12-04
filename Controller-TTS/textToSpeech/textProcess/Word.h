@@ -36,7 +36,7 @@ public:
 	int GetSentence(UCHAR * from, int *textNdx);
 	int IsNumberic(unsigned char *ch);
 	void SetTone(int word_ndx, int char_ndx, USHORT new_tone);
-//	friend std::istream & operator >> (std::istream &in, WORD_DB* &obj);
+
 public:
 	int txt_len;
 	int m_punctuation;
@@ -55,5 +55,5 @@ public:
 
 	int best_score;
 	int char_type[SENTENCE_LEN + 1];
-	BOOL m_init;
+
 };

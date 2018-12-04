@@ -23,9 +23,11 @@ public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
 	int processTheText(const char *szText, CString &strWavePath);
+	void loadModel();
+	void dumpWordData();
 
 private:
-	void loadModel();
+
 	void releaseModel();
 	void CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
 			std::vector<int>& allPPCluster, CWord &word);
@@ -34,7 +36,6 @@ private:
 			int *gduration_s, int *gduration_e, int giSftIdx);
 	CString Phone2Ph97(char* phone, int tone);
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
-	void dumpWord();
 
 private:
 	CART *CartModel;

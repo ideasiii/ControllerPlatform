@@ -10,20 +10,20 @@ using namespace std;
 int wordPitchNdx[4] = { 0, 5, 55, 430 }; //5, 5*5*2=50, 5*5*5*3=375
 
 static USHORT word_index_boundry = 0;
-static unsigned short /**phone_tab=NULL,*/*word_index = NULL;
-static WORD_DB *word_data;
+static unsigned short *word_index = NULL;
+static WORD_DB *word_data = 0;
 static int init = 0;
-//#include "sui.h"
+
 #define WORD_FILE "WORD.DAT"
 #define WORD_INDEX_FILE "WORD.NDX"
 #define PHONE_FILE "PHONE.DAT"
 
 /* chinese symbal A1 40 ~ A1 7E  */
-static unsigned char vo_class1[22][4] = { "  ", "ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ",
-		"ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ" };
-static unsigned char vo_class2[4][4] = { "", "ㄧ", "ㄨ", "ㄩ" };
-static unsigned char vo_class3[14][4] = { "   ", "ㄚ", "ㄛ", "ㄜ", "ㄝ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ" };
-static unsigned char vo_class4[5][4] = { "   ", "˙", "ˊ", "ˇ", "ˋ" };
+//static unsigned char vo_class1[22][4] = { "  ", "ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ",
+//		"ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ" };
+//static unsigned char vo_class2[4][4] = { "", "ㄧ", "ㄨ", "ㄩ" };
+//static unsigned char vo_class3[14][4] = { "   ", "ㄚ", "ㄛ", "ㄜ", "ㄝ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ" };
+//static unsigned char vo_class4[5][4] = { "   ", "˙", "ˊ", "ˇ", "ˋ" };
 static unsigned char symbol[96][4] = { "　", "！", "”", "＃", "＄", "％", "＆", "’", "（", "）", "＊", "＋", "，", "－", "．", "／",
 		"０", "１", "２", "３", "４", "５", "６", "７", "８", "９", "：", "；", "＜", "＝", "＞", "？", "＠", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ",
 		"Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "〔",
@@ -38,29 +38,12 @@ static unsigned char tail_symbol[20] = "，。！？︰；"; //"．"
 
 CWord::CWord()
 {
-	m_init = FALSE;
+
 }
 
 CWord::~CWord()
 {
-	if (m_init)
-	{
-		init--;
-	}
-	if (init == 0)
-	{
-		if (ttsPHONETAB != NULL)
-			delete[] (ttsPHONETAB);
-		ttsPHONETAB = NULL;
 
-		if (word_index != NULL)
-			delete[] (word_index);
-		word_index = NULL;
-
-		if (word_data != NULL)
-			delete[] (word_data);
-		word_data = NULL;
-	}
 }
 
 void CWord::InitWord(LPCTSTR dir)
@@ -69,145 +52,64 @@ void CWord::InitWord(LPCTSTR dir)
 	CString cs;
 	int len;
 
-	init++;
-	m_init = TRUE;
-	if (init > 1)
-		return;
-	word_data = NULL;
-	word_index = NULL;
-	cs.empty();
-	cs = cs + dir + WORD_FILE;
-
-	//open file called cs and store data in cs to word_data
-//	int aa = sizeof(WORD_DB);
-//	int bb = sizeof(char);
-//	int cc = sizeof(UCHAR);
-//	int dd = sizeof(UINT);
-//	int ee = sizeof(short);
-
 	/**********************FILE* method**********************************/
 
-	f = fopen(cs, "rb");
-	//get file size
-	fseek(f, 0, SEEK_END); // seek to end of file
-	len = ftell(f); // get current file pointer
-	word_data = new WORD_DB[(int) (len / sizeof(WORD_DB)) + 1];
-	rewind(f); // seek back to beginning of file
-	// proceed with allocating memory and reading the file
-	fread(word_data, sizeof(WORD_DB), floor(len / sizeof(WORD_DB)), f);
-
-	fclose(f);
-
-	CConvert convert;
-	for (int k = 0; k < 100; ++k)
+	if (0 == word_data)
 	{
-		char *utf8 = 0;
-		char **pUtf8 = &utf8;
-		if (-1 != convert.Big5toUTF8((char*) word_data[k].big5, word_data[k].byte, pUtf8))
-		{
-			_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", word_data[k].byte, utf8, word_data[k].counter,
-					word_data[k].phone[0]);
-		}
-		free(utf8);
+		cs.empty();
+		cs = cs + dir + WORD_FILE;
+		f = fopen(cs, "rb");
+		fseek(f, 0, SEEK_END); // seek to end of file
+		len = ftell(f); // get current file pointer
+		word_data = new WORD_DB[(int) (len / sizeof(WORD_DB)) + 1];
+		rewind(f); // seek back to beginning of file
+		fread(word_data, sizeof(WORD_DB), floor(len / sizeof(WORD_DB)), f);
+		fclose(f);
 	}
-
-	//========= dump word data ===============//
-//	ifstream cf(cs.getBuffer(), std::ifstream::binary);
-//	cf.seekg(0, cf.end);
-//	int fend = cf.tellg();
-//	cf.seekg(0, cf.beg);
-//	_log("word data size=%d", fend);
-//
-//	char byte;				//詞的BYTE數 (1 byte)
-//	unsigned char attr[4];          //(4 bytes)
-//	unsigned char big5[20];  //big5,一字二占2 byte (20 bytes)
-//	unsigned int counter;          //字數*2 (1 byte)
-//	short phone[WORD_LEN];	//發音代碼 (10 bytes)
-//
-//	CConvert convert;
-//	while (cf.tellg() != fend)
-//	{
-//		WORD_DB *node = new WORD_DB();
-//
-//		cf.read(reinterpret_cast<char *>(&byte), 1);
-//		cf.read(reinterpret_cast<char *>(attr), 4);
-//		cf.read(reinterpret_cast<char *>(big5), 20);
-//		cf.read(reinterpret_cast<char *>(&counter), sizeof(int));
-//		cf.read(reinterpret_cast<char *>(phone), sizeof(short) * 10);
-//
-//		char *utf8 = 0;
-//		char **pUtf8 = &utf8;
-//		if (-1 == convert.Big5toUTF8((char*) big5, pUtf8))
-//			return;
-//
-//		//	_log("WORD_DB byte: %d big5: %s counter: %d phone: %d", byte, utf8,  counter, phone[0]);
-//		delete node;
-//		free(utf8);
-//	}
 
 	/*******************************************************************/
-	cs.empty();
-	cs = cs + dir + PHONE_FILE;
 
-	/*****************************fable 20080527*********************/
-	/*start         更改開檔時用new  刪除時用 FreeMem (同架構)      */
-	/*****************************fable 20080527*********************/
-	/*
-	 ttsPHONETAB=(short*)LoadFile(cs, 1, NULL);
-
-	 fp.AliveOpen(cs);
-	 len=fp.GetLength();
-	 ttsPHONETAB=(short*)AllocMem( len );
-	 fp.Cread(ttsPHONETAB,len);
-	 fp.Close();
-	 ********************************************************/
-
-	f = fopen(cs, "rb");
-	//get file size
-	fseek(f, 0, SEEK_END); // seek to end of file
-	len = ftell(f); // get current file pointer
-	ttsPHONETAB = new short[(int) (len / sizeof(short)) + 1];
-	rewind(f); // seek back to beginning of file
-	// proceed with allocating memory and reading the file
-	fread(ttsPHONETAB, sizeof(short), floor(len / sizeof(short)), f);
-	fclose(f);
-
-	cs.empty();
-	cs = cs + dir + WORD_INDEX_FILE;
-	/**********************original method***********
-	 fp.Copen(cs);
-	 len = fp.GetLength() ;
-	 word_index = (unsigned short*) AllocMem( len );// quit("memory not enough") ;
-	 fp.Cread( word_index,len) ;
-	 fp.Cclose() ;
-	 ********************************************************/
-	f = fopen(cs, "rb");
-	//get file size
-	fseek(f, 0, SEEK_END); // seek to end of file
-	len = ftell(f); // get current file pointer
-	word_index = new unsigned short[(int) (len / sizeof(unsigned short)) + 1];
-	//fseek(f, 0, SEEK_SET); // seek back to beginning of file
-	rewind(f); // seek back to beginning of file
-	// proceed with allocating memory and reading the file
-	fread(word_index, sizeof(unsigned short), floor(len / sizeof(unsigned short)), f);
-	fclose(f);
-	//::GetCurrentDirectory(256,tts_output_dir);
-	int i, j;
-
-	j = 0;
-	for (i = 1; i < CHINESE_INDEX_NUM; i++)
+	if (0 == ttsPHONETAB)
 	{
-		if (word_index[i] == 0xffff)
-			continue;
-		if (word_index[i] < j)
-			break;
-		j = word_index[i];
+		cs.empty();
+		cs = cs + dir + PHONE_FILE;
+		f = fopen(cs, "rb");
+		fseek(f, 0, SEEK_END); // seek to end of file
+		len = ftell(f); // get current file pointer
+		ttsPHONETAB = new short[(int) (len / sizeof(short)) + 1];
+		rewind(f); // seek back to beginning of file
+		fread(ttsPHONETAB, sizeof(short), floor(len / sizeof(short)), f);
+		fclose(f);
 	}
-	word_index_boundry = i;
+
+	if (0 == word_index)
+	{
+		cs.empty();
+		cs = cs + dir + WORD_INDEX_FILE;
+		f = fopen(cs, "rb");
+		fseek(f, 0, SEEK_END); // seek to end of file
+		len = ftell(f); // get current file pointer
+		word_index = new unsigned short[(int) (len / sizeof(unsigned short)) + 1];
+		rewind(f); // seek back to beginning of file
+		fread(word_index, sizeof(unsigned short), floor(len / sizeof(unsigned short)), f);
+		fclose(f);
+
+		int i;
+		int j = 0;
+		for (i = 1; i < CHINESE_INDEX_NUM; i++)
+		{
+			if (word_index[i] == 0xffff)
+				continue;
+			if (word_index[i] < j)
+				break;
+			j = word_index[i];
+		}
+		word_index_boundry = i;
+	}
 
 	// 啟峻加入修改的部分
-	m_word_data = word_data;
-	m_word_index = word_index;
+//	m_word_data = word_data;
+//	m_word_index = word_index;
 	_log("[CWord] InitWord success");
 }
 
@@ -977,3 +879,4 @@ void CWord::ChangePhone()
 		prev_tone = Tone(pwi->phone[0]);
 	}
 }
+
