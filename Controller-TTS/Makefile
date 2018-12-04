@@ -80,6 +80,8 @@ checkdirs:
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p bin
 	@mkdir -p libs
+	@mkdir -p label
+	@mkdir -p gen
 	
 clean:
 	@for libName in ${MODULES} ; do \
