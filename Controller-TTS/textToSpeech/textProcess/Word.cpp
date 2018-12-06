@@ -113,24 +113,22 @@ void CWord::InitWord(LPCTSTR dir)
 	_log("[CWord] InitWord success");
 }
 
-void CWord::GetWord()
+void CWord::GetWord(WORD_PACKAGE &wordPackage)
 {
-	//static unsigned char word[40] ;
 	int i, j, k, start, ptr, offset;
 	long ndx;
 	UCHAR *leading;
 	WORD_DB *wdb;
-	BOOL found;
 
 	// text_len是以Unicode計算
-	for (i = 0; i < txt_len + 1; i++)
+	for (i = 0; i < wordPackage.txt_len + 1; ++i)
 	{
 		// SENTENCE_LEN定義為100
 		// 而tab的宣告方式為 int tab[SENTENCE_LEN][11]
-		tab[i][0] = 1;
-		tab[i][1] = i;
+		wordPackage.tab[i][0] = 1;
+		wordPackage.tab[i][1] = i;
 		// 以下ptrtab的宣告方式為int ptrtab[SENTENCE_LEN][11]
-		ptrtab[i][1] = -1;
+		wordPackage.ptrtab[i][1] = -1;
 	}
 	// tab會長成如下所示
 	// 1 0 0 0 0 0 0 0 0 0 0
@@ -148,32 +146,34 @@ void CWord::GetWord()
 	// 共有text_len個row
 
 	// 以下回圈是處理在輸入的句子之字數以外，到SENTENCE_LEN之間tab[][]的內容
-	for (; i < SENTENCE_LEN; i++)
-		tab[i][0] = 0;
+	for (; i < SENTENCE_LEN; ++i)
+		wordPackage.tab[i][0] = 0;
 
 	// 設定int char_type[SENTENCE_LEN+1]的內容
 	// char_type的內容可以為CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR等等，如下所列
 	// enum {CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR, SYMBOL_CHAR, DOT_CHAR, SPECIAL_DIGIT, SPECIAL_CHAR, MOUSE_CHAR};
-	SetCharType();
+	SetCharType(wordPackage);
 
 	// ptr是此函式中宣告的區域變數，型態為int
 	// ptr在每次迴圈中都加2，是因為Unicode編碼的關係
 	// 而text_len要成二的原因也是
-	for (ptr = 0; ptr < txt_len * 2; ptr += 2)
+	for (ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
 	{
 		// found也是區域變數，型態為BOOL
-		found = FALSE;
+//		found = FALSE;
 		// 如果輸入字串的內容中有"．"，就將他換成"點"，並更改對應之char_type[]
-		if (memcmp(&txt[ptr], "．", 2) == 0)
+
+		if (memcmp(&wordPackage.txt[ptr], "．", 2) == 0)
 		{
-			memcpy(&txt[ptr], "點", 2);
-			char_type[ptr / 2] = CHINESE_CHAR;
+			memcpy(&wordPackage.txt[ptr], "點", 2);
+			wordPackage.char_type[ptr / 2] = CHINESE_CHAR;
 		}
-		if (txt[ptr] > 0xF9 || txt[ptr] < 0xA4)
+		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4)
 			continue;
 		// ndx為區域變數，作為word的index，型態為長整數long
-		ndx = (*(txt + ptr) - 0xa4) * 157;
-		ndx += (*(txt + ptr + 1) > 0xa0) ? *(txt + ptr + 1) - 0xa1 + 0x3f : *(txt + ptr + 1) - 0x40;
+		ndx = (*(wordPackage.txt + ptr) - 0xa4) * 157;
+		ndx += (*(wordPackage.txt + ptr + 1) > 0xa0) ?
+				*(wordPackage.txt + ptr + 1) - 0xa1 + 0x3f : *(wordPackage.txt + ptr + 1) - 0x40;
 
 		// leading為區域變數型態為UCHAR*也就是unsigned char*
 		leading = NULL;
@@ -201,22 +201,21 @@ void CWord::GetWord()
 					continue;
 
 				// 根據詞長j，比較是否相同，回傳值若為零，表示一模一樣
-				if (memcmp(txt + ptr, wdb->big5, j) == 0)
+				if (memcmp(wordPackage.txt + ptr, wdb->big5, j) == 0)
 				{
 					start = ptr / 2;
 					int k;
 					if (j == 2)
 					{
 						k = 1;
-						tab[start][1] = start;
+						wordPackage.tab[start][1] = start;
 					}
 					else
 					{
-						k = ++tab[start][0];
+						k = ++wordPackage.tab[start][0];
 					}
-					tab[start][k] = start + j / 2 - 1;
-					ptrtab[start][k] = i;
-					found = TRUE;
+					wordPackage.tab[start][k] = start + j / 2 - 1;
+					wordPackage.ptrtab[start][k] = i;
 				}
 			}
 		}
@@ -225,42 +224,38 @@ void CWord::GetWord()
 	WORD_INFO *pwi;
 	WORD_DB *pwdb;
 
-	memset(w_info, 0, sizeof(w_info));
-	start = wnum = ndx = 0;
-	best_score = -9999;
-	Score(0);
+//	memset(w_info, 0, sizeof(w_info));
+	start = ndx = 0;
+	wordPackage.best_score = -9999;
+	Score(0, wordPackage);
 
 	while (1)
 	{
-		pwi = &w_info[wnum];
-		pwi->sen_pos = 1; //先假設詞在句子的中間
-		//UCHAR uc=txt[ndx*2];
-		int dsize = sizeof(*word_data);
-		int psize = sizeof(word_data);
-		//std::cout << dsize << psize;
-		if (ptrtab[start][best[start]] >= 0)
+		WORD_INFO word_info;
+		wordPackage.vecWordInfo.push_back(word_info);
+		pwi = &wordPackage.vecWordInfo[wordPackage.wnum];
+
+		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
+
+		if (wordPackage.ptrtab[start][wordPackage.best[start]] >= 0)
 		{
-			pwdb = &word_data[ptrtab[start][best[start]]];
+			pwdb = &word_data[wordPackage.ptrtab[start][wordPackage.best[start]]];
 			memcpy(pwi->attr, pwdb->attr, 4);
 		}
 		else
 			memset(pwi->attr, 0, 4);
 
-		if (tab[start][best[start]] == start)
+		if (wordPackage.tab[start][wordPackage.best[start]] == start)
 		{
-			//memset(pwi->attr,0,4);
-			pwi->phone[0] = GetPhone(start);
-			memcpy(pwi->big5, &txt[ndx * 2], 2);
+			pwi->phone[0] = GetPhone(start, wordPackage);
+			memcpy(pwi->big5, &wordPackage.txt[ndx * 2], 2);
 			pwi->wlen = 1;
 			ndx++;
 		}
 		else
 		{
-
-			//memcpy(pwi->attr,pwdb->attr,4);
-
 			p = pwdb->phone;
-			j = tab[start][best[start]] - start + 1;
+			j = wordPackage.tab[start][wordPackage.best[start]] - start + 1;
 			memcpy(pwi->big5, pwdb->big5, j * 2);
 			pwi->wlen = j;
 			ndx += j;
@@ -269,50 +264,52 @@ void CWord::GetWord()
 				pwi->phone[i] = p[i];
 			}
 		}
-		wnum++;
-		start = tab[start][best[start]] + 1;
-		if (start >= txt_len)
+		wordPackage.wnum++;
+		start = wordPackage.tab[start][wordPackage.best[start]] + 1;
+		if (start >= wordPackage.txt_len)
 			break;
 	}
-	if (char_type[txt_len / 2] == CHINESE_CHAR && w_info[wnum - 1].phone[0] >= SD_PUNC)
+
+	if (wordPackage.char_type[wordPackage.txt_len / 2]
+			== CHINESE_CHAR&& wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
 	{
 		pwi->sen_pos = 2;
-		if (wnum > 2)
+		if (wordPackage.wnum > 2)
 		{
-			w_info[0].sen_pos = 0;
-			w_info[wnum - 2].sen_pos = 2;
+			wordPackage.vecWordInfo[0].sen_pos = 0;
+			wordPackage.vecWordInfo[wordPackage.wnum - 2].sen_pos = 2;
 		}
 	}
-	else if (wnum > 1)
+	else if (wordPackage.wnum > 1)
 	{
-		w_info[0].sen_pos = 0;
+		wordPackage.vecWordInfo[0].sen_pos = 0;
 		pwi->sen_pos = 2;
 	}
-	ChangePhone();
+	ChangePhone(wordPackage);
 
 	start = 0;
 	int t, t1, t2, t3;
 	t1 = t2 = t3 = 0;
-	m_punctuation = 0;
-	for (i = 0; i < wnum; i++)
+//	m_punctuation = 0;
+	for (i = 0; i < wordPackage.wnum; i++)
 	{
-		pwi = &w_info[i];
-		toneComb4[i] = toneComb[i] = 0;
+		pwi = &wordPackage.vecWordInfo[i];
+		wordPackage.toneComb4[i] = wordPackage.toneComb[i] = 0;
 		for (k = start, j = 0; j < pwi->wlen; j++, k++)
 		{
-			if (char_type[k] == CHINESE_CHAR && pwi->phone[j] < SD_PUNC)
+			if (wordPackage.char_type[k] == CHINESE_CHAR && pwi->phone[j] < SD_PUNC)
 			{
 				t = Tone(pwi->phone[j]) - 1;
-				toneComb[i] = toneComb[i] * 5 + t;
+				wordPackage.toneComb[i] = wordPackage.toneComb[i] * 5 + t;
 				if (t == 4)
-					toneComb4[i] = -100000;
+					wordPackage.toneComb4[i] = -100000;
 				else
-					toneComb4[i] = toneComb4[i] * 4 + t;
+					wordPackage.toneComb4[i] = wordPackage.toneComb4[i] * 4 + t;
 			}
 			else
 			{
-				toneComb4[i] = toneComb[i] = -100000;
-				m_punctuation = 1;
+				wordPackage.toneComb4[i] = wordPackage.toneComb[i] = -100000;
+				//			m_punctuation = 1;
 				break;
 			}
 		}
@@ -323,14 +320,14 @@ void CWord::GetWord()
 			if (t3 == TONEBAD || t3 < 1 || t3 > 5)
 			{
 				t1 = t2 = t3 = 0;
-				voicedType[k] = 0;
+				wordPackage.voicedType[k] = 0;
 			}
 			else
 			{
 				t3--;
-				voicedType[k] = VoicedType(pwi->phone[j]);
+				wordPackage.voicedType[k] = VoicedType(pwi->phone[j]);
 			}
-			sentenceToneCobm[k] = t3 + t2 * 5 + t1 * 25;
+			wordPackage.sentenceToneCobm[k] = t3 + t2 * 5 + t1 * 25;
 			t1 = t2;
 			t2 = t3;
 		}
@@ -338,101 +335,101 @@ void CWord::GetWord()
 	}
 }
 
-void CWord::Score(int cur_ptr)
+void CWord::Score(int cur_ptr, WORD_PACKAGE &wordPackage)
 {
 	short count, start;
 	short i;
 
-	if (cur_ptr >= txt_len)
+	if (cur_ptr >= wordPackage.txt_len)
 	{
 		count = 9000, start = 0;
 		while (1)
 		{
-			if (tab[start][q[start]] == start)
+			if (wordPackage.tab[start][wordPackage.q[start]] == start)
 				count -= 20;
 			else
 				count -= 10;
-			start = tab[start][q[start]] + 1;
-			if (start >= txt_len)
+			start = wordPackage.tab[start][wordPackage.q[start]] + 1;
+			if (start >= wordPackage.txt_len)
 				break;
 		}
-		if (count >= best_score)
+		if (count >= wordPackage.best_score)
 		{
-			best_score = count;
-			for (i = 0; i < txt_len; i++)
+			wordPackage.best_score = count;
+			for (i = 0; i < wordPackage.txt_len; i++)
 			{
-				best[i] = q[i];
+				wordPackage.best[i] = wordPackage.q[i];
 			}
 		}
 		return;
 	}
-	for (i = 1; i <= tab[cur_ptr][0]; i++)
+	for (i = 1; i <= wordPackage.tab[cur_ptr][0]; i++)
 	{
-		q[cur_ptr] = i;
-		Score(tab[cur_ptr][i] + 1);
+		wordPackage.q[cur_ptr] = i;
+		Score(wordPackage.tab[cur_ptr][i] + 1, wordPackage);
 	}
 }
 
-void CWord::SetCharType()
+void CWord::SetCharType(WORD_PACKAGE &wordPackage)
 {
 	UINT v;
 	UCHAR *p;
 	int i, j;
 
-	for (i = 0; i < txt_len; i++)
+	for (i = 0; i < wordPackage.txt_len; i++)
 	{
-		p = &txt[i * 2];
+		p = &wordPackage.txt[i * 2];
 		v = p[0] * 256 + p[1];
 		if (v >= 0xa2af && v <= 0xa2b8)
 		{ //０１２３４５６７８９
-			char_type[i] = DIGIT_CHAR;
-			strncpy((char *) &txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
+			wordPackage.char_type[i] = DIGIT_CHAR;
+			strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
 		}
 		else if (v >= 0xa2cf && v <= 0xa2fe)
 		{ //ＡＢＣ．．．Ｚ
-			char_type[i] = ENGLISH_CHAR;
+			wordPackage.char_type[i] = ENGLISH_CHAR;
 		}
 		else if (v == 0xa144)
 		{  //  .
-			char_type[i] = DOT_CHAR;
+			wordPackage.char_type[i] = DOT_CHAR;
 		}
 		else if (v == 0xa249)
 		{
-			char_type[i] = MOUSE_CHAR;
+			wordPackage.char_type[i] = MOUSE_CHAR;
 		}
 		else
-			char_type[i] = CHINESE_CHAR;
+			wordPackage.char_type[i] = CHINESE_CHAR;
 	}
 
 	//the following is for email IP: @ must be in IP==> utter as Mrs White
 	//if ".." ??
-	for (i = 0; i < txt_len; i++)
+	for (i = 0; i < wordPackage.txt_len; i++)
 	{
-		if (char_type[i] == DOT_CHAR)
+		if (wordPackage.char_type[i] == DOT_CHAR)
 		{
-			if (i && i < txt_len - 1
-					&& (char_type[i - 1] == ENGLISH_CHAR || char_type[i - 1] == DIGIT_CHAR
-							|| char_type[i - 1] == SPECIAL_DIGIT) &&
+			if (i && i < wordPackage.txt_len - 1
+					&& (wordPackage.char_type[i - 1] == ENGLISH_CHAR || wordPackage.char_type[i - 1] == DIGIT_CHAR
+							|| wordPackage.char_type[i - 1] == SPECIAL_DIGIT) &&
 					//^^^^^^^^SPECIAL_DIGIT ??
-					(char_type[i + 1] == ENGLISH_CHAR || char_type[i + 1] == DIGIT_CHAR))
+					(wordPackage.char_type[i + 1] == ENGLISH_CHAR || wordPackage.char_type[i + 1] == DIGIT_CHAR))
 			{
-				strncpy((char*) &txt[2 * i], "點", 2);
+				strncpy((char*) &wordPackage.txt[2 * i], "點", 2);
 				for (j = i - 1; j >= 0; j--)
 				{
-					if (char_type[j] == ENGLISH_CHAR || char_type[j] == DIGIT_CHAR)
+					if (wordPackage.char_type[j] == ENGLISH_CHAR || wordPackage.char_type[j] == DIGIT_CHAR)
 					{
-						if (char_type[j] == DIGIT_CHAR)
-							char_type[j] = SPECIAL_DIGIT;
+						if (wordPackage.char_type[j] == DIGIT_CHAR)
+							wordPackage.char_type[j] = SPECIAL_DIGIT;
 					}
 					else
 						break;
 				}
-				for (i++; i < txt_len; i++)
+				for (i++; i < wordPackage.txt_len; i++)
 				{
-					if (char_type[i] == ENGLISH_CHAR || char_type[i] == DIGIT_CHAR)
+					if (wordPackage.char_type[i] == ENGLISH_CHAR || wordPackage.char_type[i] == DIGIT_CHAR)
 					{
-						if (char_type[i] == DIGIT_CHAR)
-							char_type[i] = SPECIAL_DIGIT;
+						if (wordPackage.char_type[i] == DIGIT_CHAR)
+							wordPackage.char_type[i] = SPECIAL_DIGIT;
 					}
 					else
 					{
@@ -442,12 +439,12 @@ void CWord::SetCharType()
 				}
 			}
 			else
-				char_type[i] = SYMBOL_CHAR;
+				wordPackage.char_type[i] = SYMBOL_CHAR;
 		}
 	}
 }
 
-unsigned CWord::GetPhone(int ptr)
+unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
 /* return 0 if not a voice_able  word */
 /* return 1 ~ 27965 if a chinese voice_able word */
 /* return 30000 if a english word */
@@ -456,8 +453,8 @@ unsigned CWord::GetPhone(int ptr)
 	//unsigned best=0,offset ;
 	SNDID sid[10];
 
-	buf[0] = txt[ptr * 2];
-	buf[1] = txt[ptr * 2 + 1];
+	buf[0] = wordPackage.txt[ptr * 2];
+	buf[1] = wordPackage.txt[ptr * 2 + 1];
 	buf[2] = 0;
 	if (buf[0] < 0xa4 || buf[0] > 0xf9)
 		return SD_PUNC;
@@ -467,155 +464,147 @@ unsigned CWord::GetPhone(int ptr)
 	return sid[0];
 }
 
-int CWord::ReadText(FILE* fp) /* return 0 if end of file */
+/*
+ int CWord::ReadText(FILE* fp)
+ {
+ unsigned char ch[3], tmp;
+ int len = 0;
+ char *p;
+ BOOL mouse;
+ int dot;
+ unsigned char* buf = txt;
+
+ mouse = FALSE;
+ dot = 0;
+ ch[2] = 0;
+ while (fread(ch, 1, 1, fp) == 1)
+ {
+ if (ch[0] == 0x1A)
+ {
+ if (len == 0)
+ len = -1;
+ goto ret;
+ }
+ if (ch[0] == 0x0D)
+ {
+ if ((ch[1] = (UCHAR) fgetc(fp)) != 0x0A)
+ _log("error: 0xd not followed 0xa");
+
+ continue;
+ }
+ if (ch[0] < 128)
+ {
+ if (ch[0] < 0x20)
+ ch[0] = 0x20;
+ tmp = ch[0];
+ if (tmp == '@')
+ {
+ dot = 0;
+ mouse = TRUE;
+ }
+ else if (tmp == '.')
+ {
+ dot++;
+ if (dot >= 6)
+ {
+ dot = 0;
+ mouse = FALSE;
+ }
+ }
+ memcpy(&buf[len * 2], symbol[ch[0] - 0x20], 2);
+ memcpy(ch, &buf[len * 2], 2);
+ ch[2] = 0;
+
+ if (ch[0] == 0xa1 && ch[1] == 0x40)
+ continue;
+ if (tmp != '.' || !mouse)
+ {
+ p = strstr((char*) tail_symbol, (char*) ch);
+ if ((p != NULL) && (((char*) p - (char*) tail_symbol) % 2 == 0))
+ {
+ len++;
+ goto ret;
+ }
+
+ if (len > WORD_LEN2 * 2)
+ if (buf[len * 2] == 0xA1)
+ if ((buf[len * 2 + 1] >= 0x40) && (buf[len * 2 + 1] <= 0x7F))
+ {
+ len++;
+ goto ret;
+ }
+ }
+ len++;
+ if (len > WORD_LEN2 * 2)
+ goto ret;
+ continue;
+ }
+ dot = 0;
+ mouse = FALSE;
+ ch[1] = (UCHAR) fgetc(fp);
+
+ if (memcmp(ch, "卅", 2) == 0)
+ {
+ memcpy(&buf[len * 2], "三十", 4);
+ len++;
+ }
+ else if (memcmp(ch, "廿", 2) == 0)
+ {
+ memcpy(&buf[len * 2], "二十", 4);
+ len++;
+ }
+ else
+ {
+ memcpy(&buf[len * 2], ch, 2);
+ }
+ ch[2] = 0;
+ if (len && ch[0] == 0xa1 && ch[1] == 0x40 && buf[len * 2 - 2] == 0xa1 && buf[len * 2 - 1] == 0x40)
+ continue;
+ p = strstr((char*) tail_symbol, (char*) ch);
+ if (p != NULL)
+ {
+ if (memcmp(p, "．", 2) == 0)
+ {
+ memcpy(&buf[len * 2], "點", 2);
+ }
+ else if (((char*) p - (char*) tail_symbol) % 2 == 0)
+ {
+ len++;
+ goto ret;
+ }
+ }
+
+ if (len > WORD_LEN2 * 2)
+ if (buf[len * 2] == 0xA1)
+ if ((buf[len * 2 + 1] > 0x40) && (buf[len * 2 + 1] < 0x7F))
+ {
+ len++;
+ goto ret;
+ }
+ len++;
+ if (len > WORD_LEN2 * 2)
+ goto ret;
+ }
+ ret: txt_len = len;
+ if (len > 0)
+ {
+ buf[len * 2] = 0;
+ return len;
+ }
+ return (-1);
+ }
+ */
+int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 {
-	unsigned char ch[3], tmp;
+	unsigned char ch[3];
 	int len = 0;
 	char *p;
-	BOOL mouse;
-	int dot;
-	unsigned char* buf = txt;
 
-	mouse = FALSE;
-	dot = 0;
 	ch[2] = 0;
-	while (fread(ch, 1, 1, fp) == 1)
-	{
-		if (ch[0] == 0x1A)
-		{
-			if (len == 0)
-				len = -1;
-			goto ret;
-		}
-		if (ch[0] == 0x0D)
-		{
-			if ((ch[1] = (UCHAR) fgetc(fp)) != 0x0A)
-				_log("error: 0xd not followed 0xa");
-			/*if( len == 0 ) continue ;
-			 buf[len*2] = 0xA1 ;
-			 buf[len*2+1] = 0x40 ;
-			 len ++ ;
-			 goto ret ;*/
-			continue;
-		}
-		if (ch[0] < 128)
-		{ /* English letter */
-			if (ch[0] < 0x20)
-				ch[0] = 0x20;
-			tmp = ch[0];
-			if (tmp == '@')
-			{
-				dot = 0;
-				mouse = TRUE;
-			}
-			else if (tmp == '.')
-			{
-				dot++;
-				if (dot >= 6)
-				{
-					dot = 0;
-					mouse = FALSE;
-				}
-			}
-			memcpy(&buf[len * 2], symbol[ch[0] - 0x20], 2);
-			memcpy(ch, &buf[len * 2], 2);
-			ch[2] = 0;
-			/*if(len && ch[0]==0xa1 && ch[1]==0x40 && buf[len*2-2]==0xa1 && buf[len*2-1]==0x40)
-			 continue;*/
-			if (ch[0] == 0xa1 && ch[1] == 0x40)
-				continue;
-			if (tmp != '.' || !mouse)
-			{
-				p = strstr((char*) tail_symbol, (char*) ch);
-				if ((p != NULL) && (((char*) p - (char*) tail_symbol) % 2 == 0))
-				{
-					len++;
-					goto ret;
-				}
-
-				if (len > WORD_LEN2 * 2)
-					if (buf[len * 2] == 0xA1)
-						if ((buf[len * 2 + 1] >= 0x40) && (buf[len * 2 + 1] <= 0x7F))
-						{ /* symbol */
-							len++;
-							goto ret;
-						}
-			}
-			len++;
-			if (len > WORD_LEN2 * 2)
-				goto ret;
-			continue;
-		}
-		dot = 0;
-		mouse = FALSE;
-		ch[1] = (UCHAR) fgetc(fp);
-////*********
-		if (memcmp(ch, "卅", 2) == 0)
-		{
-			memcpy(&buf[len * 2], "三十", 4);
-			len++;
-		}
-		else if (memcmp(ch, "廿", 2) == 0)
-		{
-			memcpy(&buf[len * 2], "二十", 4);
-			len++;
-		}
-		else
-		{
-			memcpy(&buf[len * 2], ch, 2);
-		}
-		ch[2] = 0;
-		if (len && ch[0] == 0xa1 && ch[1] == 0x40 && buf[len * 2 - 2] == 0xa1 && buf[len * 2 - 1] == 0x40)
-			continue;
-		p = strstr((char*) tail_symbol, (char*) ch);
-		if (p != NULL)
-		{
-			if (memcmp(p, "．", 2) == 0)
-			{
-				memcpy(&buf[len * 2], "點", 2);
-			}
-			else if (((char*) p - (char*) tail_symbol) % 2 == 0)
-			{
-				len++;
-				goto ret;
-			}
-		}
-
-		if (len > WORD_LEN2 * 2)
-			if (buf[len * 2] == 0xA1)
-				if ((buf[len * 2 + 1] > 0x40) && (buf[len * 2 + 1] < 0x7F)) /* symbol */
-				{
-					len++;
-					goto ret;
-				}
-		len++;
-		if (len > WORD_LEN2 * 2)
-			goto ret;
-	}
-	ret: txt_len = len;
-	if (len > 0)
-	{
-		buf[len * 2] = 0;
-		return len;
-	}
-	return (-1);
-}
-
-int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
-{
-	unsigned char ch[3], tmp;
-	int len = 0;
-	char *p;
-	BOOL mouse;
-	int dot;
-	unsigned char* buf = txt;
-
-	mouse = FALSE;
-	dot = 0;
-	ch[2] = 0;
+	_log("[CWord] GetSentence text: %s", from);
 	while ((ch[0] = from[(*textNdx)++]) != 0)
 	{
-		_log("[CWord] GetSentence char: %x", ch[0]);
+		//_log("[CWord] GetSentence ch[0]: %hhx", ch[0]);
 		if (ch[0] == 0x1A)
 		{
 			if (len == 0)
@@ -628,19 +617,18 @@ int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
 				_log("error: 0x0d not followed 0x0a");
 			continue;
 		}
-		if (ch[0] < 128)
-		{ /* English letter */
+		if (ch[0] < 128) // English letter
+		{
 			if (ch[0] < 0x20)
 				ch[0] = 0x20;
-			tmp = ch[0];
-			memcpy(&buf[len * 2], symbol[ch[0] - 0x20], 2);
-			memcpy(ch, &buf[len * 2], 2);
+
+			memcpy(&wordPackage.txt[len * 2], symbol[ch[0] - 0x20], 2);
+			memcpy(ch, &wordPackage.txt[len * 2], 2);
 			ch[2] = 0;
 
 			if (ch[0] == 0xa1 && ch[1] == 0x40)
 				continue;
 
-			//if(tmp!='.' || !mouse) {
 			p = strstr((char*) tail_symbol, (char*) ch);
 			if ((p != NULL) && (((char*) p - (char*) tail_symbol) % 2 == 0))
 			{
@@ -649,45 +637,46 @@ int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
 			}
 
 			if (len > WORD_LEN2)
-				if (buf[len * 2] == 0xA1)
-					if ((buf[len * 2 + 1] >= 0x40) && (buf[len * 2 + 1] <= 0x7F)) /* symbol */
+				if (wordPackage.txt[len * 2] == 0xA1)
+					if ((wordPackage.txt[len * 2 + 1] >= 0x40) && (wordPackage.txt[len * 2 + 1] <= 0x7F)) /* symbol */
 					{
 						len++;
 						goto ret;
 					}
-			//}
+
 			len++;
 			if (len > WORD_LEN2)
 				goto ret;
 			continue;
 		}
-		dot = 0;
-		mouse = FALSE;
+
 		ch[1] = from[(*textNdx)++];
-////*********
+		//_log("[CWord] GetSentence ch[1]: %hhx", ch[1]);
+
 		if (memcmp(ch, "卅", 2) == 0)
 		{
-			memcpy(&buf[len * 2], "三十", 4);
+			memcpy(&wordPackage.txt[len * 2], "三十", 4);
 			len++;
 		}
 		else if (memcmp(ch, "廿", 2) == 0)
 		{
-			memcpy(&buf[len * 2], "二十", 4);
+			memcpy(&wordPackage.txt[len * 2], "二十", 4);
 			len++;
 		}
 		else
 		{
-			memcpy(&buf[len * 2], ch, 2);
+			memcpy(&wordPackage.txt[len * 2], ch, 2);
 		}
 		ch[2] = 0;
-		if (len && ch[0] == 0xa1 && ch[1] == 0x40 && buf[len * 2 - 2] == 0xa1 && buf[len * 2 - 1] == 0x40)
+		if (len && ch[0] == 0xa1 && ch[1] == 0x40 && wordPackage.txt[len * 2 - 2] == 0xa1
+				&& wordPackage.txt[len * 2 - 1] == 0x40)
 			continue;
 		p = strstr((char*) tail_symbol, (char*) ch);
 		if (p != NULL)
 		{
 			if (memcmp(p, "．", 2) == 0)
 			{
-				memcpy(&buf[len * 2], "點", 2);
+				memcpy(&wordPackage.txt[len * 2], "點", 2);
 			}
 			else if (((char*) p - (char*) tail_symbol) % 2 == 0)
 			{
@@ -697,8 +686,8 @@ int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
 		}
 
 		if (len > WORD_LEN2 * 2)
-			if (buf[len * 2] == 0xA1)
-				if ((buf[len * 2 + 1] > 0x40) && (buf[len * 2 + 1] < 0x7F)) /* symbol */
+			if (wordPackage.txt[len * 2] == 0xA1)
+				if ((wordPackage.txt[len * 2 + 1] > 0x40) && (wordPackage.txt[len * 2 + 1] < 0x7F)) // symbol
 				{
 					len++;
 					goto ret;
@@ -709,10 +698,12 @@ int CWord::GetSentence(UCHAR * from, int *textNdx) /*return 0 if end*/
 	}
 
 	(*textNdx)--;
-	ret: txt_len = len;
+	_log("[CWord] GetSentence txt_len: %d", len);
+	ret: wordPackage.txt_len = len;
+
 	if (len > 0)
 	{
-		buf[len * 2] = 0;
+		wordPackage.txt[len * 2] = 0;
 		return len;
 	}
 	return (-1);
@@ -733,9 +724,9 @@ int CWord::IsNumberic(unsigned char *ch)
 		return (0);
 }
 
-void CWord::SetTone(int wno, int ndx, USHORT new_tone)
+void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage)
 {
-	w_info[wno].phone[ndx] = w_info[wno].phone[ndx] / 10 * 10 + new_tone;
+	wordPackage.vecWordInfo[wno].phone[ndx] = wordPackage.vecWordInfo[wno].phone[ndx] / 10 * 10 + new_tone;
 }
 
 BOOL CCsame(UCHAR * s, char* esi); //one Chinese Character Comparison
@@ -775,7 +766,7 @@ const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲"
 /*只針對詞與詞之間做sandhi rule的轉換					   */
 /**************************************2007 09 19 fable*****/
 
-void CWord::ChangePhone()
+void CWord::ChangePhone(WORD_PACKAGE &wordPackage)
 {
 	int /*i,*/n, tone, prev_tone;
 	WORD_INFO *pwi/*, *next_pwi*/;
@@ -786,14 +777,14 @@ void CWord::ChangePhone()
 	prev_tone = -1;
 	flag = false;
 	first_char = &tmp;
-	for (n = wnum - 1; n >= 0; n--)
+	for (n = wordPackage.wnum - 1; n >= 0; n--)
 	{
-		pwi = &w_info[n];
+		pwi = &wordPackage.vecWordInfo[n];
 		//3+3 rule between phones
 		tone = Tone(pwi->phone[pwi->wlen - 1]);
 		if (prev_tone == 3 && tone == 3)
 		{
-			SetTone(n, pwi->wlen - 1, 2);
+			SetTone(n, pwi->wlen - 1, 2, wordPackage);
 		}
 
 		if (pwi->wlen == 1)
@@ -803,12 +794,12 @@ void CWord::ChangePhone()
 			{
 				if (CCsame(first_char, "種"))
 				{
-					SetTone(n + 1, 0, 3);
+					SetTone(n + 1, 0, 3, wordPackage);
 					prev_tone = 3;
 				}
 				if (CCsame(first_char, "個"))
 				{
-					SetTone(n + 1, 0, 5);
+					SetTone(n + 1, 0, 5, wordPackage);
 					prev_tone = 5;
 				}
 			}
@@ -816,24 +807,24 @@ void CWord::ChangePhone()
 			if (flag)   //數字 非 兆 億 萬 千 百+一
 			{
 				if (IsNumberic(pwi->big5))
-					SetTone(n + 1, 0, 1);
+					SetTone(n + 1, 0, 1, wordPackage);
 				flag = false;
 			}
 
 			if (CCsame(pwi->big5, "一"))
 			{
 				//一在最後時
-				if (n == wnum - 1)
+				if (n == wordPackage.wnum - 1)
 				{
-					SetTone(n, 0, 1);
+					SetTone(n, 0, 1, wordPackage);
 					continue;
 				}
 				//+(4 || 5)=>ㄧˊ      ex 一次 一個
 				//+(1 || 2 || 3)=>ㄧˋ ex 一支 一人 一把
 				if (prev_tone == 4 || prev_tone == 5)
-					SetTone(n, 0, 2);
+					SetTone(n, 0, 2, wordPackage);
 				else
-					SetTone(n, 0, 4);
+					SetTone(n, 0, 4, wordPackage);
 
 				if (!IsNumberic(first_char))
 				{
@@ -844,7 +835,7 @@ void CWord::ChangePhone()
 					if (CCsame(first_char, "兆") || CCsame(first_char, "億") || CCsame(first_char, "萬")
 							|| CCsame(first_char, "千") || CCsame(first_char, "百"))
 						continue;
-					SetTone(n, 0, 1);
+					SetTone(n, 0, 1, wordPackage);
 					flag = false;
 				}
 			}
@@ -854,23 +845,23 @@ void CWord::ChangePhone()
 			if (CCsame(pwi->big5, "不"))
 			{
 				if (prev_tone == 4 || prev_tone == 5)
-					SetTone(n, 0, 2);
+					SetTone(n, 0, 2, wordPackage);
 				else
-					SetTone(n, 0, 4);
+					SetTone(n, 0, 4, wordPackage);
 			}
 			if (CCsame(pwi->big5, "教"))
 			{
-				SetTone(n, 0, 1);
+				SetTone(n, 0, 1, wordPackage);
 			}
 			if (CCsame(pwi->big5, "種"))
 			{
-				SetTone(n, 0, 4);
+				SetTone(n, 0, 4, wordPackage);
 			}
 			if (CCsame(first_char, "正"))
 			{
 				if (CCsame(pwi->big5, "圓") || CCsame(pwi->big5, "元"))
 				{
-					SetTone(n + 1, 0, 3);
+					SetTone(n + 1, 0, 3, wordPackage);
 				}
 			}
 		}

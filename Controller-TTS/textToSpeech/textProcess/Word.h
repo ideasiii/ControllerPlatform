@@ -7,7 +7,7 @@
 
 extern LPCTSTR word_attr[];
 
-#define SENTENCE_LEN 100
+//#define SENTENCE_LEN 100
 
 enum
 {
@@ -27,33 +27,33 @@ public:
 	~CWord();
 
 	void InitWord(LPCTSTR dir);
-	void GetWord();
-	void SetCharType();
-	unsigned GetPhone(int ptr);
-	void Score(int cur_ptr);
-	void ChangePhone();
-	int ReadText(FILE* fp);
-	int GetSentence(UCHAR * from, int *textNdx);
+	void GetWord(WORD_PACKAGE &wordPackage);
+	void SetCharType(WORD_PACKAGE &wordPackage);
+	unsigned GetPhone(int ptr, WORD_PACKAGE &wordPackage);
+	void Score(int cur_ptr, WORD_PACKAGE &wordPackage);
+	void ChangePhone(WORD_PACKAGE &wordPackage);
+//	int ReadText(FILE* fp);
+	int GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage);
 	int IsNumberic(unsigned char *ch);
-	void SetTone(int word_ndx, int char_ndx, USHORT new_tone);
+	void SetTone(int word_ndx, int char_ndx, USHORT new_tone, WORD_PACKAGE &wordPackage);
 
 public:
-	int txt_len;
-	int m_punctuation;
-	unsigned char txt[SENTENCE_LEN * 2];	// 這個類別中所要處理的句子
-	WORD_INFO w_info[80];				// 詞長，大五碼，發音代碼等等
-	int wnum;							//	word num，也就是這個句子被斷成幾個詞
+//	int txt_len;
+//	int m_punctuation;
+//	unsigned char txt[SENTENCE_LEN * 2];	// 這個類別中所要處理的句子
+//	WORD_INFO w_info[80];				// 詞長，大五碼，發音代碼等等
+//	int wnum;							//	word num，也就是這個句子被斷成幾個詞
 
-	int tab[SENTENCE_LEN][11];
-	int ptrtab[SENTENCE_LEN][11];
-	int best[SENTENCE_LEN];
-	int q[SENTENCE_LEN * 2];
-	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
-
-	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
-	int sentenceToneCobm[SENTENCE_LEN * 2];
-
-	int best_score;
-	int char_type[SENTENCE_LEN + 1];
+//	int tab[SENTENCE_LEN][11];
+//	int ptrtab[SENTENCE_LEN][11];
+//	int best[SENTENCE_LEN];
+//	int q[SENTENCE_LEN * 2];
+//	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
+//
+//	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
+//	int sentenceToneCobm[SENTENCE_LEN * 2];
+//
+//	int best_score;
+//	int char_type[SENTENCE_LEN + 1];
 
 };

@@ -18,6 +18,7 @@
 #include "HTS_engine.h"
 #include "CConvert.h"
 #include "utility.h"
+#include "WordInfo.h"
 
 using namespace std;
 
@@ -57,7 +58,7 @@ const char *POStags[34] =
 				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
 
 CTextProcess::CTextProcess() :
-		CartModel(new CART()), convert(new CConvert)
+		CartModel(new CART()), convert(new CConvert), word(new CWord)
 {
 	loadModel();
 }
@@ -70,6 +71,7 @@ CTextProcess::~CTextProcess()
 void CTextProcess::loadModel()
 {
 	CartModel->LoadCARTModel();
+	word->InitWord(WORD_MODEL);
 }
 
 void CTextProcess::releaseModel()
@@ -78,6 +80,8 @@ void CTextProcess::releaseModel()
 		delete CartModel;
 	if (convert)
 		delete convert;
+	if (word)
+		delete word;
 }
 
 int CTextProcess::processTheText(const char *szText, CString &strWavePath)
@@ -106,8 +110,10 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	vector<int> AllPWCluster;
 	vector<int> AllPPCluster;
 	CString AllBig5;
-	CWord word;
-	word.InitWord(WORD_MODEL);
+	int textNdx;
+	WORD_PACKAGE wordPackage;
+//	CWord word;
+//	word.InitWord(WORD_MODEL);
 
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
@@ -174,7 +180,18 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 				i = SentenceArray[lcount].findOneOf(vs2, strFinded))
 			SentenceArray[lcount].Delete(i, strFinded.length());
 
-		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, word);
+		/************ UTF8 轉 Big5 **********************************/
+		char *big5 = 0;
+		char **pBig5 = &big5;
+		if (-1 == convert->UTF8toBig5((char*) SentenceArray[lcount].getBuffer(), pBig5))
+			return -1;
+		textNdx = 0;
+		wordPackage.clear();
+		word->GetSentence((unsigned char*) big5, &textNdx, wordPackage);
+		word->GetWord(wordPackage);
+		free(big5);
+
+		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
 		AllBig5 += strBig5;
@@ -184,13 +201,14 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
 
 		k = l = 0;
-		for (i = 0; i < word.wnum; ++i)
+		for (i = 0; i < wordPackage.wnum; ++i)
 		{
-			for (j = 0; j < word.w_info[i].wlen; ++j)
+			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)
 			{
-				SID2Phone((word.w_info[i].phone[j]), &s[0]);
-				_log("[CTextProcess] processTheText SID2Phone sound id: %d - sound: %s", word.w_info[i].phone[j], s);
-				SyllableTone[++sIndex] = (word.w_info[i].phone[j] % 10);
+				SID2Phone((wordPackage.vecWordInfo[i].phone[j]), &s[0]);
+				_log("[CTextProcess] processTheText SID2Phone sound id: %d - sound: %s",
+						wordPackage.vecWordInfo[i].phone[j], s);
+				SyllableTone[++sIndex] = (wordPackage.vecWordInfo[i].phone[j] % 10);
 
 				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
 
@@ -252,7 +270,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
-		vector<int>& allPPCluster, CWord &word)
+		vector<int>& allPPCluster, WORD_PACKAGE &wordPackage)
 {
 	vector<int> wordpar;			// 當前的詞長
 	vector<int> syllpos;			// 當前的字在詞中位置
@@ -282,13 +300,13 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	if (-1 == convert->UTF8toBig5((char*) sentence.getBuffer(), pBig5))
 		return;
 
-	word.GetSentence((unsigned char*) big5, &textNdx);
-	word.GetWord();
+//	word.GetSentence((unsigned char*) big5, &textNdx);
+//	word.GetWord();
 	free(big5);
-	_log("[CTextProcess] CartPrediction word->wnum: %d", word.wnum);
-	for (i = 0; i < word.wnum; ++i)
+	_log("[CTextProcess] CartPrediction word->wnum: %d", wordPackage.wnum);
+	for (i = 0; i < wordPackage.wnum; ++i)
 	{
-		switch (word.w_info[i].wlen)
+		switch (wordPackage.vecWordInfo[i].wlen)
 		{
 		case 1:	//1字詞
 			wordpar.push_back(1);
@@ -323,7 +341,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		/************ Big5 轉 UTF8 **********************************/
 		char *utf8 = 0;
 		char **pUtf8 = &utf8;
-		if (-1 == convert->Big5toUTF8((char*) word.w_info[i].big5, pUtf8))
+		if (-1 == convert->Big5toUTF8((char*) wordPackage.vecWordInfo[i].big5, pUtf8))
 			return;
 		strBig5 = strBig5 + utf8;
 		cstemp = cstemp + utf8;
@@ -900,27 +918,23 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 
 void CTextProcess::dumpWordData()
 {
-	ofstream csWordFile;
-	csWordFile.open("dumpWordData.txt", ios::app);
+	char byte;								//詞的BYTE數 (1 byte)
+	unsigned char attr[4];           //(4 bytes)
+	unsigned char big5[20];  	    //big5,一字二占2 byte (20 bytes)
+	unsigned int counter;          //字數*2 (1 byte)
+	short phone[WORD_LEN];  //發音代碼 (10 bytes)
+	CString strData;
 
+	ofstream csWordFile("dumpWordData.txt", ios::app);
 	ifstream cf("model/WORD.DAT", std::ifstream::binary);
 	cf.seekg(0, cf.end);
 	int fend = cf.tellg();
 	cf.seekg(0, cf.beg);
 	_log("word data size=%d", fend);
 
-	char byte;				//詞的BYTE數 (1 byte)
-	unsigned char attr[4];          //(4 bytes)
-	unsigned char big5[20];  //big5,一字二占2 byte (20 bytes)
-	unsigned int counter;          //字數*2 (1 byte)
-	short phone[WORD_LEN];	//發音代碼 (10 bytes)
-	CString strData;
-
 	CConvert convert;
 	while (cf.tellg() != fend)
 	{
-		WORD_DB *node = new WORD_DB();
-
 		cf.read(reinterpret_cast<char *>(&byte), 1);
 		cf.read(reinterpret_cast<char *>(attr), 4);
 		cf.read(reinterpret_cast<char *>(big5), 20);
@@ -935,7 +949,7 @@ void CTextProcess::dumpWordData()
 		strData.format("byte: %d big5: %s counter: %d phone: %d-%d-%d-%d-%d-%d-%d-%d-%d-%d attr: %hhx %hhx %hhx %hhx",
 				byte, utf8, counter, phone[0], phone[1], phone[2], phone[3], phone[4], phone[5], phone[6], phone[7],
 				phone[8], phone[9], phone[10], attr[0], attr[1], attr[2], attr[3]);
-		delete node;
+
 		free(utf8);
 		csWordFile << strData.getBuffer() << endl;
 		_log("%s", strData.getBuffer());

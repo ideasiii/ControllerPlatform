@@ -1,6 +1,6 @@
-#ifndef _WORD_INFO_H_
-#define _WORD_INFO_H_
-
+#pragma once
+#include <vector>
+#include <memory.h>
 //注意：WA_VA11 ~ WA_VP : 不要更動其順序
 enum WORD_ATTR
 {
@@ -215,6 +215,7 @@ enum WORD_ATTR
 //最大的詞數
 #define WORD_LEN 10
 #define WORD_LEN2 (WORD_LEN*2)
+#define SENTENCE_LEN 100
 
 #pragma pack(push,1)
 struct WORD_DB  //總共占 48 bytes (仲)
@@ -236,4 +237,29 @@ struct WORD_INFO                //記錄斷詞的結果
 	short phone[WORD_LEN];		//發音代碼，也就是sound ID，是將big5轉成sid
 };
 
-#endif
+struct WORD_PACKAGE
+{
+	int txt_len;							// 句子的字數
+	int wnum;							//	word num，也就是這個句子被斷成幾個詞
+	unsigned char txt[200];	// 這個類別中所要處理的句子
+	std::vector<WORD_INFO> vecWordInfo;
+
+	int tab[SENTENCE_LEN][11];
+	int ptrtab[SENTENCE_LEN][11];
+	int best[SENTENCE_LEN];
+	int q[SENTENCE_LEN * 2];
+	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
+	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
+	int sentenceToneCobm[SENTENCE_LEN * 2];
+	int best_score;
+	int char_type[SENTENCE_LEN + 1];
+
+public:
+	void clear()
+	{
+		txt_len = 0;
+		wnum = 0;
+		memset(txt, 0, sizeof(txt));
+		vecWordInfo.clear();
+	}
+};
