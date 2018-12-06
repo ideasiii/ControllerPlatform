@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
+#include <string>
 #include <memory.h>
+#include "container.h"
+
 //注意：WA_VA11 ~ WA_VP : 不要更動其順序
 enum WORD_ATTR
 {
@@ -263,3 +266,12 @@ public:
 		vecWordInfo.clear();
 	}
 };
+
+//========================= 字詞替換===============================//
+
+static map<std::string, std::string> mapWordExchange1 = create_map<string, string>("10", "十")("20", "二十")("30", "三十")(
+		"40", "四十")("50", "五十")("60", "六十")("70", "七十")("80", "八十")("90", "九十");
+static map<std::string, std::string> mapWordExchange2 = create_map<string, string>("0", "零")("1", "一")("2", "二")("3",
+		"三")("4", "四")("5", "五")("6", "六")("7", "七")("8", "八")("9", "九");
+static vector<map<std::string, std::string> > vecMaps = { mapWordExchange1, mapWordExchange2 };
+

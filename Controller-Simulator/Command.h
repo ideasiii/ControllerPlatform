@@ -10,13 +10,14 @@
 #include <map>
 #include "packet.h"
 
-#define BYE				555
-#define PRESSURE		444
-#define HELP			777
+#define BYE						555
+#define PRESSURE			444
+#define HELP					777
 #define IO_PRESSURE		888
-#define EVIL			666
-#define WORD			2310
-#define MONGO			27027
+#define EVIL						666
+#define WORD					2310
+#define MONGO				27027
+#define TTS						2312
 
 using namespace std;
 
@@ -61,4 +62,4 @@ authentication_request)\
 ("amx status", amx_status_request)\
 ("semantic",
 semantic_request)("amx status2", 1166)("word", semantic_word_request)("die", controller_die_request)("tts",
-		tts_request);
+tts_request);

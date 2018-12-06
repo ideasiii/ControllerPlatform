@@ -2,8 +2,12 @@
 #include "Phone.h"
 #include "CString.h"
 #include "LogHandler.h"
-#include<cmath>
+#include <cmath>
 #include "CConvert.h"
+
+#define WORD_FILE "WORD.DAT"
+#define WORD_INDEX_FILE "WORD.NDX"
+#define PHONE_FILE "PHONE.DAT"
 
 using namespace std;
 
@@ -12,18 +16,7 @@ int wordPitchNdx[4] = { 0, 5, 55, 430 }; //5, 5*5*2=50, 5*5*5*3=375
 static USHORT word_index_boundry = 0;
 static unsigned short *word_index = NULL;
 static WORD_DB *word_data = 0;
-static int init = 0;
 
-#define WORD_FILE "WORD.DAT"
-#define WORD_INDEX_FILE "WORD.NDX"
-#define PHONE_FILE "PHONE.DAT"
-
-/* chinese symbal A1 40 ~ A1 7E  */
-//static unsigned char vo_class1[22][4] = { "  ", "ㄅ", "ㄆ", "ㄇ", "ㄈ", "ㄉ", "ㄊ", "ㄋ", "ㄌ", "ㄍ", "ㄎ", "ㄏ", "ㄐ", "ㄑ", "ㄒ",
-//		"ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ" };
-//static unsigned char vo_class2[4][4] = { "", "ㄧ", "ㄨ", "ㄩ" };
-//static unsigned char vo_class3[14][4] = { "   ", "ㄚ", "ㄛ", "ㄜ", "ㄝ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ" };
-//static unsigned char vo_class4[5][4] = { "   ", "˙", "ˊ", "ˇ", "ˋ" };
 static unsigned char symbol[96][4] = { "　", "！", "”", "＃", "＄", "％", "＆", "’", "（", "）", "＊", "＋", "，", "－", "．", "／",
 		"０", "１", "２", "３", "４", "５", "６", "７", "８", "９", "：", "；", "＜", "＝", "＞", "？", "＠", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ",
 		"Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "〔",
@@ -34,7 +27,7 @@ unsigned char numberic[][4] = { "零", "一", "二", "三", "四", "五", "六",
 		"幾", "多", "少", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖", "拾", "佰", "仟", "廿" };
 static int num = 33;
 
-static unsigned char tail_symbol[20] = "，。！？︰；"; //"．"
+static unsigned char tail_symbol[20] = "，。！？︰；";
 
 CWord::CWord()
 {
@@ -224,7 +217,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	WORD_INFO *pwi;
 	WORD_DB *pwdb;
 
-//	memset(w_info, 0, sizeof(w_info));
 	start = ndx = 0;
 	wordPackage.best_score = -9999;
 	Score(0, wordPackage);
@@ -285,12 +277,12 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 		wordPackage.vecWordInfo[0].sen_pos = 0;
 		pwi->sen_pos = 2;
 	}
-	ChangePhone(wordPackage);
+	//ChangePhone(wordPackage);
 
 	start = 0;
 	int t, t1, t2, t3;
 	t1 = t2 = t3 = 0;
-//	m_punctuation = 0;
+
 	for (i = 0; i < wordPackage.wnum; i++)
 	{
 		pwi = &wordPackage.vecWordInfo[i];
@@ -309,7 +301,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			else
 			{
 				wordPackage.toneComb4[i] = wordPackage.toneComb[i] = -100000;
-				//			m_punctuation = 1;
 				break;
 			}
 		}
@@ -383,7 +374,7 @@ void CWord::SetCharType(WORD_PACKAGE &wordPackage)
 		if (v >= 0xa2af && v <= 0xa2b8)
 		{ //０１２３４５６７８９
 			wordPackage.char_type[i] = DIGIT_CHAR;
-			strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
+			//strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
 		}
 		else if (v >= 0xa2cf && v <= 0xa2fe)
 		{ //ＡＢＣ．．．Ｚ
@@ -401,8 +392,6 @@ void CWord::SetCharType(WORD_PACKAGE &wordPackage)
 			wordPackage.char_type[i] = CHINESE_CHAR;
 	}
 
-	//the following is for email IP: @ must be in IP==> utter as Mrs White
-	//if ".." ??
 	for (i = 0; i < wordPackage.txt_len; i++)
 	{
 		if (wordPackage.char_type[i] == DOT_CHAR)
@@ -464,136 +453,6 @@ unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
 	return sid[0];
 }
 
-/*
- int CWord::ReadText(FILE* fp)
- {
- unsigned char ch[3], tmp;
- int len = 0;
- char *p;
- BOOL mouse;
- int dot;
- unsigned char* buf = txt;
-
- mouse = FALSE;
- dot = 0;
- ch[2] = 0;
- while (fread(ch, 1, 1, fp) == 1)
- {
- if (ch[0] == 0x1A)
- {
- if (len == 0)
- len = -1;
- goto ret;
- }
- if (ch[0] == 0x0D)
- {
- if ((ch[1] = (UCHAR) fgetc(fp)) != 0x0A)
- _log("error: 0xd not followed 0xa");
-
- continue;
- }
- if (ch[0] < 128)
- {
- if (ch[0] < 0x20)
- ch[0] = 0x20;
- tmp = ch[0];
- if (tmp == '@')
- {
- dot = 0;
- mouse = TRUE;
- }
- else if (tmp == '.')
- {
- dot++;
- if (dot >= 6)
- {
- dot = 0;
- mouse = FALSE;
- }
- }
- memcpy(&buf[len * 2], symbol[ch[0] - 0x20], 2);
- memcpy(ch, &buf[len * 2], 2);
- ch[2] = 0;
-
- if (ch[0] == 0xa1 && ch[1] == 0x40)
- continue;
- if (tmp != '.' || !mouse)
- {
- p = strstr((char*) tail_symbol, (char*) ch);
- if ((p != NULL) && (((char*) p - (char*) tail_symbol) % 2 == 0))
- {
- len++;
- goto ret;
- }
-
- if (len > WORD_LEN2 * 2)
- if (buf[len * 2] == 0xA1)
- if ((buf[len * 2 + 1] >= 0x40) && (buf[len * 2 + 1] <= 0x7F))
- {
- len++;
- goto ret;
- }
- }
- len++;
- if (len > WORD_LEN2 * 2)
- goto ret;
- continue;
- }
- dot = 0;
- mouse = FALSE;
- ch[1] = (UCHAR) fgetc(fp);
-
- if (memcmp(ch, "卅", 2) == 0)
- {
- memcpy(&buf[len * 2], "三十", 4);
- len++;
- }
- else if (memcmp(ch, "廿", 2) == 0)
- {
- memcpy(&buf[len * 2], "二十", 4);
- len++;
- }
- else
- {
- memcpy(&buf[len * 2], ch, 2);
- }
- ch[2] = 0;
- if (len && ch[0] == 0xa1 && ch[1] == 0x40 && buf[len * 2 - 2] == 0xa1 && buf[len * 2 - 1] == 0x40)
- continue;
- p = strstr((char*) tail_symbol, (char*) ch);
- if (p != NULL)
- {
- if (memcmp(p, "．", 2) == 0)
- {
- memcpy(&buf[len * 2], "點", 2);
- }
- else if (((char*) p - (char*) tail_symbol) % 2 == 0)
- {
- len++;
- goto ret;
- }
- }
-
- if (len > WORD_LEN2 * 2)
- if (buf[len * 2] == 0xA1)
- if ((buf[len * 2 + 1] > 0x40) && (buf[len * 2 + 1] < 0x7F))
- {
- len++;
- goto ret;
- }
- len++;
- if (len > WORD_LEN2 * 2)
- goto ret;
- }
- ret: txt_len = len;
- if (len > 0)
- {
- buf[len * 2] = 0;
- return len;
- }
- return (-1);
- }
- */
 int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 {
 	unsigned char ch[3];

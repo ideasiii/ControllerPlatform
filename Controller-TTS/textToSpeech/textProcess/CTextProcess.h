@@ -37,6 +37,7 @@ private:
 			int *gduration_s, int *gduration_e, int giSftIdx);
 	CString Phone2Ph97(char* phone, int tone);
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
+	void WordExchange(CString &strText);
 
 private:
 	CART *CartModel;

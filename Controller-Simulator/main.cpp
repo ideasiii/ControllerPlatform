@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	int nRate;
 	printf("This process is a Controller testing process!.\n");
 
-	if(argc < 3)
+	if (argc < 3)
 	{
 		printf("argc = %d\n", argc);
 		fprintf( stderr, "Usage:  %s <IP> <Remote Port> <Option> ...\n", argv[0]);
@@ -60,11 +60,11 @@ int main(int argc, char* argv[])
 
 	mbPressure = false;
 	options(argc, argv);
-	if(mbPressure)
+	if (mbPressure)
 		nRate = atoi(argv[4]);
 
 	CCmpTest *cmpTest = new CCmpTest();
-	if(!cmpTest->connectController(strIP, nPort))
+	if (!cmpTest->connectController(strIP, nPort))
 		exit(0);
 
 	CEvilTest *evil = new CEvilTest(strIP.c_str(), nPort);
@@ -77,23 +77,23 @@ int main(int argc, char* argv[])
 	epoll_ctl(epfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
 	string strInput;
 
-	while(running)
+	while (running)
 	{
 		noEvents = epoll_wait(epfd, events, FD_SETSIZE, -1);
-		for(i = 0; i < noEvents; ++i)
+		for (i = 0; i < noEvents; ++i)
 		{
 			memset(buffer, 0, BUFSIZE);
 			fgets(buffer, 1024, stdin);
 			strInput = trim(buffer);
 
-			if(BYE == mapCommands[strInput])
+			if (BYE == mapCommands[strInput])
 			{
 				printf("Bye.\n");
 				running = 0;
 				break;
 			}
 
-			if(WORD == nService)
+			if (WORD == nService)
 			{
 				JSONObject jsonWord;
 				jsonWord.put("id", 1);
@@ -102,9 +102,9 @@ int main(int argc, char* argv[])
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);
 				jsonWord.put("device_id", "AJSB_8979_OIYG_1234");
-				if(mbPressure)
+				if (mbPressure)
 				{
-					while(1)
+					while (1)
 					{
 						cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
 						sleep(nRate);
@@ -114,9 +114,19 @@ int main(int argc, char* argv[])
 					cmpTest->sendRequest(semantic_word_request, jsonWord.toString().c_str());
 				jsonWord.release();
 			}
+			else if (TTS == nService)
+			{
+				JSONObject jsonWord;
+				jsonWord.put("user_id", "1");
+				jsonWord.put("voice_id", 1);
+				jsonWord.put("emotion", 1);
+				jsonWord.put("text", strInput);
+				cmpTest->sendRequest(tts_request, jsonWord.toString().c_str());
+				jsonWord.release();
+			}
 			else
 			{
-				switch(mapCommands[strInput])
+				switch (mapCommands[strInput])
 				{
 				case EVIL:
 					evil->start(500);
@@ -127,7 +137,7 @@ int main(int argc, char* argv[])
 					break;
 				case HELP:
 					printf("Test CMP Use:\n");
-					for(map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
+					for (map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
 					{
 						cout << (*i).first << endl;
 					}
@@ -149,7 +159,7 @@ int main(int argc, char* argv[])
 
 int cmpRequest(int nCommand, CCmpTest *cmpTest)
 {
-	switch(nCommand)
+	switch (nCommand)
 	{
 	case PRESSURE:
 		cmpTest->cmpPressure();
@@ -204,14 +214,14 @@ void options(int argc, char **argv)
 	int c, deb, index;
 	struct option opts[] = { { "help", no_argument, NULL, 'h' }, { "pressure", required_argument, NULL, 'p' }, {
 			"debug", no_argument, &deb, 1 }, { 0, 0, 0, 0 } };
-	while((c = getopt_long(argc, argv, optstring, opts, &index)) != -1)
+	while ((c = getopt_long(argc, argv, optstring, opts, &index)) != -1)
 	{
-		switch(c)
+		switch (c)
 		{
 		case 'h':
 			printf("Option Parameter:\nsimulator <IP> <Port> [Option]\nOption: -p=pressure test\n");
 			printf("Usage Command\n");
-			for(map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
+			for (map<string, int>::iterator i = mapCommands.begin(); i != mapCommands.end(); ++i)
 			{
 				cout << (*i).first << endl;
 			}

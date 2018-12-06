@@ -112,15 +112,15 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	CString AllBig5;
 	int textNdx;
 	WORD_PACKAGE wordPackage;
-//	CWord word;
-//	word.InitWord(WORD_MODEL);
 
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 	strInput = szText;
 	_log("[CTextProcess] processTheText Input Text: %s", strInput.getBuffer());
-	_log("斷句. 先把input的文章存成sentence Array");
+	WordExchange(strInput);
+	_log("[CTextProcess] processTheText Word Exchange Text: %s", strInput.getBuffer());
+//	_log("斷句. 先把input的文章存成sentence Array");
 	int i, j, k, l, lcount, sIndex, wIndex, pIndex;
 	CStringArray SentenceArray;
 	CString strTemp1, strResult;
@@ -128,7 +128,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	strTemp1 = strTemp1.SpanExcluding("\r");
 	strResult = strTemp1;
 	_log("[CTextProcess] processTheText SpanExcluding: %s", strResult.getBuffer());
-	_log("全形符號斷詞 。？！；，與半形符號斷詞");
+//	_log("全形符號斷詞 。？！；，與半形符號斷詞");
 
 	vector<string> vs = { "。", "？", "！", "；", "，", "!", ",", ".", ";", "?" };
 	string strFinded;
@@ -291,19 +291,8 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	int textNdx = 0;
 	int valFeatureLW;
 	int valFeaturePOS;
-	_log("[CTextProcess] CartPrediction sentence: %s strBig5: %s", sentence.getBuffer(), strBig5.getBuffer());
-	_log("將資料全行文字轉換成半形 針對數字部份");
+	_log("[CTextProcess] CartPrediction sentence: %s  wnum: %d", sentence.getBuffer(), wordPackage.wnum);
 
-	/************ UTF8 轉 Big5 **********************************/
-	char *big5 = 0;
-	char **pBig5 = &big5;
-	if (-1 == convert->UTF8toBig5((char*) sentence.getBuffer(), pBig5))
-		return;
-
-//	word.GetSentence((unsigned char*) big5, &textNdx);
-//	word.GetWord();
-	free(big5);
-	_log("[CTextProcess] CartPrediction word->wnum: %d", wordPackage.wnum);
 	for (i = 0; i < wordPackage.wnum; ++i)
 	{
 		switch (wordPackage.vecWordInfo[i].wlen)
@@ -351,23 +340,22 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 //		strBig5 = strBig5 + word.w_info[i].big5;
 //		cstemp = cstemp + word.w_info[i].big5;
 	}
-	_log("String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
+	_log("[CTextProcess] CartPrediction String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
 	/**
 	 *  將文字分詞為 : 我們 來 做 垃圾
 	 *  透過Standfor將詞性加入，變成: 我們/X 來/X 做/X 垃圾/X
 	 *  將字詞屬性轉換成屬性標記
 	 */
-	_log("將文字分詞，將字詞屬性轉換成屬性標記");
 
 	vector<string> vData;
 	spliteData(const_cast<char *>(cstemp.getBuffer()), " ", vData);
 	for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
 	{
-		_log("[CTextProcess] CartPrediction spliteData: %s", it->c_str());
+		//	_log("[CTextProcess] CartPrediction spliteData: %s", it->c_str());
 		ulIndex = it->find("/", 0);
 		ulLength = it->length();
 		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
-		_log("[CTextProcess] CartPrediction  POS String: %s", tempPOS.getBuffer());
+//		_log("[CTextProcess] CartPrediction  POS String: %s", tempPOS.getBuffer());
 		ulIndex /= 2;
 		bAdded = false;
 		for (j = 1; 34 > j; ++j)
@@ -378,7 +366,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 				{
 					pos.push_back(j);
 					bAdded = true;
-					_log("[CTextProcess] CartPrediction pos : %d added", j);
+					//				_log("[CTextProcess] CartPrediction pos : %d added", j);
 					break;
 				}
 			}
@@ -388,15 +376,15 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			for (k = 0; k < (int) ulIndex; ++k)
 			{
 				pos.push_back(j);
-				_log("[CTextProcess] CartPrediction pos : %d", j);
+//				_log("[CTextProcess] CartPrediction pos : %d", j);
 			}
 		}
 
 	}
 
-	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
-	_log("============== CART_Model =================");
-	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
+//	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
+//	_log("============== CART_Model =================");
+//	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
 	for (i = 0; i < (int) syllpos.size(); ++i) // 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
@@ -411,8 +399,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			}
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
-		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,
-				syllpos[i]);
+//		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,	syllpos[i]);
 		pcdData->Att_Catagory.push_back(syllpos.size());	// Sentence length
 		pcdData->Att_Catagory.push_back(i);	// Position in sentence (Forward)
 		pcdData->Att_Catagory.push_back(syllpos.size() - i);	// Position in sentence (Backward)
@@ -426,14 +413,14 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			}
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
-		_log("CART TEST");
+//		_log("CART TEST");
 		CartModel->TEST(pcdData);
 		cluster.push_back(pcdData->clu);
-		_log("cluster push: %d", pcdData->clu);
+//		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
-	_log("取得PWCluster數據");
+//	_log("取得PWCluster數據");
 	for (i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPWCluster.push_back(cluster[i]);
@@ -443,7 +430,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 	}
 	cluster.clear();
 
-	_log("============== CART_Model2 =================");
+//	_log("============== CART_Model2 =================");
 	for (i = 0, k = 0; i < (int) pwBoundary.size(); ++i, ++k)	// 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
@@ -455,8 +442,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 				valFeatureLW = abs(pwBoundary[k - j] - pwBoundary[k - j - 1]);
 			pcdData->Att_Catagory.push_back(valFeatureLW);
 		}
-		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,
-				syllpos[i]);
+//		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,	syllpos[i]);
 		pcdData->Att_Catagory.push_back(pwBoundary.size());	// Sentence length
 		pcdData->Att_Catagory.push_back(k);	// Position in sentence (Forward)
 		pcdData->Att_Catagory.push_back(pwBoundary.size() - k);	// Position in sentence (Backward)
@@ -468,16 +454,16 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			if (((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
-			_log("valFeaturePOS: %d", valFeaturePOS);
+			//		_log("valFeaturePOS: %d", valFeaturePOS);
 		}
-		_log("CART TEST2");
+//		_log("CART TEST2");
 		CartModel->TEST2(pcdData);
 		cluster.push_back(pcdData->clu);
-		_log("cluster push: %d", pcdData->clu);
+//		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
-	_log("取得PPCluster數據");
+//	_log("取得PPCluster數據");
 	for (i = 0; i < (int) cluster.size(); ++i)
 	{
 		allPPCluster.push_back(cluster[i]);
@@ -957,4 +943,20 @@ void CTextProcess::dumpWordData()
 
 	cf.close();
 	csWordFile.close();
+}
+void CTextProcess::WordExchange(CString &strText)
+{
+	for (vector<map<std::string, std::string> >::iterator i = vecMaps.begin(); vecMaps.end() != i; ++i)
+	{
+		for (map<string, string>::iterator j = i->begin(); j != i->end(); ++j)
+		{
+			size_t start_pos = strText.find((*j).first.c_str());
+			if (start_pos != std::string::npos)
+			{
+				strText = strText.toString().replace(start_pos, (*j).first.length(), (*j).second.c_str());
+				cout << (*j).first << ": " << (*j).second << endl;
+			}
+
+		}
+	}
 }
