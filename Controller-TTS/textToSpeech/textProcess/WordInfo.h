@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <memory.h>
+#include <map>
 #include "container.h"
 
 //注意：WA_VA11 ~ WA_VP : 不要更動其順序
@@ -267,11 +268,23 @@ public:
 	}
 };
 
+//========================= 字詞分割===============================//
+static std::vector<std::string> vWordWrap = { "。", "？", "！", "；", "，", "!", ",", ".", ";", "?" };
+//========================= 字詞删除===============================//
+static std::vector<std::string> vWordDel = { "\n", "\r", "\t", " ", "	", "(", ")", "[", "]", "{", "}", "'", "、", "\"",
+		"@", "%", "^", "&", "*", "”", "＃", "＄", "％", "＆", "’", "（", "）", "＊", "＋", "，", "－", "／", "＜", "＝", "＞", "？",
+		"＠", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ", "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ",
+		"Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "〔", "＼", "〕", "︿", "ˍ", "’", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ", "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ",
+		"Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "｛", "｜", "｝", "～", "～" };
 //========================= 字詞替換===============================//
 
-static map<std::string, std::string> mapWordExchange1 = create_map<string, string>("10", "十")("20", "二十")("30", "三十")(
-		"40", "四十")("50", "五十")("60", "六十")("70", "七十")("80", "八十")("90", "九十");
-static map<std::string, std::string> mapWordExchange2 = create_map<string, string>("0", "零")("1", "一")("2", "二")("3",
-		"三")("4", "四")("5", "五")("6", "六")("7", "七")("8", "八")("9", "九");
-static vector<map<std::string, std::string> > vecMaps = { mapWordExchange1, mapWordExchange2 };
+static std::map<std::string, std::string> mapWordExchange1 =
+		create_map<std::string, std::string>("10", "十")("20", "二十")("30", "三十")("40", "四十")("50", "五十")("60", "六十")(
+				"70", "七十")("80", "八十")("90", "九十");
+static std::map<std::string, std::string> mapWordExchange2 = create_map<std::string, std::string>("0", "零")("1", "一")(
+		"2", "二")("3", "三")("4", "四")("5", "五")("6", "六")("7", "七")("8", "八")("9", "九");
+static std::map<std::string, std::string> mapWordExchange3 = create_map<std::string, std::string>("卅", "三十")("廿", "二十")(
+		"．", "點");
+static std::vector<std::map<std::string, std::string> > vecMaps =
+		{ mapWordExchange1, mapWordExchange2, mapWordExchange3 };
 

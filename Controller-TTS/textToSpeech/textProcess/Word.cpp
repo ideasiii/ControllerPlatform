@@ -464,7 +464,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 	while ((ch[0] = from[(*textNdx)++]) != 0)
 	{
 		//_log("[CWord] GetSentence ch[0]: %hhx", ch[0]);
-		if (ch[0] == 0x1A)
+		if (ch[0] == 0x1A) // 0X1A经过读取之后被处理成0XFF（即EOF（-1））
 		{
 			if (len == 0)
 				len = -1;
@@ -485,7 +485,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 			memcpy(ch, &wordPackage.txt[len * 2], 2);
 			ch[2] = 0;
 
-			if (ch[0] == 0xa1 && ch[1] == 0x40)
+			if (ch[0] == 0xa1 && ch[1] == 0x40) // 0xa1，说明输入的是汉字。因为汉字的内码是从0xa1开始编码的
 				continue;
 
 			p = strstr((char*) tail_symbol, (char*) ch);
@@ -510,22 +510,9 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 		}
 
 		ch[1] = from[(*textNdx)++];
-		//_log("[CWord] GetSentence ch[1]: %hhx", ch[1]);
 
-		if (memcmp(ch, "卅", 2) == 0)
-		{
-			memcpy(&wordPackage.txt[len * 2], "三十", 4);
-			len++;
-		}
-		else if (memcmp(ch, "廿", 2) == 0)
-		{
-			memcpy(&wordPackage.txt[len * 2], "二十", 4);
-			len++;
-		}
-		else
-		{
-			memcpy(&wordPackage.txt[len * 2], ch, 2);
-		}
+		memcpy(&wordPackage.txt[len * 2], ch, 2);
+
 		ch[2] = 0;
 		if (len && ch[0] == 0xa1 && ch[1] == 0x40 && wordPackage.txt[len * 2 - 2] == 0xa1
 				&& wordPackage.txt[len * 2 - 1] == 0x40)
@@ -533,11 +520,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 		p = strstr((char*) tail_symbol, (char*) ch);
 		if (p != NULL)
 		{
-			if (memcmp(p, "．", 2) == 0)
-			{
-				memcpy(&wordPackage.txt[len * 2], "點", 2);
-			}
-			else if (((char*) p - (char*) tail_symbol) % 2 == 0)
+			if (((char*) p - (char*) tail_symbol) % 2 == 0)
 			{
 				len++;
 				goto ret;

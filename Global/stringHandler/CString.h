@@ -23,8 +23,6 @@ typedef char* LPSTR;
 typedef const char* LPCSTR;
 typedef wchar_t* LPWSTR;
 
-
-
 class CString
 {
 public:
@@ -175,7 +173,7 @@ public:
 	// return STL string
 	std::string toString();
 
-	CString SpanExcluding(LPCTSTR strSrc);
+	CString& SpanExcluding(LPCTSTR strSrc);
 
 protected:
 	LPTSTR m_pchData;   // pointer to ref counted string data

@@ -106,9 +106,11 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	int *gduration_e = NULL;
 	int giSftIdx = 0;
 	int playcount = 0;
+	int i, j, k, l, sIndex, wIndex, pIndex;
 	vector<int> indexArray;
 	vector<int> AllPWCluster;
 	vector<int> AllPPCluster;
+	CStringArray SentenceArray;
 	CString AllBig5;
 	int textNdx;
 	WORD_PACKAGE wordPackage;
@@ -116,34 +118,28 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
-	strInput = szText;
-	_log("[CTextProcess] processTheText Input Text: %s", strInput.getBuffer());
-	WordExchange(strInput);
-	_log("[CTextProcess] processTheText Word Exchange Text: %s", strInput.getBuffer());
-//	_log("斷句. 先把input的文章存成sentence Array");
-	int i, j, k, l, lcount, sIndex, wIndex, pIndex;
-	CStringArray SentenceArray;
-	CString strTemp1, strResult;
-	strTemp1 = strInput.SpanExcluding("\n");
-	strTemp1 = strTemp1.SpanExcluding("\r");
-	strResult = strTemp1;
-	_log("[CTextProcess] processTheText SpanExcluding: %s", strResult.getBuffer());
-//	_log("全形符號斷詞 。？！；，與半形符號斷詞");
 
-	vector<string> vs = { "。", "？", "！", "；", "，", "!", ",", ".", ";", "?" };
-	string strFinded;
-	while (strResult.findOneOf(vs, strFinded) != -1)
+	_log("[CTextProcess] processTheText Input Text: %s", szText);
+	strInput = szText;
+	strInput.trim();
+
+	for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
 	{
-		CString temp;
-		i = strResult.findOneOf(vs, strFinded);
-		temp = strResult.left(i);
-		strResult = strResult.right(strResult.getLength() - i - strFinded.length());
-		SentenceArray.add(temp);
-		_log("Text: %s finded: %s", temp.getBuffer(), strFinded.c_str());
+		strInput.replace(vdel_it->c_str(), "");
+	}
+
+	WordExchange(strInput);
+	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());
+
+	string strFinded;
+	while ((i = strInput.findOneOf(vWordWrap, strFinded)) != -1)
+	{
+		SentenceArray.add(strInput.left(i));
+		strInput = strInput.right(strInput.getLength() - i - strFinded.length());
 	}
 	if (0 >= SentenceArray.getSize())
 	{
-		SentenceArray.add(strResult);
+		SentenceArray.add(strInput);
 	}
 
 	for (i = 0; i < SentenceArray.getSize(); ++i)
@@ -151,9 +147,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
 
-	_log("以sentence為單位合成");
-
-	for (lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
+	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
 	{
 		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
 		CString strBig5;
@@ -163,22 +157,10 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		_log("initial boundaries and indexes for a sentence");
 		sIndex = wIndex = pIndex = 0;
 		SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
-		for (i = 1; i < 100; i++)
+		for (i = 1; i < 100; ++i)
 			SyllableBound[i] = WordBound[i] = 0;
-		for (i = 1; i < 20; i++)
+		for (i = 1; i < 20; ++i)
 			PhraseBound[i] = 0;
-
-		_log("簡單處理標點符號及分隔字符");
-		SentenceArray[lcount].replace(" ", "");
-		SentenceArray[lcount].replace("\t", "");
-		vector<string> vs1 = { "：", "、", "（", "）", "「", "」" };
-		for (i = SentenceArray[lcount].findOneOf(vs1, strFinded); i != -1;
-				i = SentenceArray[lcount].findOneOf(vs1, strFinded))
-			SentenceArray[lcount].Delete(i, strFinded.length());
-		vector<string> vs2 = { ":", ";", "?", "!", "(", ")", "[", "]" };
-		for (i = SentenceArray[lcount].findOneOf(vs2, strFinded); i != -1;
-				i = SentenceArray[lcount].findOneOf(vs2, strFinded))
-			SentenceArray[lcount].Delete(i, strFinded.length());
 
 		/************ UTF8 轉 Big5 **********************************/
 		char *big5 = 0;
@@ -191,6 +173,11 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		word->GetWord(wordPackage);
 		free(big5);
 
+		if (-1 == convert->Big5toUTF8((char*) wordPackage.txt, pBig5))
+			return -1;
+		_log("==============> %s", big5);
+		free(big5);
+	//	return 0;
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
@@ -956,7 +943,6 @@ void CTextProcess::WordExchange(CString &strText)
 				strText = strText.toString().replace(start_pos, (*j).first.length(), (*j).second.c_str());
 				cout << (*j).first << ": " << (*j).second << endl;
 			}
-
 		}
 	}
 }

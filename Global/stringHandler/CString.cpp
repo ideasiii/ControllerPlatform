@@ -521,21 +521,16 @@ int CString::replace(LPCTSTR lpszOld, LPCTSTR lpszNew)
 	if (!lpszNew)
 		return -1;
 
-	// check string from the beginning on
-	int iPos;
-	int iLenOld = strlen(lpszOld);
-	int iLen = getLength() - iLenOld;
-	int iCount = 0;
-	for (iPos = 0; iPos < iLen; ++iPos)
+	string strOld = lpszOld;
+	CString strText = toString();
+	size_t start_pos;
+	size_t old_size = strOld.length();
+	while ((start_pos = strText.find(lpszOld)) != string::npos)
 	{
-		if (mid(iPos, iLenOld) == lpszOld)
-		{
-			Delete(iPos, iLenOld);
-			insert(iPos, lpszNew);
-			++iCount;
-		}
+		strText = strText.toString().replace(start_pos, old_size, lpszNew);
 	}
-	return iCount;
+	*this = strText;
+	return start_pos;
 }
 
 int CString::remove(TCHAR chRemove)
@@ -781,9 +776,8 @@ string CString::toString()
 	return strData;
 }
 
-CString CString::SpanExcluding(LPCTSTR strExcluding)
+CString& CString::SpanExcluding(LPCTSTR strExcluding)
 {
-//replace(strExcluding, "");
 	string strCharsToRemove = strExcluding;
 	string str = toString();
 
@@ -792,6 +786,7 @@ CString CString::SpanExcluding(LPCTSTR strExcluding)
 		return strCharsToRemove.find(c) != string::npos;
 	}), str.end());
 
-	return str;
+	*this = str;
+	return *this;
 }
 
