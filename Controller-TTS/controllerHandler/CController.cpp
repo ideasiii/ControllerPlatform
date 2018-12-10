@@ -21,6 +21,8 @@
 #include "JSONObject.h"
 #include "CString.h"
 
+#define TTS_HOST				"http://175.98.119.122"
+
 using namespace std;
 
 CController::CController() :
@@ -114,7 +116,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	else
 	{
 		_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
-		strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), "http://54.199.198.94");
+		strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
 		jsonResp.put("status", 0);
 		jsonResp.put("wave", strResponseWav.c_str());
 	}
