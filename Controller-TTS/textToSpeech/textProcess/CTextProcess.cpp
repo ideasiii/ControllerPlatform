@@ -254,7 +254,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	nResult = htsSynthesize(12, param);
 
 	//=============windows version========================//
-	int i;
+/*	int i;
 	CString command;
 	CStringArray strCommandArray;
 	command.format("%s", szLabel);	// argument 1
@@ -275,7 +275,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	}
 
 	hts_engine(commandLine, dPitchRatio, dSpeakRate, nSpeaker);
-
+*/
 	delete param;
 	return nResult;
 }
