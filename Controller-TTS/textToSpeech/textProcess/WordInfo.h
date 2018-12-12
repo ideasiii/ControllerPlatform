@@ -256,7 +256,7 @@ struct WORD_PACKAGE
 	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
 	int sentenceToneCobm[SENTENCE_LEN * 2];
 	int best_score;
-	int char_type[SENTENCE_LEN + 1];
+//	int char_type[SENTENCE_LEN + 1];
 
 public:
 	void clear()

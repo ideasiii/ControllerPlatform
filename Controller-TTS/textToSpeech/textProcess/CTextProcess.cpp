@@ -177,7 +177,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 			return -1;
 		_log("==============> %s", big5);
 		free(big5);
-	//	return 0;
+		//	return 0;
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
@@ -924,6 +924,52 @@ void CTextProcess::dumpWordData()
 				phone[8], phone[9], phone[10], attr[0], attr[1], attr[2], attr[3]);
 
 		free(utf8);
+		csWordFile << strData.getBuffer() << endl;
+		_log("%s", strData.getBuffer());
+	}
+
+	cf.close();
+	csWordFile.close();
+}
+
+void CTextProcess::dumpWordIndex()
+{
+	ofstream csWordFile("dumpWordIndex.txt", ios::app);
+	ifstream cf("model/WORD.NDX", std::ifstream::binary);
+	cf.seekg(0, cf.end);
+	int fend = cf.tellg();
+	cf.seekg(0, cf.beg);
+	_log("word index size=%d", fend);
+	unsigned short value;
+	CString strData;
+
+	while (cf.tellg() != fend)
+	{
+		cf.read(reinterpret_cast<char *>(&value), sizeof(unsigned short));
+		strData.format("%d", value);
+		csWordFile << strData.getBuffer() << endl;
+		_log("%s", strData.getBuffer());
+	}
+
+	cf.close();
+	csWordFile.close();
+}
+
+void CTextProcess::dumpPhone()
+{
+	ofstream csWordFile("dumpPhone.txt", ios::app);
+	ifstream cf("model/PHONE.DAT", std::ifstream::binary);
+	cf.seekg(0, cf.end);
+	int fend = cf.tellg();
+	cf.seekg(0, cf.beg);
+	_log("word index size=%d", fend);
+	unsigned short value;
+	CString strData;
+
+	while (cf.tellg() != fend)
+	{
+		cf.read(reinterpret_cast<char *>(&value), sizeof(short));
+		strData.format("%d", value);
 		csWordFile << strData.getBuffer() << endl;
 		_log("%s", strData.getBuffer());
 	}

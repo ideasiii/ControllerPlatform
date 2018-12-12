@@ -237,7 +237,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 	string strDie = "{\"key\":\"suicide\"}";
 	string strWheelPies = "";
-	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態'角色[語音智慧平台]，我說\n\n\n\n一個故事給你們聽。要注意聽!(千萬)要\t\t\t\t注意聽，\n因為；如果沒聽到，你一\r\r定會問，你在說什麼?文字、聲音、及影像等。故事透過敘述的方式闡述幾個情節，\r\"}";
+	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態'角色[語音智慧平台]，我說\n\n\n\n一個故事給你們聽。要注意聽!(千萬)要\t\t\t\t注意聽，\n因為；如果沒聽到，你一\r\r定會問，我在說什麼?這是個文字、聲音、及影像等。故事透過敘述的方式闡述幾個情節，\r\"}";
 
 	if(0 != szBody)
 	{

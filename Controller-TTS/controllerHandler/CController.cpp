@@ -71,6 +71,8 @@ int CController::onInitial(void* szConfPath)
 	}
 	// test
 	// textProcess->dumpWordData();
+	// textProcess->dumpWordIndex();
+	//textProcess->dumpPhone();
 	//CString strWav;
 	//textProcess->processTheText("你在說什麼?多型態角色語音智慧平台，我說一個故事給你們聽。要注意聽!千萬要注意聽，因為；如果沒聽到，你一定會問，你在說什麼?", strWav);
 	//_log("=====================憋魚酒氣了");

@@ -91,7 +91,7 @@ void CWord::InitWord(LPCTSTR dir)
 		int j = 0;
 		for (i = 1; i < CHINESE_INDEX_NUM; i++)
 		{
-			if (word_index[i] == 0xffff)
+			if (word_index[i] == 0xffff) //65535
 				continue;
 			if (word_index[i] < j)
 				break;
@@ -100,15 +100,12 @@ void CWord::InitWord(LPCTSTR dir)
 		word_index_boundry = i;
 	}
 
-	// 啟峻加入修改的部分
-//	m_word_data = word_data;
-//	m_word_index = word_index;
 	_log("[CWord] InitWord success");
 }
 
 void CWord::GetWord(WORD_PACKAGE &wordPackage)
 {
-	int i, j, k, start, ptr, offset;
+	int i, j, k, start, offset;
 	long ndx;
 	UCHAR *leading;
 	WORD_DB *wdb;
@@ -145,23 +142,13 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	// 設定int char_type[SENTENCE_LEN+1]的內容
 	// char_type的內容可以為CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR等等，如下所列
 	// enum {CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR, SYMBOL_CHAR, DOT_CHAR, SPECIAL_DIGIT, SPECIAL_CHAR, MOUSE_CHAR};
-	SetCharType(wordPackage);
+	//SetCharType(wordPackage);
 
-	// ptr是此函式中宣告的區域變數，型態為int
 	// ptr在每次迴圈中都加2，是因為Unicode編碼的關係
 	// 而text_len要成二的原因也是
-	for (ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
+	for (int ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
 	{
-		// found也是區域變數，型態為BOOL
-//		found = FALSE;
-		// 如果輸入字串的內容中有"．"，就將他換成"點"，並更改對應之char_type[]
-
-		if (memcmp(&wordPackage.txt[ptr], "．", 2) == 0)
-		{
-			memcpy(&wordPackage.txt[ptr], "點", 2);
-			wordPackage.char_type[ptr / 2] = CHINESE_CHAR;
-		}
-		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4)
+		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4) //Big5_ETen，每個字由兩個位元組(2 bytes)組成， 其第一位元組編碼範圍為 0xA1-0xF9
 			continue;
 		// ndx為區域變數，作為word的index，型態為長整數long
 		ndx = (*(wordPackage.txt + ptr) - 0xa4) * 157;
@@ -262,8 +249,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			break;
 	}
 
-	if (wordPackage.char_type[wordPackage.txt_len / 2]
-			== CHINESE_CHAR&& wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
+	if (wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
 	{
 		pwi->sen_pos = 2;
 		if (wordPackage.wnum > 2)
@@ -289,7 +275,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 		wordPackage.toneComb4[i] = wordPackage.toneComb[i] = 0;
 		for (k = start, j = 0; j < pwi->wlen; j++, k++)
 		{
-			if (wordPackage.char_type[k] == CHINESE_CHAR && pwi->phone[j] < SD_PUNC)
+			if (pwi->phone[j] < SD_PUNC)
 			{
 				t = Tone(pwi->phone[j]) - 1;
 				wordPackage.toneComb[i] = wordPackage.toneComb[i] * 5 + t;
@@ -361,77 +347,79 @@ void CWord::Score(int cur_ptr, WORD_PACKAGE &wordPackage)
 	}
 }
 
-void CWord::SetCharType(WORD_PACKAGE &wordPackage)
-{
-	UINT v;
-	UCHAR *p;
-	int i, j;
+/* not use
+ void CWord::SetCharType(WORD_PACKAGE &wordPackage)
+ {
+ UINT v;
+ UCHAR *p;
+ int i, j;
 
-	for (i = 0; i < wordPackage.txt_len; i++)
-	{
-		p = &wordPackage.txt[i * 2];
-		v = p[0] * 256 + p[1];
-		if (v >= 0xa2af && v <= 0xa2b8)
-		{ //０１２３４５６７８９
-			wordPackage.char_type[i] = DIGIT_CHAR;
-			//strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
-		}
-		else if (v >= 0xa2cf && v <= 0xa2fe)
-		{ //ＡＢＣ．．．Ｚ
-			wordPackage.char_type[i] = ENGLISH_CHAR;
-		}
-		else if (v == 0xa144)
-		{  //  .
-			wordPackage.char_type[i] = DOT_CHAR;
-		}
-		else if (v == 0xa249)
-		{
-			wordPackage.char_type[i] = MOUSE_CHAR;
-		}
-		else
-			wordPackage.char_type[i] = CHINESE_CHAR;
-	}
+ for (i = 0; i < wordPackage.txt_len; i++)
+ {
+ p = &wordPackage.txt[i * 2];
+ v = p[0] * 256 + p[1];
+ if (v >= 0xa2af && v <= 0xa2b8)
+ { //０１２３４５６７８９
+ wordPackage.char_type[i] = DIGIT_CHAR;
+ //strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
+ }
+ else if (v >= 0xa2cf && v <= 0xa2fe)
+ { //ＡＢＣ．．．Ｚ
+ wordPackage.char_type[i] = ENGLISH_CHAR;
+ }
+ else if (v == 0xa144)
+ {  //  .
+ wordPackage.char_type[i] = DOT_CHAR;
+ }
+ else if (v == 0xa249)
+ {
+ wordPackage.char_type[i] = MOUSE_CHAR;
+ }
+ else
+ wordPackage.char_type[i] = CHINESE_CHAR;
+ }
 
-	for (i = 0; i < wordPackage.txt_len; i++)
-	{
-		if (wordPackage.char_type[i] == DOT_CHAR)
-		{
-			if (i && i < wordPackage.txt_len - 1
-					&& (wordPackage.char_type[i - 1] == ENGLISH_CHAR || wordPackage.char_type[i - 1] == DIGIT_CHAR
-							|| wordPackage.char_type[i - 1] == SPECIAL_DIGIT) &&
-					//^^^^^^^^SPECIAL_DIGIT ??
-					(wordPackage.char_type[i + 1] == ENGLISH_CHAR || wordPackage.char_type[i + 1] == DIGIT_CHAR))
-			{
-				strncpy((char*) &wordPackage.txt[2 * i], "點", 2);
-				for (j = i - 1; j >= 0; j--)
-				{
-					if (wordPackage.char_type[j] == ENGLISH_CHAR || wordPackage.char_type[j] == DIGIT_CHAR)
-					{
-						if (wordPackage.char_type[j] == DIGIT_CHAR)
-							wordPackage.char_type[j] = SPECIAL_DIGIT;
-					}
-					else
-						break;
-				}
-				for (i++; i < wordPackage.txt_len; i++)
-				{
-					if (wordPackage.char_type[i] == ENGLISH_CHAR || wordPackage.char_type[i] == DIGIT_CHAR)
-					{
-						if (wordPackage.char_type[i] == DIGIT_CHAR)
-							wordPackage.char_type[i] = SPECIAL_DIGIT;
-					}
-					else
-					{
-						i--;
-						break;
-					}
-				}
-			}
-			else
-				wordPackage.char_type[i] = SYMBOL_CHAR;
-		}
-	}
-}
+ for (i = 0; i < wordPackage.txt_len; i++)
+ {
+ if (wordPackage.char_type[i] == DOT_CHAR)
+ {
+ if (i && i < wordPackage.txt_len - 1
+ && (wordPackage.char_type[i - 1] == ENGLISH_CHAR || wordPackage.char_type[i - 1] == DIGIT_CHAR
+ || wordPackage.char_type[i - 1] == SPECIAL_DIGIT) &&
+ //^^^^^^^^SPECIAL_DIGIT ??
+ (wordPackage.char_type[i + 1] == ENGLISH_CHAR || wordPackage.char_type[i + 1] == DIGIT_CHAR))
+ {
+ strncpy((char*) &wordPackage.txt[2 * i], "點", 2);
+ for (j = i - 1; j >= 0; j--)
+ {
+ if (wordPackage.char_type[j] == ENGLISH_CHAR || wordPackage.char_type[j] == DIGIT_CHAR)
+ {
+ if (wordPackage.char_type[j] == DIGIT_CHAR)
+ wordPackage.char_type[j] = SPECIAL_DIGIT;
+ }
+ else
+ break;
+ }
+ for (i++; i < wordPackage.txt_len; i++)
+ {
+ if (wordPackage.char_type[i] == ENGLISH_CHAR || wordPackage.char_type[i] == DIGIT_CHAR)
+ {
+ if (wordPackage.char_type[i] == DIGIT_CHAR)
+ wordPackage.char_type[i] = SPECIAL_DIGIT;
+ }
+ else
+ {
+ i--;
+ break;
+ }
+ }
+ }
+ else
+ wordPackage.char_type[i] = SYMBOL_CHAR;
+ }
+ }
+ }
+ */
 
 unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
 /* return 0 if not a voice_able  word */

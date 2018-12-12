@@ -26,6 +26,8 @@ public:
 	int processTheText(const char *szText, CString &strWavePath);
 	void loadModel();
 	void dumpWordData();
+	void dumpWordIndex();
+	void dumpPhone();
 
 private:
 
