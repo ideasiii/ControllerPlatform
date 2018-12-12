@@ -16,6 +16,7 @@
 #include "HTS_engine.h"
 #include "CString.h"
 #include "HTS_engine.h"
+#include "hts_engine.h"
 #include "CConvert.h"
 #include "utility.h"
 #include "WordInfo.h"
@@ -123,17 +124,16 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	strInput = szText;
 	strInput.trim();
 
-	for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
-	{
-		strInput.replace(vdel_it->c_str(), "");
-	}
-
 	WordExchange(strInput);
 	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());
 
 	string strFinded;
 	while ((i = strInput.findOneOf(vWordWrap, strFinded)) != -1)
 	{
+		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
+		{
+			strInput.left(i).replace(vdel_it->c_str(), "");
+		}
 		SentenceArray.add(strInput.left(i));
 		strInput = strInput.right(strInput.getLength() - i - strFinded.length());
 	}
@@ -169,20 +169,20 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 			return -1;
 		textNdx = 0;
 		wordPackage.clear();
+		_log("[CTextProcess] processTheText word from count:%d txt: %s", lcount, SentenceArray[lcount].getBuffer());
 		word->GetSentence((unsigned char*) big5, &textNdx, wordPackage);
 		word->GetWord(wordPackage);
 		free(big5);
 
-		if (-1 == convert->Big5toUTF8((char*) wordPackage.txt, pBig5))
-			return -1;
-		_log("==============> %s", big5);
-		free(big5);
+//		if (-1 == convert->Big5toUTF8((char*) wordPackage.txt, pBig5))
+//			return -1;
+//		_log("==============> %s", big5);
+//		free(big5);
 		//	return 0;
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
 		AllBig5 += strBig5;
-		_log("AllBig5: %s", AllBig5.getBuffer());
 
 		AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
 		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
@@ -228,7 +228,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		csLabFile.close();
 		PhoneSeq.removeAll();
 	}
-
+	_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
 	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
 	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
 
@@ -252,9 +252,11 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[11] = const_cast<char*>("1.2");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
 	nResult = htsSynthesize(12, param);
+	delete param;
+	return nResult;
 
 	//=============windows version========================//
-/*	int i;
+	int i;
 	CString command;
 	CStringArray strCommandArray;
 	command.format("%s", szLabel);	// argument 1
@@ -263,21 +265,21 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	strCommandArray.add(command);
 	command.replace(".f0", ".raw");			// argument 3
 	strCommandArray.add(command);
-	command.Replace(".raw", ".trace");			// argument 4
-	strCommandArray.Add(command);
-	command.Replace(".trace", ".raw");
-	char **commandLine = new char*[strCommandArray.GetSize()];
-	for (i = 0; i < strCommandArray.GetSize(); i++)
+	command.replace(".raw", ".trace");			// argument 4
+	strCommandArray.add(command);
+
+	char **commandLine = new char*[strCommandArray.getSize()];
+	for (i = 0; i < strCommandArray.getSize(); i++)
 	{
-		commandLine[i] = new char[strCommandArray[i].GetLength() + 2];		// CString GetLength回傳的大小不包含"\0" (預留空間給\0)
-		strcpy(commandLine[i], strCommandArray[i].GetBuffer(strCommandArray[i].GetLength()));		// strcpy會在最後加上"\0"
-		strCommandArray[i].ReleaseBuffer();
+		commandLine[i] = new char[strCommandArray[i].getLength() + 2];		// CString GetLength回傳的大小不包含"\0" (預留空間給\0)
+		strcpy(commandLine[i], strCommandArray[i].getBuffer(strCommandArray[i].getLength()));		// strcpy會在最後加上"\0"
+		strCommandArray[i].releaseBuffer();
 	}
 
-	hts_engine(commandLine, dPitchRatio, dSpeakRate, nSpeaker);
-*/
-	delete param;
-	return nResult;
+	_log("[CTextProcess] Synthesize to Windows version: %s %s %s %s", commandLine[0], commandLine[1], commandLine[2],
+			commandLine[3]);
+	hts_engine(commandLine, 1.2f, -0.03f, 1);
+
 }
 
 void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,

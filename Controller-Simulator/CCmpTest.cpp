@@ -53,7 +53,7 @@ CCmpTest::CCmpTest() :
 
 CCmpTest::~CCmpTest()
 {
-	if(-1 != m_nSocketFD)
+	if (-1 != m_nSocketFD)
 	{
 		close(m_nSocketFD);
 		m_nSocketFD = -1;
@@ -65,7 +65,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 	closeConnect();
 
 	struct sockaddr_in hostAddr;
-	if((m_nSocketFD = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+	if ((m_nSocketFD = socket( PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
 	{
 		_DBG("TCP Socket Create Fail!!\n");
 		return FALSE;
@@ -74,7 +74,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 	hostAddr.sin_family = AF_INET;
 	hostAddr.sin_addr.s_addr = inet_addr(strIP.c_str());
 	hostAddr.sin_port = htons(nPort);
-	if(connect(m_nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
+	if (connect(m_nSocketFD, (struct sockaddr *) &hostAddr, sizeof(struct sockaddr_in)) != 0)
 	{
 		_DBG("TCP Socket Connect Fail!!\n");
 		return FALSE;
@@ -89,7 +89,7 @@ int CCmpTest::connectController(const std::string strIP, const int nPort)
 
 void CCmpTest::closeConnect()
 {
-	if(-1 != m_nSocketFD)
+	if (-1 != m_nSocketFD)
 	{
 		close(m_nSocketFD);
 		m_nSocketFD = -1;
@@ -106,7 +106,7 @@ int CCmpTest::sendRequest(const int nCommandId, const char *szBody)
 	int nRet = -1;
 	int nPacketLen;
 
-	if(-1 == m_nSocketFD)
+	if (-1 == m_nSocketFD)
 	{
 		_DBG("TCP Socket invalid");
 		return nRet;
@@ -120,7 +120,7 @@ int CCmpTest::sendRequest(const int nCommandId, const char *szBody)
 
 	nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
 
-	if(nPacketLen == nRet)
+	if (nPacketLen == nRet)
 	{
 		CMP_HEADER *pHeader;
 		pHeader = (CMP_HEADER *) pbuf;
@@ -141,7 +141,7 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 {
 	int nRet = -1;
 
-	if(-1 == m_nSocketFD)
+	if (-1 == m_nSocketFD)
 	{
 		_DBG("TCP Socket invalid");
 		return nRet;
@@ -153,7 +153,7 @@ int CCmpTest::sendRequestAMX(const int nCommandId)
 	char *pbuf;
 	pbuf = buf;
 
-	switch(nCommandId)
+	switch (nCommandId)
 	{
 	case AMX_BIND:
 		strCommand = "bind";
@@ -192,7 +192,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	sprintf(bufId, "%d", ++snId);
 	strId = bufId;
 
-	if(27027 == nCommand)
+	if (27027 == nCommand)
 		packet.cmpHeader.command_id = htonl(access_log_request);
 	else
 		packet.cmpHeader.command_id = htonl(nCommand);
@@ -237,9 +237,10 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	string strSematicWord = "{\"id\":0,\"type\":0,\"word\":\"我說一個故事給你們聽\",\"total\":0,\"number\":0}";
 	string strDie = "{\"key\":\"suicide\"}";
 	string strWheelPies = "";
-	string strTTS = "{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"多型態'角色[語音智慧平台]，我說\n\n\n\n一個故事給你們聽。要注意聽!(千萬)要\t\t\t\t注意聽，\n因為；如果沒聽到，你一\r\r定會問，我在說什麼?這是個文字、聲音、及影像等。故事透過敘述的方式闡述幾個情節，\r\"}";
+	string strTTS =
+			"{\"user_id\":\"\",\"voice_id\":0,\"emotion\":0,\"text\":\"我是三角形，出門去旅行。哎呦，哎呀，不小心跌了一跤。你看我。我看你。嗨！我們都是三角形！找到了朋友，好開心。哈哈哈，嘻嘻，一起在花園裡，飛來飛去。哈哈哈，嘻嘻，嗚，啦啦啦，啦啦啦，一起在池塘裡，游來游去，一起迎著風，轉來轉去。好涼喔，哈哈哈。一起飛到天空，去旅行。呦齁，哇，天好藍，雲好白。天黑了，溜進房間裡。啪！把燈打開。你看見了我。一格格的彩色玻璃窗我們來玩捉迷藏。咦？你在哪裏？哈哈，找到了，在這裡。找到了朋友，真開心。\"}";
 
-	if(0 != szBody)
+	if (0 != szBody)
 	{
 		memcpy(pIndex, szBody, strlen(szBody));
 		pIndex += strlen(szBody);
@@ -250,7 +251,7 @@ int CCmpTest::formatPacket(int nCommand, void **pPacket, int nSequence, const ch
 	}
 	else
 	{
-		switch(nCommand)
+		switch (nCommand)
 		{
 		case bind_request:
 			memcpy(pIndex, strBind.c_str(), strBind.size());
@@ -464,10 +465,10 @@ void CCmpTest::cmpPressure()
 	nPacketLen = formatPacket( semantic_word_request, &pbuf, getSequence());
 	pHeader = (CMP_HEADER *) pbuf;
 
-	while(1)
+	while (1)
 	{
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
-		if(nPacketLen == nRet)
+		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
 					ntohl(pHeader->command_length), "", m_nSocketFD);
@@ -494,10 +495,10 @@ void CCmpTest::ioPressure()
 	nPacketLen = formatPacket( enquire_link_request, &pbuf, getSequence());
 	pHeader = (CMP_HEADER *) pbuf;
 
-	while(1)
+	while (1)
 	{
 		nRet = send(m_nSocketFD, pbuf, nPacketLen, 0);
-		if(nPacketLen == nRet)
+		if (nPacketLen == nRet)
 		{
 			printPacket(ntohl(pHeader->command_id), ntohl(pHeader->command_status), ntohl(pHeader->sequence_number),
 					ntohl(pHeader->command_length), "", m_nSocketFD);
@@ -527,19 +528,19 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 	void *pHeaderResp = &cmpHeader;
 	int nCommandResp;
 
-	while(1)
+	while (1)
 	{
 		memset(&cmpPacket, 0, sizeof(CMP_PACKET));
 		result = recv(nSocketFD, pHeader, sizeof(CMP_HEADER), MSG_NOSIGNAL);
 
-		if(sizeof(CMP_HEADER) == result)
+		if (sizeof(CMP_HEADER) == result)
 		{
 			nCommand = ntohl(cmpPacket.cmpHeader.command_id);
 			nStatus = ntohl(cmpPacket.cmpHeader.command_status);
 			nSequence = ntohl(cmpPacket.cmpHeader.sequence_number);
 			nTotalLen = ntohl(cmpPacket.cmpHeader.command_length);
 			printPacket(nCommand, nStatus, nSequence, nTotalLen, "", nSocketFD);
-			if( enquire_link_request == nCommand)
+			if ( enquire_link_request == nCommand)
 			{
 				memset(&cmpHeader, 0, sizeof(CMP_HEADER));
 				nCommandResp = generic_nack | nCommand;
@@ -551,17 +552,17 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 				continue;
 			}
 
-			if(enquire_link_request == (0x000000FF | nCommand))
+			if (enquire_link_request == (0x000000FF | nCommand))
 				continue;
 
 			nBodyLen = nTotalLen - sizeof(CMP_HEADER);
 			char buffer[nBodyLen];
-			if(0 < nBodyLen)
+			if (0 < nBodyLen)
 			{
 				pBody = buffer;
 				memset(buffer, 0, sizeof(buffer));
 				result = recv(nSocketFD, pBody, nBodyLen, MSG_NOSIGNAL);
-				if(result != nBodyLen)
+				if (result != nBodyLen)
 				{
 					close(nSocketFD);
 					printf("[Socket Client] socket client close : %d , packet length error: %d != %d\n", nSocketFD,
@@ -578,7 +579,7 @@ void CCmpTest::runCMPSocketReceive(int nSocketFD)
 			break;
 		}
 
-		if(0 >= result)
+		if (0 >= result)
 		{
 			close(nSocketFD);
 			break;
@@ -607,12 +608,12 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 	char pBuf[BUF_SIZE];
 	string strPacket;
 
-	while(1)
+	while (1)
 	{
 		memset(pBuf, 0, sizeof(pBuf));
 		result = recv(nSocketFD, pBuf, BUF_SIZE, MSG_NOSIGNAL);
 
-		if(0 >= result)
+		if (0 >= result)
 		{
 			close(nSocketFD);
 			break;
@@ -620,12 +621,12 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 
 		strPacket = pBuf;
 		printf("[Socket Client] socket receive : %s\n", strPacket.c_str());
-		if(0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
+		if (0 != strPacket.substr(0, 6).compare("CTL_OK") && 0 != strPacket.substr(0, 9).compare("CTL_ERROR"))
 		{
 			memset(pBuf, 0, sizeof(pBuf));
 			int nSize = 0;
 			string strCommand = trim(strPacket);
-			if(AMX_STATUS_CURRENT.find(strCommand) != AMX_STATUS_CURRENT.end())
+			if (AMX_STATUS_CURRENT.find(strCommand) != AMX_STATUS_CURRENT.end())
 			{
 				string strCurrent = AMX_STATUS_CURRENT[strCommand] + "\n";
 
@@ -661,7 +662,7 @@ void CCmpTest::runSocketReceive(int nSocketFD)
 			 }
 			 */
 			result = send(nSocketFD, pBuf, nSize, MSG_NOSIGNAL);
-			if(0 >= result)
+			if (0 >= result)
 			{
 				close(nSocketFD);
 				break;

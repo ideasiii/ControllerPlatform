@@ -29,3 +29,6 @@
 			3：WAVE 產生失敗
 			4：系統錯誤
 				
+			
+//=====================RAW to WAV ================================//
+sox -t raw -b 16 -e signed-integer -r 16000 -c 1 *.raw duck.wav
