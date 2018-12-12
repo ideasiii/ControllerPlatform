@@ -252,6 +252,30 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[11] = const_cast<char*>("1.2");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
 	nResult = htsSynthesize(12, param);
+
+	//=============windows version========================//
+	int i;
+	CString command;
+	CStringArray strCommandArray;
+	command.format("%s", szLabel);	// argument 1
+	strCommandArray.add(command);
+	command.replace(".lab", ".f0");			// argument 2
+	strCommandArray.add(command);
+	command.replace(".f0", ".raw");			// argument 3
+	strCommandArray.add(command);
+	command.Replace(".raw", ".trace");			// argument 4
+	strCommandArray.Add(command);
+	command.Replace(".trace", ".raw");
+	char **commandLine = new char*[strCommandArray.GetSize()];
+	for (i = 0; i < strCommandArray.GetSize(); i++)
+	{
+		commandLine[i] = new char[strCommandArray[i].GetLength() + 2];		// CString GetLength回傳的大小不包含"\0" (預留空間給\0)
+		strcpy(commandLine[i], strCommandArray[i].GetBuffer(strCommandArray[i].GetLength()));		// strcpy會在最後加上"\0"
+		strCommandArray[i].ReleaseBuffer();
+	}
+
+	hts_engine(commandLine, dPitchRatio, dSpeakRate, nSpeaker);
+
 	delete param;
 	return nResult;
 }
