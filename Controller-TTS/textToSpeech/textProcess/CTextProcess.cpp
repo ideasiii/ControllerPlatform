@@ -170,15 +170,13 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		textNdx = 0;
 		wordPackage.clear();
 		_log("[CTextProcess] processTheText word from count:%d txt: %s", lcount, SentenceArray[lcount].getBuffer());
+//		WORD_INFO word_info;
+//		wordPackage.vecWordInfo.push_back(word_info);
+//		wordPackage.vecWordInfo[lcount].strSentence = SentenceArray[lcount].getBuffer();
 		word->GetSentence((unsigned char*) big5, &textNdx, wordPackage);
 		word->GetWord(wordPackage);
 		free(big5);
 
-//		if (-1 == convert->Big5toUTF8((char*) wordPackage.txt, pBig5))
-//			return -1;
-//		_log("==============> %s", big5);
-//		free(big5);
-		//	return 0;
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
 		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
@@ -228,7 +226,14 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		csLabFile.close();
 		PhoneSeq.removeAll();
 	}
-	_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
+	char *big5 = 0;
+	char **pBig5 = &big5;
+	if (-1 != convert->Big5toUTF8((char*) AllBig5.getBuffer(), pBig5))
+	{
+		_log("[CTextProcess] processTheText AllBig5: %s", big5);
+	}
+	free(big5);
+
 	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
 	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
 
@@ -345,8 +350,8 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		char **pUtf8 = &utf8;
 		if (-1 == convert->Big5toUTF8((char*) wordPackage.vecWordInfo[i].big5, pUtf8))
 			return;
-		strBig5 = strBig5 + utf8;
-		cstemp = cstemp + utf8;
+		strBig5 = strBig5 + wordPackage.vecWordInfo[i].big5;
+		cstemp = cstemp + wordPackage.vecWordInfo[i].big5;
 		cstemp = cstemp + "/X ";
 		free(utf8);
 
