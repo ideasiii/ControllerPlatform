@@ -20,6 +20,7 @@
 #include "CConvert.h"
 #include "utility.h"
 #include "WordInfo.h"
+#include "utf8.h"
 
 using namespace std;
 
@@ -163,19 +164,18 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 			PhraseBound[i] = 0;
 
 		/************ UTF8 轉 Big5 **********************************/
-		char *big5 = 0;
-		char **pBig5 = &big5;
-		if (-1 == convert->UTF8toBig5((char*) SentenceArray[lcount].getBuffer(), pBig5))
+		wordPackage.clear();
+		wordPackage.strText = SentenceArray[lcount].getBuffer();
+		wordPackage.txt_len = utf8len(wordPackage.strText.getBuffer());
+		if (-1 == convert->UTF8toBig5((char*) wordPackage.strText.getBuffer(), &wordPackage.txt))
 			return -1;
 		textNdx = 0;
-		wordPackage.clear();
-		_log("[CTextProcess] processTheText word from count:%d txt: %s", lcount, SentenceArray[lcount].getBuffer());
-//		WORD_INFO word_info;
-//		wordPackage.vecWordInfo.push_back(word_info);
-//		wordPackage.vecWordInfo[lcount].strSentence = SentenceArray[lcount].getBuffer();
-		word->GetSentence((unsigned char*) big5, &textNdx, wordPackage);
+
+		_log("[CTextProcess] processTheText word from count:%d utf8: %s big5: %s txt_len: %d", lcount,
+				wordPackage.strText.getBuffer(), wordPackage.txt, wordPackage.txt_len);
+
 		word->GetWord(wordPackage);
-		free(big5);
+		free(wordPackage.txt);
 
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);

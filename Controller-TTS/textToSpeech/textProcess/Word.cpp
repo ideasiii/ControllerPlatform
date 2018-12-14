@@ -106,11 +106,11 @@ void CWord::InitWord(LPCTSTR dir)
 void CWord::GetWord(WORD_PACKAGE &wordPackage)
 {
 	int i, j, k, start, offset;
-	long ndx;
+	long ndx = 0;
 	UCHAR *leading;
 	WORD_DB *wdb;
 
-	// text_len是以Unicode計算
+	// text_len是以Unicode計算 幾個字
 	for (i = 0; i < wordPackage.txt_len + 1; ++i)
 	{
 		// SENTENCE_LEN定義為100
@@ -139,74 +139,13 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	for (; i < SENTENCE_LEN; ++i)
 		wordPackage.tab[i][0] = 0;
 
-	// 設定int char_type[SENTENCE_LEN+1]的內容
-	// char_type的內容可以為CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR等等，如下所列
-	// enum {CHINESE_CHAR, ENGLISH_CHAR, DIGIT_CHAR, SYMBOL_CHAR, DOT_CHAR, SPECIAL_DIGIT, SPECIAL_CHAR, MOUSE_CHAR};
-	//SetCharType(wordPackage);
-
-	// ptr在每次迴圈中都加2，是因為Unicode編碼的關係
-	// 而text_len要成二的原因也是
-	for (int ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
-	{
-		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4) //Big5_ETen，每個字由兩個位元組(2 bytes)組成， 其第一位元組編碼範圍為 0xA1-0xF9
-			continue;
-		// ndx為區域變數，作為word的index，型態為長整數long
-		ndx = (*(wordPackage.txt + ptr) - 0xa4) * 157;
-		ndx += (*(wordPackage.txt + ptr + 1) > 0xa0) ?
-				*(wordPackage.txt + ptr + 1) - 0xa1 + 0x3f : *(wordPackage.txt + ptr + 1) - 0x40;
-
-		// leading為區域變數型態為UCHAR*也就是unsigned char*
-		leading = NULL;
-		if (word_index[ndx] != 0xffff)
-		{
-			offset = word_index[ndx];
-			if (ndx >= word_index_boundry)
-				offset += 65535L;
-			for (i = offset;; i++)
-			{
-				// 由詞庫中讀出以輸入字串中目前index到的字為首的所有的詞
-				// word_data為詞庫，指標為ndx
-				int dsize = sizeof(*word_data);
-				int psize = sizeof(word_data);
-				int ssize = sizeof(word_data[i]);
-				//std::cout << dsize << psize << ssize;
-				wdb = &word_data[i];
-				if (leading != NULL && (leading[0] != wdb->big5[0] || leading[1] != wdb->big5[1]))
-					break;
-				leading = wdb->big5;
-				j = wdb->byte;
-
-				// 只處理到詞長最大為四字詞
-				if (j > 2 * 4)
-					continue;
-
-				// 根據詞長j，比較是否相同，回傳值若為零，表示一模一樣
-				if (memcmp(wordPackage.txt + ptr, wdb->big5, j) == 0)
-				{
-					start = ptr / 2;
-					int k;
-					if (j == 2)
-					{
-						k = 1;
-						wordPackage.tab[start][1] = start;
-					}
-					else
-					{
-						k = ++wordPackage.tab[start][0];
-					}
-					wordPackage.tab[start][k] = start + j / 2 - 1;
-					wordPackage.ptrtab[start][k] = i;
-				}
-			}
-		}
-	}
 	short *p;
 	WORD_INFO *pwi;
 	WORD_DB *pwdb;
 
 	start = ndx = 0;
-	wordPackage.best_score = -9999;
-	Score(0, wordPackage);
+	//wordPackage.best_score = -9999;
+	//Score(0, wordPackage);
 
 	while (1)
 	{
@@ -216,15 +155,15 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 
 		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
 
-		if (wordPackage.ptrtab[start][wordPackage.best[start]] >= 0)
+		if (wordPackage.ptrtab[start][1] >= 0)
 		{
-			pwdb = &word_data[wordPackage.ptrtab[start][wordPackage.best[start]]];
+			pwdb = &word_data[wordPackage.ptrtab[start][1]];
 			memcpy(pwi->attr, pwdb->attr, 4);
 		}
 		else
 			memset(pwi->attr, 0, 4);
 
-		if (wordPackage.tab[start][wordPackage.best[start]] == start)
+		if (wordPackage.tab[start][1] == start)
 		{
 			pwi->phone[0] = GetPhone(start, wordPackage);
 			memcpy(pwi->big5, &wordPackage.txt[ndx * 2], 2);
@@ -234,7 +173,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 		else
 		{
 			p = pwdb->phone;
-			j = wordPackage.tab[start][wordPackage.best[start]] - start + 1;
+			j = wordPackage.tab[start][/*wordPackage.best[start]*/1] - start + 1;
 			memcpy(pwi->big5, pwdb->big5, j * 2);
 			pwi->wlen = j;
 			ndx += j;
@@ -244,7 +183,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			}
 		}
 		wordPackage.wnum++;
-		start = wordPackage.tab[start][wordPackage.best[start]] + 1;
+		start = wordPackage.tab[start][/*wordPackage.best[start]*/1] + 1;
 		if (start >= wordPackage.txt_len)
 			break;
 	}
@@ -263,7 +202,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 		wordPackage.vecWordInfo[0].sen_pos = 0;
 		pwi->sen_pos = 2;
 	}
-	//ChangePhone(wordPackage);
 
 	start = 0;
 	int t, t1, t2, t3;
@@ -312,115 +250,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	}
 }
 
-void CWord::Score(int cur_ptr, WORD_PACKAGE &wordPackage)
-{
-	short count, start;
-	short i;
-
-	if (cur_ptr >= wordPackage.txt_len)
-	{
-		count = 9000, start = 0;
-		while (1)
-		{
-			if (wordPackage.tab[start][wordPackage.q[start]] == start)
-				count -= 20;
-			else
-				count -= 10;
-			start = wordPackage.tab[start][wordPackage.q[start]] + 1;
-			if (start >= wordPackage.txt_len)
-				break;
-		}
-		if (count >= wordPackage.best_score)
-		{
-			wordPackage.best_score = count;
-			for (i = 0; i < wordPackage.txt_len; i++)
-			{
-				wordPackage.best[i] = wordPackage.q[i];
-			}
-		}
-		return;
-	}
-	for (i = 1; i <= wordPackage.tab[cur_ptr][0]; i++)
-	{
-		wordPackage.q[cur_ptr] = i;
-		Score(wordPackage.tab[cur_ptr][i] + 1, wordPackage);
-	}
-}
-
-/* not use
- void CWord::SetCharType(WORD_PACKAGE &wordPackage)
- {
- UINT v;
- UCHAR *p;
- int i, j;
-
- for (i = 0; i < wordPackage.txt_len; i++)
- {
- p = &wordPackage.txt[i * 2];
- v = p[0] * 256 + p[1];
- if (v >= 0xa2af && v <= 0xa2b8)
- { //０１２３４５６７８９
- wordPackage.char_type[i] = DIGIT_CHAR;
- //strncpy((char *) &wordPackage.txt[2 * i], (char*) &numberic[v - 0xa2af][0], 2);
- }
- else if (v >= 0xa2cf && v <= 0xa2fe)
- { //ＡＢＣ．．．Ｚ
- wordPackage.char_type[i] = ENGLISH_CHAR;
- }
- else if (v == 0xa144)
- {  //  .
- wordPackage.char_type[i] = DOT_CHAR;
- }
- else if (v == 0xa249)
- {
- wordPackage.char_type[i] = MOUSE_CHAR;
- }
- else
- wordPackage.char_type[i] = CHINESE_CHAR;
- }
-
- for (i = 0; i < wordPackage.txt_len; i++)
- {
- if (wordPackage.char_type[i] == DOT_CHAR)
- {
- if (i && i < wordPackage.txt_len - 1
- && (wordPackage.char_type[i - 1] == ENGLISH_CHAR || wordPackage.char_type[i - 1] == DIGIT_CHAR
- || wordPackage.char_type[i - 1] == SPECIAL_DIGIT) &&
- //^^^^^^^^SPECIAL_DIGIT ??
- (wordPackage.char_type[i + 1] == ENGLISH_CHAR || wordPackage.char_type[i + 1] == DIGIT_CHAR))
- {
- strncpy((char*) &wordPackage.txt[2 * i], "點", 2);
- for (j = i - 1; j >= 0; j--)
- {
- if (wordPackage.char_type[j] == ENGLISH_CHAR || wordPackage.char_type[j] == DIGIT_CHAR)
- {
- if (wordPackage.char_type[j] == DIGIT_CHAR)
- wordPackage.char_type[j] = SPECIAL_DIGIT;
- }
- else
- break;
- }
- for (i++; i < wordPackage.txt_len; i++)
- {
- if (wordPackage.char_type[i] == ENGLISH_CHAR || wordPackage.char_type[i] == DIGIT_CHAR)
- {
- if (wordPackage.char_type[i] == DIGIT_CHAR)
- wordPackage.char_type[i] = SPECIAL_DIGIT;
- }
- else
- {
- i--;
- break;
- }
- }
- }
- else
- wordPackage.char_type[i] = SYMBOL_CHAR;
- }
- }
- }
- */
-
 unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
 /* return 0 if not a voice_able  word */
 /* return 1 ~ 27965 if a chinese voice_able word */
@@ -441,6 +270,7 @@ unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
 	return sid[0];
 }
 
+/*
 int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 {
 	unsigned char ch[3];
@@ -485,7 +315,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 
 			if (len > WORD_LEN2)
 				if (wordPackage.txt[len * 2] == 0xA1)
-					if ((wordPackage.txt[len * 2 + 1] >= 0x40) && (wordPackage.txt[len * 2 + 1] <= 0x7F)) /* symbol */
+					if ((wordPackage.txt[len * 2 + 1] >= 0x40) && (wordPackage.txt[len * 2 + 1] <= 0x7F))
 					{
 						len++;
 						goto ret;
@@ -538,7 +368,7 @@ int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
 	}
 	return (-1);
 }
-
+*/
 int CWord::IsNumberic(unsigned char *ch)
 {
 	int i;
@@ -559,9 +389,9 @@ void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage
 	wordPackage.vecWordInfo[wno].phone[ndx] = wordPackage.vecWordInfo[wno].phone[ndx] / 10 * 10 + new_tone;
 }
 
-BOOL CCsame(UCHAR * s, char* esi); //one Chinese Character Comparison
-BOOL CCsame(UCHAR * s, char* esi)
-{
+//BOOL CCsame(UCHAR * s, char* esi); //one Chinese Character Comparison
+//BOOL CCsame(UCHAR * s, char* esi)
+//{
 
 	/*
 	 asm
@@ -573,9 +403,9 @@ BOOL CCsame(UCHAR * s, char* esi)
 	 "cmp eax,dword ptr [esi]"
 	 "je same"
 	 );*/
-	return 0;
+	//return 0;
 	//same: return 1;
-}
+//}
 
 const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲", "ㄑㄩˇ" }, { "行", "ㄏㄤˊ" }, { "更", "ㄍㄥ" },
 		{ "度", "ㄉㄨˋ" }, { "省", "ㄕㄥˇ" }, { "重", "ㄔㄨㄥˊ" }, { "校", "ㄒㄧㄠˋ" }, { "處", "ㄔㄨˋ" }, { "著", "ㄓㄠ" }, { "載", "ㄗㄞˇ" },
@@ -595,109 +425,109 @@ const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲"
 /*所以對斷出來的詞不再做sandhi rule的轉變				   */
 /*只針對詞與詞之間做sandhi rule的轉換					   */
 /**************************************2007 09 19 fable*****/
+/*
+ void CWord::ChangePhone(WORD_PACKAGE &wordPackage)
+ {
+ int n, tone, prev_tone;
+ WORD_INFO *pwi;
+ UCHAR *first_char;
+ UCHAR tmp = 0;
+ bool flag;   //for 一
 
-void CWord::ChangePhone(WORD_PACKAGE &wordPackage)
-{
-	int /*i,*/n, tone, prev_tone;
-	WORD_INFO *pwi/*, *next_pwi*/;
-	UCHAR *first_char;
-	UCHAR tmp = 0;
-	bool flag;   //for 一
+ prev_tone = -1;
+ flag = false;
+ first_char = &tmp;
+ for (n = wordPackage.wnum - 1; n >= 0; n--)
+ {
+ pwi = &wordPackage.vecWordInfo[n];
+ //3+3 rule between phones
+ tone = Tone(pwi->phone[pwi->wlen - 1]);
+ if (prev_tone == 3 && tone == 3)
+ {
+ SetTone(n, pwi->wlen - 1, 2, wordPackage);
+ }
 
-	prev_tone = -1;
-	flag = false;
-	first_char = &tmp;
-	for (n = wordPackage.wnum - 1; n >= 0; n--)
-	{
-		pwi = &wordPackage.vecWordInfo[n];
-		//3+3 rule between phones
-		tone = Tone(pwi->phone[pwi->wlen - 1]);
-		if (prev_tone == 3 && tone == 3)
-		{
-			SetTone(n, pwi->wlen - 1, 2, wordPackage);
-		}
+ if (pwi->wlen == 1)
+ {
+ //數字+ 種 個
+ if (IsNumberic(pwi->big5))
+ {
+ if (CCsame(first_char, "種"))
+ {
+ SetTone(n + 1, 0, 3, wordPackage);
+ prev_tone = 3;
+ }
+ if (CCsame(first_char, "個"))
+ {
+ SetTone(n + 1, 0, 5, wordPackage);
+ prev_tone = 5;
+ }
+ }
+ //一's rule
+ if (flag)   //數字 非 兆 億 萬 千 百+一
+ {
+ if (IsNumberic(pwi->big5))
+ SetTone(n + 1, 0, 1, wordPackage);
+ flag = false;
+ }
 
-		if (pwi->wlen == 1)
-		{
-			//數字+ 種 個
-			if (IsNumberic(pwi->big5))
-			{
-				if (CCsame(first_char, "種"))
-				{
-					SetTone(n + 1, 0, 3, wordPackage);
-					prev_tone = 3;
-				}
-				if (CCsame(first_char, "個"))
-				{
-					SetTone(n + 1, 0, 5, wordPackage);
-					prev_tone = 5;
-				}
-			}
-			//一's rule
-			if (flag)   //數字 非 兆 億 萬 千 百+一
-			{
-				if (IsNumberic(pwi->big5))
-					SetTone(n + 1, 0, 1, wordPackage);
-				flag = false;
-			}
+ if (CCsame(pwi->big5, "一"))
+ {
+ //一在最後時
+ if (n == wordPackage.wnum - 1)
+ {
+ SetTone(n, 0, 1, wordPackage);
+ continue;
+ }
+ //+(4 || 5)=>ㄧˊ      ex 一次 一個
+ //+(1 || 2 || 3)=>ㄧˋ ex 一支 一人 一把
+ if (prev_tone == 4 || prev_tone == 5)
+ SetTone(n, 0, 2, wordPackage);
+ else
+ SetTone(n, 0, 4, wordPackage);
 
-			if (CCsame(pwi->big5, "一"))
-			{
-				//一在最後時
-				if (n == wordPackage.wnum - 1)
-				{
-					SetTone(n, 0, 1, wordPackage);
-					continue;
-				}
-				//+(4 || 5)=>ㄧˊ      ex 一次 一個
-				//+(1 || 2 || 3)=>ㄧˋ ex 一支 一人 一把
-				if (prev_tone == 4 || prev_tone == 5)
-					SetTone(n, 0, 2, wordPackage);
-				else
-					SetTone(n, 0, 4, wordPackage);
+ if (!IsNumberic(first_char))
+ {
+ flag = true;				//標記上一個字為一+非數字時的情況 用以數字+一+非數字時改調
+ }
+ else				//一後面是數字時  非 兆 億 萬 千 百
+ {
+ if (CCsame(first_char, "兆") || CCsame(first_char, "億") || CCsame(first_char, "萬")
+ || CCsame(first_char, "千") || CCsame(first_char, "百"))
+ continue;
+ SetTone(n, 0, 1, wordPackage);
+ flag = false;
+ }
+ }
+ //不
+ //+(4)=>ㄅㄨˊ
+ //+(1 || 2 || 3)=> ㄅㄨˋ
+ if (CCsame(pwi->big5, "不"))
+ {
+ if (prev_tone == 4 || prev_tone == 5)
+ SetTone(n, 0, 2, wordPackage);
+ else
+ SetTone(n, 0, 4, wordPackage);
+ }
+ if (CCsame(pwi->big5, "教"))
+ {
+ SetTone(n, 0, 1, wordPackage);
+ }
+ if (CCsame(pwi->big5, "種"))
+ {
+ SetTone(n, 0, 4, wordPackage);
+ }
+ if (CCsame(first_char, "正"))
+ {
+ if (CCsame(pwi->big5, "圓") || CCsame(pwi->big5, "元"))
+ {
+ SetTone(n + 1, 0, 3, wordPackage);
+ }
+ }
+ }
 
-				if (!IsNumberic(first_char))
-				{
-					flag = true;				//標記上一個字為一+非數字時的情況 用以數字+一+非數字時改調
-				}
-				else				//一後面是數字時  非 兆 億 萬 千 百
-				{
-					if (CCsame(first_char, "兆") || CCsame(first_char, "億") || CCsame(first_char, "萬")
-							|| CCsame(first_char, "千") || CCsame(first_char, "百"))
-						continue;
-					SetTone(n, 0, 1, wordPackage);
-					flag = false;
-				}
-			}
-			//不
-			//+(4)=>ㄅㄨˊ
-			//+(1 || 2 || 3)=> ㄅㄨˋ
-			if (CCsame(pwi->big5, "不"))
-			{
-				if (prev_tone == 4 || prev_tone == 5)
-					SetTone(n, 0, 2, wordPackage);
-				else
-					SetTone(n, 0, 4, wordPackage);
-			}
-			if (CCsame(pwi->big5, "教"))
-			{
-				SetTone(n, 0, 1, wordPackage);
-			}
-			if (CCsame(pwi->big5, "種"))
-			{
-				SetTone(n, 0, 4, wordPackage);
-			}
-			if (CCsame(first_char, "正"))
-			{
-				if (CCsame(pwi->big5, "圓") || CCsame(pwi->big5, "元"))
-				{
-					SetTone(n + 1, 0, 3, wordPackage);
-				}
-			}
-		}
-
-		first_char = &pwi->big5[0];
-		prev_tone = Tone(pwi->phone[0]);
-	}
-}
-
+ first_char = &pwi->big5[0];
+ prev_tone = Tone(pwi->phone[0]);
+ }
+ }
+ */

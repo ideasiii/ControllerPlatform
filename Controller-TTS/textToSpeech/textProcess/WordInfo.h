@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <map>
 #include "container.h"
+#include "CString.h"
 
 //注意：WA_VA11 ~ WA_VP : 不要更動其順序
 enum WORD_ATTR
@@ -246,17 +247,19 @@ struct WORD_PACKAGE
 {
 	int txt_len;							// 句子的字數
 	int wnum;							//	word num，也就是這個句子被斷成幾個詞
-	unsigned char txt[200];	// 這個類別中所要處理的句子
+	//unsigned char txt[200];	// 這個類別中所要處理的句子
+	char *txt;
+	CString strText;
 	std::vector<WORD_INFO> vecWordInfo;
 
 	int tab[SENTENCE_LEN][11];
 	int ptrtab[SENTENCE_LEN][11];
-	int best[SENTENCE_LEN];
-	int q[SENTENCE_LEN * 2];
+//	int best[SENTENCE_LEN];
+//	int q[SENTENCE_LEN * 2];
 	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
 	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
 	int sentenceToneCobm[SENTENCE_LEN * 2];
-	int best_score;
+//	int best_score;
 //	int char_type[SENTENCE_LEN + 1];
 
 public:
@@ -264,19 +267,22 @@ public:
 	{
 		txt_len = 0;
 		wnum = 0;
-		memset(txt, 0, sizeof(txt));
+		txt = 0;
+		//	memset(txt, 0, sizeof(txt));
 		vecWordInfo.clear();
 	}
 };
 
 //========================= 字詞分割===============================//
-static std::vector<std::string> vWordWrap = { "。","。", "。", "？", "！", "；", "，", "!", ",", ".", ";", "?" ,"，","！","，","\r"};
+static std::vector<std::string> vWordWrap = { "。", "。", "。", "？", "！", "；", "，", "!", ",", ".", ";", "?", "，", "！", "，",
+		"\r" };
 //========================= 字詞删除===============================//
 static std::vector<std::string> vWordDel = { "\n", "\r", "\t", " ", "	", "(", ")", "[", "]", "{", "}", "'", "、", "\"",
 		"@", "%", "^", "&", "*", "”", "＃", "＄", "％", "＆", "’", "（", "）", "＊", "＋", "，", "－", "／", "＜", "＝", "＞", "？",
 		"＠", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ", "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ",
 		"Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "〔", "＼", "〕", "︿", "ˍ", "’", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ", "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ",
-		"Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "｛", "｜", "｝", "～", "～", "。","。", "。" ,"！","，"};
+		"Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "｛", "｜", "｝", "～", "～", "。", "。",
+		"。", "！", "，" };
 //========================= 字詞替換===============================//
 
 static std::map<std::string, std::string> mapWordExchange1 =
