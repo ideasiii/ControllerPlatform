@@ -929,7 +929,12 @@ void CTextProcess::dumpWordData()
 	short phone[WORD_LEN];  //發音代碼 (10 bytes)
 	CString strData;
 
-	ofstream csWordFile("dumpWordData.txt", ios::app);
+//("ss", (short[] ) { 0, 0, 0, 0, 0, 0,0, 0, 0, 0 })
+	ofstream csWordFile1("dumpWordData_1.txt", ios::app);
+//	ofstream csWordFile2("dumpWordData_2.txt", ios::app);
+//	ofstream csWordFile3("dumpWordData_3.txt", ios::app);
+//	ofstream csWordFile4("dumpWordData_4.txt", ios::app);
+
 	ifstream cf("model/WORD.DAT", std::ifstream::binary);
 	cf.seekg(0, cf.end);
 	int fend = cf.tellg();
@@ -950,17 +955,38 @@ void CTextProcess::dumpWordData()
 		if (-1 == convert.Big5toUTF8((char*) big5, byte, pUtf8))
 			return;
 
-		strData.format("byte: %d big5: %s counter: %d phone: %d-%d-%d-%d-%d-%d-%d-%d-%d-%d attr: %hhx %hhx %hhx %hhx",
-				byte, utf8, counter, phone[0], phone[1], phone[2], phone[3], phone[4], phone[5], phone[6], phone[7],
-				phone[8], phone[9], phone[10], attr[0], attr[1], attr[2], attr[3]);
-
+//		strData.format("(\"%s\", (short[]){ %d,%d,%d,%d,%d,%d,%d,%d,%d,%d})", utf8, phone[0], phone[1], phone[2],
+//				phone[3], phone[4], phone[5], phone[6], phone[7], phone[8], phone[9], phone[10]);
+		strData.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", utf8, phone[0], phone[1], phone[2], phone[3], phone[4],
+				phone[5], phone[6], phone[7], phone[8], phone[9], phone[10]);
+		counter = utf8len(utf8);
 		free(utf8);
-		csWordFile << strData.getBuffer() << endl;
+		csWordFile1 << strData.getBuffer() << endl;
+
+//		switch (counter)
+//		{
+//		case 1:
+//			csWordFile1 << strData.getBuffer() << endl;
+//			break;
+//		case 2:
+//			csWordFile2 << strData.getBuffer() << endl;
+//			break;
+//		case 3:
+//			csWordFile3 << strData.getBuffer() << endl;
+//			break;
+//		case 4:
+//			csWordFile4 << strData.getBuffer() << endl;
+//			break;
+//		}
+
 		_log("%s", strData.getBuffer());
 	}
 
 	cf.close();
-	csWordFile.close();
+	csWordFile1.close();
+//	csWordFile2.close();
+//	csWordFile3.close();
+//	csWordFile4.close();
 }
 
 void CTextProcess::dumpWordIndex()

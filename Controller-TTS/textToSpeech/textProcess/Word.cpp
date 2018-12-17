@@ -4,6 +4,8 @@
 #include "LogHandler.h"
 #include <cmath>
 #include "CConvert.h"
+#include <fstream>
+#include <stdio.h>
 
 #define WORD_FILE "WORD.DAT"
 #define WORD_INDEX_FILE "WORD.NDX"
@@ -11,25 +13,13 @@
 
 using namespace std;
 
-//int wordPitchNdx[4] = { 0, 5, 55, 430 }; //5, 5*5*2=50, 5*5*5*3=375
-
 static USHORT word_index_boundry = 0;
 static unsigned short *word_index = NULL;
 static WORD_DB *word_data = 0;
 
-/*
- static unsigned char symbol[96][4] = { "　", "！", "”", "＃", "＄", "％", "＆", "’", "（", "）", "＊", "＋", "，", "－", "．", "／",
- "０", "１", "２", "３", "４", "５", "６", "７", "８", "９", "：", "；", "＜", "＝", "＞", "？", "＠", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ",
- "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ", "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "〔",
- "＼", "〕", "︿", "ˍ", "’", "Ａ", "Ｂ", "Ｃ", "Ｄ", "Ｅ", "Ｆ", "Ｇ", "Ｈ", "Ｉ", "Ｊ", "Ｋ", "Ｌ", "Ｍ", "Ｎ", "Ｏ", "Ｐ", "Ｑ",
- "Ｒ", "Ｓ", "Ｔ", "Ｕ", "Ｖ", "Ｗ", "Ｘ", "Ｙ", "Ｚ", "｛", "｜", "｝", "～", "～" };
- */
-
 unsigned char numberic[][4] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "萬", "億", "兆", "半",
 		"幾", "多", "少", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖", "拾", "佰", "仟", "廿" };
 static int num = 33;
-
-//static unsigned char tail_symbol[20] = "，。！？︰；";
 
 CWord::CWord()
 {
@@ -47,6 +37,40 @@ void CWord::InitWord(LPCTSTR dir)
 	CString cs;
 	int len;
 
+	//==================== 載入字詞字典檔 =======================//
+	ifstream file("model/WordData.txt");
+	string str;
+	if (file.is_open())
+	{
+		char * pch;
+		string strWord;
+		CString strSID;
+		int nSize;
+		int nIndex;
+		short sSID[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		while (getline(file, str))
+		{
+	//		printf("%s\n", str.c_str());
+
+			pch = strtok(const_cast<char*>(str.c_str()), ",");
+			if (NULL != pch)
+			{
+				strWord = pch;
+				mapWord[strWord] = sSID;
+			}
+
+			pch = strtok( NULL, ",");
+			nIndex = 0;
+			while (pch != NULL)
+			{
+				mapWord[strWord][nIndex] = atoi(pch);
+				pch = strtok( NULL, ",");
+				++nIndex;
+			}
+		}
+		file.close();
+	}
+//	mapWord
 	/**********************FILE* method**********************************/
 
 	if (0 == word_data)
@@ -141,8 +165,65 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	for (; i < SENTENCE_LEN; ++i)
 		wordPackage.tab[i][0] = 0;
 
+	// ptr是此函式中宣告的區域變數，型態為int
+	// ptr在每次迴圈中都加2，是因為Unicode編碼的關係
+	// 而text_len要成二的原因也是
+	bool found = FALSE;
+	for (int ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
+	{
+		// found也是區域變數，型態為BOOL
+		found = FALSE;
+		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4)
+			continue;
+		// ndx為區域變數，作為word的index，型態為長整數long
+		ndx = (*(wordPackage.txt + ptr) - 0xa4) * 157;
+		ndx += (*(wordPackage.txt + ptr + 1) > 0xa0) ?
+				*(wordPackage.txt + ptr + 1) - 0xa1 + 0x3f : *(wordPackage.txt + ptr + 1) - 0x40;
+
+		// leading為區域變數型態為UCHAR*也就是unsigned char*
+		leading = NULL;
+		if (word_index[ndx] != 0xffff)
+		{
+			offset = word_index[ndx];
+			if (ndx >= word_index_boundry)
+				offset += 65535L;
+			for (i = offset;; i++)
+			{
+				// 由詞庫中讀出以輸入字串中目前index到的字為首的所有的詞
+				// word_data為詞庫，指標為ndx
+				wdb = &word_data[i];
+				if (leading != NULL && (leading[0] != wdb->big5[0] || leading[1] != wdb->big5[1]))
+					break;
+				leading = wdb->big5;
+				j = wdb->byte;
+
+				// 只處理到詞長最大為四字詞
+				if (j > 2 * 4)
+					continue;
+
+				// 根據詞長j，比較是否相同，回傳值若為零，表示一模一樣
+				if (memcmp(wordPackage.txt + ptr, wdb->big5, j) == 0)
+				{
+					start = ptr / 2;
+					int k;
+					if (j == 2)
+					{
+						k = 1;
+						wordPackage.tab[start][1] = start;
+					}
+					else
+					{
+						k = ++wordPackage.tab[start][0];
+					}
+					wordPackage.tab[start][k] = start + j / 2 - 1;
+					wordPackage.ptrtab[start][k] = i;
+					found = TRUE;
+				}
+			}
+		}
+	}
+
 	short *p;
-//	WORD_INFO *pwi;
 	WORD_DB *pwdb;
 
 	wordPackage.wnum = start = ndx = 0;
@@ -151,24 +232,25 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	{
 		WORD_INFO word_info;
 		wordPackage.vecWordInfo.push_back(word_info);
-//		pwi = &wordPackage.vecWordInfo[wordPackage.wnum];
-
-		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
+//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
 
 		if (wordPackage.ptrtab[start][1] >= 0)
 		{
 			pwdb = &word_data[wordPackage.ptrtab[start][1]];
-			memcpy(wordPackage.vecWordInfo[wordPackage.wnum].attr, pwdb->attr, 4);
+			//		memcpy(wordPackage.vecWordInfo[wordPackage.wnum].attr, pwdb->attr, 4);
 		}
-		else
-			memset(wordPackage.vecWordInfo[wordPackage.wnum].attr, 0, 4);
+//		else
+//			memset(wordPackage.vecWordInfo[wordPackage.wnum].attr, 0, 4);
 
-		if (wordPackage.tab[start][1] == start)
+		if (wordPackage.tab[start][1] == start) // 抓一個字
 		{
 			wordPackage.vecWordInfo[wordPackage.wnum].phone[0] = GetPhone(start, wordPackage);
 			memcpy(wordPackage.vecWordInfo[wordPackage.wnum].big5, &wordPackage.txt[ndx * 2], 2);
 			wordPackage.vecWordInfo[wordPackage.wnum].wlen = 1;
-			ndx++;
+			++ndx;
+			_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d ===========================", start,
+					wordPackage.vecWordInfo[wordPackage.wnum].phone[0], wordPackage.vecWordInfo[wordPackage.wnum].big5,
+					wordPackage.wnum);
 		}
 		else
 		{
@@ -181,6 +263,9 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			{
 				wordPackage.vecWordInfo[wordPackage.wnum].phone[i] = p[i];
 			}
+			_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", start,
+					wordPackage.vecWordInfo[wordPackage.wnum].phone[0], wordPackage.vecWordInfo[wordPackage.wnum].big5,
+					wordPackage.wnum);
 		}
 		++wordPackage.wnum;
 		start = wordPackage.tab[start][1] + 1;
@@ -190,17 +275,17 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 
 	if (wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
 	{
-		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
+//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
 		if (wordPackage.wnum > 2)
 		{
-			wordPackage.vecWordInfo[0].sen_pos = 0;
-			wordPackage.vecWordInfo[wordPackage.wnum - 2].sen_pos = 2;
+//			wordPackage.vecWordInfo[0].sen_pos = 0;
+//			wordPackage.vecWordInfo[wordPackage.wnum - 2].sen_pos = 2;
 		}
 	}
 	else if (wordPackage.wnum > 1)
 	{
-		wordPackage.vecWordInfo[0].sen_pos = 0;
-		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
+//		wordPackage.vecWordInfo[0].sen_pos = 0;
+//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
 	}
 
 	start = 0;

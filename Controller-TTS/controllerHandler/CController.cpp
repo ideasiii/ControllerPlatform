@@ -70,7 +70,7 @@ int CController::onInitial(void* szConfPath)
 		delete config;
 	}
 	// test
-	// textProcess->dumpWordData();
+	 //textProcess->dumpWordData();
 	// textProcess->dumpWordIndex();
 	//textProcess->dumpPhone();
 	//CString strWav;

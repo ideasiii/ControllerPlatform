@@ -17,7 +17,7 @@
 #define EVIL						666
 #define WORD					2310
 #define MONGO				27027
-#define TTS						231200
+#define TTS						2312
 
 using namespace std;
 
