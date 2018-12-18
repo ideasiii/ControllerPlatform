@@ -6,6 +6,7 @@
 #include "CConvert.h"
 #include <fstream>
 #include <stdio.h>
+#include "utf8.h"
 
 #define WORD_FILE "WORD.DAT"
 #define WORD_INDEX_FILE "WORD.NDX"
@@ -43,33 +44,51 @@ void CWord::InitWord(LPCTSTR dir)
 	if (file.is_open())
 	{
 		char * pch;
-		string strWord;
-		CString strSID;
-		int nSize;
 		int nIndex;
-		short sSID[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 		while (getline(file, str))
 		{
-	//		printf("%s\n", str.c_str());
-
-			pch = strtok(const_cast<char*>(str.c_str()), ",");
+			vector<WORD_DIC> vecWord;
+			WORD_DIC worddic;
+			pch = strtok(const_cast<char*>(str.c_str()), ","); // 抓字
 			if (NULL != pch)
 			{
-				strWord = pch;
-				mapWord[strWord] = sSID;
+				worddic.strWord = pch;
+				if (mapWordDictionary.end() == mapWordDictionary.find(utf8_substr(worddic.strWord, 0, 1)))
+				{
+					mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)] = vecWord;
+				}
+
+				pch = strtok( NULL, ",");
+				nIndex = 0;
+				while (pch != NULL)
+				{
+					worddic.phoneID[nIndex] = atoi(pch);
+					pch = strtok( NULL, ",");
+					++nIndex;
+				}
+
+				mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)].push_back(worddic);
 			}
 
-			pch = strtok( NULL, ",");
-			nIndex = 0;
-			while (pch != NULL)
-			{
-				mapWord[strWord][nIndex] = atoi(pch);
-				pch = strtok( NULL, ",");
-				++nIndex;
-			}
 		}
 		file.close();
+		/*
+		 for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
+		 it != mapWordDictionary.end(); ++it)
+		 {
+		 _log("<==================== %s =====================>", it->first.c_str());
+		 vector<WORD_DIC> vecDic = it->second;
+		 for (vector<WORD_DIC>::iterator vecit = it->second.begin(); it->second.end() != vecit; ++vecit)
+		 {
+		 _log("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", vecit->strWord.c_str(), vecit->phoneID[0], vecit->phoneID[1],
+		 vecit->phoneID[2], vecit->phoneID[3], vecit->phoneID[4], vecit->phoneID[5], vecit->phoneID[6],
+		 vecit->phoneID[7], vecit->phoneID[8], vecit->phoneID[9]);
+		 }
+		 }
+		 */
 	}
+
 //	mapWord
 	/**********************FILE* method**********************************/
 
@@ -165,64 +184,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	for (; i < SENTENCE_LEN; ++i)
 		wordPackage.tab[i][0] = 0;
 
-	// ptr是此函式中宣告的區域變數，型態為int
-	// ptr在每次迴圈中都加2，是因為Unicode編碼的關係
-	// 而text_len要成二的原因也是
-	bool found = FALSE;
-	for (int ptr = 0; ptr < wordPackage.txt_len * 2; ptr += 2)
-	{
-		// found也是區域變數，型態為BOOL
-		found = FALSE;
-		if (wordPackage.txt[ptr] > 0xF9 || wordPackage.txt[ptr] < 0xA4)
-			continue;
-		// ndx為區域變數，作為word的index，型態為長整數long
-		ndx = (*(wordPackage.txt + ptr) - 0xa4) * 157;
-		ndx += (*(wordPackage.txt + ptr + 1) > 0xa0) ?
-				*(wordPackage.txt + ptr + 1) - 0xa1 + 0x3f : *(wordPackage.txt + ptr + 1) - 0x40;
-
-		// leading為區域變數型態為UCHAR*也就是unsigned char*
-		leading = NULL;
-		if (word_index[ndx] != 0xffff)
-		{
-			offset = word_index[ndx];
-			if (ndx >= word_index_boundry)
-				offset += 65535L;
-			for (i = offset;; i++)
-			{
-				// 由詞庫中讀出以輸入字串中目前index到的字為首的所有的詞
-				// word_data為詞庫，指標為ndx
-				wdb = &word_data[i];
-				if (leading != NULL && (leading[0] != wdb->big5[0] || leading[1] != wdb->big5[1]))
-					break;
-				leading = wdb->big5;
-				j = wdb->byte;
-
-				// 只處理到詞長最大為四字詞
-				if (j > 2 * 4)
-					continue;
-
-				// 根據詞長j，比較是否相同，回傳值若為零，表示一模一樣
-				if (memcmp(wordPackage.txt + ptr, wdb->big5, j) == 0)
-				{
-					start = ptr / 2;
-					int k;
-					if (j == 2)
-					{
-						k = 1;
-						wordPackage.tab[start][1] = start;
-					}
-					else
-					{
-						k = ++wordPackage.tab[start][0];
-					}
-					wordPackage.tab[start][k] = start + j / 2 - 1;
-					wordPackage.ptrtab[start][k] = i;
-					found = TRUE;
-				}
-			}
-		}
-	}
-
 	short *p;
 	WORD_DB *pwdb;
 
@@ -232,6 +193,9 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	{
 		WORD_INFO word_info;
 		wordPackage.vecWordInfo.push_back(word_info);
+
+		//================== 分詞 ====================//
+
 //		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
 
 		if (wordPackage.ptrtab[start][1] >= 0)
@@ -295,21 +259,21 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	for (i = 0; i < wordPackage.wnum; ++i)
 	{
 //		pwi = &wordPackage.vecWordInfo[i];
-		wordPackage.toneComb4[i] = wordPackage.toneComb[i] = 0;
+//		wordPackage.toneComb4[i] = wordPackage.toneComb[i] = 0;
 		for (k = start, j = 0; j < wordPackage.vecWordInfo[i].wlen; j++, k++)
 		{
 			if (wordPackage.vecWordInfo[i].phone[j] < SD_PUNC)
 			{
 				t = Tone(wordPackage.vecWordInfo[i].phone[j]) - 1;
-				wordPackage.toneComb[i] = wordPackage.toneComb[i] * 5 + t;
-				if (t == 4)
-					wordPackage.toneComb4[i] = -100000;
-				else
-					wordPackage.toneComb4[i] = wordPackage.toneComb4[i] * 4 + t;
+//				wordPackage.toneComb[i] = wordPackage.toneComb[i] * 5 + t;
+//				if (t == 4)
+//					wordPackage.toneComb4[i] = -100000;
+//				else
+//					wordPackage.toneComb4[i] = wordPackage.toneComb4[i] * 4 + t;
 			}
 			else
 			{
-				wordPackage.toneComb4[i] = wordPackage.toneComb[i] = -100000;
+//				wordPackage.toneComb4[i] = wordPackage.toneComb[i] = -100000;
 				break;
 			}
 		}
@@ -320,12 +284,12 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			if (t3 == TONEBAD || t3 < 1 || t3 > 5)
 			{
 				t1 = t2 = t3 = 0;
-				wordPackage.voicedType[k] = 0;
+				//			wordPackage.voicedType[k] = 0;
 			}
 			else
 			{
 				t3--;
-				wordPackage.voicedType[k] = VoicedType(wordPackage.vecWordInfo[i].phone[j]);
+				//			wordPackage.voicedType[k] = VoicedType(wordPackage.vecWordInfo[i].phone[j]);
 			}
 			wordPackage.sentenceToneCobm[k] = t3 + t2 * 5 + t1 * 25;
 			t1 = t2;

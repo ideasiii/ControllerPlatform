@@ -255,8 +255,8 @@ struct WORD_PACKAGE
 	int ptrtab[SENTENCE_LEN][11];
 //	int best[SENTENCE_LEN];
 //	int q[SENTENCE_LEN * 2];
-	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
-	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
+//	int toneComb[SENTENCE_LEN * 2], toneComb4[SENTENCE_LEN * 2];	//toneComb與toneComb4的差別好像是，一個是五聲調，一個是四聲調
+//	int voicedType[SENTENCE_LEN * 2];			//有聲或無聲的子音
 	int sentenceToneCobm[SENTENCE_LEN * 2];
 //	int best_score;
 //	int char_type[SENTENCE_LEN + 1];
@@ -273,7 +273,14 @@ public:
 };
 
 //========================= 字詞字典檔==============================//
+typedef struct _WORD_DIC
+{
+	std::string strWord;
+	short phoneID[10];
+} WORD_DIC;
 static std::map<std::string, short[10]> mapWord;
+
+static std::map<std::string, vector<WORD_DIC> > mapWordDictionary;
 
 //========================= 字詞分割===============================//
 static std::vector<std::string> vWordWrap = { "。", "。", "。", "？", "！", "；", "，", "!", ",", ".", ";", "?", "，", "！", "，",
