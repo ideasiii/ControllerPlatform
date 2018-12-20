@@ -138,7 +138,8 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		SentenceArray.add(strInput.left(i));
 		strInput = strInput.right(strInput.getLength() - i - strFinded.length());
 	}
-	if (0 >= SentenceArray.getSize())
+
+	if (0 >= SentenceArray.getSize() || 0 < strInput.getLength())
 	{
 		SentenceArray.add(strInput);
 	}
@@ -163,19 +164,11 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		for (i = 1; i < 20; ++i)
 			PhraseBound[i] = 0;
 
-		/************ UTF8 轉 Big5 **********************************/
 		wordPackage.clear();
 		wordPackage.strText = SentenceArray[lcount].getBuffer();
-		wordPackage.txt_len = utf8len(wordPackage.strText.getBuffer());
-		if (-1 == convert->UTF8toBig5((char*) wordPackage.strText.getBuffer(), &wordPackage.txt))
-			return -1;
-		textNdx = 0;
-
-		_log("[CTextProcess] processTheText word from count:%d utf8: %s big5: %s txt_len: %d", lcount,
-				wordPackage.strText.getBuffer(), wordPackage.txt, wordPackage.txt_len);
+		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
 
 		word->GetWord(wordPackage);
-		free(wordPackage.txt);
 
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		vector<int> tmpIdx(PWCluster.size(), lcount);
@@ -226,13 +219,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		csLabFile.close();
 		PhoneSeq.removeAll();
 	}
-	char *big5 = 0;
-	char **pBig5 = &big5;
-	if (-1 != convert->Big5toUTF8((char*) AllBig5.getBuffer(), pBig5))
-	{
-		_log("[CTextProcess] processTheText AllBig5: %s", big5);
-	}
-	free(big5);
+	_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
 
 	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
 	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
@@ -346,14 +333,15 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		}
 
 		/************ Big5 轉 UTF8 **********************************/
-		char *utf8 = 0;
-		char **pUtf8 = &utf8;
-		if (-1 == convert->Big5toUTF8((char*) wordPackage.vecWordInfo[i].big5, pUtf8))
-			return;
-		strBig5 = strBig5 + wordPackage.vecWordInfo[i].big5;
-		cstemp = cstemp + wordPackage.vecWordInfo[i].big5;
+//		char *utf8 = 0;
+//		char **pUtf8 = &utf8;
+//		if (-1 != convert->Big5toUTF8((char*) wordPackage.vecWordInfo[i].big5, pUtf8))
+//		{
+		strBig5 = strBig5 + wordPackage.vecWordInfo[i].strSentence;
+		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + "/X ";
-		free(utf8);
+//		}
+//		free(utf8);
 
 //		strBig5 = strBig5 + word.w_info[i].big5;
 //		cstemp = cstemp + word.w_info[i].big5;

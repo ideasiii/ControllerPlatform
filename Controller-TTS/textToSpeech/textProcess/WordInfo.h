@@ -247,8 +247,8 @@ struct WORD_PACKAGE
 	int txt_len;							// 句子的字數
 	int wnum;							//	word num，也就是這個句子被斷成幾個詞
 	//unsigned char txt[200];	// 這個類別中所要處理的句子
-	char *txt;
-	CString strText;
+	//char *txt;
+	std::string strText;
 	std::vector<WORD_INFO> vecWordInfo;
 
 	int tab[SENTENCE_LEN][11];
@@ -266,7 +266,7 @@ public:
 	{
 		txt_len = 0;
 		wnum = 0;
-		txt = 0;
+		//txt = 0;
 		//	memset(txt, 0, sizeof(txt));
 		vecWordInfo.clear();
 	}

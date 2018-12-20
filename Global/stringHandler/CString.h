@@ -174,6 +174,7 @@ public:
 	std::string toString();
 
 	CString& SpanExcluding(LPCTSTR strSrc);
+	std::wstring String2WString();
 
 protected:
 	LPTSTR m_pchData;   // pointer to ref counted string data

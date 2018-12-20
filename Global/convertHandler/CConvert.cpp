@@ -89,8 +89,9 @@ int CConvert::Big5toUTF8(char *szFrom, char **szTo)
 
 	if ((int) iconv(cd, &in_ptr, &in_s, &out_ptr, &out_s) == -1)
 	{
-		_log("[CConvert] Big5toUTF8 errno: %s\n", strerror(errno));
+		_log("[CConvert] Big5toUTF8 errno: %s  %s --> %s", strerror(errno), ibuf, *szTo);
 		free(*szTo);
+		iconv_close(cd);
 		return -1;
 	}
 

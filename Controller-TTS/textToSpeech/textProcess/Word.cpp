@@ -73,20 +73,21 @@ void CWord::InitWord(LPCTSTR dir)
 
 		}
 		file.close();
-		/*
-		 for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
-		 it != mapWordDictionary.end(); ++it)
-		 {
-		 _log("<==================== %s =====================>", it->first.c_str());
-		 vector<WORD_DIC> vecDic = it->second;
-		 for (vector<WORD_DIC>::iterator vecit = it->second.begin(); it->second.end() != vecit; ++vecit)
-		 {
-		 _log("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", vecit->strWord.c_str(), vecit->phoneID[0], vecit->phoneID[1],
-		 vecit->phoneID[2], vecit->phoneID[3], vecit->phoneID[4], vecit->phoneID[5], vecit->phoneID[6],
-		 vecit->phoneID[7], vecit->phoneID[8], vecit->phoneID[9]);
-		 }
-		 }
-		 */
+
+#ifdef DEBUG
+		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
+				it != mapWordDictionary.end(); ++it)
+		{
+			_log("<==================== %s =====================>", it->first.c_str());
+			vector<WORD_DIC> vecDic = it->second;
+			for (vector<WORD_DIC>::iterator vecit = it->second.begin(); it->second.end() != vecit; ++vecit)
+			{
+				_log("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", vecit->strWord.c_str(), vecit->phoneID[0], vecit->phoneID[1],
+						vecit->phoneID[2], vecit->phoneID[3], vecit->phoneID[4], vecit->phoneID[5], vecit->phoneID[6],
+						vecit->phoneID[7], vecit->phoneID[8], vecit->phoneID[9]);
+			}
+		}
+#endif
 	}
 
 //	mapWord
@@ -151,170 +152,253 @@ void CWord::InitWord(LPCTSTR dir)
 void CWord::GetWord(WORD_PACKAGE &wordPackage)
 {
 	int i, j, k, start, offset;
-	long ndx = 0;
-	UCHAR *leading;
-	WORD_DB *wdb;
+	string strWord;
+	string strWordRight;
+	string strText;
 
-	// text_len是以Unicode計算 幾個字
-	for (i = 0; i < wordPackage.txt_len + 1; ++i)
-	{
-		// SENTENCE_LEN定義為100
-		// 而tab的宣告方式為 int tab[SENTENCE_LEN][11]
-		wordPackage.tab[i][0] = 1;
-		wordPackage.tab[i][1] = i;
-		// 以下ptrtab的宣告方式為int ptrtab[SENTENCE_LEN][11]
-		wordPackage.ptrtab[i][1] = -1;
-	}
-	// tab會長成如下所示
-	// 1 0 0 0 0 0 0 0 0 0 0
-	// 1 1 0 0 0 0 0 0 0 0 0
-	// 1 2 0 0 0 0 0 0 0 0 0
-	// 1 3 0 0 0 0 0 0 0 0 0
-	// ...
-	// 共有text_len個row
-	// ptrtab會長成如下所示
-	// - -1 0 0 0 0 0 0 0 0 0
-	// - -1 0 0 0 0 0 0 0 0 0
-	// - -1 0 0 0 0 0 0 0 0 0
-	// - -1 0 0 0 0 0 0 0 0 0
-	// ...
-	// 共有text_len個row
+	//================= UTF-8 Version Start ============================//
+	int nTxtLen = wordPackage.strText.length();
+	int nWordNum = utf8len(wordPackage.strText.c_str());
+	_log("[CWord] GetWord txt byte = %d word number = %d", nTxtLen, nWordNum);
 
-	// 以下回圈是處理在輸入的句子之字數以外，到SENTENCE_LEN之間tab[][]的內容
-	for (; i < SENTENCE_LEN; ++i)
-		wordPackage.tab[i][0] = 0;
-
-	short *p;
-	WORD_DB *pwdb;
-
-	wordPackage.wnum = start = ndx = 0;
+	int nDicWordNum;
+	int nDicWord;
+	int nWordLen;
+	int nWnum = 0;
+	int offseted = 0;
+	map<std::string, vector<WORD_DIC> >::iterator itWordDic;
+	vector<WORD_DIC>::iterator itVecDic;
+	vector<WORD_DIC> vecDic;
+	i = 0;
+	strText = wordPackage.strText;
 
 	while (1)
 	{
-		WORD_INFO word_info;
-		wordPackage.vecWordInfo.push_back(word_info);
+		if (0 >= GetUtf8Word(strText.c_str(), nWnum + 1, offset))
+			break;
 
-		//================== 分詞 ====================//
+		nWordLen = offset - offseted;
+		strWord = strText.substr(i, nWordLen);
+		strWordRight = strText.substr(i);
+		offseted = offset;
 
-//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
+		//=========== 查字典檔 ===============//
+		vecDic = mapWordDictionary[strWord];
+	//	_log("============ strWord: %s ====================", strWord.c_str());
 
-		if (wordPackage.ptrtab[start][1] >= 0)
+		for (itVecDic = vecDic.begin(); vecDic.end() != itVecDic; ++itVecDic)
 		{
-			pwdb = &word_data[wordPackage.ptrtab[start][1]];
-			//		memcpy(wordPackage.vecWordInfo[wordPackage.wnum].attr, pwdb->attr, 4);
+		//	_log("======= word:%s   dic word: %s phone: %d", strWordRight.c_str(), itVecDic->strWord.c_str(),					itVecDic->phoneID[0]);
+			nDicWordNum = nDicWord = 0;
+			if (0 == strWordRight.compare(0, itVecDic->strWord.length(), itVecDic->strWord.c_str()))
+			{
+				_log("===== word: %s   compare ok %s =======================", strWordRight.c_str(),
+						itVecDic->strWord.c_str());
+				strWordRight = strWordRight.substr(0, itVecDic->strWord.length());
+				nDicWord = itVecDic->strWord.length();
+				nDicWordNum = utf8len(itVecDic->strWord.c_str());
+			//	_log("======== word right: %s  dicword size: %d  dicwordNum: %d ===========", strWordRight.c_str(),						nDicWord, nDicWordNum);
+				break;
+			}
 		}
-//		else
-//			memset(wordPackage.vecWordInfo[wordPackage.wnum].attr, 0, 4);
 
-		if (wordPackage.tab[start][1] == start) // 抓一個字
+		if (0 != nDicWord)
 		{
-			wordPackage.vecWordInfo[wordPackage.wnum].phone[0] = GetPhone(start, wordPackage);
-			memcpy(wordPackage.vecWordInfo[wordPackage.wnum].big5, &wordPackage.txt[ndx * 2], 2);
-			wordPackage.vecWordInfo[wordPackage.wnum].wlen = 1;
-			++ndx;
-			_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d ===========================", start,
-					wordPackage.vecWordInfo[wordPackage.wnum].phone[0], wordPackage.vecWordInfo[wordPackage.wnum].big5,
-					wordPackage.wnum);
+			i = offset + nDicWord - nWordLen;
+			nWnum += nDicWordNum;
+			offseted += (nDicWord - nWordLen);
 		}
 		else
 		{
-			p = pwdb->phone;
-			j = wordPackage.tab[start][1] - start + 1;
-			memcpy(wordPackage.vecWordInfo[wordPackage.wnum].big5, pwdb->big5, j * 2);
-			wordPackage.vecWordInfo[wordPackage.wnum].wlen = j;
-			ndx += j;
-			for (i = 0; i < j; i++)
-			{
-				wordPackage.vecWordInfo[wordPackage.wnum].phone[i] = p[i];
-			}
-			_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", start,
-					wordPackage.vecWordInfo[wordPackage.wnum].phone[0], wordPackage.vecWordInfo[wordPackage.wnum].big5,
-					wordPackage.wnum);
+			i = offset;
+			++nWnum;
 		}
-		++wordPackage.wnum;
-		start = wordPackage.tab[start][1] + 1;
-		if (start >= wordPackage.txt_len)
+		nDicWord = 0;
+
+		if (nWnum > nWordNum)
 			break;
 	}
+//================= UTF-8 Version End =============================//
 
-	if (wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
+	long ndx = 0;
+	UCHAR *leading;
+	WORD_DB *wdb;
+	CConvert convert;
+	char *txt;
+
+	if (-1 != convert.UTF8toBig5((char*) wordPackage.strText.c_str(), &txt))
 	{
-//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
-		if (wordPackage.wnum > 2)
+		// text_len是以Unicode計算 幾個字
+		for (i = 0; i < wordPackage.txt_len + 1; ++i)
 		{
+			// SENTENCE_LEN定義為100
+			// 而tab的宣告方式為 int tab[SENTENCE_LEN][11]
+			wordPackage.tab[i][0] = 1;
+			wordPackage.tab[i][1] = i;
+			// 以下ptrtab的宣告方式為int ptrtab[SENTENCE_LEN][11]
+			wordPackage.ptrtab[i][1] = -1;
+		}
+		// tab會長成如下所示
+		// 1 0 0 0 0 0 0 0 0 0 0
+		// 1 1 0 0 0 0 0 0 0 0 0
+		// 1 2 0 0 0 0 0 0 0 0 0
+		// 1 3 0 0 0 0 0 0 0 0 0
+		// ...
+		// 共有text_len個row
+		// ptrtab會長成如下所示
+		// - -1 0 0 0 0 0 0 0 0 0
+		// - -1 0 0 0 0 0 0 0 0 0
+		// - -1 0 0 0 0 0 0 0 0 0
+		// - -1 0 0 0 0 0 0 0 0 0
+		// ...
+		// 共有text_len個row
+
+		// 以下回圈是處理在輸入的句子之字數以外，到SENTENCE_LEN之間tab[][]的內容
+		for (; i < SENTENCE_LEN; ++i)
+			wordPackage.tab[i][0] = 0;
+
+		short *p;
+		WORD_DB *pwdb;
+
+		wordPackage.wnum = start = ndx = 0;
+
+		while (1)
+		{
+			WORD_INFO word_info;
+			wordPackage.vecWordInfo.push_back(word_info);
+
+			//================== 分詞 ====================//
+
+//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 1; //先假設詞在句子的中間
+
+			if (wordPackage.ptrtab[start][1] >= 0)
+			{
+				pwdb = &word_data[wordPackage.ptrtab[start][1]];
+				//		memcpy(wordPackage.vecWordInfo[wordPackage.wnum].attr, pwdb->attr, 4);
+			}
+//		else
+//			memset(wordPackage.vecWordInfo[wordPackage.wnum].attr, 0, 4);
+
+			if (wordPackage.tab[start][1] == start) // 抓一個字
+			{
+				wordPackage.vecWordInfo[wordPackage.wnum].phone[0] = GetPhone(start, txt);
+				memcpy(wordPackage.vecWordInfo[wordPackage.wnum].big5, &txt[ndx * 2], 2);
+				wordPackage.vecWordInfo[wordPackage.wnum].wlen = 1;
+				++ndx;
+				_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d ===========================", start,
+						wordPackage.vecWordInfo[wordPackage.wnum].phone[0],
+						wordPackage.vecWordInfo[wordPackage.wnum].big5, wordPackage.wnum);
+			}
+			else
+			{
+				p = pwdb->phone;
+				j = wordPackage.tab[start][1] - start + 1;
+				memcpy(wordPackage.vecWordInfo[wordPackage.wnum].big5, pwdb->big5, j * 2);
+				wordPackage.vecWordInfo[wordPackage.wnum].wlen = j;
+				ndx += j;
+				for (i = 0; i < j; i++)
+				{
+					wordPackage.vecWordInfo[wordPackage.wnum].phone[i] = p[i];
+				}
+				_log("[CWord] GetWord start=%d phone=%d big5=%hhx wnum=%d xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", start,
+						wordPackage.vecWordInfo[wordPackage.wnum].phone[0],
+						wordPackage.vecWordInfo[wordPackage.wnum].big5, wordPackage.wnum);
+			}
+
+			char *utf8 = 0;
+			char **pUtf8 = &utf8;
+			if (-1 != convert.Big5toUTF8((char*) wordPackage.vecWordInfo[wordPackage.wnum].big5, pUtf8))
+			{
+				wordPackage.vecWordInfo[wordPackage.wnum].strSentence = utf8;
+				free(utf8);
+			}
+
+			++wordPackage.wnum;
+			start = wordPackage.tab[start][1] + 1;
+			if (start >= wordPackage.txt_len)
+				break;
+		}
+
+		if (wordPackage.vecWordInfo[wordPackage.wnum - 1].phone[0] >= SD_PUNC)
+		{
+//		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
+			if (wordPackage.wnum > 2)
+			{
 //			wordPackage.vecWordInfo[0].sen_pos = 0;
 //			wordPackage.vecWordInfo[wordPackage.wnum - 2].sen_pos = 2;
+			}
 		}
-	}
-	else if (wordPackage.wnum > 1)
-	{
+		else if (wordPackage.wnum > 1)
+		{
 //		wordPackage.vecWordInfo[0].sen_pos = 0;
 //		wordPackage.vecWordInfo[wordPackage.wnum].sen_pos = 2;
-	}
+		}
 
-	start = 0;
-	int t, t1, t2, t3;
-	t1 = t2 = t3 = 0;
+		start = 0;
+		int t1, t2, t3;
+		t1 = t2 = t3 = 0;
 
-	for (i = 0; i < wordPackage.wnum; ++i)
-	{
+		for (i = 0; i < wordPackage.wnum; ++i)
+		{
 //		pwi = &wordPackage.vecWordInfo[i];
 //		wordPackage.toneComb4[i] = wordPackage.toneComb[i] = 0;
-		for (k = start, j = 0; j < wordPackage.vecWordInfo[i].wlen; j++, k++)
-		{
-			if (wordPackage.vecWordInfo[i].phone[j] < SD_PUNC)
+			for (k = start, j = 0; j < wordPackage.vecWordInfo[i].wlen; j++, k++)
 			{
-				t = Tone(wordPackage.vecWordInfo[i].phone[j]) - 1;
+				if (wordPackage.vecWordInfo[i].phone[j] < SD_PUNC)
+				{
+					//t = Tone(wordPackage.vecWordInfo[i].phone[j]) - 1;
 //				wordPackage.toneComb[i] = wordPackage.toneComb[i] * 5 + t;
 //				if (t == 4)
 //					wordPackage.toneComb4[i] = -100000;
 //				else
 //					wordPackage.toneComb4[i] = wordPackage.toneComb4[i] * 4 + t;
-			}
-			else
-			{
+				}
+				else
+				{
 //				wordPackage.toneComb4[i] = wordPackage.toneComb[i] = -100000;
-				break;
+					break;
+				}
 			}
-		}
 
-		for (j = 0, k = start; j < wordPackage.vecWordInfo[i].wlen; j++, k++)
-		{		//不能與上面的合併：因為有 break;
-			t3 = Tone(wordPackage.vecWordInfo[i].phone[j]);
-			if (t3 == TONEBAD || t3 < 1 || t3 > 5)
-			{
-				t1 = t2 = t3 = 0;
-				//			wordPackage.voicedType[k] = 0;
+			for (j = 0, k = start; j < wordPackage.vecWordInfo[i].wlen; j++, k++)
+			{		//不能與上面的合併：因為有 break;
+				t3 = Tone(wordPackage.vecWordInfo[i].phone[j]);
+				if (t3 == TONEBAD || t3 < 1 || t3 > 5)
+				{
+					t1 = t2 = t3 = 0;
+					//			wordPackage.voicedType[k] = 0;
+				}
+				else
+				{
+					t3--;
+					//			wordPackage.voicedType[k] = VoicedType(wordPackage.vecWordInfo[i].phone[j]);
+				}
+				wordPackage.sentenceToneCobm[k] = t3 + t2 * 5 + t1 * 25;
+				t1 = t2;
+				t2 = t3;
 			}
-			else
-			{
-				t3--;
-				//			wordPackage.voicedType[k] = VoicedType(wordPackage.vecWordInfo[i].phone[j]);
-			}
-			wordPackage.sentenceToneCobm[k] = t3 + t2 * 5 + t1 * 25;
-			t1 = t2;
-			t2 = t3;
+			start += wordPackage.vecWordInfo[i].wlen;
 		}
-		start += wordPackage.vecWordInfo[i].wlen;
+		free(txt);
 	}
 }
 
-unsigned CWord::GetPhone(int ptr, WORD_PACKAGE &wordPackage)
+unsigned CWord::GetPhone(int ptr, char *txt)
 /* return 0 if not a voice_able  word */
 /* return 1 ~ 27965 if a chinese voice_able word */
 /* return 30000 if a english word */
 {
 	UCHAR buf[22];
-	//unsigned best=0,offset ;
+//unsigned best=0,offset ;
 	SNDID sid[10];
 
-	buf[0] = wordPackage.txt[ptr * 2];
-	buf[1] = wordPackage.txt[ptr * 2 + 1];
+	buf[0] = txt[ptr * 2];
+	buf[1] = txt[ptr * 2 + 1];
 	buf[2] = 0;
 	if (buf[0] < 0xa4 || buf[0] > 0xf9)
 		return SD_PUNC;
-	// buf是斷出來的一個個的詞
-	// 例如"我為人人，人人為我"中的"我"
+// buf是斷出來的一個個的詞
+// 例如"我為人人，人人為我"中的"我"
 	Big52SID(buf, sid);
 	return sid[0];
 }

@@ -1660,6 +1660,46 @@ static std::string utf8_substr(const std::string& str, unsigned int start, unsig
 	return str.substr(min, max);
 }
 
+static int GetUtf8LetterNumber(const char *s)
+{
+	int i = 0, j = 0;
+	while (s[i])
+	{
+		if ((s[i] & 0xc0) != 0x80)
+			j++;
+		i++;
+	}
+	return j;
+}
+
+static int GetUtf8Word(const char *s, int wantedNum, int& offset)
+{
+	int i = 0, j = 0;
+
+	int readedNum = 0;
+	int isReach = 0;
+	while (s[i])
+	{
+		if ((s[i] & 0xc0) != 0x80)
+		{
+			if (isReach)
+			{
+				break;
+			}
+			++j;
+			readedNum = j;
+			if (j == wantedNum)
+			{
+				isReach = 1;
+			}
+
+		}
+		++i;
+	}
+	offset = i;
+	return readedNum;
+}
+
 #undef utf8_restrict
 #undef utf8_null
 
