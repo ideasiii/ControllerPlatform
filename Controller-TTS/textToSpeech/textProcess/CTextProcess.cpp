@@ -109,7 +109,6 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	int giSftIdx = 0;
 	int playcount = 0;
 	int i, j, k, l, sIndex, wIndex, pIndex;
-	vector<int> indexArray;
 	vector<int> AllPWCluster;
 	vector<int> AllPPCluster;
 	CStringArray SentenceArray;
@@ -171,8 +170,6 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 		word->GetWord(wordPackage);
 
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
-		vector<int> tmpIdx(PWCluster.size(), lcount);
-		indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
 		AllBig5 += strBig5;
 
 		AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
@@ -200,7 +197,8 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 				}
 
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
-				if (PWCluster[k] == 1)
+
+				if (!PWCluster.empty() && PWCluster[k] == 1)
 				{
 					WordBound[++wIndex] = SyllableBound[sIndex];
 					if (PPCluster[l] == 2)
@@ -332,19 +330,10 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			break;
 		}
 
-		/************ Big5 轉 UTF8 **********************************/
-//		char *utf8 = 0;
-//		char **pUtf8 = &utf8;
-//		if (-1 != convert->Big5toUTF8((char*) wordPackage.vecWordInfo[i].big5, pUtf8))
-//		{
 		strBig5 = strBig5 + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + "/X ";
-//		}
-//		free(utf8);
 
-//		strBig5 = strBig5 + word.w_info[i].big5;
-//		cstemp = cstemp + word.w_info[i].big5;
 	}
 	_log("[CTextProcess] CartPrediction String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
 	/**
@@ -390,7 +379,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 
 //	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
 //	_log("============== CART_Model =================");
-//	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
+	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
 	for (i = 0; i < (int) syllpos.size(); ++i) // 每一次iteration處理一個syllable的attribute
 	{
 		CART_DATA *pcdData = new CART_DATA();
@@ -419,10 +408,10 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			}
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
-//		_log("CART TEST");
+		_log("CART TEST");
 		CartModel->TEST(pcdData);
 		cluster.push_back(pcdData->clu);
-//		_log("cluster push: %d", pcdData->clu);
+		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
@@ -556,7 +545,6 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 	i--;
 	if (tone != 5)
 	{
-		_log("tone != 5 result: %s", result.getBuffer());
 		if ((tone == 1) || (tone == 4))		// part 2
 			result += "H ";
 		else
@@ -572,6 +560,7 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 		tmp.format("M %sM", Ph97Phoneme[i]);
 		result += tmp;
 	}
+
 	return result;
 }
 

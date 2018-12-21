@@ -159,8 +159,6 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	//================= UTF-8 Version Start ============================//
 	int nTxtLen = wordPackage.strText.length();
 	int nWordNum = utf8len(wordPackage.strText.c_str());
-	_log("[CWord] GetWord txt byte = %d word number = %d", nTxtLen, nWordNum);
-
 	int nDicWordNum;
 	int nDicWord;
 	int nWordLen;
@@ -171,6 +169,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	vector<WORD_DIC> vecDic;
 	i = 0;
 	strText = wordPackage.strText;
+	_log("[CWord] GetWord txt byte = %d word number = %d word: %s", nTxtLen, nWordNum, strText.c_str());
 
 	while (1)
 	{
@@ -184,11 +183,14 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 
 		//=========== 查字典檔 ===============//
 		vecDic = mapWordDictionary[strWord];
-	//	_log("============ strWord: %s ====================", strWord.c_str());
+		if (vecDic.empty())
+		{
+			_log("============ shit strWord: %s ====================", strWord.c_str());
+		}
 
 		for (itVecDic = vecDic.begin(); vecDic.end() != itVecDic; ++itVecDic)
 		{
-		//	_log("======= word:%s   dic word: %s phone: %d", strWordRight.c_str(), itVecDic->strWord.c_str(),					itVecDic->phoneID[0]);
+			//	_log("======= word:%s   dic word: %s phone: %d", strWordRight.c_str(), itVecDic->strWord.c_str(),					itVecDic->phoneID[0]);
 			nDicWordNum = nDicWord = 0;
 			if (0 == strWordRight.compare(0, itVecDic->strWord.length(), itVecDic->strWord.c_str()))
 			{
@@ -197,7 +199,16 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 				strWordRight = strWordRight.substr(0, itVecDic->strWord.length());
 				nDicWord = itVecDic->strWord.length();
 				nDicWordNum = utf8len(itVecDic->strWord.c_str());
-			//	_log("======== word right: %s  dicword size: %d  dicwordNum: %d ===========", strWordRight.c_str(),						nDicWord, nDicWordNum);
+				WORD_INFO word_info;
+				word_info.strSentence = itVecDic->strWord;
+				word_info.wlen = nDicWordNum;
+				for (int phoneidx = 0; phoneidx < nDicWordNum; ++phoneidx)
+				{
+					word_info.phone[phoneidx] = itVecDic->phoneID[phoneidx];
+				}
+				wordPackage.vecWordInfo.push_back(word_info);
+				++wordPackage.wnum;
+				//	_log("======== word right: %s  dicword size: %d  dicwordNum: %d ===========", strWordRight.c_str(),						nDicWord, nDicWordNum);
 				break;
 			}
 		}
@@ -218,6 +229,8 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 		if (nWnum > nWordNum)
 			break;
 	}
+
+	return;
 //================= UTF-8 Version End =============================//
 
 	long ndx = 0;
@@ -264,8 +277,8 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 
 		while (1)
 		{
-			WORD_INFO word_info;
-			wordPackage.vecWordInfo.push_back(word_info);
+			//		WORD_INFO word_info;
+			//		wordPackage.vecWordInfo.push_back(word_info);
 
 			//================== 分詞 ====================//
 
