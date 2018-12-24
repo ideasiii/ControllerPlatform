@@ -1,5 +1,5 @@
 [TTS Server]
-	IP: 54.199.198.94
+	IP: 175.98.119.121
 	Port: 2312
 	
 [TTS CMP]

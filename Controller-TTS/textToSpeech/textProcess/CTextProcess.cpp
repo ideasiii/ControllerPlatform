@@ -109,8 +109,6 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	int giSftIdx = 0;
 	int playcount = 0;
 	int i, j, k, l, sIndex, wIndex, pIndex;
-	vector<int> AllPWCluster;
-	vector<int> AllPPCluster;
 	CStringArray SentenceArray;
 	CString AllBig5;
 	int textNdx;
@@ -171,9 +169,6 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 
 		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
 		AllBig5 += strBig5;
-
-		AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
-		AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
 
 		k = l = 0;
 		for (i = 0; i < wordPackage.wnum; ++i)
@@ -906,11 +901,7 @@ void CTextProcess::dumpWordData()
 	short phone[WORD_LEN];  //發音代碼 (10 bytes)
 	CString strData;
 
-//("ss", (short[] ) { 0, 0, 0, 0, 0, 0,0, 0, 0, 0 })
-	ofstream csWordFile1("dumpWordData_1.txt", ios::app);
-//	ofstream csWordFile2("dumpWordData_2.txt", ios::app);
-//	ofstream csWordFile3("dumpWordData_3.txt", ios::app);
-//	ofstream csWordFile4("dumpWordData_4.txt", ios::app);
+	ofstream csWordFile1("WordData.txt", ios::app);
 
 	ifstream cf("model/WORD.DAT", std::ifstream::binary);
 	cf.seekg(0, cf.end);
@@ -932,38 +923,72 @@ void CTextProcess::dumpWordData()
 		if (-1 == convert.Big5toUTF8((char*) big5, byte, pUtf8))
 			return;
 
-//		strData.format("(\"%s\", (short[]){ %d,%d,%d,%d,%d,%d,%d,%d,%d,%d})", utf8, phone[0], phone[1], phone[2],
-//				phone[3], phone[4], phone[5], phone[6], phone[7], phone[8], phone[9], phone[10]);
-		strData.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", utf8, phone[0], phone[1], phone[2], phone[3], phone[4],
-				phone[5], phone[6], phone[7], phone[8], phone[9], phone[10]);
-		counter = utf8len(utf8);
+		int nIndex = 0;
+		char s[20];
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp0 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp1 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp2 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp3 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp4 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp5 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp6 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp7 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp8 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		memset(s, 0, sizeof(s));
+		SID2Phone(phone[nIndex], &s[0]);
+		CString strp9 = Phone2Ph97(s, phone[nIndex] % 10);
+		++nIndex;
+
+		strData.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", utf8, strp0.getBuffer(), strp1.getBuffer(),
+				strp2.getBuffer(), strp3.getBuffer(), strp4.getBuffer(), strp5.getBuffer(), strp6.getBuffer(),
+				strp7.getBuffer(), strp8.getBuffer(), strp9.getBuffer());
+
 		free(utf8);
 		csWordFile1 << strData.getBuffer() << endl;
-
-//		switch (counter)
-//		{
-//		case 1:
-//			csWordFile1 << strData.getBuffer() << endl;
-//			break;
-//		case 2:
-//			csWordFile2 << strData.getBuffer() << endl;
-//			break;
-//		case 3:
-//			csWordFile3 << strData.getBuffer() << endl;
-//			break;
-//		case 4:
-//			csWordFile4 << strData.getBuffer() << endl;
-//			break;
-//		}
 
 		_log("%s", strData.getBuffer());
 	}
 
 	cf.close();
 	csWordFile1.close();
-//	csWordFile2.close();
-//	csWordFile3.close();
-//	csWordFile4.close();
+
 }
 
 void CTextProcess::dumpWordIndex()
