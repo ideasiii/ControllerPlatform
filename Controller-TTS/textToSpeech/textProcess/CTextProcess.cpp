@@ -259,7 +259,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 
 	_log("[CTextProcess] Synthesize to Windows version: %s %s %s %s", commandLine[0], commandLine[1], commandLine[2],
 			commandLine[3]);
-	hts_engine(commandLine, 1.2f, -0.03f, 1);
+	hts_engine(commandLine, 1.2f, -0.03f, 0);
 
 }
 
