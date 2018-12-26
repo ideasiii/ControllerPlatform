@@ -93,6 +93,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 
 	CString strLabelName;
 
+	int nSypollCount;
 	int nIndex;
 	int nLen = 0;
 	int nCount = 0;
@@ -100,10 +101,8 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	CString strPart;
 	char s[10];
 	int SyllableBound[100];		// syllable邊界
-	int SyllableTone[100];		// tone of syllable
 	int WordBound[100];			// word boundary, tts 斷詞結果
 	int PhraseBound[20];		// phrase boundary
-	SyllableTone[0] = 0;
 	int *gduration_s = NULL;
 	int *gduration_e = NULL;
 	int giSftIdx = 0;
@@ -167,31 +166,29 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 
 		word->GetWord(wordPackage);
 
-		CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
+		if (-1 == CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage))
+			continue;
 		AllBig5 += strBig5;
 
 		k = l = 0;
-		for (i = 0; i < wordPackage.wnum; ++i)
+		for (i = 0; i < wordPackage.wnum; ++i) // 字詞數
 		{
-			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)
+			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)   // 詞的字數
 			{
-				SID2Phone((wordPackage.vecWordInfo[i].phone[j]), &s[0]);
-				_log("[CTextProcess] processTheText SID2Phone sound id: %d - sound: %s",
-						wordPackage.vecWordInfo[i].phone[j], s);
-				SyllableTone[++sIndex] = (wordPackage.vecWordInfo[i].phone[j] % 10);
-
-				CString pph = Phone2Ph97(s, SyllableTone[sIndex]);
-
-				_log("[CTextProcess] processTheText Phone2Ph97: %s", pph.getBuffer());
+				_log("[CTextProcess] processTheText Text: %s Phone: %s", wordPackage.vecWordInfo[i].strSentence.c_str(),
+						wordPackage.vecWordInfo[i].strPhone[j].c_str());
 
 				vector<string> vData;
-				spliteData(const_cast<char *>(pph.getBuffer()), " ", vData);
-				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)
+				spliteData(const_cast<char *>(wordPackage.vecWordInfo[i].strPhone[j].c_str()), " ", vData);
+
+				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)  // 因素分解
 				{
 					PhoneSeq.add(*it);
 				}
+				++sIndex;
 
 				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
+				//_log("======================> SyllableBound[%d] = %d", sIndex, SyllableBound[sIndex]);
 
 				if (!PWCluster.empty() && PWCluster[k] == 1)
 				{
@@ -203,7 +200,6 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 				++k;
 			}
 		}
-
 		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
 		ofstream csLabFile;
 		csLabFile.open(strLabelName.getBuffer(), ios::app);
@@ -267,7 +263,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 
 }
 
-void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
+int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
 		vector<int>& allPPCluster, WORD_PACKAGE &wordPackage)
 {
 	vector<int> wordpar;			// 當前的詞長
@@ -328,9 +324,17 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		strBig5 = strBig5 + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + "/X ";
-
 	}
-	_log("[CTextProcess] CartPrediction String Big5 : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
+
+	_log("================ len %d=================", cstemp.getLength());
+	if (0 >= cstemp.getLength())
+	{
+		_log("[CTextProcess] CartPrediction Dictionary loss : %s", sentence.getBuffer());
+		return -1;
+	}
+
+	_log("[CTextProcess] CartPrediction String  : %s , cstemp : %s", strBig5.getBuffer(), cstemp.getBuffer());
+
 	/**
 	 *  將文字分詞為 : 我們 來 做 垃圾
 	 *  透過Standfor將詞性加入，變成: 我們/X 來/X 做/X 垃圾/X
@@ -345,7 +349,6 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		ulIndex = it->find("/", 0);
 		ulLength = it->length();
 		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
-//		_log("[CTextProcess] CartPrediction  POS String: %s", tempPOS.getBuffer());
 		ulIndex /= 2;
 		bAdded = false;
 		for (j = 1; 34 > j; ++j)
@@ -356,7 +359,6 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 				{
 					pos.push_back(j);
 					bAdded = true;
-					//				_log("[CTextProcess] CartPrediction pos : %d added", j);
 					break;
 				}
 			}
@@ -366,7 +368,6 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			for (k = 0; k < (int) ulIndex; ++k)
 			{
 				pos.push_back(j);
-//				_log("[CTextProcess] CartPrediction pos : %d", j);
 			}
 		}
 
@@ -403,10 +404,10 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 			}
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
 		}
-		_log("CART TEST");
+
 		CartModel->TEST(pcdData);
 		cluster.push_back(pcdData->clu);
-		_log("cluster push: %d", pcdData->clu);
+
 		delete pcdData;
 	}
 
@@ -460,6 +461,7 @@ void CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<in
 		_log("PPCluster數據: %d", cluster[i]);
 	}
 	cluster.clear();
+	return 0;
 }
 
 // Ph97: Extended initial + final
@@ -571,7 +573,7 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	monostr = "";
 
 	// output time information from cue. use timeinfo() to enable "outpu time information"
-	char timebuf[25]; // tag of time. calculated from cue and syllabel boundaries
+//	char timebuf[25]; // tag of time. calculated from cue and syllabel boundaries
 	if (gduration_s != NULL) // output time info for the first pause label
 	{
 		int tmp = 0;
@@ -581,21 +583,28 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		fullstr += tempstr;
 		monostr += tempstr;
 	}
-	//
 
 	// p1^p2-p3+p4=p5@p6_p7/A:a3/B:b3@b4-b5&b6-b7/C:c3/D:d2/E:e2@e3+e4
 	// /F:f2/G:g1_g2/H:h1=h2@h3=h4/I:i1=i2/J:j1+j2-j3
 	tempstr.format("x^x-pau+%s=%s@x_x/A:0/B:x@x-x&x-x/C:%d/D:0/E:x@x+x", sequence[0].getBuffer(),
 			sequence[1].getBuffer(), sBound[1] + 1);	// current phoneme = pause (pau);
+
 	fullstr += tempstr; // ky modify: don't initial fullstr, since I'll do it myself.
 	tempstr.format("pau\n"); // ky add: for mono
 	monostr += tempstr; // ky add: for mono
 	int anchor, anchor2;
 	anchor = anchor2 = 0;
+
 	while (sBound[anchor] != wBound[1]) 	// f2
+	{
 		anchor++;
+		if (100 <= anchor)
+			break;
+	}
+
 	tempstr.format("/F:%d/G:0_0/H:x=x@1=%d", anchor, pCount);
 	fullstr += tempstr;
+
 	if (pCount == 1)	// i1, i2
 		tempstr.format("/I:%d=%d", sCount, wCount);
 	else
@@ -611,6 +620,7 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		tempstr.format("=%d", anchor);
 		fullstr += tempstr;
 	}
+
 	tempstr.format("/J:%d+%d-%d\n", sCount, wCount, pCount);
 	fullstr += tempstr;
 	int iMM = INT_MAX; //index mm: syllable_phone   phone index. since the mm is assigned from sylla_p[ll], the value is initialed as maximum value, and reassigned in the loop
@@ -898,7 +908,7 @@ void CTextProcess::dumpWordData()
 	unsigned char attr[4];           //(4 bytes)
 	unsigned char big5[20];  	    //big5,一字二占2 byte (20 bytes)
 	unsigned int counter;          //字數*2 (1 byte)
-	short phone[WORD_LEN];  //發音代碼 (10 bytes)
+	short phone[10];  //發音代碼 (10 bytes)
 	CString strData;
 
 	ofstream csWordFile1("WordData.txt", ios::app);
@@ -923,62 +933,29 @@ void CTextProcess::dumpWordData()
 		if (-1 == convert.Big5toUTF8((char*) big5, byte, pUtf8))
 			return;
 
+		int i;
 		int nIndex = 0;
 		char s[20];
+		CString strppt[10];
 
 		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp0 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
+		for (i = 0; i < 10; ++i)
+		{
+			strppt[i] = "";
+		}
 
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp1 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
+		int nLen = utf8len(utf8);
 
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp2 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
+		for (nIndex = 0; nIndex < nLen; ++nIndex)
+		{
+			memset(s, 0, sizeof(s));
+			SID2Phone(phone[nIndex], &s[0]);
+			strppt[nIndex] = Phone2Ph97(s, phone[nIndex] % 10);
+		}
 
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp3 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp4 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp5 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp6 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp7 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp8 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		memset(s, 0, sizeof(s));
-		SID2Phone(phone[nIndex], &s[0]);
-		CString strp9 = Phone2Ph97(s, phone[nIndex] % 10);
-		++nIndex;
-
-		strData.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", utf8, strp0.getBuffer(), strp1.getBuffer(),
-				strp2.getBuffer(), strp3.getBuffer(), strp4.getBuffer(), strp5.getBuffer(), strp6.getBuffer(),
-				strp7.getBuffer(), strp8.getBuffer(), strp9.getBuffer());
+		strData.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", utf8, strppt[0].getBuffer(), strppt[1].getBuffer(),
+				strppt[2].getBuffer(), strppt[3].getBuffer(), strppt[4].getBuffer(), strppt[5].getBuffer(),
+				strppt[6].getBuffer(), strppt[7].getBuffer(), strppt[8].getBuffer(), strppt[9].getBuffer());
 
 		free(utf8);
 		csWordFile1 << strData.getBuffer() << endl;

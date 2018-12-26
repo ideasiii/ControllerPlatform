@@ -8,15 +8,15 @@
 #include <stdio.h>
 #include "utf8.h"
 
-#define WORD_FILE "WORD.DAT"
-#define WORD_INDEX_FILE "WORD.NDX"
-#define PHONE_FILE "PHONE.DAT"
+//#define WORD_FILE "WORD.DAT"
+//#define WORD_INDEX_FILE "WORD.NDX"
+//#define PHONE_FILE "PHONE.DAT"
 
 using namespace std;
 
-static USHORT word_index_boundry = 0;
-static unsigned short *word_index = NULL;
-static WORD_DB *word_data = 0;
+//static USHORT word_index_boundry = 0;
+//static unsigned short *word_index = NULL;
+//static WORD_DB *word_data = 0;
 
 unsigned char numberic[][4] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "萬", "億", "兆", "半",
 		"幾", "多", "少", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖", "拾", "佰", "仟", "廿" };
@@ -63,7 +63,7 @@ void CWord::InitWord(LPCTSTR dir)
 				nIndex = 0;
 				while (pch != NULL)
 				{
-					worddic.phoneID[nIndex] = atoi(pch);
+					worddic.strPhone[nIndex] = pch;
 					pch = strtok( NULL, ",");
 					++nIndex;
 				}
@@ -82,68 +82,13 @@ void CWord::InitWord(LPCTSTR dir)
 			vector<WORD_DIC> vecDic = it->second;
 			for (vector<WORD_DIC>::iterator vecit = it->second.begin(); it->second.end() != vecit; ++vecit)
 			{
-				_log("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", vecit->strWord.c_str(), vecit->phoneID[0], vecit->phoneID[1],
-						vecit->phoneID[2], vecit->phoneID[3], vecit->phoneID[4], vecit->phoneID[5], vecit->phoneID[6],
-						vecit->phoneID[7], vecit->phoneID[8], vecit->phoneID[9]);
+				_log("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", vecit->strWord.c_str(), vecit->strPhone[0].c_str(),
+						vecit->strPhone[1].c_str(), vecit->strPhone[2].c_str(), vecit->strPhone[3].c_str(),
+						vecit->strPhone[4].c_str(), vecit->strPhone[5].c_str(), vecit->strPhone[6].c_str(),
+						vecit->strPhone[7].c_str(), vecit->strPhone[8].c_str(), vecit->strPhone[9].c_str());
 			}
 		}
 #endif
-	}
-
-//	mapWord
-	/**********************FILE* method**********************************/
-
-	if (0 == word_data)
-	{
-		cs.empty();
-		cs = cs + dir + WORD_FILE;
-		f = fopen(cs, "rb");
-		fseek(f, 0, SEEK_END); // seek to end of file
-		len = ftell(f); // get current file pointer
-		word_data = new WORD_DB[(int) (len / sizeof(WORD_DB)) + 1];
-		rewind(f); // seek back to beginning of file
-		fread(word_data, sizeof(WORD_DB), floor(len / sizeof(WORD_DB)), f);
-		fclose(f);
-	}
-
-	/*******************************************************************/
-
-	if (0 == ttsPHONETAB)
-	{
-		cs.empty();
-		cs = cs + dir + PHONE_FILE;
-		f = fopen(cs, "rb");
-		fseek(f, 0, SEEK_END); // seek to end of file
-		len = ftell(f); // get current file pointer
-		ttsPHONETAB = new short[(int) (len / sizeof(short)) + 1];
-		rewind(f); // seek back to beginning of file
-		fread(ttsPHONETAB, sizeof(short), floor(len / sizeof(short)), f);
-		fclose(f);
-	}
-
-	if (0 == word_index)
-	{
-		cs.empty();
-		cs = cs + dir + WORD_INDEX_FILE;
-		f = fopen(cs, "rb");
-		fseek(f, 0, SEEK_END); // seek to end of file
-		len = ftell(f); // get current file pointer
-		word_index = new unsigned short[(int) (len / sizeof(unsigned short)) + 1];
-		rewind(f); // seek back to beginning of file
-		fread(word_index, sizeof(unsigned short), floor(len / sizeof(unsigned short)), f);
-		fclose(f);
-
-		int i;
-		int j = 0;
-		for (i = 1; i < CHINESE_INDEX_NUM; i++)
-		{
-			if (word_index[i] == 0xffff) //65535
-				continue;
-			if (word_index[i] < j)
-				break;
-			j = word_index[i];
-		}
-		word_index_boundry = i;
 	}
 
 	_log("[CWord] InitWord success");
@@ -200,7 +145,7 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 				word_info.wlen = nDicWordNum;
 				for (int phoneidx = 0; phoneidx < nDicWordNum; ++phoneidx)
 				{
-					word_info.phone[phoneidx] = itVecDic->phoneID[phoneidx];
+					word_info.strPhone[phoneidx] = itVecDic->strPhone[phoneidx];
 				}
 				wordPackage.vecWordInfo.push_back(word_info);
 				++wordPackage.wnum;
@@ -227,25 +172,25 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 	}
 }
 
-unsigned CWord::GetPhone(int ptr, char *txt)
-/* return 0 if not a voice_able  word */
-/* return 1 ~ 27965 if a chinese voice_able word */
-/* return 30000 if a english word */
-{
-	UCHAR buf[22];
-//unsigned best=0,offset ;
-	SNDID sid[10];
-
-	buf[0] = txt[ptr * 2];
-	buf[1] = txt[ptr * 2 + 1];
-	buf[2] = 0;
-	if (buf[0] < 0xa4 || buf[0] > 0xf9)
-		return SD_PUNC;
-// buf是斷出來的一個個的詞
-// 例如"我為人人，人人為我"中的"我"
-	Big52SID(buf, sid);
-	return sid[0];
-}
+//unsigned CWord::GetPhone(int ptr, char *txt)
+///* return 0 if not a voice_able  word */
+///* return 1 ~ 27965 if a chinese voice_able word */
+///* return 30000 if a english word */
+//{
+//	UCHAR buf[22];
+////unsigned best=0,offset ;
+//	SNDID sid[10];
+//
+//	buf[0] = txt[ptr * 2];
+//	buf[1] = txt[ptr * 2 + 1];
+//	buf[2] = 0;
+//	if (buf[0] < 0xa4 || buf[0] > 0xf9)
+//		return SD_PUNC;
+//// buf是斷出來的一個個的詞
+//// 例如"我為人人，人人為我"中的"我"
+//	Big52SID(buf, sid);
+//	return sid[0];
+//}
 
 /*
  int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
@@ -346,6 +291,7 @@ unsigned CWord::GetPhone(int ptr, char *txt)
  return (-1);
  }
  */
+/*
 int CWord::IsNumberic(unsigned char *ch)
 {
 	int i;
@@ -360,11 +306,11 @@ int CWord::IsNumberic(unsigned char *ch)
 	else
 		return (0);
 }
-
-void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage)
-{
-	wordPackage.vecWordInfo[wno].phone[ndx] = wordPackage.vecWordInfo[wno].phone[ndx] / 10 * 10 + new_tone;
-}
+*/
+//void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage)
+//{
+//	wordPackage.vecWordInfo[wno].phone[ndx] = wordPackage.vecWordInfo[wno].phone[ndx] / 10 * 10 + new_tone;
+//}
 
 //BOOL CCsame(UCHAR * s, char* esi); //one Chinese Character Comparison
 //BOOL CCsame(UCHAR * s, char* esi)
@@ -383,17 +329,19 @@ void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage
 //return 0;
 //same: return 1;
 //}
-const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲", "ㄑㄩˇ" }, { "行", "ㄏㄤˊ" }, { "更", "ㄍㄥ" },
-		{ "度", "ㄉㄨˋ" }, { "省", "ㄕㄥˇ" }, { "重", "ㄔㄨㄥˊ" }, { "校", "ㄒㄧㄠˋ" }, { "處", "ㄔㄨˋ" }, { "著", "ㄓㄠ" }, { "載", "ㄗㄞˇ" },
-		{ "種", "ㄓㄨㄥˇ" }, { "擔", "ㄉㄢˋ" }, { "子", "ㄗˇ" }, { "角", "ㄐㄧㄠˇ" }, { "卷", "ㄐㄩㄢˇ" },
-		{ "刻", "ㄎㄜˋ" }, //num
-		{ "宿", "ㄒㄧㄡˇ" }, //num
-		{ "朝", "ㄓㄠ" }, //num
-		{ "間", "ㄐㄧㄢ" }, { "剎", "ㄔㄚˋ" }, { "吐", "ㄊㄨˇ" }, { "畜", "ㄔㄨˋ" }, { "較", "ㄐㄧㄠˋ" }, { "說", "ㄕㄨㄛ" },
-		{ "轉", "ㄓㄨㄢˇ" }, { "騎", "ㄐㄧˋ" }, { "鵠", "ㄏㄨˊ" }, { "覺", "ㄐㄧㄠˋ" }, { "勺", "ㄕㄠˊ" }, { "種", "ㄓㄨㄥˇ" },
-		//{"分" , "ㄈㄣ"},
-		//{"匹" , "ㄆㄧ"    , "ㄆㄧˇ"  },
-		{ 0, 0 } };
+/*
+ const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲", "ㄑㄩˇ" }, { "行", "ㄏㄤˊ" }, { "更", "ㄍㄥ" },
+ { "度", "ㄉㄨˋ" }, { "省", "ㄕㄥˇ" }, { "重", "ㄔㄨㄥˊ" }, { "校", "ㄒㄧㄠˋ" }, { "處", "ㄔㄨˋ" }, { "著", "ㄓㄠ" }, { "載", "ㄗㄞˇ" },
+ { "種", "ㄓㄨㄥˇ" }, { "擔", "ㄉㄢˋ" }, { "子", "ㄗˇ" }, { "角", "ㄐㄧㄠˇ" }, { "卷", "ㄐㄩㄢˇ" },
+ { "刻", "ㄎㄜˋ" }, //num
+ { "宿", "ㄒㄧㄡˇ" }, //num
+ { "朝", "ㄓㄠ" }, //num
+ { "間", "ㄐㄧㄢ" }, { "剎", "ㄔㄚˋ" }, { "吐", "ㄊㄨˇ" }, { "畜", "ㄔㄨˋ" }, { "較", "ㄐㄧㄠˋ" }, { "說", "ㄕㄨㄛ" },
+ { "轉", "ㄓㄨㄢˇ" }, { "騎", "ㄐㄧˋ" }, { "鵠", "ㄏㄨˊ" }, { "覺", "ㄐㄧㄠˋ" }, { "勺", "ㄕㄠˊ" }, { "種", "ㄓㄨㄥˇ" },
+ //{"分" , "ㄈㄣ"},
+ //{"匹" , "ㄆㄧ"    , "ㄆㄧˇ"  },
+ { 0, 0 } };
+ */
 /**/
 /**/
 /**************************************2007 09 19 fable*****/

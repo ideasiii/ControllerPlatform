@@ -218,7 +218,7 @@ enum WORD_ATTR
 
 #define WORD_ATTR_NUM (WA_STAR+1)
 //最大的詞數
-#define WORD_LEN 10
+//#define WORD_LEN 10
 #define WORD_LEN2 (WORD_LEN*2)
 #define SENTENCE_LEN 100
 
@@ -229,16 +229,17 @@ struct WORD_DB  //總共占 48 bytes (仲)
 	unsigned char attr[4];          //(4 bytes)
 	unsigned char big5[20];  //big5,一字二占2 byte (20 bytes)
 	unsigned int counter;          //字數*2 (1 byte)
-	short phone[WORD_LEN];	//發音代碼 (10 bytes)
+	short phone[10];	//發音代碼 (10 bytes)
 };
 #pragma pack(pop)
 
 struct WORD_INFO                //記錄斷詞的結果
 {
 	char wlen;					//詞的長度（以中文字為單位)
-	unsigned char big5[20 + 1];	//+1，當作字串結尾。這是詞的內容(可輸出)
+//	unsigned char big5[20 + 1];	//+1，當作字串結尾。這是詞的內容(可輸出)
 //	char sen_pos;				//詞在句中的位置
-	short phone[WORD_LEN];		//發音代碼，也就是sound ID，是將big5轉成sid
+//	short phone[WORD_LEN];		//發音代碼，也就是sound ID，是將big5轉成sid
+	std::string strPhone[10];				// 羅馬拼音
 	std::string strSentence;		// UTF8
 };
 
@@ -276,9 +277,10 @@ public:
 typedef struct _WORD_DIC
 {
 	std::string strWord;
-	short phoneID[10];
+	//short phoneID[10];
+	std::string strPhone[10];
 } WORD_DIC;
-static std::map<std::string, short[10]> mapWord;
+//static std::map<std::string, short[10]> mapWord;
 
 static std::map<std::string, vector<WORD_DIC> > mapWordDictionary;
 

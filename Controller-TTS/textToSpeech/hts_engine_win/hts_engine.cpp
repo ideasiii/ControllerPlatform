@@ -405,7 +405,7 @@ void HTS_Process(FILE *labfp, FILE *rawfp, FILE *lf0fp, FILE *mcepfp, FILE *durf
 
 	/* Specified utterance length is too short */
 	if (gp->LENGTH > 0.0 && gp->LENGTH * gp->RATE / gp->FPERIOD < um.nState)
-		HTS_Error(1, "hts_engine: specified utterance length is too short.\n");
+		HTS_Error(1, const_cast<char*>("hts_engine: specified utterance length is too short.\n"));
 
 	/* if total length of utterance is specified, RHO (temporal factor) have to be computed */
 	if (gp->LENGTH > 0.0)
@@ -551,7 +551,7 @@ FILE *HTS_Getfp(const char *name, const char *opt)
 	FILE *fp = fopen(name, opt);
 
 	if (fp == NULL)
-		HTS_Error(2, "HTS_Getfp: >\"< Cannot open %s.\n", name);
+		HTS_Error(2, const_cast<char*>("HTS_Getfp: >\"< Cannot open %s.\n"), name);
 
 	return (fp);
 }
@@ -611,7 +611,7 @@ char *HTS_Calloc(const size_t num, const size_t size)
 	char *mem = (char *) calloc(num, size);
 
 	if (mem == NULL)
-		HTS_Error(1, "HTS_calloc: Cannot allocate memory.\n");
+		HTS_Error(1, const_cast<char*>("HTS_calloc: Cannot allocate memory.\n"));
 
 	return (mem);
 }
@@ -878,7 +878,7 @@ void InitDWin(PStream *pst)
 		/* check the number of coefficients */
 		fscanf(fp, "%d", &fsize);
 		if (fsize < 1)
-			HTS_Error(1, "InitDWIn: number of coefficients in %s is invalid", pst->dw.fn[i]);
+			HTS_Error(1, const_cast<char*>("InitDWIn: number of coefficients in %s is invalid"), pst->dw.fn[i]);
 
 		/* read coefficients */
 		pst->dw.coef[i] = (double *) HTS_Calloc(fsize, sizeof(double));
@@ -1138,12 +1138,12 @@ void LoadModelSet(ModelSet *ms)
 	/* read the number of HMM states */
 	HTS_Fread(&ms->nstate, sizeof(int), 1, ms->fp[DUR]);
 	if (ms->nstate < 0)
-		HTS_Error(1, "LoadModelFiles: #HMM states must be positive value.\n");
+		HTS_Error(1, const_cast<char*>("LoadModelFiles: #HMM states must be positive value.\n"));
 
 	/* read the number of duration pdfs */
 	HTS_Fread(&ms->ndurpdf, sizeof(int), 1, ms->fp[DUR]);
 	if (ms->ndurpdf < 0)
-		HTS_Error(1, "LoadModelFiles: #duration pdf must be positive value.\n");
+		HTS_Error(1, const_cast<char*>("LoadModelFiles: #duration pdf must be positive value.\n"));
 
 	ms->durpdf = (double **) HTS_Calloc(ms->ndurpdf, sizeof(double *));
 	ms->durpdf--;
@@ -1164,7 +1164,7 @@ void LoadModelSet(ModelSet *ms)
 	/* read vector size for spectrum */
 	HTS_Fread(&ms->mcepvsize, sizeof(int), 1, ms->fp[MCP]);
 	if (ms->mcepvsize < 0)
-		HTS_Error(1, "LoadModelFiles: vector size of mel-cepstrum part must be positive.\n");
+		HTS_Error(1, const_cast<char*>("LoadModelFiles: vector size of mel-cepstrum part must be positive.\n"));
 
 	ms->nmceppdf = (int *) HTS_Calloc(ms->nstate, sizeof(int));
 	ms->nmceppdf -= 2;
@@ -1174,7 +1174,7 @@ void LoadModelSet(ModelSet *ms)
 	for (i = 2; i <= ms->nstate + 1; i++)
 	{
 		if (ms->nmceppdf[i] < 0)
-			HTS_Error(1, "LoadModelFiles: #mcep pdf at state %d must be positive value.\n", i);
+			HTS_Error(1, const_cast<char*>("LoadModelFiles: #mcep pdf at state %d must be positive value.\n"), i);
 	}
 	ms->mceppdf = (double ***) HTS_Calloc(ms->nstate, sizeof(double **));
 	ms->mceppdf -= 2;
@@ -1199,7 +1199,7 @@ void LoadModelSet(ModelSet *ms)
 	/* read the number of streams for f0 modeling */
 	HTS_Fread(&ms->lf0stream, sizeof(int), 1, ms->fp[LF0]);
 	if (ms->lf0stream < 0)
-		HTS_Error(1, "LoadModelFiles: #stream for log f0 part must be positive value.\n");
+		HTS_Error(1, const_cast<char*>("LoadModelFiles: #stream for log f0 part must be positive value.\n"));
 
 	ms->nlf0pdf = (int *) HTS_Calloc(ms->nstate, sizeof(int));
 	ms->nlf0pdf -= 2;
@@ -1209,7 +1209,7 @@ void LoadModelSet(ModelSet *ms)
 	for (i = 2; i <= ms->nstate + 1; i++)
 	{
 		if (ms->nlf0pdf[i] < 0)
-			HTS_Error(1, "LoadModelFiles: #lf0 pdf at state %d must be positive.\n", i);
+			HTS_Error(1, const_cast<char*>("LoadModelFiles: #lf0 pdf at state %d must be positive.\n"), i);
 	}
 	ms->lf0pdf = (double ****) HTS_Calloc(ms->nstate, sizeof(double ***));
 	ms->lf0pdf -= 2;
@@ -1236,7 +1236,8 @@ void LoadModelSet(ModelSet *ms)
 				vw = ms->lf0pdf[i][j][k][2]; /* voiced weight */
 				uvw = ms->lf0pdf[i][j][k][3]; /* unvoiced weight */
 				if (vw < 0.0 || uvw < 0.0 || vw + uvw < 0.99 || vw + uvw > 1.01)
-					HTS_Error(1, "LoadModelFiles: voiced/unvoiced weights must be within 0.99 to 1.01.\n");
+					HTS_Error(1,
+							const_cast<char*>("LoadModelFiles: voiced/unvoiced weights must be within 0.99 to 1.01.\n"));
 			}
 		}
 	}
@@ -1579,7 +1580,7 @@ Question *FindQuestion(TreeSet *ts, const HTS_Mtype type, char *buf)
 			break;
 
 	if (q == ts->qtail[type])
-		HTS_Error(1, "FindQuestion: cannot find question %s.\n", buf);
+		HTS_Error(1, const_cast<char*>("FindQuestion: cannot find question %s.\n"), buf);
 
 	return q;
 }
@@ -1711,11 +1712,11 @@ void LoadTreeSet(TreeSet *ts, const HTS_Mtype type)
 	if (ts->thead[type]->next == NULL)
 	{
 		if (type == DUR)
-			HTS_Error(1, "LoadTreesFile: no trees for duration are loaded.\n");
+			HTS_Error(1, const_cast<char*>("LoadTreesFile: no trees for duration are loaded.\n"));
 		else if (type == LF0)
-			HTS_Error(1, "LoadTreesFile: no trees for log f0 are loaded.\n");
+			HTS_Error(1, const_cast<char*>("LoadTreesFile: no trees for log f0 are loaded.\n"));
 		else
-			HTS_Error(1, "LoadTreesFile: no trees for mel-cepstrum are loaded.\n");
+			HTS_Error(1, const_cast<char*>("LoadTreesFile: no trees for mel-cepstrum are loaded.\n"));
 	}
 
 	return;

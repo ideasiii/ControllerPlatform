@@ -239,6 +239,7 @@ int utf8casecmp(const void *src1, const void *src2)
 			return 1;
 		}
 	}
+	return -1;
 }
 
 void *utf8cat(void *utf8_restrict dst, const void *utf8_restrict src)
@@ -1615,13 +1616,15 @@ utf8_int32_t utf8uprcodepoint(utf8_int32_t cp)
 	return cp;
 }
 
-static std::string utf8_substr(const std::string& str, unsigned int start, unsigned int leng)
+__attribute__ ((unused))static std::string utf8_substr(const std::string& str, unsigned int start, unsigned int leng)
 {
 	if (leng == 0)
 	{
 		return "";
 	}
-	unsigned int c, i, ix, q, min = std::string::npos, max = std::string::npos;
+	unsigned int c, i, ix, q;
+	int min = (int) std::string::npos;
+	int max = (int) std::string::npos;
 	for (q = 0, i = 0, ix = str.length(); i < ix; i++, q++)
 	{
 		if (q == start)
@@ -1653,14 +1656,14 @@ static std::string utf8_substr(const std::string& str, unsigned int start, unsig
 	{
 		max = i;
 	}
-	if (min == std::string::npos || max == std::string::npos)
+	if (min == (int) std::string::npos || max == (int) std::string::npos)
 	{
 		return "";
 	}
 	return str.substr(min, max);
 }
 
-static int GetUtf8LetterNumber(const char *s)
+__attribute__ ((unused))static int GetUtf8LetterNumber(const char *s)
 {
 	int i = 0, j = 0;
 	while (s[i])
@@ -1672,7 +1675,7 @@ static int GetUtf8LetterNumber(const char *s)
 	return j;
 }
 
-static int GetUtf8Word(const char *s, int wantedNum, int& offset)
+__attribute__ ((unused))static int GetUtf8Word(const char *s, int wantedNum, int& offset)
 {
 	int i = 0, j = 0;
 

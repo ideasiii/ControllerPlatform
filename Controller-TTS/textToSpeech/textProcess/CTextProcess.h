@@ -32,7 +32,7 @@ public:
 private:
 
 	void releaseModel();
-	void CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
+	int CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
 			std::vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
 	CString GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
