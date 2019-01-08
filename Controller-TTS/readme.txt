@@ -32,3 +32,5 @@
 			
 //=====================RAW to WAV ================================//
 sox -t raw -b 16 -e signed-integer -r 16000 -c 1 *.raw duck.wav
+
+
