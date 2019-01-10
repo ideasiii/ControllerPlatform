@@ -15,6 +15,13 @@
 #include "CConfig.h"
 #include <dirent.h>
 #include <stdio.h>
+#include <set>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
+
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+#include "CFileHandler.h"
 
 using namespace std;
 
@@ -55,13 +62,37 @@ int CController::onInitial(void* szConfPath)
 	return nRet;
 }
 
+void CController::accessFile()
+{
+	vector<string> vFileList;
+
+	foldScan(vFileList);
+
+	//=======  insert data to monogodb =========//
+//	mongocxx::instance inst { };
+//	mongocxx::client conn { mongocxx::uri { } };
+//
+//	bsoncxx::builder::stream::document document { };
+//
+//	auto collection = conn["testdb"]["testcollection"];
+//	document << "hello" << "world";
+//
+//	collection.insert_one(document.view());
+//	auto cursor = collection.find( { });
+//
+//	for (auto&& doc : cursor)
+//	{
+//		std::cout << bsoncxx::to_json(doc) << std::endl;
+//	}
+}
+
 void CController::onTimer(int nId)
 {
 	switch (nId)
 	{
 	case 666:
 		killTimer(666);
-		foldScan();
+		accessFile();
 		break;
 	}
 }
@@ -77,20 +108,27 @@ void CController::onHandleMessage(Message &message)
 
 }
 
-void CController::foldScan()
+void CController::foldScan(vector<string> & vFileList)
 {
-	DIR *dir;
-	struct dirent *stdire;
-	dir = opendir("/data/arx");
-	if (dir)
-	{
-		while (0 != (stdire = readdir(dir)))
-		{
-			if ((strcmp(stdire->d_name, ".") == 0) || (strcmp(stdire->d_name, "..") == 0))
-				continue;
+	CFileHandler fileHandler;
+	vector<string> vFiles;
+	int nIndex;
 
-			printf("%s\n", stdire->d_name);
+	if (fileHandler.readPath("/data/arx", vFiles))
+	{
+		for (vector<string>::iterator it = vFiles.begin(); vFiles.end() != it; ++it)
+		{
+			nIndex = it->rfind(".");
+			if ((int) string::npos != nIndex)
+			{
+				++nIndex;
+				if (!it->substr(nIndex).compare("csv") || !it->substr(nIndex).compare("CSV"))
+				{
+				//	_log("[CController] foldScan : %s", it->c_str());
+					vFileList.push_back(*it);
+				}
+			}
 		}
-		closedir(dir);
 	}
+	vFiles.clear();
 }

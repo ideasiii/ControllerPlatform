@@ -6,9 +6,9 @@
  */
 
 #include <sys/stat.h>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/locks.hpp>
+//#include <boost/thread/mutex.hpp>
+//#include <boost/thread/thread.hpp>
+//#include <boost/thread/locks.hpp>
 #include <syslog.h>
 #include <fstream>
 #include <stdio.h>
@@ -25,7 +25,7 @@ string mstrLogDate;
 
 extern char *__progname;
 
-boost::mutex the_mutex;
+//boost::mutex the_mutex;
 
 inline bool fileExists(const string& filename)
 {
@@ -70,7 +70,7 @@ inline void writeLog(int nSize, const char *pLog)
 
 void _log(const char* format, ...)
 {
-	boost::mutex::scoped_lock lock(the_mutex);
+//	boost::mutex::scoped_lock lock(the_mutex);
 	va_list vl;
 	va_start(vl, format);
 	int size = vsnprintf(0, 0, format, vl) + sizeof('\0');

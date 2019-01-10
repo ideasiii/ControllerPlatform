@@ -35,6 +35,7 @@ LDLIBS    := $(LIB_LINK) \
 			-lpq \
 			-lsqlite3 \
 			-lmongoclient \
+			-lmongocxx \
 			-lboost_thread \
 			-lboost_system \
 			-lboost_filesystem \
@@ -102,6 +103,8 @@ clean:
 	done
 	@rm -rf $(DIR_APP_ROOT)build
 	@rm -rf $(DIR_APP_ROOT)bin
+	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0;
+	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1;
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs
@@ -125,6 +128,8 @@ package:
 	apt-get -y install autoconf automake libtool
 	apt-get -y install cmake libssl-dev libsasl2-dev
 	apt-get -y install libmongo-client-dev mongodb-clients
+	apt-get -y install libmongoc-1.0-0
+	apt-get -y install libbson-1.0
 	apt-get -y install libbson-dev
 	apt-get -y install libmongoc-dev
 	apt-get -y install libpq-dev
@@ -145,9 +150,12 @@ debug:
 	
 mongodb:
 	@mkdir -p libs
-	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver && scons install CCFLAGS="-Wno-unused-variable";
-	@cp -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/include/mongo $(DIR_APP_ROOT)extInclude
-	@cp $(DIR_APP_ROOT)extLibs/mongo-cxx-driver/build/install/lib/libmongoclient.a $(DIR_APP_ROOT)libs/libmongoclient.a
+	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0;
+	@cd $(DIR_APP_ROOT)extLibs && tar zxvf mongo-c-driver-1.13.0.tgz;
+	@cd $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0/build && cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && make && make install;
+	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1;
+	@cd $(DIR_APP_ROOT)extLibs && tar zxvf mongo-cxx-driver-r3.3.1.tgz;
+	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1/build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local .. && make && make install;
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	

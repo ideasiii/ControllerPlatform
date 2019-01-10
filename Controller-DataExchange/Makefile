@@ -16,7 +16,7 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR)) 
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /usr/local/include/mongocxx/v_noabi/ -I /usr/local/include/bsoncxx/v_noabi/
 CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -g -std=c++11
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
@@ -24,13 +24,11 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
+			-L/usr/local/lib \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lboost_thread \
-			-lboost_system \
-			-lboost_filesystem \
-			-lboost_regex \
-			-lboost_program_options
+			-lmongocxx \
+			-lbsoncxx
 			
 vpath %.cpp $(SRC_DIR)
 

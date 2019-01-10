@@ -6,7 +6,7 @@
  */
 
 #pragma once
-
+#include <vector>
 #include "CApplication.h"
 
 class CController: public CApplication
@@ -23,7 +23,8 @@ protected:
 	void onTimer(int nId);
 
 private:
-	void foldScan();
+	void accessFile();
+	void foldScan(std::vector<std::string> & vFileList);
 
 private:
 	int mnMsqKey;

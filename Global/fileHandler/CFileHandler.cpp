@@ -33,16 +33,16 @@ CFileHandler::~CFileHandler()
 
 }
 
-unsigned int CFileHandler::readAllLine(const char *szFile, set<string> &setData)
+unsigned int CFileHandler::readAllLine(const char *szFile, vector<string> &setData)
 {
-	if(szFile)
+	if (szFile)
 	{
 		ifstream file(szFile);
 		string str;
-		if(file.is_open())
+		if (file.is_open())
 		{
-			while(getline(file, str))
-				setData.insert(str);
+			while (getline(file, str))
+				setData.push_back(str);
 			file.close();
 		}
 	}
@@ -53,48 +53,85 @@ unsigned int CFileHandler::readContent(const char *szFile, string &strContent, b
 {
 	strContent.clear();
 
-	if(szFile)
+	if (szFile)
 	{
 		ifstream file(szFile);
 		string str;
-		if(file.is_open())
+		if (file.is_open())
 		{
-			while(getline(file, str))
+			while (getline(file, str))
 			{
-				if(bTrim)
+				if (bTrim)
 				{
 					strContent.append(trim(str));
-					//_log("[CFileHandler] readContent line: %s", trim(str).c_str());
 				}
 				else
 				{
 					strContent.append(str);
-					//_log("[CFileHandler] readContent line: %s", str.c_str());
 				}
 			}
-			//_log("[CFileHandler] readContent Content: %s", strContent.c_str());
 			file.close();
 		}
 	}
 	return strContent.length();
 }
 
-unsigned int CFileHandler::readPath(const char *szPath, set<string> &setData)
+unsigned int CFileHandler::readPath(const char *szPath, vector<string> &setData)
 {
 	DIR *dp;
 	struct dirent *dirp;
 
-	if(szPath)
+	if (szPath)
 	{
-		if(!(dp = opendir(szPath)))
+		if (!(dp = opendir(szPath)))
 		{
 			_log("[CFileHandler] readPath Error: %s", strerror(errno));
 		}
 		else
 		{
-			while((dirp = readdir(dp)))
+			while ((dirp = readdir(dp)))
 			{
-				if(dirp->d_type != DT_DIR)
+				if (dirp->d_type != DT_DIR)
+					setData.push_back(string(dirp->d_name));
+			}
+			closedir(dp);
+		}
+	}
+	return setData.size();
+}
+
+unsigned int CFileHandler::readAllLine(const char *szFile, std::set<std::string> &setData)
+{
+	if (szFile)
+	{
+		ifstream file(szFile);
+		string str;
+		if (file.is_open())
+		{
+			while (getline(file, str))
+				setData.insert(str);
+			file.close();
+		}
+	}
+	return setData.size();
+}
+
+unsigned int CFileHandler::readPath(const char *szPath, std::set<std::string> &setData)
+{
+	DIR *dp;
+	struct dirent *dirp;
+
+	if (szPath)
+	{
+		if (!(dp = opendir(szPath)))
+		{
+			_log("[CFileHandler] readPath Error: %s", strerror(errno));
+		}
+		else
+		{
+			while ((dirp = readdir(dp)))
+			{
+				if (dirp->d_type != DT_DIR)
 					setData.insert(string(dirp->d_name));
 			}
 			closedir(dp);

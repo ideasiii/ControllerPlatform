@@ -217,6 +217,7 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
 {
+
 	int nResult;
 	char** param = new char*[12];
 	param[0] = const_cast<char*>("hts_engine");
@@ -228,9 +229,9 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[6] = const_cast<char*>("-fm");
 	param[7] = const_cast<char*>("1");
 	param[8] = const_cast<char*>("-b");
-	param[9] = const_cast<char*>("0.3");
+	param[9] = const_cast<char*>("0.0");
 	param[10] = const_cast<char*>("-r");
-	param[11] = const_cast<char*>("1.2");
+	param[11] = const_cast<char*>("1.0");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
 	nResult = htsSynthesize(12, param);
 	delete param;
