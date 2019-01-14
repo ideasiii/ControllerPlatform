@@ -24,7 +24,8 @@ protected:
 
 private:
 	void accessFile();
-	void foldScan(std::vector<std::string> & vFileList);
+	void foldScan(const char * szFolderPath, std::vector<std::string> & vFileList);
+	void insertDB(std::vector<std::string> & vDataList);
 
 private:
 	int mnMsqKey;

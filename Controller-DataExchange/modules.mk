@@ -9,6 +9,7 @@ export MODULES=controllerHandler \
 ../Global/jsonHandler \
 ../Global/logHandler \
 ../Global/processHandler \
-../Global/fileHandler
+../Global/fileHandler \
+../Global/stringHandler
  
 #export EXT_MODULES=extInclude

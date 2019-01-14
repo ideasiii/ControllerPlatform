@@ -13,7 +13,7 @@ OBJDIR = $(DIR_APP_ROOT)build/$(TARGET)
 OUTDIR = $(DIR_APP_ROOT)bin
 LIBOUTDIR = $(DIR_APP_ROOT)lib
 CXXFLAGS = -Wall -g $(LOG)
-CINC   = -I./ -I../global_inc -I../logHandler -I../extInclude -I../threadHandler
+CINC   = -I./ -I../global_inc -I../logHandler -I../extInclude -I../threadHandler -I /usr/local/include/mongocxx/v_noabi -I /usr/local/include/bsoncxx/v_noabi
 LDLIBS  = -L/usr/lib/x86_64-linux-gnu \
           -lpthread -lm -lrt -ldl \
           -L../libs \
@@ -21,10 +21,11 @@ LDLIBS  = -L/usr/lib/x86_64-linux-gnu \
 			-L/lib64 \
 			-L/usr/lib64 \
 			-L/usr/lib64/x86_64-linux-gnu \
-			-I/usr/include/mongo \
+			-L/usr/local/lib \
+			-lbsoncxx \
+			-lmongocxx \
 			-lpthread \
 			-lm -lrt -ldl \
-			-lmongoclient \
 			-lboost_thread \
 			-lboost_system \
 			-lboost_filesystem \

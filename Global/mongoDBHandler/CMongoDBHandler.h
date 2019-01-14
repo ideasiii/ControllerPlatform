@@ -9,7 +9,8 @@
 #include <string>
 #include <map>
 #include <list>
-#include "mongo/client/dbclient.h"
+
+class mongo;
 
 class CMongoDBHandler
 {
@@ -30,7 +31,7 @@ public:
 	bool isValid();
 	int query(std::string strDB, std::string strCollection, std::string strField, std::string strFilter,
 			std::string strCondition, std::list<std::string> &listJSON);
-	int query(std::string strDB, std::string strCollection, mongo::BSONObj bsonobj, std::list<std::string> &listJSON);
+	//int query(std::string strDB, std::string strCollection, mongo::BSONObj bsonobj, std::list<std::string> &listJSON);
 
 private:
 	explicit CMongoDBHandler();

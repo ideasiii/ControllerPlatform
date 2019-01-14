@@ -17,12 +17,26 @@
 #include <stdio.h>
 #include <set>
 #include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/json.hpp>
-
-#include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 #include "CFileHandler.h"
+#include "CString.h"
 
+#include <cstdint>
+#include <iostream>
+#include <vector>
+#include <bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/stdx.hpp>
+#include <mongocxx/uri.hpp>
+
+using bsoncxx::builder::stream::close_array;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::finalize;
+using bsoncxx::builder::stream::open_array;
+using bsoncxx::builder::stream::open_document;
+
+#define PATH_FOLDER		"/data/arx"
 using namespace std;
 
 CController::CController() :
@@ -57,6 +71,8 @@ int CController::onInitial(void* szConfPath)
 	if (strConfPath.empty())
 		return FALSE;
 
+	mongocxx::instance instance { }; // This should be done only once.
+
 	setTimer(666, 3, 3);
 
 	return nRet;
@@ -64,9 +80,24 @@ int CController::onInitial(void* szConfPath)
 
 void CController::accessFile()
 {
+	CString strPath;
+	CFileHandler fileHandler;
 	vector<string> vFileList;
+	vector<string> vCsv;
 
-	foldScan(vFileList);
+	foldScan(PATH_FOLDER, vFileList);
+
+	for (vector<string>::iterator vecit = vFileList.begin(); vFileList.end() != vecit; ++vecit)
+	{
+		strPath.format("%s/%s", PATH_FOLDER, vecit->c_str());
+		_log("[CController] accessFile File name: %s", strPath.getBuffer());
+		vCsv.clear();
+		fileHandler.readAllLine(strPath.getBuffer(), vCsv);
+		if (vCsv.size())
+		{
+			insertDB(vCsv);
+		}
+	}
 
 	//=======  insert data to monogodb =========//
 //	mongocxx::instance inst { };
@@ -75,15 +106,34 @@ void CController::accessFile()
 //	bsoncxx::builder::stream::document document { };
 //
 //	auto collection = conn["testdb"]["testcollection"];
+
 //	document << "hello" << "world";
-//
-//	collection.insert_one(document.view());
+//	coll.insert_one(document.view());
 //	auto cursor = collection.find( { });
 //
 //	for (auto&& doc : cursor)
 //	{
 //		std::cout << bsoncxx::to_json(doc) << std::endl;
 //	}
+
+}
+
+void CController::insertDB(std::vector<std::string> & vDataList)
+{
+	mongocxx::uri uri("mongodb://localhost:27017");
+	mongocxx::client client(uri);
+	mongocxx::database db = client["findata"];
+	mongocxx::collection collection = db["csv"];
+	vector<bsoncxx::document::value> documents;
+
+	string strColumn = vDataList[0];
+	_log("[CController] insertDB get Columns: %s", strColumn.c_str());
+
+//	for (int i = 0; i < 100; i++)
+//	{
+//		documents.push_back(bsoncxx::builder::stream::document { } << "i" << i << "j" << i + 1 << finalize);
+//	}
+//	collection.insert_many(documents);
 }
 
 void CController::onTimer(int nId)
@@ -108,13 +158,13 @@ void CController::onHandleMessage(Message &message)
 
 }
 
-void CController::foldScan(vector<string> & vFileList)
+void CController::foldScan(const char * szFolderPath, vector<string> & vFileList)
 {
 	CFileHandler fileHandler;
 	vector<string> vFiles;
 	int nIndex;
 
-	if (fileHandler.readPath("/data/arx", vFiles))
+	if (fileHandler.readPath(szFolderPath, vFiles))
 	{
 		for (vector<string>::iterator it = vFiles.begin(); vFiles.end() != it; ++it)
 		{
@@ -124,7 +174,6 @@ void CController::foldScan(vector<string> & vFileList)
 				++nIndex;
 				if (!it->substr(nIndex).compare("csv") || !it->substr(nIndex).compare("CSV"))
 				{
-				//	_log("[CController] foldScan : %s", it->c_str());
 					vFileList.push_back(*it);
 				}
 			}
