@@ -7,6 +7,7 @@
 
 #pragma once
 #include <vector>
+#include <string>
 #include "CApplication.h"
 
 class CController: public CApplication
@@ -14,6 +15,7 @@ class CController: public CApplication
 public:
 	explicit CController();
 	virtual ~CController();
+	void importDB(const char * szPath);
 
 protected:
 	int onCreated(void* nMsqKey);

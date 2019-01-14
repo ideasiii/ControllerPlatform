@@ -5,7 +5,7 @@
  *      Author: Louis Ju
  */
 
-#include <string>
+#include <thread>
 #include <map>
 #include "CController.h"
 #include "common.h"
@@ -20,7 +20,8 @@
 #include <mongocxx/instance.hpp>
 #include "CFileHandler.h"
 #include "CString.h"
-
+#include <unistd.h>
+#include <signal.h>
 #include <cstdint>
 #include <iostream>
 #include <vector>
@@ -28,6 +29,12 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <spawn.h>
+#include <sys/wait.h>
 
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::close_document;
@@ -37,6 +44,7 @@ using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
 #define PATH_FOLDER		"/data/arx"
+
 using namespace std;
 
 CController::CController() :
@@ -71,7 +79,7 @@ int CController::onInitial(void* szConfPath)
 	if (strConfPath.empty())
 		return FALSE;
 
-	mongocxx::instance instance { }; // This should be done only once.
+//	mongocxx::instance instance { }; // This should be done only once.
 
 	setTimer(666, 3, 3);
 
@@ -93,42 +101,75 @@ void CController::accessFile()
 		_log("[CController] accessFile File name: %s", strPath.getBuffer());
 		vCsv.clear();
 		fileHandler.readAllLine(strPath.getBuffer(), vCsv);
-		if (vCsv.size())
+		if (1 < vCsv.size())
 		{
-			insertDB(vCsv);
+			importDB(strPath);
 		}
 	}
+}
 
-	//=======  insert data to monogodb =========//
-//	mongocxx::instance inst { };
-//	mongocxx::client conn { mongocxx::uri { } };
-//
-//	bsoncxx::builder::stream::document document { };
-//
-//	auto collection = conn["testdb"]["testcollection"];
+void CController::importDB(const char * szPath)
+{
+	if (szPath)
+	{
+		char *arg_list[] = { const_cast<char*>("mongoimport"), const_cast<char*>("--db"), const_cast<char*>("findata"),
+				const_cast<char*>("--collection"), const_cast<char*>("csv"), const_cast<char*>("--type"),
+				const_cast<char*>("csv"), const_cast<char*>("--headerline"), const_cast<char*>("--ignoreBlanks"),
+				const_cast<char*>("--file"), const_cast<char*>(szPath), NULL };
 
-//	document << "hello" << "world";
-//	coll.insert_one(document.view());
-//	auto cursor = collection.find( { });
-//
-//	for (auto&& doc : cursor)
-//	{
-//		std::cout << bsoncxx::to_json(doc) << std::endl;
-//	}
+		pid_t pid;
+		int status;
 
+		status = posix_spawn(&pid, "/usr/bin/mongoimport", NULL, NULL, arg_list, environ);
+		if (status == 0)
+		{
+			_log("[CController] importDB posix_spawn Child pid: %i", pid);
+			if (waitpid(pid, &status, 0) != -1)
+			{
+				_log("[CController] importDB Child exited with status %i", status);
+			}
+			else
+			{
+				_log("[CController] importDB waitpid Error");
+			}
+		}
+		else
+		{
+			_log("[CController] importDB Error posix_spawn: %s", strerror(status));
+		}
+	}
 }
 
 void CController::insertDB(std::vector<std::string> & vDataList)
 {
-	mongocxx::uri uri("mongodb://localhost:27017");
-	mongocxx::client client(uri);
-	mongocxx::database db = client["findata"];
-	mongocxx::collection collection = db["csv"];
-	vector<bsoncxx::document::value> documents;
+//	char *arg_list[] = { "mongoimport", "--db", "findata", "--collection", "csv", "--type", "csv", "--headerline",
+//			"--ignoreBlanks", "--file", "/data/arx/data_deid.csv", NULL };
 
-	string strColumn = vDataList[0];
-	_log("[CController] insertDB get Columns: %s", strColumn.c_str());
+//	spawn("ls", arg_list);
+//	_log("[CController] insertDB run Execv Success");
 
+// mongoimport --db network1 --collection networkmanagement --type csv --headerline --ignoreBlanks --file /home/erik/Documents/networkmanagement-1.csv
+
+//	char * argv[] = { "ls", "-al", "/etc/passwd", (char *) 0 };
+//	char * envp[] = { "PATH=/bin", 0 };
+//	execve("/bin/ls", argv, envp);
+
+//	char * argv[] = { const_cast<char*>("ls"), const_cast<char*>("-al"), const_cast<char*>("/etc/passwd"),
+//			const_cast<char*>("0") };
+
+//	int nRecords;
+//	mongocxx::uri uri("mongodb://localhost:27017");
+//	mongocxx::client client(uri);
+//	mongocxx::database db = client["findata"];
+//	mongocxx::collection collection = db["csv"];
+//	vector<bsoncxx::document::value> documents;
+//
+//	nRecords = vDataList.size();
+
+//======= 抓第一行 資料欄位名 ============//
+//	string strColumn = vDataList[0];
+//	_log("[CController] insertDB get Columns: %s", strColumn.c_str());
+//
 //	for (int i = 0; i < 100; i++)
 //	{
 //		documents.push_back(bsoncxx::builder::stream::document { } << "i" << i << "j" << i + 1 << finalize);
@@ -138,12 +179,11 @@ void CController::insertDB(std::vector<std::string> & vDataList)
 
 void CController::onTimer(int nId)
 {
-	switch (nId)
+	if (666 == nId)
 	{
-	case 666:
-		killTimer(666);
+		killTimer(nId);
 		accessFile();
-		break;
+		return;
 	}
 }
 
