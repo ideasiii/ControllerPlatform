@@ -15,7 +15,8 @@ class CController: public CApplication
 public:
 	explicit CController();
 	virtual ~CController();
-	void importDB(const char * szPath);
+	int importDB(const char * szPath);
+	void moveFile(const char * szPath);
 
 protected:
 	int onCreated(void* nMsqKey);

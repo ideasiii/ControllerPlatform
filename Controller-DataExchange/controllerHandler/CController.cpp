@@ -35,6 +35,9 @@
 #include <unistd.h>
 #include <spawn.h>
 #include <sys/wait.h>
+#include <iostream>     // std::streambuf, std::cout
+#include <fstream>      // std::ofstream
+#include <algorithm>    // std::remove
 
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::close_document;
@@ -44,6 +47,7 @@ using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
 #define PATH_FOLDER		"/data/arx"
+#define PATH_FINISH		"/data/arx/finished"
 
 using namespace std;
 
@@ -103,22 +107,25 @@ void CController::accessFile()
 		fileHandler.readAllLine(strPath.getBuffer(), vCsv);
 		if (1 < vCsv.size())
 		{
-			importDB(strPath);
+			if (0 == importDB(strPath))
+			{
+				moveFile(vecit->c_str());
+			}
 		}
 	}
 }
 
-void CController::importDB(const char * szPath)
+int CController::importDB(const char * szPath)
 {
+	pid_t pid;
+	int status = -1;
+
 	if (szPath)
 	{
 		char *arg_list[] = { const_cast<char*>("mongoimport"), const_cast<char*>("--db"), const_cast<char*>("findata"),
 				const_cast<char*>("--collection"), const_cast<char*>("csv"), const_cast<char*>("--type"),
 				const_cast<char*>("csv"), const_cast<char*>("--headerline"), const_cast<char*>("--ignoreBlanks"),
 				const_cast<char*>("--file"), const_cast<char*>(szPath), NULL };
-
-		pid_t pid;
-		int status;
 
 		status = posix_spawn(&pid, "/usr/bin/mongoimport", NULL, NULL, arg_list, environ);
 		if (status == 0)
@@ -138,6 +145,21 @@ void CController::importDB(const char * szPath)
 			_log("[CController] importDB Error posix_spawn: %s", strerror(status));
 		}
 	}
+	return status;
+}
+
+void CController::moveFile(const char * szPath)
+{
+	CString strOld;
+	CString strNew;
+
+	strOld.format("%s/%s", PATH_FOLDER, szPath);
+	strNew.format("%s/%s", PATH_FINISH, szPath);
+
+	ifstream ifs(strOld.getBuffer(), ios::in | ios::binary);
+	ofstream ofs(strNew.getBuffer(), ios::out | ios::binary);
+	ofs << ifs.rdbuf();
+	std::remove(strOld.getBuffer());
 }
 
 void CController::insertDB(std::vector<std::string> & vDataList)
