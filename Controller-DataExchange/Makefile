@@ -87,18 +87,10 @@ mk_debug:
 	@echo 'Build Director  : '$(BUILD_DIR)"\n"
 	@echo 'Link Library    : '$(LDLIBS)"\n"
 	@echo 'Extend Include :'$(EXT_INCLUDES)"\n"
-	
-package-s:
-	yum -y install sqlite-devel.x86_64
-	yum -y install boost boost-devel
-	yum -y install gcc-c++
-	@echo -ne '\n###### Package for CentSO install completed. ######\n'
-	@echo "\n"
-	
+		
 package:
 	apt-get -y install build-essential
 	apt-get -y install autoconf automake libtool
-	apt-get -y install libcurl4-openssl-dev libssl-dev uuid-dev zlib1g-dev libpulse-dev
 	@echo -ne '\n###### Package for Ubuntu install completed. ######\n'
 	@echo "\n"
 
