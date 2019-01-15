@@ -153,8 +153,10 @@ void CController::moveFile(const char * szPath)
 	CString strOld;
 	CString strNew;
 
+	time_t rawtime;
+	time(&rawtime);
 	strOld.format("%s/%s", PATH_FOLDER, szPath);
-	strNew.format("%s/%s", PATH_FINISH, szPath);
+	strNew.format("%s/%ld_%s", PATH_FINISH, rawtime, szPath);
 
 	ifstream ifs(strOld.getBuffer(), ios::in | ios::binary);
 	ofstream ofs(strNew.getBuffer(), ios::out | ios::binary);
@@ -205,6 +207,7 @@ void CController::onTimer(int nId)
 	{
 		killTimer(nId);
 		accessFile();
+		setTimer(666, 1, 3);
 		return;
 	}
 }
