@@ -5,30 +5,23 @@
  *      Author: Louis Ju
  */
 
-#include <thread>
-#include <map>
 #include "CController.h"
 #include "common.h"
 #include "event.h"
 #include "packet.h"
 #include "utility.h"
 #include "CConfig.h"
+#include "CFileHandler.h"
+#include "CString.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <set>
-#include <bsoncxx/builder/stream/document.hpp>
-#include <mongocxx/instance.hpp>
-#include "CFileHandler.h"
-#include "CString.h"
+#include <thread>
+#include <map>
 #include <unistd.h>
 #include <signal.h>
 #include <cstdint>
-#include <iostream>
 #include <vector>
-#include <bsoncxx/json.hpp>
-#include <mongocxx/client.hpp>
-#include <mongocxx/stdx.hpp>
-#include <mongocxx/uri.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,13 +31,6 @@
 #include <iostream>     // std::streambuf, std::cout
 #include <fstream>      // std::ofstream
 #include <algorithm>    // std::remove
-
-using bsoncxx::builder::stream::close_array;
-using bsoncxx::builder::stream::close_document;
-using bsoncxx::builder::stream::document;
-using bsoncxx::builder::stream::finalize;
-using bsoncxx::builder::stream::open_array;
-using bsoncxx::builder::stream::open_document;
 
 #define PATH_FOLDER		"/data/arx"
 #define PATH_FINISH		"/data/arx/finished"
@@ -82,8 +68,6 @@ int CController::onInitial(void* szConfPath)
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
 	if (strConfPath.empty())
 		return FALSE;
-
-//	mongocxx::instance instance { }; // This should be done only once.
 
 	setTimer(666, 3, 3);
 
@@ -162,43 +146,6 @@ void CController::moveFile(const char * szPath)
 	ofstream ofs(strNew.getBuffer(), ios::out | ios::binary);
 	ofs << ifs.rdbuf();
 	std::remove(strOld.getBuffer());
-}
-
-void CController::insertDB(std::vector<std::string> & vDataList)
-{
-//	char *arg_list[] = { "mongoimport", "--db", "findata", "--collection", "csv", "--type", "csv", "--headerline",
-//			"--ignoreBlanks", "--file", "/data/arx/data_deid.csv", NULL };
-
-//	spawn("ls", arg_list);
-//	_log("[CController] insertDB run Execv Success");
-
-// mongoimport --db network1 --collection networkmanagement --type csv --headerline --ignoreBlanks --file /home/erik/Documents/networkmanagement-1.csv
-
-//	char * argv[] = { "ls", "-al", "/etc/passwd", (char *) 0 };
-//	char * envp[] = { "PATH=/bin", 0 };
-//	execve("/bin/ls", argv, envp);
-
-//	char * argv[] = { const_cast<char*>("ls"), const_cast<char*>("-al"), const_cast<char*>("/etc/passwd"),
-//			const_cast<char*>("0") };
-
-//	int nRecords;
-//	mongocxx::uri uri("mongodb://localhost:27017");
-//	mongocxx::client client(uri);
-//	mongocxx::database db = client["findata"];
-//	mongocxx::collection collection = db["csv"];
-//	vector<bsoncxx::document::value> documents;
-//
-//	nRecords = vDataList.size();
-
-//======= 抓第一行 資料欄位名 ============//
-//	string strColumn = vDataList[0];
-//	_log("[CController] insertDB get Columns: %s", strColumn.c_str());
-//
-//	for (int i = 0; i < 100; i++)
-//	{
-//		documents.push_back(bsoncxx::builder::stream::document { } << "i" << i << "j" << i + 1 << finalize);
-//	}
-//	collection.insert_many(documents);
 }
 
 void CController::onTimer(int nId)
