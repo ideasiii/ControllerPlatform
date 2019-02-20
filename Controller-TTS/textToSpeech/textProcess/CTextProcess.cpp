@@ -21,6 +21,17 @@
 #include "utility.h"
 #include "WordInfo.h"
 #include "utf8.h"
+#include <map>
+
+//*****for domain socket client*****//
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+//char *socket_path = "/home/johann/ipc_tmp/ipc_tmp.txt";  //original test
+char *socket_path = "/data/opt/ipc_tmp/ipc_tmp.txt";
+//***************************//
 
 using namespace std;
 
@@ -31,6 +42,8 @@ using namespace std;
 #define HMM_MODEL				"model/hmm.htsvoice"
 #define WORD_MODEL			"model/"
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
+
+#define max_size 1000
 
 // ==================  注意順序不要改變!!!!  ==========================
 
@@ -54,7 +67,7 @@ static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",
 		};
 
 // =====================================================================
-
+// standford
 const char *POStags[34] =
 		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
 				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
@@ -88,6 +101,7 @@ void CTextProcess::releaseModel()
 
 int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 {
+
 	time_t rawtime;
 	time(&rawtime);
 
@@ -288,6 +302,31 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 	int valFeaturePOS;
 	_log("[CTextProcess] CartPrediction sentence: %s  wnum: %d", sentence.getBuffer(), wordPackage.wnum);
 
+//	const char* test[] = {"/AD ", "/VV ", "/NN "};  //硬給詞性
+
+    //***** domain socket connect *****//
+	struct sockaddr_un addr;
+	int fd;
+	char receiveMessage[max_size];
+
+	if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+		perror("socket error");
+		exit(-1);
+	}
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	if (*socket_path == '\0') {
+		*addr.sun_path = '\0';
+	  strncpy(addr.sun_path+1, socket_path+1, sizeof(addr.sun_path)-2);
+	} else {
+	  strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+	}
+	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+	  perror("connect error");
+	  exit(-1);
+	}
+	//***************//
+
 	for (i = 0; i < wordPackage.wnum; ++i)
 	{
 		switch (wordPackage.vecWordInfo[i].wlen)
@@ -323,9 +362,21 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		}
 
 		strBig5 = strBig5 + wordPackage.vecWordInfo[i].strSentence;
-		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence;
-		cstemp = cstemp + "/X ";
+		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence ;
+		cstemp = cstemp + " ";
 	}
+
+	//***** domain socket *****//
+
+	memset(receiveMessage, 0, sizeof(receiveMessage));
+	write(fd, cstemp, cstemp.getLength());
+	printf("Input: %s\n", cstemp.getBuffer());
+	read(fd,receiveMessage,sizeof(receiveMessage));
+	printf("%s\n", receiveMessage);
+	CString cstring = receiveMessage;
+	cstemp = cstring;
+
+	//********************//
 
 	_log("================ len %d=================", cstemp.getLength());
 	if (0 >= cstemp.getLength())
@@ -350,29 +401,29 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		ulIndex = it->find("/", 0);
 		ulLength = it->length();
 		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
-		ulIndex /= 2;
+		ulIndex /= 3;
 		bAdded = false;
 		for (j = 1; 34 > j; ++j)
 		{
 			if (!tempPOS.Compare(POStags[j]))
 			{
-				for (int k = 0; k < (int) ulIndex; ++k)
-				{
+
 					pos.push_back(j);
+					for (k = 1; k < (int) ulIndex; ++k)
+								{
+									pos.push_back(j);
+								}
+
 					bAdded = true;
 					break;
-				}
+
 			}
-		}
-		if (!bAdded)
-		{
-			for (k = 0; k < (int) ulIndex; ++k)
-			{
-				pos.push_back(j);
-			}
+			if (bAdded)
+				break;
 		}
 
 	}
+
 
 //	_log("syllable attribute資料結構產出，處理音韻詞的位置與音韻詞的字數狀態");
 //	_log("============== CART_Model =================");
@@ -390,12 +441,16 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 				valFeatureLW = wordpar[i - j];	// (LL/L/C/R/RR) syllable所在LW長度
 			}
 			pcdData->Att_Catagory.push_back(valFeatureLW);
+
 		}
-//		_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,	syllpos[i]);
+		//_log("Sentence length: %d Forward: %d Backward: %d lexicon: %d", pwBoundary.size(), k, pwBoundary.size() - k,	syllpos[i]);
 		pcdData->Att_Catagory.push_back(syllpos.size());	// Sentence length
 		pcdData->Att_Catagory.push_back(i);	// Position in sentence (Forward)
 		pcdData->Att_Catagory.push_back(syllpos.size() - i);	// Position in sentence (Backward)
 		pcdData->Att_Catagory.push_back(syllpos[i]);	// Position in lexicon word
+
+
+
 		for (j = 2; j >= -2; --j)
 		{
 			valFeaturePOS = 0;
@@ -404,6 +459,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 				valFeaturePOS = pos[i - j];	// (LL/L/C/R/RR) syllable所在POS tags
 			}
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
+
 		}
 
 		CartModel->TEST(pcdData);
@@ -419,7 +475,9 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		_log("PWCluster數據: %d", cluster[i]);
 		if (cluster[i] == 1)
 			pwBoundary.push_back(i);
+
 	}
+
 	cluster.clear();
 
 //	_log("============== CART_Model2 =================");
@@ -446,12 +504,13 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 			if (((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
-			//		_log("valFeaturePOS: %d", valFeaturePOS);
+					//_log("valFeaturePOS: %d", valFeaturePOS);
 		}
 //		_log("CART TEST2");
 		CartModel->TEST2(pcdData);
+
 		cluster.push_back(pcdData->clu);
-//		_log("cluster push: %d", pcdData->clu);
+		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
@@ -1024,7 +1083,6 @@ void CTextProcess::WordExchange(CString &strText)
 			if (start_pos != std::string::npos)
 			{
 				strText = strText.toString().replace(start_pos, (*j).first.length(), (*j).second.c_str());
-				cout << (*j).first << ": " << (*j).second << endl;
 			}
 		}
 	}
