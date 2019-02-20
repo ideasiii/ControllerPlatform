@@ -164,16 +164,16 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 	int index;
 	CString strTmp = "";
 
-	for(index = 0; index < (int) vcartData.size(); ++index)
+	for(index = 0; index < (int) vcartData2.size(); ++index)
 	{
-		if(vcartData[index].nodeID == lid)
+		if(vcartData2[index].nodeID == lid)
 		{
 			CART_NODE *node = new CART_NODE();
-			node->clu = vcartData[index].clu;
-			node->dim = vcartData[index].dim;
-			for(int i = 0; i < vcartData[index].size; ++i)
+			node->clu = vcartData2[index].clu;
+			node->dim = vcartData2[index].dim;
+			for(int i = 0; i < vcartData2[index].size; ++i)
 			{
-				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+				node->cuiaQuestion.push_back(vcartData2[index].cuiaQuestion[i]);
 			}
 			pNode->Lchild = node;
 //			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,vcartData[index].size);
@@ -182,16 +182,16 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 		}
 	}
 
-	for(index = 0; index < (int) vcartData.size(); ++index)
+	for(index = 0; index < (int) vcartData2.size(); ++index)
 	{
-		if(vcartData[index].nodeID == rid)
+		if(vcartData2[index].nodeID == rid)
 		{
 			CART_NODE *node = new CART_NODE();
-			node->clu = vcartData[index].clu;
-			node->dim = vcartData[index].dim;
-			for(int i = 0; i < vcartData[index].size; ++i)
+			node->clu = vcartData2[index].clu;
+			node->dim = vcartData2[index].dim;
+			for(int i = 0; i < vcartData2[index].size; ++i)
 			{
-				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+				node->cuiaQuestion.push_back(vcartData2[index].cuiaQuestion[i]);
 			}
 			pNode->Rchild = node;
 //			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,vcartData[index].size);
