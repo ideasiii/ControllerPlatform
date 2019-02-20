@@ -4,7 +4,6 @@
  *  Created on: 2018年9月28日
  *      Author: Jugo
  */
-
 #include <memory.h>
 #include <climits>
 #include "CTextProcess.h"
@@ -39,7 +38,9 @@ using namespace std;
 #define CLUSTER						2
 #define CART_MODEL				"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
-#define HMM_MODEL				"model/hmm.htsvoice"
+//#define HMM_MODEL				"model/hmm.htsvoice"
+//#define HMM_MODEL				"model/hmm_original.htsvoice"
+#define HMM_MODEL				"model/hmm_adapt.htsvoice"
 #define WORD_MODEL			"model/"
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
 
