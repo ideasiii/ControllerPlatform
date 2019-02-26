@@ -4,6 +4,9 @@
  *  Created on: 2018年9月28日
  *      Author: Jugo
  */
+
+#pragma once //kris 2019/02/21 新增
+
 #include <memory.h>
 #include <climits>
 #include "CTextProcess.h"
@@ -21,6 +24,7 @@
 #include "WordInfo.h"
 #include "utf8.h"
 #include <map>
+#include "CController.h" //kris 2019/02/21 新增
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -39,8 +43,8 @@ using namespace std;
 #define CART_MODEL				"model/CART_Model.bin"
 #define CART_MODEL2			"model/CART_Model2.bin"
 //#define HMM_MODEL				"model/hmm.htsvoice"
-//#define HMM_MODEL				"model/hmm_original.htsvoice"
 #define HMM_MODEL				"model/hmm_adapt.htsvoice"
+#define HMM_MODEL2				"model/hmm_original.htsvoice"
 #define WORD_MODEL			"model/"
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
 
@@ -100,7 +104,10 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-int CTextProcess::processTheText(const char *szText, CString &strWavePath)
+int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris call by reference
+//int CTextProcess::processTheText(TTS_REQ *test, CString &strWavePath)  //kris call by address
+//int CTextProcess::processTheText(const char *szText, CString &strWavePath) //kris 2019/02/21 original
+//int CTextProcess::processTheText(const char *userid, const int voiceid, const int emotion, const char *szText, CString &strWavePath)
 {
 
 	time_t rawtime;
@@ -132,8 +139,21 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 
-	_log("[CTextProcess] processTheText Input Text: %s", szText);
-	strInput = szText;
+//	char temp[]      = {"model/hmm_adapt.htsvoice"};   //--- kris test ---//
+//	char HMMMODEL[]  = {"model/hmm_adapt.htsvoice"};
+//	char HMMMODEL2[] = {"model/hmm_original.htsvoice"};//-----------------//
+
+	char hmm_temp[]   = {"model/hmm_10.htsvoice"};
+ 	char hmm_10[]     = {"model/hmm_10.htsvoice"};
+	char hmm_11[]     = {"model/hmm_11.htsvoice"};
+	char hmm_12[]     = {"model/hmm_12.htsvoice"};
+	strcpy(hmm_10, hmm_temp);
+	_log("model: %s", hmm_10);
+	_log("temp: %s", hmm_temp);
+//	_log("[CTextProcess] processTheText Input Text: %s", szText);
+//	strInput = szText;
+//	strInput = test->text; //kris call by address
+	strInput = test.text;  //kris call by reference
 	strInput.trim();
 
 	WordExchange(strInput);
@@ -226,8 +246,39 @@ int CTextProcess::processTheText(const char *szText, CString &strWavePath)
 	_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
 
 	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
-	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
 
+	//_log("[Test] voiceid: %d", test->voice_id); //kris call by address
+	_log("[Test] voiceid: %d", test.voice_id);
+
+////*************** version 1 ***************//
+////	if(test->voice_id == 1) //kris call by address
+//	if(test.voice_id == 1)  //kris call by reference
+//	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
+//
+////	if(test->voice_id == 2) //kris call by address
+//	if(test.voice_id == 2)  //kris call by reference
+//	return Synthesize(HMM_MODEL2, strWavePath.getBuffer(), strLabelName.getBuffer());
+
+//**************** version 2 ****************//
+	switch(test.voice_id)
+	{
+	case 0:
+		break;
+	case 1:
+		strcpy(hmm_temp, hmm_10);
+		strcpy(hmm_10, hmm_11);
+		break;
+	case 2:
+		strcpy(hmm_temp, hmm_10);
+		strcpy(hmm_10, hmm_12);
+		break;
+	}
+	_log("model_10: %s", hmm_10);
+	_log("model_11: %s", hmm_11);
+	_log("model_12: %s", hmm_12);
+	_log("temp: %s", hmm_temp);
+
+	return Synthesize(hmm_10, strWavePath.getBuffer(), strLabelName.getBuffer());
 }
 
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)

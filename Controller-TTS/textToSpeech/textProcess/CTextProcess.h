@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <CController.h>   //kris add
 
 class CString;
 class CStringArray;
@@ -23,7 +24,10 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(const char *szText, CString &strWavePath);
+//	int processTheText(const char *szText, CString &strWavePath); //kris original 2019/02/21
+//	int processTheText(TTS_REQ *test, CString &strWavePath);   //kris new processthetext call by address
+	int processTheText(TTS_REQ &test, CString &strWavePath);   //kris new processthetext call by reference
+//	int processTheText(const char *userid, const int voiceid, const int emotion, const char *szText, CString &strWavePath);
 	void loadModel();
 	void dumpWordData();
 	void dumpWordIndex();
