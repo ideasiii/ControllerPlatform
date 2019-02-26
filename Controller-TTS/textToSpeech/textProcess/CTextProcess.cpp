@@ -139,17 +139,23 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 
-//	char temp[]      = {"model/hmm_adapt.htsvoice"};   //--- kris test ---//
-//	char HMMMODEL[]  = {"model/hmm_adapt.htsvoice"};
-//	char HMMMODEL2[] = {"model/hmm_original.htsvoice"};//-----------------//
-
-	char hmm_temp[]   = {"model/hmm_10.htsvoice"};
+//	char hmm_out[] = {};
+//	memset(hmm_out, 0, sizeof(hmm_out));
+//	_log("hmm_out: %s", hmm_out);
+	char temp[]    = {"model/hmm_adapt.htsvoice"};     //--- kris test ---//
+	char hmm_0[]   = {"model/hmm_adapt.htsvoice"};
+//	char HMMMODEL2[] = {"model/hmm_original.htsvoice"};
+	strcpy(hmm_0, temp);							   //-----------------//
+	_log("model: %s", hmm_0);
+	_log("temp: %s", temp);
+//	char hmm_temp[]   = {"model/hmm_10.htsvoice"};
  	char hmm_10[]     = {"model/hmm_10.htsvoice"};
 	char hmm_11[]     = {"model/hmm_11.htsvoice"};
 	char hmm_12[]     = {"model/hmm_12.htsvoice"};
-	strcpy(hmm_10, hmm_temp);
-	_log("model: %s", hmm_10);
-	_log("temp: %s", hmm_temp);
+//	strcpy(hmm_10, hmm_temp);
+//	_log("model: %s", hmm_10);
+//	_log("temp: %s", hmm_temp);
+
 //	_log("[CTextProcess] processTheText Input Text: %s", szText);
 //	strInput = szText;
 //	strInput = test->text; //kris call by address
@@ -250,7 +256,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	//_log("[Test] voiceid: %d", test->voice_id); //kris call by address
 	_log("[Test] voiceid: %d", test.voice_id);
 
-////*************** version 1 ***************//
+////**************** version 1 ****************//
 ////	if(test->voice_id == 1) //kris call by address
 //	if(test.voice_id == 1)  //kris call by reference
 //	return Synthesize(HMM_MODEL, strWavePath.getBuffer(), strLabelName.getBuffer());
@@ -259,26 +265,48 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 //	if(test.voice_id == 2)  //kris call by reference
 //	return Synthesize(HMM_MODEL2, strWavePath.getBuffer(), strLabelName.getBuffer());
 
-//**************** version 2 ****************//
+////**************** version 2 ****************//
+//	switch(test.voice_id)
+//	{
+//	case 0:
+//		break;
+//	case 1:
+//		strcpy(hmm_temp, hmm_10);
+//		strcpy(hmm_10, hmm_11);
+//		break;
+//	case 2:
+//		strcpy(hmm_temp, hmm_10);
+//		strcpy(hmm_10, hmm_12);
+//		break;
+//	}
+//	_log("model_10: %s", hmm_10);
+//	_log("model_11: %s", hmm_11);
+//	_log("model_12: %s", hmm_12);
+//	_log("temp: %s", hmm_temp);
+//	return Synthesize(hmm_10, strWavePath.getBuffer(), strLabelName.getBuffer());
+
+//  //**************** version 3 ****************//
 	switch(test.voice_id)
 	{
 	case 0:
 		break;
 	case 1:
-		strcpy(hmm_temp, hmm_10);
-		strcpy(hmm_10, hmm_11);
 		break;
 	case 2:
-		strcpy(hmm_temp, hmm_10);
-		strcpy(hmm_10, hmm_12);
+		break;
+	case 3:
+		break;
+	case 10:
+		strcpy(hmm_0, hmm_10);
+		break;
+	case 11:
+		strcpy(hmm_0, hmm_11);
+		break;
+	case 12:
+		strcpy(hmm_0, hmm_12);
 		break;
 	}
-	_log("model_10: %s", hmm_10);
-	_log("model_11: %s", hmm_11);
-	_log("model_12: %s", hmm_12);
-	_log("temp: %s", hmm_temp);
-
-	return Synthesize(hmm_10, strWavePath.getBuffer(), strLabelName.getBuffer());
+	return Synthesize(hmm_0, strWavePath.getBuffer(), strLabelName.getBuffer());
 }
 
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
