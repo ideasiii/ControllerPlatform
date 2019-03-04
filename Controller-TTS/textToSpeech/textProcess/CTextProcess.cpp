@@ -149,12 +149,23 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	_log("model: %s", hmm_0);
 	_log("temp: %s", temp);
 //	char hmm_temp[]   = {"model/hmm_10.htsvoice"};
+ 	char hmm_9[]      = {"model/hmm_9.htsvoice"};
  	char hmm_10[]     = {"model/hmm_10.htsvoice"};
 	char hmm_11[]     = {"model/hmm_11.htsvoice"};
 	char hmm_12[]     = {"model/hmm_12.htsvoice"};
+	char hmm_13[]     = {"model/hmm_13.htsvoice"};
 //	strcpy(hmm_10, hmm_temp);
 //	_log("model: %s", hmm_10);
 //	_log("temp: %s", hmm_temp);
+
+//	map<int, char> mHMM;  //----- version 4 -----//
+//	mHMM[0]  = 'a';
+//	mHMM[1]  = 'b';
+//	mHMM[2]  = 'c';
+//	mHMM[3]  = 'd';
+//	mHMM[10] = 'e';
+//	mHMM[11] = 'f';
+//	mHMM[12] = 'g';
 
 //	_log("[CTextProcess] processTheText Input Text: %s", szText);
 //	strInput = szText;
@@ -285,7 +296,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 //	_log("temp: %s", hmm_temp);
 //	return Synthesize(hmm_10, strWavePath.getBuffer(), strLabelName.getBuffer());
 
-//  //**************** version 3 ****************//
+//**************** version 3 ****************//
 	switch(test.voice_id)
 	{
 	case 0:
@@ -296,6 +307,9 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 		break;
 	case 3:
 		break;
+	case 9:
+		strcpy(hmm_0, hmm_9);
+		break;
 	case 10:
 		strcpy(hmm_0, hmm_10);
 		break;
@@ -305,17 +319,41 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	case 12:
 		strcpy(hmm_0, hmm_12);
 		break;
+	case 13:
+		strcpy(hmm_0, hmm_13);
+		break;
 	}
 	return Synthesize(hmm_0, strWavePath.getBuffer(), strLabelName.getBuffer());
+
+////**************** version 4  developing ****************//
+//	if(mHMM.count(test.voice_id) < 4){
+//		try {
+//			_log("/////////////////////////////////////////////////////////////////////");
+//			char ccc = mHMM[3];
+//			_log("[test] hmm_id: %s", ccc);
+//			// return Synthesize(mHMM[test.voice_id], strWavePath.getBuffer(), strLabelName.getBuffer());
+//			//return NULL;
+//		} catch (int error) {
+//
+//			printf("error!!!!!!!!!!!!!!!!!!!!!!!!!!! %d\n", error);
+//		}
+//		// char ccc = mHMM[test.voice_id];
+//		// _log("[test] hmm_id: %s", ccc);
+//		// return Synthesize(mHMM[test.voice_id], strWavePath.getBuffer(), strLabelName.getBuffer());
+//		return NULL;
+//	}
+
 }
 
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel)
+//int CTextProcess::Synthesize(const char szModelName, const char* szWaveName, const char* szLabel)
 {
 
 	int nResult;
 	char** param = new char*[12];
 	param[0] = const_cast<char*>("hts_engine");
 	param[1] = const_cast<char*>("-m");
+//	param[2] = reinterpret_cast<char*>(szModelName);
 	param[2] = const_cast<char*>(szModelName);
 	param[3] = const_cast<char*>("-ow");
 	param[4] = const_cast<char*>(szWaveName);
