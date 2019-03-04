@@ -216,6 +216,13 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 		wordPackage.strText = SentenceArray[lcount].getBuffer();
 		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
 
+		//----- 2019/03/04 fix multiple symbols error -----//
+		_log("[CTextProcess] Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
+		if(wordPackage.txt_len == 0){
+			continue;
+		}
+		//-------------------------------------------------//
+
 		word->GetWord(wordPackage);
 
 		if (-1 == CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage))
