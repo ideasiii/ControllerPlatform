@@ -158,6 +158,8 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 //	_log("model: %s", hmm_10);
 //	_log("temp: %s", hmm_temp);
 
+	char hmm_101[]     = {"model/hmm_101.htsvoice"};
+	char hmm_102[]     = {"model/hmm_102.htsvoice"};
 //	map<int, char> mHMM;  //----- version 4 -----//
 //	mHMM[0]  = 'a';
 //	mHMM[1]  = 'b';
@@ -328,6 +330,12 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 		break;
 	case 13:
 		strcpy(hmm_0, hmm_13);
+		break;
+	case 101:
+		strcpy(hmm_0, hmm_101);
+		break;
+	case 102:
+		strcpy(hmm_0, hmm_102);
 		break;
 	}
 	return Synthesize(hmm_0, strWavePath.getBuffer(), strLabelName.getBuffer());
