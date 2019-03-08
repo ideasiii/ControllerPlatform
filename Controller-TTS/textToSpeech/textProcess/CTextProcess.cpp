@@ -263,7 +263,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 		ofstream csLabFile;
 		csLabFile.open(strLabelName.getBuffer(), ios::app);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-				gduration_s, gduration_e, giSftIdx);
+				gduration_s, gduration_e, giSftIdx, test.voice_id);
 		csLabFile.close();
 		PhoneSeq.removeAll();
 	}
@@ -748,8 +748,9 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 
 CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[],
 		const int pBound[], const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
-		int *gduration_s, int *gduration_e, int giSftIdx)
+		int *gduration_s, int *gduration_e, int giSftIdx, int voice_id)
 {
+
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
 	CString monostr; // store all lines for mono labels
 	int sIndex, wIndex, pIndex; // syllable/word/phrase index for sBound/wBound/pBound
@@ -1076,6 +1077,12 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		anchor--;
 	tempstr.format("_%d/H:x=x@%d=1/I:0=0/J:%d+%d-%d\n", wIndex - anchor, pCount, sCount, wCount, pCount);
 	fullstr += tempstr;
+
+	//----- kris filterlabel 2019/03/07-----//
+	fullstr = filterLabel(fullstr, voice_id);
+//	_log("[testtttttttttttttttttttt]voiceid: %d, fullstr: %s", voice_id, fullstr.getBuffer());
+
+
 	csFile << fullstr;	//fullstr即為輸出的Label內容
 	//csFile.close();
 	if (pcsFile2 != NULL)
@@ -1085,6 +1092,73 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	}
 
 	return fullstr;
+}
+
+
+CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris filterlabel 2019/03/07-----//
+	if (voice_id <= 100)
+		return fullstr;
+	_log("[filterLabel] %d", voice_id);
+	string strfullstr = fullstr.toString();
+	char* labels = strdup(strfullstr.c_str());
+	char* SplitLabel;
+	string StrSplitLabel;
+	CString tempSplitLabel;
+	CString CStrSplitLabel;
+	string empty = "";
+	string firstStrSplitLabel;
+	CString fisrttempSplitLabel;
+
+	SplitLabel = strtok(labels, "\n");
+	firstStrSplitLabel = SplitLabel;
+	int idx_b0 = firstStrSplitLabel.find("/B:", 0);
+	int idx_c0 = firstStrSplitLabel.find("/C:", 0);
+	int idx_d0 = firstStrSplitLabel.find("/D:", 0);
+	int idx_j0 = firstStrSplitLabel.find("/J:", 0);
+	string seg_10 = firstStrSplitLabel.substr(idx_b0, (idx_c0 - idx_b0));
+	seg_10 = seg_10.substr(seg_10.find("@"));
+//			_log("[testtest_1]%s", seg_1.c_str());
+	string seg_20 = firstStrSplitLabel.substr(idx_d0, (idx_j0 - idx_d0));
+//			_log("[testtest_2]%s", seg_2.c_str());
+	string seg_30 = firstStrSplitLabel.substr(idx_j0);
+	seg_30 = seg_30.substr(seg_30.find("+"));
+//			_log("[testtest_3]%s", seg_3.c_str());
+	string firstfinalLabel = firstStrSplitLabel.replace(
+			firstStrSplitLabel.find(seg_10), seg_10.length(), empty).replace(
+			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
+			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
+	CStrSplitLabel += (fisrttempSplitLabel + "\n");
+
+	while (SplitLabel != NULL) {
+		SplitLabel = strtok(NULL, "\n");
+		if (SplitLabel != NULL) {
+			StrSplitLabel = SplitLabel;
+//			_log("[test_original]%s", StrSplitLabel.c_str());
+			int idx_b = StrSplitLabel.find("/B:", 0);
+			int idx_c = StrSplitLabel.find("/C:", 0);
+			int idx_d = StrSplitLabel.find("/D:", 0);
+			int idx_j = StrSplitLabel.find("/J:", 0);
+
+			string seg_1 = StrSplitLabel.substr(idx_b, (idx_c - idx_b));
+			seg_1 = seg_1.substr(seg_1.find("@"));
+//			_log("[testtest_1]%s", seg_1.c_str());
+			string seg_2 = StrSplitLabel.substr(idx_d, (idx_j - idx_d));
+//			_log("[testtest_2]%s", seg_2.c_str());
+			string seg_3 = StrSplitLabel.substr(idx_j);
+			seg_3 = seg_3.substr(seg_3.find("+"));
+//			_log("[testtest_3]%s", seg_3.c_str());
+
+			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
+					seg_1.length(), empty).replace(StrSplitLabel.find(seg_2),
+					seg_2.length(), empty).replace(StrSplitLabel.find(seg_3),
+					seg_3.length(), empty);
+//			_log("[test_final]%s", finalLabel.c_str());
+			tempSplitLabel.format("%s", finalLabel.c_str());
+			CStrSplitLabel += (tempSplitLabel + "\n");
+		}
+	}
+	return CStrSplitLabel;
 }
 
 void CTextProcess::dumpWordData()

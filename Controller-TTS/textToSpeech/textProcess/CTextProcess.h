@@ -40,10 +40,13 @@ private:
 			std::vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
 	CString GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
-			int *gduration_s, int *gduration_e, int giSftIdx);
+			int *gduration_s, int *gduration_e, int giSftIdx, int voice_id);
 	CString Phone2Ph97(char* phone, int tone);
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel);
+//	int Synthesize(const char szModelName, const char* szWaveName, const char* szLabel);
 	void WordExchange(CString &strText);
+
+	CString filterLabel(CString fullstr, int voice_id);  // kris filterLabel 2019/03/07
 
 private:
 	CART *CartModel;
