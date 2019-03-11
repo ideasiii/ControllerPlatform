@@ -643,7 +643,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		CartModel->TEST2(pcdData);
 
 		cluster.push_back(pcdData->clu);
-		_log("cluster push: %d", pcdData->clu);
+//		_log("cluster push: %d", pcdData->clu);
 		delete pcdData;
 	}
 
@@ -1136,7 +1136,7 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
 			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
 	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
-	CStrSplitLabel += (fisrttempSplitLabel + "\n");
+	CStrSplitLabel = (fisrttempSplitLabel + "\n");
 
 	while (SplitLabel != NULL) {
 		SplitLabel = strtok(NULL, "\n");

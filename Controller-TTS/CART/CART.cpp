@@ -86,7 +86,7 @@ void CART::TEST(CART_DATA *cdData, CART_NODE *cnNode)
 	else
 	{
 		cdData->clu = cnNode->clu;
-		cout << "cdData->clu: " << cdData->clu << endl;
+//		cout << "cdData->clu: " << cdData->clu << endl;
 	}
 }
 
@@ -115,7 +115,7 @@ void CART::TEST2(CART_DATA *cdData, CART_NODE *cnNode)
 	else
 	{
 		cdData->clu = cnNode->clu;
-		cout << "cdData->clu: " << cdData->clu << endl;
+//		cout << "cdData->clu: " << cdData->clu << endl;
 	}
 }
 
