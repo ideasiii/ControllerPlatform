@@ -1164,11 +1164,14 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 			seg_3 = seg_3.substr(seg_3.find("+"));
 			_log("[testtest_33]%s", seg_3.c_str());
 
-			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
-					seg_1.length(), empty).replace(StrSplitLabel.find(seg_2),
-					seg_2.length(), empty).replace(StrSplitLabel.find(seg_3),
-					seg_3.length(), empty);
-			_log("[testtest_7]oooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkk");
+//			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
+//					seg_1.length(), empty).replace(StrSplitLabel.find(seg_2),
+//					seg_2.length(), empty).replace(StrSplitLabel.find(seg_3),
+//					seg_3.length(), empty);
+			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1), seg_1.length(), empty);
+			finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_2), seg_2.length(), empty);
+			finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_3), seg_3.length(), empty);
+			_log("[testtest_]oooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkk");
 //			_log("[test_final]%s", finalLabel.c_str());
 			tempSplitLabel.format("%s", finalLabel.c_str());
 			CStrSplitLabel += (tempSplitLabel + "\n");
