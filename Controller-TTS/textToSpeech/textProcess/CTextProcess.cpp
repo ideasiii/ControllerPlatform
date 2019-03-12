@@ -1088,7 +1088,7 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 
 	//----- kris filterlabel 2019/03/07-----//
 	fullstr = filterLabel(fullstr, voice_id);
-//	_log("[testtttttttttttttttttttt]voiceid: %d, fullstr: %s", voice_id, fullstr.getBuffer());
+	_log("[testtttttttttttttttttttt]voiceid: %d, fullstr: %s", voice_id, fullstr.getBuffer());
 
 
 	csFile << fullstr;	//fullstr即為輸出的Label內容
@@ -1125,18 +1125,25 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 	int idx_j0 = firstStrSplitLabel.find("/J:", 0);
 	string seg_10 = firstStrSplitLabel.substr(idx_b0, (idx_c0 - idx_b0));
 	seg_10 = seg_10.substr(seg_10.find("@"));
-//			_log("[testtest_1]%s", seg_1.c_str());
+			_log("[testtest_1]%s", seg_10.c_str());
 	string seg_20 = firstStrSplitLabel.substr(idx_d0, (idx_j0 - idx_d0));
-//			_log("[testtest_2]%s", seg_2.c_str());
+			_log("[testtest_2]%s", seg_20.c_str());
 	string seg_30 = firstStrSplitLabel.substr(idx_j0);
 	seg_30 = seg_30.substr(seg_30.find("+"));
-//			_log("[testtest_3]%s", seg_3.c_str());
+			_log("[testtest_3]%s", seg_30.c_str());
 	string firstfinalLabel = firstStrSplitLabel.replace(
 			firstStrSplitLabel.find(seg_10), seg_10.length(), empty).replace(
 			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
 			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+//	string firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_10), seg_10.length(), empty);
+//	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
+//	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+	_log("[testtest_4]oooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkk");
+
 	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
+	_log("[testtest_5]goooooooooooooooodddd");
 	CStrSplitLabel = (fisrttempSplitLabel + "\n");
+	_log("[testtest_6]hhhhhhhhhhhhhhhhhaaaaaaaaaaaaaaaaaaaaaaaaa");
 
 	while (SplitLabel != NULL) {
 		SplitLabel = strtok(NULL, "\n");
