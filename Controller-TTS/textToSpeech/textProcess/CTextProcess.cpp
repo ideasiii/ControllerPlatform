@@ -1131,13 +1131,13 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 	string seg_30 = firstStrSplitLabel.substr(idx_j0);
 	seg_30 = seg_30.substr(seg_30.find("+"));
 			_log("[testtest_3]%s", seg_30.c_str());
-	string firstfinalLabel = firstStrSplitLabel.replace(
-			firstStrSplitLabel.find(seg_10), seg_10.length(), empty).replace(
-			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
-			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
-//	string firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_10), seg_10.length(), empty);
-//	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
-//	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+//	string firstfinalLabel = firstStrSplitLabel.replace(
+//			firstStrSplitLabel.find(seg_10), seg_10.length(), empty).replace(
+//			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
+//			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+	string firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_10), seg_10.length(), empty);
+	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
+	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
 	_log("[testtest_4]oooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkk");
 
 	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
@@ -1157,17 +1157,18 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 
 			string seg_1 = StrSplitLabel.substr(idx_b, (idx_c - idx_b));
 			seg_1 = seg_1.substr(seg_1.find("@"));
-//			_log("[testtest_1]%s", seg_1.c_str());
+			_log("[testtest_11]%s", seg_1.c_str());
 			string seg_2 = StrSplitLabel.substr(idx_d, (idx_j - idx_d));
-//			_log("[testtest_2]%s", seg_2.c_str());
+			_log("[testtest_22]%s", seg_2.c_str());
 			string seg_3 = StrSplitLabel.substr(idx_j);
 			seg_3 = seg_3.substr(seg_3.find("+"));
-//			_log("[testtest_3]%s", seg_3.c_str());
+			_log("[testtest_33]%s", seg_3.c_str());
 
 			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
 					seg_1.length(), empty).replace(StrSplitLabel.find(seg_2),
 					seg_2.length(), empty).replace(StrSplitLabel.find(seg_3),
 					seg_3.length(), empty);
+			_log("[testtest_7]oooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkk");
 //			_log("[test_final]%s", finalLabel.c_str());
 			tempSplitLabel.format("%s", finalLabel.c_str());
 			CStrSplitLabel += (tempSplitLabel + "\n");
