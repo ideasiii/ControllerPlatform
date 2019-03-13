@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
 #define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
 using namespace std;
@@ -121,10 +120,11 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	strDevice_id = jsonReq.getString("device_id");
 	jsonReq.release();
 
+	_log("device id: %s ===============================", strDevice_id.getBuffer());
 	if (0 == strDevice_id.Compare("chihlee"))
 	{
-		ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::app);
-		//ofstream csWordFile("Text.txt", ios::trunc);
+		_log("write chihlee ==========================");
+		ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
 		csWordFile << strWord.getBuffer() << endl;
 		csWordFile.close();
 	}
