@@ -20,7 +20,7 @@ using namespace std;
 
 unsigned char numberic[][4] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "萬", "億", "兆", "半",
 		"幾", "多", "少", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖", "拾", "佰", "仟", "廿" };
-static int num = 33;
+//static int num = 33;
 
 CWord::CWord()
 {
@@ -46,7 +46,6 @@ void CWord::InitWord(LPCTSTR dir)
 		char * pch;
 		int nIndex;
 
-		ofstream csWordFile("name.txt", ios::app);
 		while (getline(file, str))
 		{
 			vector<WORD_DIC> vecWord;
@@ -57,7 +56,6 @@ void CWord::InitWord(LPCTSTR dir)
 				worddic.strWord = pch;
 				if (mapWordDictionary.end() == mapWordDictionary.find(utf8_substr(worddic.strWord, 0, 1)))
 				{
-					csWordFile << utf8_substr(worddic.strWord, 0, 1).c_str() << endl;
 					//_log("%s\n", utf8_substr(worddic.strWord, 0, 1).c_str());
 					mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)] = vecWord;
 				}
@@ -76,7 +74,7 @@ void CWord::InitWord(LPCTSTR dir)
 
 		}
 		file.close();
-		csWordFile.close();
+
 #ifdef DEBUG
 		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
 				it != mapWordDictionary.end(); ++it)
