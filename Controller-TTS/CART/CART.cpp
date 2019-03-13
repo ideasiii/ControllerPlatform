@@ -86,7 +86,7 @@ void CART::TEST(CART_DATA *cdData, CART_NODE *cnNode)
 	else
 	{
 		cdData->clu = cnNode->clu;
-		cout << "cdData->clu: " << cdData->clu << endl;
+//		cout << "cdData->clu: " << cdData->clu << endl;
 	}
 }
 
@@ -115,7 +115,7 @@ void CART::TEST2(CART_DATA *cdData, CART_NODE *cnNode)
 	else
 	{
 		cdData->clu = cnNode->clu;
-		cout << "cdData->clu: " << cdData->clu << endl;
+//		cout << "cdData->clu: " << cdData->clu << endl;
 	}
 }
 
@@ -250,7 +250,8 @@ bool CART::LoadCARTModel(int cartModel, CString csfile)
 	cf.seekg(0, cf.end);
 	fend = cf.tellg();
 	cf.seekg(0, cf.beg);
-	_log("CART_Model size=%d", fend);
+	//	if want to see fend _log("CART_Model size=%d", fend); kris
+
 	CString strData = "";
 	CString strQues;
 	CString strTmp;
@@ -291,7 +292,7 @@ bool CART::LoadCARTModel(int cartModel, CString csfile)
 	}
 	cf.close();
 
-	_log("CART NODE: %s", strData.getBuffer());
+	//_log("CART NODE: %s", strData.getBuffer()); kris
 	if(cartModel == 1){
 		if(cnRoot != NULL) // cnRoot is assigned a new CART_NODE in constructor
 			delete cnRoot;
