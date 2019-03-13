@@ -378,7 +378,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[8] = const_cast<char*>("-b");
 	param[9] = const_cast<char*>("0.0");
 	param[10] = const_cast<char*>("-r");
-	param[11] = const_cast<char*>("1.0");
+	param[11] = const_cast<char*>("1.2");
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s", szModelName, szWaveName, szLabel);
 	nResult = htsSynthesize(12, param);
 	delete param;
