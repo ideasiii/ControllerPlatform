@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 #include <string>
+#include<fstream>
 #include <iostream>
 #include <utility>
 #include <thread>
@@ -29,6 +30,9 @@
 #include "CString.h"
 #include "CStory.h"
 #include "CParticiple.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
@@ -68,14 +72,14 @@ int CController::onInitial(void* szConfPath)
 	nResult = FALSE;
 	strConfPath = reinterpret_cast<const char*>(szConfPath);
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
-	if(strConfPath.empty())
+	if (strConfPath.empty())
 		return nResult;
 
 	config = new CConfig();
-	if(config->loadConfig(strConfPath))
+	if (config->loadConfig(strConfPath))
 	{
 		strPort = config->getValue("SERVER WORD", "port");
-		if(!strPort.empty())
+		if (!strPort.empty())
 		{
 			convertFromString(nPort, strPort);
 			nResult = cmpword->start(0, nPort, mnMsqKey);
@@ -116,9 +120,18 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	strDevice_id = jsonReq.getString("device_id");
 	jsonReq.release();
 
+	_log("device id: %s ===============================", strDevice_id.getBuffer());
+	if (0 == strDevice_id.Compare("chihlee"))
+	{
+		_log("write chihlee ==========================");
+		ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
+		csWordFile << strWord.getBuffer() << endl;
+		csWordFile.close();
+	}
+
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
-	if(!strWord.Compare("分析垃圾"))
+	if (!strWord.Compare("分析垃圾"))
 	{
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
@@ -128,7 +141,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		return;
 	}
 
-	if(!strWord.Compare("emotion"))
+	if (!strWord.Compare("emotion"))
 	{
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
@@ -140,7 +153,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		return;
 	}
 
-	switch(nType)
+	switch (nType)
 	{
 	case TYPE_REQ_NODEFINE: // 語意判斷
 		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp);
@@ -174,9 +187,9 @@ void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int
 {
 	CString strSQL;
 
-	if(!mysql->isValid())
+	if (!mysql->isValid())
 	{
-		if(!mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5"))
+		if (!mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5"))
 		{
 			_log("[CController] recordResponse mysql invalid, can't record response: %s", szData);
 			return;
@@ -190,7 +203,7 @@ void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int
 
 void CController::onHandleMessage(Message &message)
 {
-	switch(message.what)
+	switch (message.what)
 	{
 	case semantic_word_request:
 		// Lambda Expression
