@@ -129,12 +129,13 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		csWordFile << strWord.getBuffer() << endl;
 		csWordFile.close();
 		rename("/chihlee/jetty/webapps/chihlee/map.jpg", "/chihlee/jetty/webapps/chihlee/map_hide.jpg");
+		_log("map rename    : map ----------> map hide");
 	}
 
 	if (strWord.find("導覽") || strWord.find("地圖"))
 	{
 		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
-		_log("map rename");
+		_log("map rename    :  map hide ----------------> map");
 	}
 	//======================= chihlee end ===================================//
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
