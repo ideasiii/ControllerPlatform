@@ -132,7 +132,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		_log("map rename    : map ----------> map hide");
 	}
 
-	if (strWord.find("導覽") || strWord.find("地圖"))
+	if ( 0 <= strWord.find("導覽") || 0 <= strWord.find("地圖"))
 	{
 		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
 		_log("map rename    :  map hide ----------------> map");
