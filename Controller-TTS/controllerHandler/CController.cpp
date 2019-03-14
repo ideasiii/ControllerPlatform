@@ -106,7 +106,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.emotion = jsonReq.getInt("emotion");
 	ttsReq.text = jsonReq.getString("text");
 //	ttsReq.user_id = "";                    //--- kris for test ---//
-//	ttsReq.voice_id = 2;
+//	ttsReq.voice_id = 103;
 //	ttsReq.emotion = 2;
 //	ttsReq.text = "多型態角色語音智慧平台";     //---------------------//
 	jsonReq.release();
