@@ -120,6 +120,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	strDevice_id = jsonReq.getString("device_id");
 	jsonReq.release();
 
+	//=================== chihlee start===================================//
 	_log("device id: %s ===============================", strDevice_id.getBuffer());
 	if (0 == strDevice_id.Compare("chihlee"))
 	{
@@ -127,8 +128,16 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
 		csWordFile << strWord.getBuffer() << endl;
 		csWordFile.close();
+		rename("/chihlee/jetty/webapps/chihlee/map.jpg", "/chihlee/jetty/webapps/chihlee/map_hide.jpg");
+		_log("map rename    : map ----------> map hide");
 	}
 
+	if ( 0 <= strWord.find("導覽") || 0 <= strWord.find("地圖"))
+	{
+		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		_log("map rename    :  map hide ----------------> map");
+	}
+	//======================= chihlee end ===================================//
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
 	if (!strWord.Compare("分析垃圾"))
