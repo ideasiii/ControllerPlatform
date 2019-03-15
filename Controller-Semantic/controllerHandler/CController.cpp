@@ -13,6 +13,9 @@
 #include <functional>
 #include <atomic>
 #include <set>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "CController.h"
 #include "CCmpWord.h"
 #include "common.h"
@@ -30,16 +33,14 @@
 #include "CString.h"
 #include "CStory.h"
 #include "CParticiple.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "CChihlee.h"
 
 #define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0), mysql(0)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0), mysql(0), chihlee(0)
 {
 
 }
@@ -56,7 +57,7 @@ int CController::onCreated(void* nMsqKey)
 	cmpword = new CCmpWord(this);
 //	penreader = new CPenReader;
 	mysql = new CMysqlHandler();
-
+	chihlee = new CChihlee();
 	return mnMsqKey;
 }
 
@@ -122,22 +123,17 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 
 	//=================== chihlee start===================================//
 	_log("device id: %s ===============================", strDevice_id.getBuffer());
-	if (0 == strDevice_id.Compare("chihlee"))
+	if (0 == strDevice_id.Compare("chihlee")) // 致理科大導覽系統
 	{
-		_log("write chihlee ==========================");
-		ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
-		csWordFile << strWord.getBuffer() << endl;
-		csWordFile.close();
-		rename("/chihlee/jetty/webapps/chihlee/map.jpg", "/chihlee/jetty/webapps/chihlee/map_hide.jpg");
-		_log("map rename    : map ----------> map hide");
-	}
-
-	if ( 0 <= strWord.find("導覽") || 0 <= strWord.find("地圖"))
-	{
-		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
-		_log("map rename    :  map hide ----------------> map");
+		chihlee->runAnalysis(strWord.getBuffer(), jsonResp);
+		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
+				jsonResp.put("id", nId).toJSON().c_str());
+		recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
+		jsonResp.release();
+		return;
 	}
 	//======================= chihlee end ===================================//
+
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
 	if (!strWord.Compare("分析垃圾"))
