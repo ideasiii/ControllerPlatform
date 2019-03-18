@@ -17,10 +17,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <unistd.h>
 #include "JSONObject.h"
 #include "CChihlee.h"
 #include "CString.h"
 #include "LogHandler.h"
+#include "CResponsePacket.h"
 
 using namespace std;
 
@@ -37,18 +42,53 @@ CChihlee::~CChihlee()
 void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 {
 	CString strWord = szInput;
+	CResponsePacket respPacket;
+	CString strText;
 
-	_log("write chihlee text ==========================");
 	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
+	strText.format("%10 s\n          \n          ", szInput);
 	csWordFile << szInput << endl;
 	csWordFile.close();
 	rename("/chihlee/jetty/webapps/chihlee/map.jpg", "/chihlee/jetty/webapps/chihlee/map_hide.jpg");
-	_log("map rename    : map ----------> map hide");
 
+	//=============== 校園導覽 =================================//
 	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖"))
 	{
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_1.wav");
 		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
 		_log("map rename    :  map hide ----------------> map");
+	}
+
+	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
+			"").format(jsonResp);
+}
+
+void CChihlee::playSound(const char *szWav)
+{
+	pid_t pid;
+	int status = -1;
+
+	if (szWav)
+	{
+		char *arg_list[] = { const_cast<char*>(szWav), NULL };
+
+		status = posix_spawn(&pid, "/usr/bin/aplay", NULL, NULL, arg_list, environ);
+		if (status == 0)
+		{
+			_log("[CController] importDB posix_spawn Child pid: %i", pid);
+			if (waitpid(pid, &status, 0) != -1)
+			{
+				_log("[CController] importDB Child exited with status %i", status);
+			}
+			else
+			{
+				_log("[CController] importDB waitpid Error");
+			}
+		}
+		else
+		{
+			_log("[CController] importDB Error posix_spawn: %s", strerror(status));
+		}
 	}
 }
 

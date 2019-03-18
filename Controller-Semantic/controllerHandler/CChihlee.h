@@ -15,4 +15,7 @@ public:
 	explicit CChihlee();
 	virtual ~CChihlee();
 	void runAnalysis(const char *szInput, JSONObject &jsonResp);
+
+private:
+	void playSound(const char *szWav);
 };
