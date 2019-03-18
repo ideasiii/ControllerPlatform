@@ -26,6 +26,7 @@
 #include "CString.h"
 #include "LogHandler.h"
 #include "CResponsePacket.h"
+#include "CFileHandler.h"
 
 using namespace std;
 
@@ -41,22 +42,30 @@ CChihlee::~CChihlee()
 
 void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 {
+	CFileHandler file;
 	CString strWord = szInput;
 	CResponsePacket respPacket;
 	CString strText;
 
 	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
 	strText.format("%10 s\n          \n          ", szInput);
-	csWordFile << szInput << endl;
+	csWordFile << strText.getBuffer() << endl;
 	csWordFile.close();
-	rename("/chihlee/jetty/webapps/chihlee/map.jpg", "/chihlee/jetty/webapps/chihlee/map_hide.jpg");
+	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 
 	//=============== 校園導覽 =================================//
 	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖"))
 	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/map.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		//rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
 		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_1.wav");
-		rename("/chihlee/jetty/webapps/chihlee/map_hide.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
-		_log("map rename    :  map hide ----------------> map");
+	}
+
+	//=============== 廁所怎麼走 =================================//
+	if (0 <= strWord.find("廁所") || 0 <= strWord.find("洗手間") || 0 <= strWord.find("大便") || 0 <= strWord.find("小便"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/wc_map.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_2.wav");
 	}
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
