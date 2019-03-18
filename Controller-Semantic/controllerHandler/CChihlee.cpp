@@ -70,7 +70,7 @@ void CChihlee::playSound(const char *szWav)
 
 	if (szWav)
 	{
-		char *arg_list[] = { const_cast<char*>(szWav), NULL };
+		char *arg_list[] = { const_cast<char*>("aplay"), const_cast<char*>(szWav), NULL };
 
 		status = posix_spawn(&pid, "/usr/bin/aplay", NULL, NULL, arg_list, environ);
 		if (status == 0)
