@@ -47,8 +47,10 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	CResponsePacket respPacket;
 	CString strText;
 
+	strWord.replace("笑訊", "校訓");
+	strWord.replace("校去", "校訓");
 	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
-	strText.format("%10 s\n          \n          ", szInput);
+	strText.format("%s\n          \n          ", szInput);
 	csWordFile << strText.getBuffer() << endl;
 	csWordFile.close();
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
@@ -66,6 +68,41 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	{
 		file.copyFile("/chihlee/jetty/webapps/chihlee/img/wc_map.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
 		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_2.wav");
+	}
+
+	//=============== 我想找電動輪椅充電 =================================//
+	if (0 <= strWord.find("電動輪椅") || 0 <= strWord.find("輪椅充電") || 0 <= strWord.find("充電") || 0 <= strWord.find("沒電"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/wc_map.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_3.wav");
+	}
+
+	//=============== 圖書館怎麼走 =================================//
+	if (0 <= strWord.find("圖書館") || 0 <= strWord.find("圖館") || 0 <= strWord.find("書館") || 0 <= strWord.find("看書"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/wc_map.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_4.wav");
+	}
+
+	//=============== 校訓 =================================//
+	if (0 <= strWord.find("校訓"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/motto.png", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_5.wav");
+	}
+
+	//=============== 吉祥物 =================================//
+	if (0 <= strWord.find("吉祥物"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/character.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_6.wav");
+	}
+
+	//=============== 校歌 =================================//
+	if (0 <= strWord.find("校歌"))
+	{
+		file.copyFile("/chihlee/jetty/webapps/chihlee/img/song.jpg", "/chihlee/jetty/webapps/chihlee/map.jpg");
+		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_7.wav");
 	}
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
