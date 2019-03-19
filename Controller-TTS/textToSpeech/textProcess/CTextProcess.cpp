@@ -443,6 +443,9 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		ulIndex = it->find("/", 0);
 		ulLength = it->length();
 		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
+		if (!tempPOS.Compare("X")){      // no pos
+			tempPOS.format("%s", "DEC"); // X -> DEC
+		}
 		ulIndex /= 3;
 		bAdded = false;
 		for (j = 1; 34 > j; ++j)
