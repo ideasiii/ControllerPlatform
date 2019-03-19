@@ -19,6 +19,9 @@ typedef struct _TTS_REQ
 	int voice_id;
 	int emotion;
 	std::string text;
+	std::string fm;
+	std::string b;
+	std::string r;
 } TTS_REQ;
 
 class CController: public CApplication

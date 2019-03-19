@@ -105,18 +105,23 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.voice_id = jsonReq.getInt("voice_id");
 	ttsReq.emotion = jsonReq.getInt("emotion");
 	ttsReq.text = jsonReq.getString("text");
+	ttsReq.fm = jsonReq.getString("fm");
+	ttsReq.b = jsonReq.getString("b");
+	ttsReq.r = jsonReq.getString("r");
+
 //	ttsReq.user_id = "";                    //--- kris for test ---//
 //	ttsReq.voice_id = 103;
 //	ttsReq.emotion = 2;
-//	ttsReq.text = "多型態角色語音智慧平台";     //---------------------//
+//	ttsReq.text = "多型態角色語音智慧平台";
+//	ttsReq.fm = "";
+//	ttsReq.b = "";
+//	ttsReq.r = "";                         //---------------------//
 	jsonReq.release();
-	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d", nSocketFD, ttsReq.text.c_str(),
-			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion);
+
+	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s b: %s r: %s", nSocketFD, ttsReq.text.c_str(),
+			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.b.c_str(), ttsReq.r.c_str());
 
 	jsonResp.create();
-//	if (-1 == textProcess->processTheText(ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.text.c_str(), strWave))
-//  if (-1 == textProcess->processTheText(ttsReq.text.c_str(), strWave)) kris original
-//	if (-1 == textProcess->processTheText(&ttsReq, strWave)) //kris call by address
 	if (-1 == textProcess->processTheText(ttsReq, strWave))  //kris call by reference
 	{
 		jsonResp.put("status", 3);

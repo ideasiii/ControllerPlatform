@@ -14,6 +14,9 @@
 			"voice_id":0,
 			"emotion":0,
 			"text":"多型態角色語音智慧平台"
+			"fm":	"1",
+			"b":	"0.0",
+			"r":	"1.25"
 		}
 		
 		tts_response Packet Body Example:
