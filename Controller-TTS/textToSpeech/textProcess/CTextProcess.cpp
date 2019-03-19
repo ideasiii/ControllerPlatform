@@ -152,9 +152,9 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	strLabelName.format("label/%ld.lab", rawtime);
 	AllBig5 = "";
 
-	_log("[CTextProcess] processTheText Input Text: %s", test.text);
+	_log("[CTextProcess] processTheText Input Text: %s", test.text.c_str());
 //	strInput = szText;
-	strInput = test.text;  //kris call by reference
+	strInput = test.text.c_str();  //kris call by reference
 	strInput.trim();
 
 	WordExchange(strInput);
