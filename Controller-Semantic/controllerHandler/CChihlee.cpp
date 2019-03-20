@@ -62,8 +62,8 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	//=============== 校園導覽 =================================//
 	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖") || 0 <= strWord.find("參觀") || 0 <= strWord.find("校園"))
 	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/wav/wav_1.mp3";
-		strSound = "/chihlee/jetty/webapps/chihlee/img/map.jpg";
+		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_1.mp3";
+		strScreen = "/chihlee/jetty/webapps/chihlee/img/map.jpg";
 	}
 
 	//=============== 廁所怎麼走 =================================//
@@ -114,7 +114,8 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 			|| 0 <= strWord.find("謝啦") || 0 <= strWord.find("謝拉"))
 	{
 		remove("/chihlee/jetty/webapps/chihlee/map.jpg");
-		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_8.wav");
+		//playSound("/chihlee/jetty/webapps/chihlee/wav/wav_8.wav");
+		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_8.wav";
 	}
 
 	file.copyFile(strScreen.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
