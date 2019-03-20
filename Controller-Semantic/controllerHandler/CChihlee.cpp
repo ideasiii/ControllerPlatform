@@ -62,7 +62,7 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	//=============== 校園導覽 =================================//
 	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖") || 0 <= strWord.find("參觀") || 0 <= strWord.find("校園"))
 	{
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_1.mp3";
+		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_1.wav";
 		strScreen = "/chihlee/jetty/webapps/chihlee/img/map.jpg";
 	}
 
@@ -114,7 +114,6 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 			|| 0 <= strWord.find("謝啦") || 0 <= strWord.find("謝拉"))
 	{
 		remove("/chihlee/jetty/webapps/chihlee/map.jpg");
-		//playSound("/chihlee/jetty/webapps/chihlee/wav/wav_8.wav");
 		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_8.wav";
 	}
 
@@ -137,19 +136,19 @@ void CChihlee::playSound(const char *szWav)
 		status = posix_spawn(&pid, "/usr/bin/aplay", NULL, NULL, arg_list, environ);
 		if (status == 0)
 		{
-			_log("[CController] importDB posix_spawn Child pid: %i", pid);
+			_log("[CChihlee] playSound posix_spawn Child pid: %i", pid);
 			if (waitpid(pid, &status, 0) != -1)
 			{
-				_log("[CController] importDB Child exited with status %i", status);
+				_log("[CChihlee] playSound Child exited with status %i", status);
 			}
 			else
 			{
-				_log("[CController] importDB waitpid Error");
+				_log("[CChihlee] playSound waitpid Error");
 			}
 		}
 		else
 		{
-			_log("[CController] importDB Error posix_spawn: %s", strerror(status));
+			_log("[CChihlee] playSound Error posix_spawn: %s", strerror(status));
 		}
 	}
 }
