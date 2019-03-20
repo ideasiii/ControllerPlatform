@@ -51,6 +51,7 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 
 	strWord.replace("笑訊", "校訓");
 	strWord.replace("校去", "校訓");
+	strWord.replace("治理", "致理");
 
 	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
 	strText.format("%s\n          \n          ", szInput);
@@ -59,14 +60,15 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 
 	//=============== 校園導覽 =================================//
-	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖")|| 0 <= strWord.find("參觀")|| 0 <= strWord.find("校園"))
+	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖") || 0 <= strWord.find("參觀") || 0 <= strWord.find("校園"))
 	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/wav/wav_1.wav";
+		strScreen = "/chihlee/jetty/webapps/chihlee/wav/wav_1.mp3";
 		strSound = "/chihlee/jetty/webapps/chihlee/img/map.jpg";
 	}
 
 	//=============== 廁所怎麼走 =================================//
-	if (0 <= strWord.find("廁所") || 0 <= strWord.find("洗手間") || 0 <= strWord.find("大便") || 0 <= strWord.find("小便")|| 0 <= strWord.find("方便間"))
+	if (0 <= strWord.find("廁所") || 0 <= strWord.find("洗手間") || 0 <= strWord.find("大便") || 0 <= strWord.find("小便")
+			|| 0 <= strWord.find("方便間"))
 	{
 		strScreen = "/chihlee/jetty/webapps/chihlee/img/wc_map.jpg";
 		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_2.wav";
@@ -87,28 +89,29 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	}
 
 	//=============== 校訓 =================================//
-	if (0 <= strWord.find("校訓")|| 0 <= strWord.find("誠信")|| 0 <= strWord.find("致理科大"))
+	if (0 <= strWord.find("校訓") || 0 <= strWord.find("誠信") || 0 <= strWord.find("致理科大"))
 	{
 		strScreen = "/chihlee/jetty/webapps/chihlee/img/motto.png";
 		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_5.wav";
 	}
 
 	//=============== 吉祥物 =================================//
-	if (0 <= strWord.find("吉祥物")|| 0 <= strWord.find("喜鵲"))
+	if (0 <= strWord.find("吉祥物") || 0 <= strWord.find("喜鵲"))
 	{
 		strScreen = "/chihlee/jetty/webapps/chihlee/img/character.jpg";
 		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_6.wav";
 	}
 
 	//=============== 校歌 =================================//
-	if (0 <= strWord.find("校歌")|| 0 <= strWord.find("學生活動"))
+	if (0 <= strWord.find("校歌") || 0 <= strWord.find("學生活動"))
 	{
 		strScreen = "/chihlee/jetty/webapps/chihlee/img/song.jpg";
 		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_7.wav";
 	}
 
 	//================ 謝謝你的解說=====================//
-	if (0 <= strWord.find("謝謝")|| 0 <= strWord.find("感謝")|| 0 <= strWord.find("掰掰"))
+	if (0 <= strWord.find("謝謝") || 0 <= strWord.find("感謝") || 0 <= strWord.find("掰掰") || 0 <= strWord.find("拜拜")
+			|| 0 <= strWord.find("謝啦") || 0 <= strWord.find("謝拉"))
 	{
 		remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 		playSound("/chihlee/jetty/webapps/chihlee/wav/wav_8.wav");
