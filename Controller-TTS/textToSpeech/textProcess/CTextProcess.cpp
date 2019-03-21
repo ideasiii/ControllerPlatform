@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-//char *socket_path = "/home/johann/ipc_tmp/ipc_tmp.txt";  //original test
 char *socket_path = "/data/opt/ipc_tmp/ipc_tmp.txt";
 //***************************//
 
@@ -1013,21 +1012,34 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	return fullstr;
 }
 
-CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris filterlabel 2019/03/07-----//
+CString CTextProcess::filterLabel(CString fullstr, int voice_id) {  //----- kris filterlabel modified 2019/03/20/ -----//
 	if (voice_id <= 100)
 		return fullstr;
 	_log("[CTextProcess] Filter Label: %d", voice_id);
 	string strfullstr = fullstr.toString();
 	char* labels = strdup(strfullstr.c_str());
 	char* SplitLabel;
+	CString CStrSplitLabel;
+	CString FinalLabel;
+
+	SplitLabel = strtok(labels, "\n");
+	FinalLabel = filterLabelLine(SplitLabel);
+	while (SplitLabel != NULL) {
+		SplitLabel = strtok(NULL, "\n");
+		if (SplitLabel != NULL) {
+			FinalLabel += filterLabelLine(SplitLabel);
+		}
+	}
+	return FinalLabel;
+}
+
+CString CTextProcess::filterLabelLine(char* SplitLabel) { //----- kris filterlabel 2019/03/20/ -----//
 	string StrSplitLabel;
-	CString tempSplitLabel;
 	CString CStrSplitLabel;
 	string empty = "";
 	string firstStrSplitLabel;
 	CString fisrttempSplitLabel;
 
-	SplitLabel = strtok(labels, "\n");
 	firstStrSplitLabel = SplitLabel;
 	int idx_b0 = firstStrSplitLabel.find("/B:", 0);
 	int idx_c0 = firstStrSplitLabel.find("/C:", 0);
@@ -1038,53 +1050,13 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) { //----- kris 
 	string seg_20 = firstStrSplitLabel.substr(idx_d0, (idx_j0 - idx_d0));
 	string seg_30 = firstStrSplitLabel.substr(idx_j0);
 	seg_30 = seg_30.substr(seg_30.find("+"));
-//	string firstfinalLabel = firstStrSplitLabel.replace(
-//			firstStrSplitLabel.find(seg_10), seg_10.length(), empty).replace(
-//			firstStrSplitLabel.find(seg_20), seg_20.length(), empty).replace(
-//			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
 	string firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_10), seg_10.length(), empty);
 	firstfinalLabel = firstStrSplitLabel.replace(
 			firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
 	firstfinalLabel = firstStrSplitLabel.replace(
 			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
-
 	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
 	CStrSplitLabel = (fisrttempSplitLabel + "\n");
-
-	while (SplitLabel != NULL) {
-		SplitLabel = strtok(NULL, "\n");
-		if (SplitLabel != NULL) {
-			StrSplitLabel = SplitLabel;
-//			_log("[test_original]%s", StrSplitLabel.c_str());
-
-			idx_b0 = StrSplitLabel.find("/B:", 0);
-			idx_c0 = StrSplitLabel.find("/C:", 0);
-			idx_d0 = StrSplitLabel.find("/D:", 0);
-			idx_j0 = StrSplitLabel.find("/J:", 0);
-
-			string seg_1 = StrSplitLabel.substr(idx_b0, (idx_c0 - idx_b0));
-			seg_1 = seg_1.substr(seg_1.find("@"));
-//			_log("[testtest_1]%s", seg_1.c_str());
-			string seg_2 = StrSplitLabel.substr(idx_d0, (idx_j0 - idx_d0));
-//			_log("[testtest_2]%s", seg_2.c_str());
-			string seg_3 = StrSplitLabel.substr(idx_j0);
-			seg_3 = seg_3.substr(seg_3.find("+"));
-//			_log("[testtest_3]%s", seg_3.c_str());
-
-//			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
-//					seg_1.length(), empty).replace(StrSplitLabel.find(seg_2),
-//					seg_2.length(), empty).replace(StrSplitLabel.find(seg_3),
-//					seg_3.length(), empty);
-			string finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_1),
-					seg_1.length(), empty);
-			finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_2),
-					seg_2.length(), empty);
-			finalLabel = StrSplitLabel.replace(StrSplitLabel.find(seg_3),
-					seg_3.length(), empty);
-			tempSplitLabel.format("%s", finalLabel.c_str());
-			CStrSplitLabel += (tempSplitLabel + "\n");
-		}
-	}
 	return CStrSplitLabel;
 }
 

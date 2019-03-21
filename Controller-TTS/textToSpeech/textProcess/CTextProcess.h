@@ -42,6 +42,7 @@ private:
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &test2);
 	void WordExchange(CString &strText);
 	CString filterLabel(CString fullstr, int voice_id);  // kris filterLabel 2019/03/07
+	CString filterLabelLine(char* SplitLabel);
 
 private:
 	CART *CartModel;
