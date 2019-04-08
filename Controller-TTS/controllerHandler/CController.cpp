@@ -91,6 +91,7 @@ int CController::onInitial(void* szConfPath)
 		delete config;
 	}
 	// test
+	//textProcess->genLabels();
 	//textProcess->dumpWordData();
 	// textProcess->dumpWordIndex();
 	//textProcess->dumpPhone();

@@ -30,6 +30,11 @@ public:
 	void dumpWordIndex();
 	void dumpPhone();
 
+	void genLabels(); // kris new test 2019/04/02
+	int giSftIdx ; // kris new test 2019/04/03: shift of cue idx for each sentence. word-based.
+	int* gduration_s;// kris new test 2019/04/03
+	int* gduration_e;// kris new test 2019/04/03
+
 private:
 
 	void releaseModel();
@@ -43,6 +48,8 @@ private:
 	void WordExchange(CString &strText);
 	CString filterLabel(CString fullstr, int voice_id);  // kris filterLabel 2019/03/07
 	CString filterLabelLine(char* SplitLabel);
+	bool initrd(); //kris new test 2019/04/02
+	bool timeinfo(int* duration_si,int* duration_ei); //kris new test 2019/04/03
 
 private:
 	CART *CartModel;

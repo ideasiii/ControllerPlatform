@@ -25,6 +25,7 @@
 #include "utf8.h"
 #include <map>
 #include "CController.h" //kris 2019/02/21 新增
+#include "WaveFile.h" //kris 2019/04/02 genmodel test
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -48,6 +49,8 @@ using namespace std;
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
 
 #define max_size 1000
+
+#define MAX_PATH 260 //kris 2019/04/02 genmodel test
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},
@@ -92,6 +95,12 @@ static const char* Ph97Phoneme[] = { "jr", "chr", "shr", "r", "tz", "tsz", "sz",
 const char *POStags[34] =
 		{ " ", "VA", "VC", "VE", "VV", "NR", "NT", "NN", "LC", "PN", "DT", "CD", "OD", "M", "AD", "P", "CC", "CS",
 				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
+
+// kris 2019/04/03
+static std::vector<std::string> testsymbol = { "。", "？", "！", "；", "，"};
+static std::vector<std::string> testsymbol2 = { "：", "、", "（", "）", "「", "」"};
+static std::vector<std::string> testsymbol3 = { ":", ";", ",", "?", "!", "(", ")", "[", "]"};
+
 
 CTextProcess::CTextProcess() :
 		CartModel(new CART()), convert(new CConvert), word(new CWord)
@@ -258,6 +267,165 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	_log("[CTextProcess] Voice_ID: %d", test.voice_id);
 	_log("[CTextProcess] Model: %s", ModelMap[test.voice_id]);
 	return Synthesize(ModelMap[test.voice_id], strWavePath.getBuffer(), strLabelName.getBuffer(), test);
+}
+
+void CTextProcess::genLabels(){
+
+	CString strInput2;
+	CString strDirPath2;
+	CString strFileTitle2; // kris new test 2019/04/02
+
+	time_t rawtime;
+	time(&rawtime);
+
+	CString strLabelName;
+	int nSypollCount;
+	int nIndex;
+	int nLen = 0;
+	int nCount = 0;
+	CString strPart;
+	char s[10];
+	int SyllableBound[100];		// syllable邊界
+	int WordBound[100];			// word boundary, tts 斷詞結果
+	int PhraseBound[20];		// phrase boundary
+	int *gduration_s = NULL;
+	int *gduration_e = NULL;
+	int giSftIdx = 0;
+	int playcount = 0;
+	int i, j, k, l, sIndex, wIndex, pIndex;
+	CStringArray SentenceArray;
+	CString AllBig5;
+	int textNdx;
+	WORD_PACKAGE wordPackage;
+
+	CWaveFile WaveFile;  // class for loading cue information from wav file
+	char csTargetFileName[MAX_PATH];  // filename of wav file with absolute path
+	sprintf(csTargetFileName, "%s/wav/%s.wav", strDirPath2, strFileTitle2);
+	WaveFile.open(csTargetFileName, ios::in | ios::binary);
+	int nTotalCue = WaveFile.GetTotalCue();  // total # cue tags in the wav file, including tags of all sentences.
+	UINT *cuestart = new UINT[nTotalCue];		//cue start
+	UINT *cuelength = new UINT[nTotalCue];		//cue length
+	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
+	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
+	WaveFile.GetCueParameter(cuestart, cuelength);
+
+	for (int i = 0; i < nTotalCue; i++) {  // convert unit to sample-point based.
+		cuestart2[i+1] = cuestart[i]*1000/1.6;
+		cuelength2[i+1] = cuestart2[i+1]+cuelength[i]*1000/1.6;
+	}
+//	_log("[CTextProcess] genlabel processTheText Input Text: %s", test.text.c_str());
+//	strInput = test.text.c_str();  //kris call by reference
+	strInput2.trim();
+
+	WordExchange(strInput2);
+	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput2.getBuffer());
+
+	string strFinded;
+	while ((i = strInput2.findOneOf(vWordWrap, strFinded)) != -1)
+	{
+		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
+		{
+			strInput2.left(i).replace(vdel_it->c_str(), "");
+		}
+		SentenceArray.add(strInput2.left(i));
+		strInput2 = strInput2.right(strInput2.getLength() - i - strFinded.length());
+	}
+
+	if (0 >= SentenceArray.getSize() || 0 < strInput2.getLength())
+	{
+		SentenceArray.add(strInput2);
+	}
+
+	for (i = 0; i < SentenceArray.getSize(); ++i)
+	{
+		_log("[CTextProcess] genlabel processTheText Sentence: %s", SentenceArray[i].getBuffer());
+	}
+
+	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
+	{
+		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
+		CString strBig5;
+		vector<int> PWCluster;
+		vector<int> PPCluster;
+
+		_log("initial boundaries and indexes for a sentence");
+		sIndex = wIndex = pIndex = 0;
+		SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
+		for (i = 1; i < 100; ++i)
+			SyllableBound[i] = WordBound[i] = 0;
+		for (i = 1; i < 20; ++i)
+			PhraseBound[i] = 0;
+
+		wordPackage.clear();
+		wordPackage.strText = SentenceArray[lcount].getBuffer();
+		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
+
+		_log("[CTextProcess] genlabel Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
+		if(wordPackage.txt_len == 0){
+			continue;
+		}
+		word->GetWord(wordPackage);
+
+		if (-1 == CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage))
+			continue;
+		AllBig5 += strBig5;
+
+		k = l = 0;
+		for (i = 0; i < wordPackage.wnum; ++i) // 字詞數
+		{
+			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)   // 詞的字數
+			{
+				_log("[CTextProcess] genlabel processTheText Text: %s Phone: %s", wordPackage.vecWordInfo[i].strSentence.c_str(),
+						wordPackage.vecWordInfo[i].strPhone[j].c_str());
+
+				vector<string> vData;
+				spliteData(const_cast<char *>(wordPackage.vecWordInfo[i].strPhone[j].c_str()), " ", vData);
+
+				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)  // 因素分解
+				{
+					PhoneSeq.add(*it);
+				}
+				++sIndex;
+
+				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
+				//_log("======================> SyllableBound[%d] = %d", sIndex, SyllableBound[sIndex]);
+
+				if (!PWCluster.empty() && PWCluster[k] == 1)
+				{
+					WordBound[++wIndex] = SyllableBound[sIndex];
+					if (PPCluster[l] == 2)
+						PhraseBound[++pIndex] = WordBound[wIndex];
+					++l;
+				}
+				++k;
+			}
+		}
+
+		ofstream csLabFileFull;
+		ofstream csLabFileMono;
+		CString strFileName;
+		strFileName.format("%s/train/full/temp_%s_%d.lab", strDirPath2, strFileTitle2, lcount);
+		csLabFileFull.open(strFileName.getBuffer(), ios::app);
+		strFileName.format("%s/train/mono/temp_%s_%d.lab", strDirPath2, strFileTitle2, lcount);
+		csLabFileMono.open(strFileName.getBuffer(), ios::app);
+		timeinfo((int*)cuestart2,(int*)cuelength2);
+
+		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
+				gduration_s, gduration_e, giSftIdx, 1);
+		csLabFileFull.close();
+		csLabFileMono.close();
+		PhoneSeq.removeAll();
+	}
+
+}
+
+bool CTextProcess::timeinfo(int* duration_si, int* duration_ei)
+{
+	//	duration_e=duration_ei;
+	gduration_e = duration_ei + giSftIdx; // ky modify
+	//	duration_s=duration_si;
+	gduration_s = duration_si + giSftIdx; // ky modify
+	return true;
 }
 
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &test2)
@@ -1060,6 +1228,115 @@ CString CTextProcess::filterLabelLine(char* SplitLabel) { //----- kris filterlab
 	CStrSplitLabel = (fisrttempSplitLabel + "\n");
 	return CStrSplitLabel;
 }
+
+//void CTextProcess::genLabels(){
+//	CWaveFile WaveFile;  // class for loading cue information from wav file
+//	char csTargetFileName[MAX_PATH];  // filename of wav file with absolute path
+//	sprintf(csTargetFileName, "%s/wav/%s.wav", strDirPath, strFileTitle);
+//	WaveFile.open(csTargetFileName, ios::in | ios::binary);
+//	int nTotalCue = WaveFile.GetTotalCue();  // total # cue tags in the wav file, including tags of all sentences.
+//	UINT *cuestart = new UINT[nTotalCue];		//cue start
+//	UINT *cuelength = new UINT[nTotalCue];		//cue length
+//	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
+//	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
+//	WaveFile.GetCueParameter(cuestart, cuelength);
+//	for (int i = 0; i < nTotalCue; i++) {  // convert unit to sample-point based.
+//		cuestart2[i+1] = cuestart[i]*1000/1.6;
+//		cuelength2[i+1] = cuestart2[i+1]+cuelength[i]*1000/1.6;
+//	}
+//	// 斷句. 先把input的文章存成sentence Array
+//	CStringArray SentenceArray;
+//	CString strTemp1, strResult;
+//	strTemp1 = strInput.SpanExcluding("\n");
+//	strTemp1 = strTemp1.SpanExcluding("\r");
+//	strResult = strTemp1;
+//	string testfinded;
+//	string testfinded2;
+//	string testfinded3;
+//
+//
+//	while(strResult.findOneOf(testsymbol, testfinded) != -1){
+//		CString temp;
+//		int i = strResult.findOneOf(testsymbol, testfinded);
+//		temp = strResult.left(i);
+//		strResult = strResult.right(strResult.getLength()-i-2);
+//		SentenceArray.add(temp);
+//	}
+//	if(strResult != "")	SentenceArray.add(strResult);
+//
+//	char s[10];
+//	int SyllableBound[100];		// syllable邊界
+//	int SyllableTone[100];		// tone of syllable
+//	int WordBound[100];			// word boundary, tts 斷詞結果
+//	int PhraseBound[20];		// phrase boundary
+//	int lcount;
+//	initrd(); // initial cue and shift as empty.
+//	for( lcount = 0; lcount < SentenceArray.getSize(); lcount++){
+//		// 簡單處理標點符號及分隔字符
+//		SentenceArray[lcount].replace(" ","");
+//		SentenceArray[lcount].replace("\t","");
+//		for(int i = SentenceArray[lcount].findOneOf(testsymbol2, testfinded2) ; i != -1; i = SentenceArray[lcount].findOneOf(testsymbol2, testfinded2))
+//			SentenceArray[lcount].Delete(i, 2);
+//		for(int i = SentenceArray[lcount].findOneOf(testsymbol3, testfinded3) ; i != -1; i = SentenceArray[lcount].findOneOf(testsymbol3, testfinded3))
+//			SentenceArray[lcount].Delete(i, 1);
+//	}
+//
+//	// CART
+//	CString strBig5;
+//	vector <int> PWCluster;
+//	vector <int> PPCluster;
+//	WORD_PACKAGE wordPackage;
+//	CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
+//
+//	// reset boundaries and indexes
+//	SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
+//	SyllableTone[0] = 0;
+//	for(int i = 1; i < 100; i++)	SyllableBound[i] = WordBound[i] = SyllableTone[i] =  0;
+//	for(int i = 1; i < 20; i++)		PhraseBound[i] = 0;
+//	int sIndex = 0, wIndex = 0, pIndex = 0; // # of syllable/word/phrase in this sentence
+//	int k = 0, l = 0 ;
+//
+//	//算boundaries, and count # syllable/word/phrase:sIndex/wIndex/pIndex
+//	CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence
+//	vector<int>	tmpIdx(PWCluster.size(), lcount);
+//	vector<int>	indexArray;
+//	vector<int> AllPWCluster;
+//	vector<int> AllPPCluster;
+//
+//	CString AllBig5;
+//
+//	indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
+//	AllBig5 += strBig5;
+//	AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
+//	AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
+//	for(int i = 0; i<word.wnum; i++)
+//	{
+//		for(int j = 0; j< word.w_info[i].wlen; j++)
+//		{
+//			SID2Phone((word.w_info[i].phone[j]),&s[0]);
+//			SyllableTone[++sIndex] = (word.w_info[i].phone[j]%10);
+//			SplitString(Phone2Ph97(s,SyllableTone[sIndex])," ",PhoneSeq);
+//			SyllableBound[sIndex] = PhoneSeq.GetSize()-1;
+//			if(PWCluster[k] == 1)
+//			{
+//				WordBound[++wIndex] = SyllableBound[sIndex];
+//				if(PPCluster[l] == 2)
+//					PhraseBound[++pIndex] = WordBound[wIndex];
+//				l++;
+//			}
+//			k++;
+//		}
+//	}
+//
+//}
+
+//bool CTextProcess::initrd()
+//{
+//	int *gduration_s = NULL;
+//	int *gduration_e = NULL;
+//	int giSftIdx = 0 ; // ky add
+//	return true;
+//}
 
 void CTextProcess::dumpWordData()
 {
