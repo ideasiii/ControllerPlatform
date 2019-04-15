@@ -26,6 +26,7 @@
 #include <map>
 #include "CController.h" //kris 2019/02/21 新增
 #include "WaveFile.h" //kris 2019/04/02 genmodel test
+#include "dirent.h"  //kris 2019/04/08 read directory file
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -48,9 +49,14 @@ using namespace std;
 #define WORD_MODEL			"model/"
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
 
+#define GEN_PATH            "/data/opt/tomcat/webapps/genlabel"     //kris 2019/04/09 read directory file
+#define GEN_WAV_PATH 		"/data/opt/tomcat/webapps/genlabel/wav/" //kris 2019/04/08 read directory file WAV
+#define GEN_TEXT_PATH       "/data/opt/tomcat/webapps/genlabel/txt/" //kris 2019/04/08 read directory file TEXT
+#define _MAX_PATH   260
+
 #define max_size 1000
 
-#define MAX_PATH 260 //kris 2019/04/02 genmodel test
+
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},
@@ -65,6 +71,8 @@ static std::map<int, const char*> ModelMap = {
 		{14,  "model/hmm_14.htsvoice"},
 		{15,  "model/hmm_15.htsvoice"},
 		{16,  "model/hmm_16.htsvoice"},
+		{17,  "model/hmm_17.htsvoice"},
+		{18,  "model/hmm_18.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
@@ -273,69 +281,155 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 
 void CTextProcess::genLabels(){
 
-	CString strInput2;
-	CString strDirPath2;
-	CString strFileTitle2; // kris new test 2019/04/02
-
-	time_t rawtime;
-	time(&rawtime);
-
+	CString strTextTitle2;
+	//CString strFileTitle2; // kris new test 2019/04/02
 	CString strLabelName;
-	int nSypollCount;
-	int nIndex;
-	int nLen = 0;
-	int nCount = 0;
-	CString strPart;
-	char s[10];
 	int SyllableBound[100];		// syllable邊界
 	int WordBound[100];			// word boundary, tts 斷詞結果
 	int PhraseBound[20];		// phrase boundary
-	int *gduration_s = NULL;
-	int *gduration_e = NULL;
-	int giSftIdx = 0;
-	int playcount = 0;
 	int i, j, k, l, sIndex, wIndex, pIndex;
 	CStringArray SentenceArray;
 	CString AllBig5;
-	int textNdx;
 	WORD_PACKAGE wordPackage;
-
+	initrd();
 	CWaveFile WaveFile;  // class for loading cue information from wav file
-	char csTargetFileName[MAX_PATH];  // filename of wav file with absolute path
-	sprintf(csTargetFileName, "%s/wav/%s.wav", strDirPath2, strFileTitle2);
-	WaveFile.open(csTargetFileName, ios::in | ios::binary);
-	int nTotalCue = WaveFile.GetTotalCue();  // total # cue tags in the wav file, including tags of all sentences.
+	CString csTargetWavName;  // filename of wav file with absolute path
+	CString csTargetTxtName;  // filename of wav file with absolute path
+
+//	DIR *directory_pointer;
+//	struct dirent *entry;
+//	if ((directory_pointer = opendir(GEN_WAV_PATH)) == NULL) {
+//		fprintf(stderr, "cant open %s", GEN_WAV_PATH);
+//		printf("Error open\n");
+//	}
+//	while ((entry = readdir(directory_pointer)) != NULL) {
+//		if (entry->d_name[0] == '.')
+//			continue;
+//		//printf("%s\n", entry->d_name);
+//		strFileTitle2 = entry->d_name;
+//	}
+
+//	printf("FileTitle: %s\n", strFileTitle2.getBuffer());
+	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle_test.getBuffer());
+	char *temp = 0;
+	temp = csTargetWavName.getBuffer();
+	printf("\npath %s\n", temp);
+
+	//	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle2.getBuffer());
+
+
+	ifstream cf(temp, std::ifstream::binary);
+	cf.seekg(0, cf.beg);
+	unsigned long totalcues;
+	unsigned long data;
+	char head[40];
+	char shortdata[5];
+	char* wavebuffer = NULL;
+	cf.read(reinterpret_cast<char*>(&head), 40);			//位址 0
+	cf.read(reinterpret_cast<char*>(&data), 4);				//位址 40 , 值為 資料長度
+
+	wavebuffer = new char[data];
+	cf.read(wavebuffer, data);		// read data into wavebuffer
+	free(wavebuffer);
+	wavebuffer = NULL;
+//	printf("data :%d\n", data);
+
+	cf.read(shortdata, 4);			//開始 read 最後 cue 資料
+	shortdata[4] = '\0';
+	//先檢查是否有 cue 資料
+	if (strcmp(shortdata, "cue ") != 0) {
+		cf.close();
+	} else {
+		cf.seekg(4, cf.cur);
+		cf.read(reinterpret_cast<char*>(&totalcues), 4);// how many cues in the wave file
+	}
+
+	int nTotalCue = (unsigned int) totalcues;// total # cue tags in the wav file, including tags of all sentences.
+//	printf("total %d\n", nTotalCue);
+	unsigned long data2;
+	char head2[40];
+	char *wavebuffer2 = NULL;
+	ifstream cf2(temp, std::ifstream::binary);
+	free(temp);
+	cf2.seekg(0, cf2.beg);
+	cf2.read(reinterpret_cast<char*>(&head2), 40);
+	cf2.read(reinterpret_cast<char*>(&data2), 4);
+	wavebuffer2 = new char[data2];
+	cf2.read(wavebuffer2, data2);
+//	printf("data2 :%d\n", data2);
+	free(wavebuffer2);
+	wavebuffer2 = NULL;
+
 	UINT *cuestart = new UINT[nTotalCue];		//cue start
 	UINT *cuelength = new UINT[nTotalCue];		//cue length
-	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
-	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
-	WaveFile.GetCueParameter(cuestart, cuelength);
+	UINT *cuestart2 = new UINT[nTotalCue + 1];	//cue start
+	UINT *cuelength2 = new UINT[nTotalCue + 1];	//cue length
 
-	for (int i = 0; i < nTotalCue; i++) {  // convert unit to sample-point based.
-		cuestart2[i+1] = cuestart[i]*1000/1.6;
-		cuelength2[i+1] = cuestart2[i+1]+cuelength[i]*1000/1.6;
+	cf2.seekg(12, cf2.cur);
+	for (unsigned int i = 0; i < nTotalCue; i++) {
+		cf2.seekg(4, cf2.cur);
+		cf2.read(reinterpret_cast<char*>(&data2), 4);
+		cf2.seekg(16, cf2.cur);
+		cuestart[i] = (unsigned int) data2;
 	}
-//	_log("[CTextProcess] genlabel processTheText Input Text: %s", test.text.c_str());
-//	strInput = test.text.c_str();  //kris call by reference
-	strInput2.trim();
+	cf2.seekg(12, cf2.cur);
 
-	WordExchange(strInput2);
-	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput2.getBuffer());
+	for (unsigned int j = 0; j < nTotalCue; j++) {
+		cf2.seekg(12, cf2.cur);
+		cf2.read(reinterpret_cast<char*>(&data2), 4);
+		cf2.seekg(12, cf2.cur);
+		cuelength[j] = (unsigned int) data2;
+	}
+
+	for (int i = 0; i < nTotalCue; i++) { // convert unit to sample-point based.
+		cuestart2[i + 1] = cuestart[i] * 1000 / 1.6;
+		cuelength2[i + 1] = cuestart2[i + 1] + cuelength[i] * 1000 / 1.6;
+//		printf("cuestart2: %d\n", cuestart2[i + 1]);
+//		printf("cuelength2: %d\n", cuelength2[i + 1]);
+	}
+
+
+//	ifstream textInput;
+//	if ((directory_pointer = opendir(GEN_TEXT_PATH)) == NULL) {
+//		fprintf(stderr, "cant open %s", GEN_TEXT_PATH);
+//		printf("Error open\n");
+//	}
+//	while ((entry = readdir(directory_pointer)) != NULL) {
+//		if (entry->d_name[0] == '.')
+//			continue;
+//		strTextTitle2 = entry->d_name;
+//	}
+//	printf("FileTitle: %s\n", strTextTitle2.getBuffer());
+
+//	csTargetTxtName.format("%s%s", GEN_TEXT_PATH, strTextTitle2.getBuffer());
+//	printf("path %s\n", csTargetTxtName.getBuffer());
+//	textInput.open(csTargetTxtName.getBuffer(), ios::in);
+//	char textinfo[1000];
+//	while(textInput.peek() != EOF){
+//		textInput.read(textinfo, sizeof(textinfo));
+//	}
+//	CString info = textinfo;
+//	printf("info: %s\n", info.getBuffer());
+//	textInput.close();
+
+	strInput_test.trim();
+	WordExchange(strInput_test);
+	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput_test.getBuffer());
 
 	string strFinded;
-	while ((i = strInput2.findOneOf(vWordWrap, strFinded)) != -1)
+	while ((i = strInput_test.findOneOf(vWordWrap, strFinded)) != -1)
 	{
 		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
 		{
-			strInput2.left(i).replace(vdel_it->c_str(), "");
+			strInput_test.left(i).replace(vdel_it->c_str(), "");
 		}
-		SentenceArray.add(strInput2.left(i));
-		strInput2 = strInput2.right(strInput2.getLength() - i - strFinded.length());
+		SentenceArray.add(strInput_test.left(i));
+		strInput_test = strInput_test.right(strInput_test.getLength() - i - strFinded.length());
 	}
 
-	if (0 >= SentenceArray.getSize() || 0 < strInput2.getLength())
+	if (0 >= SentenceArray.getSize() || 0 < strInput_test.getLength())
 	{
-		SentenceArray.add(strInput2);
+		SentenceArray.add(strInput_test);
 	}
 
 	for (i = 0; i < SentenceArray.getSize(); ++i)
@@ -402,23 +496,70 @@ void CTextProcess::genLabels(){
 				++k;
 			}
 		}
-
+		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
 		ofstream csLabFileFull;
 		ofstream csLabFileMono;
 		CString strFileName;
-		strFileName.format("%s/train/full/temp_%s_%d.lab", strDirPath2, strFileTitle2, lcount);
+		FinalFileTitle = strFileTitle_test.getBuffer();
+		string wav = ".wav";
+		FinalFileTitle = FinalFileTitle.replace(FinalFileTitle.find(wav), sizeof(wav), "");
+		strFileName.format("%s/train/full/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
 		csLabFileFull.open(strFileName.getBuffer(), ios::app);
-		strFileName.format("%s/train/mono/temp_%s_%d.lab", strDirPath2, strFileTitle2, lcount);
+		strFileName.format("%s/train/mono/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
 		csLabFileMono.open(strFileName.getBuffer(), ios::app);
 		timeinfo((int*)cuestart2,(int*)cuelength2);
-
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
 				gduration_s, gduration_e, giSftIdx, 1);
+
 		csLabFileFull.close();
 		csLabFileMono.close();
-		PhoneSeq.removeAll();
 	}
+	CString strFileName;
+	strFileName.format("%s/train", GEN_PATH );
+	ConcatenateLabel( FinalFileTitle.c_str(), strFileName.getBuffer(), SentenceArray.getSize() ) ;
+	delete [] cuestart;
+	delete [] cuelength;
+	delete [] cuestart2;
+	delete [] cuelength2;
 
+}
+
+void CTextProcess::ConcatenateLabel( string outfilename, char* dir, int iSentenceCnt )
+{
+	FILE *fpMono;
+	FILE *fpFull;
+	char output[_MAX_PATH];
+	char cBuf[1024] ;
+	sprintf(output,"%s/mono/%s.lab",dir,outfilename.c_str());
+	fpMono=fopen(output,"w+");
+	sprintf(output,"%s/full/%s.lab",dir,outfilename.c_str());
+	fpFull=fopen(output,"w+");
+	for( int i = 0 ; i < iSentenceCnt ; i++ ){
+		sprintf(output,"%s/mono/temp_%s_%d.lab",dir,outfilename.c_str(), i );
+		FILE *fp = fopen( output, "r" ) ;
+		while( !feof(fp) ) {
+			cBuf[0]=0 ;
+			fgets(cBuf,1024,fp) ;
+			if( strlen(cBuf) == 0 )
+				continue ;
+			fprintf( fpMono, "%s", cBuf ) ;
+		}
+		fclose(fp) ;
+
+
+		sprintf(output,"%s/full/temp_%s_%d.lab",dir,outfilename.c_str(), i);
+		fp = fopen( output, "r" ) ;
+		while( !feof(fp) ) {
+			cBuf[0]=0 ;
+			fgets(cBuf,1024,fp) ;
+			if( strlen(cBuf) == 0 )
+				continue ;
+			fprintf( fpFull, "%s", cBuf ) ;
+		}
+		fclose(fp) ;
+	}
+	fclose(fpMono) ;
+	fclose(fpFull) ;
 }
 
 bool CTextProcess::timeinfo(int* duration_si, int* duration_ei)
@@ -430,6 +571,13 @@ bool CTextProcess::timeinfo(int* duration_si, int* duration_ei)
 	return true;
 }
 
+bool CTextProcess::initrd()
+{
+	gduration_s = NULL;
+	gduration_e = NULL;
+	giSftIdx = 0 ; // ky add
+	return true;
+}
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &test2)
 //int CTextProcess::Synthesize(const char szModelName, const char* szWaveName, const char* szLabel)
 {
@@ -858,6 +1006,9 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		tempstr.format("%10d %10d ", tmp, gduration_s[1]);
 		fullstr += tempstr;
 		monostr += tempstr;
+//		printf("1_fullstr: %s\n", fullstr.getBuffer());
+//		printf("1_monostr: %s\n", monostr.getBuffer());
+
 	}
 
 	// p1^p2-p3+p4=p5@p6_p7/A:a3/B:b3@b4-b5&b6-b7/C:c3/D:d2/E:e2@e3+e4
@@ -870,6 +1021,8 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	monostr += tempstr; // ky add: for mono
 	int anchor, anchor2;
 	anchor = anchor2 = 0;
+//	printf("2_fullstr: %s\n", fullstr.getBuffer());
+//	printf("2_monostr: %s\n", monostr.getBuffer());
 
 	while (sBound[anchor] != wBound[1]) 	// f2
 	{
@@ -931,8 +1084,12 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 									/ (iSy_p_ll_1 - iSy_p_ll));
 			fullstr += tempstr;
 			monostr += tempstr;
+//			printf("3_fullstr: %s\n", fullstr.getBuffer());
+//			printf("3_monostr: %s\n", monostr.getBuffer());
 			tempstr.format("%s\n", sequence[index].getBuffer());
 			monostr += tempstr;
+//			printf("4_fullstr: %s\n", fullstr.getBuffer());
+//			printf("4_monostr: %s\n", monostr.getBuffer());
 		}
 		//
 
@@ -1134,7 +1291,6 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	//	index--;
 	int index = sequence.getSize() - 1;	//20091211 rosy edit for .Net 取代上面那行 index --
 
-	// ky add: add time info for pau at the end of the sentence
 	if (gduration_s != NULL)
 	{
 		int tmp = 0;
@@ -1144,14 +1300,20 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		tempstr.format("%10d %10d ", gduration_e[iCount_2], tmp);
 		fullstr += tempstr;
 		monostr += tempstr;
+//		monostr += tempstr;
+//		printf("5_fullstr: %s\n", fullstr.getBuffer());
+//		printf("5_monostr: %s\n", monostr.getBuffer());
 	}
-	//
+
 
 	tempstr.format("%s^%s-pau+x=x@x_x/A:%d/B:x@x-x&x-x/C:0", sequence[index - 1].getBuffer(),
 			sequence[index].getBuffer(), sBound[sIndex] - sBound[sIndex - 1]);
 	fullstr += tempstr;
 	tempstr.format("pau\n");  // ky add
 	monostr += tempstr; // ky add
+//	monostr += tempstr;
+//	printf("6_fullstr: %s\n", fullstr.getBuffer());
+//	printf("6_monostr: %s\n", monostr.getBuffer());
 	anchor = sIndex;
 	while (wBound[wIndex - 1] < sBound[anchor])	// d2 ~ f2
 		anchor--;
@@ -1170,7 +1332,7 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 
 	//----- kris filterlabel 2019/03/07-----//
 	fullstr = filterLabel(fullstr, voice_id);
-	_log("[CTextProcess] Voice_ID: %d, Label: %s", voice_id, fullstr.getBuffer());
+	_log("[CTextProcess] Voice_ID:\n %d, Label: %s", voice_id, fullstr.getBuffer());
 
 	csFile << fullstr;	//fullstr即為輸出的Label內容
 	//csFile.close();
@@ -1179,8 +1341,10 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 		(*pcsFile2) << monostr;
 		//*pcsFile2.close();
 	}
-
-	return fullstr;
+	monostr += tempstr;
+	printf("7_fullstr:\n %s\n", fullstr.getBuffer());
+	printf("7_monostr:\n %s\n", monostr.getBuffer());
+	return fullstr, monostr;
 }
 
 CString CTextProcess::filterLabel(CString fullstr, int voice_id) {  //----- kris filterlabel modified 2019/03/20/ -----//
@@ -1230,115 +1394,6 @@ CString CTextProcess::filterLabelLine(char* SplitLabel) { //----- kris filterlab
 	CStrSplitLabel = (fisrttempSplitLabel + "\n");
 	return CStrSplitLabel;
 }
-
-//void CTextProcess::genLabels(){
-//	CWaveFile WaveFile;  // class for loading cue information from wav file
-//	char csTargetFileName[MAX_PATH];  // filename of wav file with absolute path
-//	sprintf(csTargetFileName, "%s/wav/%s.wav", strDirPath, strFileTitle);
-//	WaveFile.open(csTargetFileName, ios::in | ios::binary);
-//	int nTotalCue = WaveFile.GetTotalCue();  // total # cue tags in the wav file, including tags of all sentences.
-//	UINT *cuestart = new UINT[nTotalCue];		//cue start
-//	UINT *cuelength = new UINT[nTotalCue];		//cue length
-//	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
-//	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
-//	WaveFile.GetCueParameter(cuestart, cuelength);
-//	for (int i = 0; i < nTotalCue; i++) {  // convert unit to sample-point based.
-//		cuestart2[i+1] = cuestart[i]*1000/1.6;
-//		cuelength2[i+1] = cuestart2[i+1]+cuelength[i]*1000/1.6;
-//	}
-//	// 斷句. 先把input的文章存成sentence Array
-//	CStringArray SentenceArray;
-//	CString strTemp1, strResult;
-//	strTemp1 = strInput.SpanExcluding("\n");
-//	strTemp1 = strTemp1.SpanExcluding("\r");
-//	strResult = strTemp1;
-//	string testfinded;
-//	string testfinded2;
-//	string testfinded3;
-//
-//
-//	while(strResult.findOneOf(testsymbol, testfinded) != -1){
-//		CString temp;
-//		int i = strResult.findOneOf(testsymbol, testfinded);
-//		temp = strResult.left(i);
-//		strResult = strResult.right(strResult.getLength()-i-2);
-//		SentenceArray.add(temp);
-//	}
-//	if(strResult != "")	SentenceArray.add(strResult);
-//
-//	char s[10];
-//	int SyllableBound[100];		// syllable邊界
-//	int SyllableTone[100];		// tone of syllable
-//	int WordBound[100];			// word boundary, tts 斷詞結果
-//	int PhraseBound[20];		// phrase boundary
-//	int lcount;
-//	initrd(); // initial cue and shift as empty.
-//	for( lcount = 0; lcount < SentenceArray.getSize(); lcount++){
-//		// 簡單處理標點符號及分隔字符
-//		SentenceArray[lcount].replace(" ","");
-//		SentenceArray[lcount].replace("\t","");
-//		for(int i = SentenceArray[lcount].findOneOf(testsymbol2, testfinded2) ; i != -1; i = SentenceArray[lcount].findOneOf(testsymbol2, testfinded2))
-//			SentenceArray[lcount].Delete(i, 2);
-//		for(int i = SentenceArray[lcount].findOneOf(testsymbol3, testfinded3) ; i != -1; i = SentenceArray[lcount].findOneOf(testsymbol3, testfinded3))
-//			SentenceArray[lcount].Delete(i, 1);
-//	}
-//
-//	// CART
-//	CString strBig5;
-//	vector <int> PWCluster;
-//	vector <int> PPCluster;
-//	WORD_PACKAGE wordPackage;
-//	CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage);
-//
-//	// reset boundaries and indexes
-//	SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
-//	SyllableTone[0] = 0;
-//	for(int i = 1; i < 100; i++)	SyllableBound[i] = WordBound[i] = SyllableTone[i] =  0;
-//	for(int i = 1; i < 20; i++)		PhraseBound[i] = 0;
-//	int sIndex = 0, wIndex = 0, pIndex = 0; // # of syllable/word/phrase in this sentence
-//	int k = 0, l = 0 ;
-//
-//	//算boundaries, and count # syllable/word/phrase:sIndex/wIndex/pIndex
-//	CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence
-//	vector<int>	tmpIdx(PWCluster.size(), lcount);
-//	vector<int>	indexArray;
-//	vector<int> AllPWCluster;
-//	vector<int> AllPPCluster;
-//
-//	CString AllBig5;
-//
-//	indexArray.insert(indexArray.end(), tmpIdx.begin(), tmpIdx.end());
-//	AllBig5 += strBig5;
-//	AllPWCluster.insert(AllPWCluster.end(), PWCluster.begin(), PWCluster.end());
-//	AllPPCluster.insert(AllPPCluster.end(), PPCluster.begin(), PPCluster.end());
-//	for(int i = 0; i<word.wnum; i++)
-//	{
-//		for(int j = 0; j< word.w_info[i].wlen; j++)
-//		{
-//			SID2Phone((word.w_info[i].phone[j]),&s[0]);
-//			SyllableTone[++sIndex] = (word.w_info[i].phone[j]%10);
-//			SplitString(Phone2Ph97(s,SyllableTone[sIndex])," ",PhoneSeq);
-//			SyllableBound[sIndex] = PhoneSeq.GetSize()-1;
-//			if(PWCluster[k] == 1)
-//			{
-//				WordBound[++wIndex] = SyllableBound[sIndex];
-//				if(PPCluster[l] == 2)
-//					PhraseBound[++pIndex] = WordBound[wIndex];
-//				l++;
-//			}
-//			k++;
-//		}
-//	}
-//
-//}
-
-//bool CTextProcess::initrd()
-//{
-//	int *gduration_s = NULL;
-//	int *gduration_e = NULL;
-//	int giSftIdx = 0 ; // ky add
-//	return true;
-//}
 
 void CTextProcess::dumpWordData()
 {

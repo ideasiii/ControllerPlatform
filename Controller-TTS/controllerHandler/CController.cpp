@@ -24,7 +24,12 @@
 #include <wait.h>
 #include <unistd.h>
 
+#include <fstream>
+#include <dirent.h>
 #define TTS_HOST				"http://175.98.119.122"
+#define GEN_PATH            "/data/opt/tomcat/webapps/genlabel"     //kris 2019/04/11 read directory file
+
+
 
 using namespace std;
 
@@ -69,6 +74,7 @@ int CController::onInitial(void* szConfPath)
 			{
 				convertFromString(nPort, strPort);
 				nResult = cmpTTS->start(0, nPort, mnMsqKey);
+// standford auto connect
 				if (nResult > 0){
 					pid_t pid;
 					char *argv[] = { "sh", "-c", "/data/opt/DomainSocketServer/startup.sh", NULL };
@@ -87,13 +93,51 @@ int CController::onInitial(void* szConfPath)
 					}
 				}
 			}
+
 		}
 		delete config;
 	}
-	// test
-	//textProcess->genLabels();
+
+//	//----------
+//	sleep(2);
+//	CString filepath;
+//	CString filename;
+//	CString csTargetFileName;
+//	string datain;
+//
+//	filepath.format("%s/wav/",GEN_PATH);
+//	printf("\nfile %s\n", filepath.getBuffer());
+//
+//	DIR *dp;
+//	struct dirent *entry;
+//	if((dp = opendir(filepath.getBuffer())) == NULL){
+//		fprintf(stderr, "cant open %s", filepath.getBuffer());
+//		printf("Error open\n");
+//	}
+//	while ((entry = readdir(dp)) != NULL) {
+//		if (entry->d_name[0] == '.')
+//			continue;
+//		filename = entry->d_name;
+//		printf("%s\n", entry->d_name);
+//		printf("filename: %s\n", filename.getBuffer());
+//		std::string FinalTitle = filename.getBuffer();
+//		std::string FinalTitle2 = FinalTitle;
+//		string wav = ".wav";
+//		FinalTitle = FinalTitle.replace(FinalTitle.find(wav), sizeof(wav), "");
+//		csTargetFileName.format("%s/txt/%s.txt",GEN_PATH,FinalTitle.c_str());
+//		printf("csTargetFileName: %s\n", csTargetFileName.getBuffer());
+//		ifstream test(csTargetFileName, std::ifstream::in);
+//		getline(test,datain);
+//		printf("datain : %s\n", datain.c_str());
+//		test.close();
+//		textProcess->strFileTitle_test = FinalTitle2.c_str();
+//		textProcess->strInput_test = datain;
+//		textProcess->genLabels();
+//	}
+//	//------------
+
 	//textProcess->dumpWordData();
-	// textProcess->dumpWordIndex();
+	//textProcess->dumpWordIndex();
 	//textProcess->dumpPhone();
 	//CString strWav;
 	//textProcess->processTheText("你在說什麼?多型態角色語音智慧平台，我說一個故事給你們聽。要注意聽!千萬要注意聽，因為；如果沒聽到，你一定會問，你在說什麼?", strWav);
