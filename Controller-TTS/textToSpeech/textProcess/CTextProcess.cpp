@@ -27,6 +27,8 @@
 #include "CController.h" //kris 2019/02/21 新增
 #include "WaveFile.h" //kris 2019/04/02 genmodel test
 #include "dirent.h"  //kris 2019/04/08 read directory file
+#include <spawn.h>    //new 2019/03/19
+#include <wait.h>
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -53,10 +55,12 @@ using namespace std;
 #define GEN_WAV_PATH 		"/data/opt/tomcat/webapps/genlabel/wav/" //kris 2019/04/08 read directory file WAV
 #define GEN_TEXT_PATH       "/data/opt/tomcat/webapps/genlabel/txt/" //kris 2019/04/08 read directory file TEXT
 #define _MAX_PATH   260
-
 #define max_size 1000
 
-
+#define Label_PATH         "/data/opt/tomcat/webapps/label/"
+#define LabelRow_PATH      "labelrow/"
+//#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
+#define bin_PATH  		   "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},
@@ -139,14 +143,19 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris call by reference
+int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData)    //kris call by reference
 {
 
 	time_t rawtime;
 	time(&rawtime);
 
+	CString LabelRowZip;
+	CString strLabelRowFile;
+	CString strLabelRow;
 	CString strLabelName;
-
+	CString LabelRowFile;
+	CString FinalRowPath;
+	CString ChineseLabel;
 	int nSypollCount;
 	int nIndex;
 	int nLen = 0;
@@ -167,8 +176,13 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 	int textNdx;
 	WORD_PACKAGE wordPackage;
 
+	int count = 1;
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
+	strLabelRowFile.format("labelrow/%s", test.id.c_str());
+	LabelRowFile.format("%slabelrow/%s", bin_PATH, test.id.c_str());
+	LabelRowZip.format("%s.tar.gz", test.id.c_str());
+	ChineseLabel.format("/data/%ld.lab", rawtime);
 	AllBig5 = "";
 
 	_log("[CTextProcess] processTheText Input Text: %s", test.text.c_str());
@@ -200,8 +214,13 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
 
+	if (test.voice_id == -1 && test.sequence_num == 1){
+		mkdir(strLabelRowFile, 0777);
+	}
+
 	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
 	{
+		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, count);
 		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
 		CString strBig5;
 		vector<int> PWCluster;
@@ -262,21 +281,101 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath)    //kris 
 				++k;
 			}
 		}
-		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
-		ofstream csLabFile;
-		csLabFile.open(strLabelName.getBuffer(), ios::app);
-		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-				gduration_s, gduration_e, giSftIdx, test.voice_id);
-		csLabFile.close();
-		PhoneSeq.removeAll();
+		if(test.voice_id == -1){
+			_log("=============== 合成Label檔 %s===============", strLabelRow.getBuffer());
+			ofstream csLabFile;
+			csLabFile.open(strLabelRow.getBuffer(), ios::app);
+			CString full = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
+					gduration_s, gduration_e, giSftIdx, test.voice_id);
+			csLabFile.close();
+			PhoneSeq.removeAll();
+			count++;
+		}else if(test.voice_id == -2){
+			_log("=============== 注音用Label檔 ===============");
+			ofstream csLabFile;
+			csLabFile.open(ChineseLabel.getBuffer(), ios::app);
+			strChineseData = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
+					gduration_s, gduration_e, giSftIdx, test.voice_id);
+			csLabFile.close();
+			PhoneSeq.removeAll();
+
+		}else{
+			_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
+			ofstream csLabFile;
+			csLabFile.open(strLabelName.getBuffer(), ios::app);
+			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
+					gduration_s, gduration_e, giSftIdx, test.voice_id);
+			csLabFile.close();
+			PhoneSeq.removeAll();
+		}
 	}
-	_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
 
-	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
+	if(test.voice_id == -2){
+		return 0;
+	}
 
-	_log("[CTextProcess] Voice_ID: %d", test.voice_id);
-	_log("[CTextProcess] Model: %s", ModelMap[test.voice_id]);
-	return Synthesize(ModelMap[test.voice_id], strWavePath.getBuffer(), strLabelName.getBuffer(), test);
+	if(test.voice_id == -1 && test.sequence_num != test.total){
+		return 0;
+	}else if(test.voice_id == -1 && test.sequence_num == test.total){
+
+		char *LabelFileZipPath = strLabelRowFile.getBuffer();
+		char cmd[] = "tar";
+		char param[] = "zcvf";
+		char *LabelFileZipName = LabelRowZip.getBuffer();
+		char *args[5];
+		args[0] = cmd;
+		args[1] = param;
+		args[2] = LabelFileZipName;
+		args[3] = LabelFileZipPath;
+		args[4] = NULL;
+		pid_t pid;
+		int status;
+		status = posix_spawn(&pid, "/bin/tar", NULL, NULL, args, environ);
+
+		if (status == 0) {
+		 _log("tar: Child pid: %d\n", pid);
+		 if (waitpid(pid, &status, 0) != -1) {
+		  _log("tar: Child exited with status %i\n", status);
+		 } else {
+		  _log("Error: waitpid");
+		 }
+		} else {
+		 _log("tar: posix_spawn: %s\n", strerror(status));
+		}
+
+		FinalRowPath.format("%s%s.tar.gz", bin_PATH, test.id.c_str());
+		char *LabelFileZipPath2 = FinalRowPath.getBuffer();
+		char cmd2[] = "mv";
+		char endRoot[] = "/data/opt/tomcat/webapps/label/";				//mkdir label for different user
+		char *args2[4];
+		args2[0] = cmd2;
+		args2[1] = LabelFileZipPath2;
+		args2[2] = endRoot;
+		args2[3] = NULL;
+		pid_t pid2;
+		int status2;
+		status2 = posix_spawn(&pid2, "/bin/mv", NULL, NULL, args2, environ);
+		if (status2 == 0) {
+		 _log("mv: Child pid: %d\n", pid);
+		 if (waitpid(pid, &status, 0) != -1) {
+		  _log("mv: Child exited with status %i\n", status2);
+		 } else {
+		  _log("Error: waitpid");
+		 }
+		} else {
+		 _log("mv: posix_spawn: %s\n", strerror(status2));
+		}
+		strLabelZip.format("%s%s.tar.gz", Label_PATH, test.id.c_str());
+		return 0;
+	} else {
+		_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
+		_log("=============== 合成聲音檔 %s===============",
+				strWavePath.getBuffer());
+		_log("[CTextProcess] Voice_ID: %d", test.voice_id);
+		_log("[CTextProcess] Model: %s", ModelMap[test.voice_id]);
+		return Synthesize(ModelMap[test.voice_id], strWavePath.getBuffer(),
+				strLabelName.getBuffer(), test);
+	}
 }
 
 void CTextProcess::genLabels(){
@@ -1332,18 +1431,23 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 
 	//----- kris filterlabel 2019/03/07-----//
 	fullstr = filterLabel(fullstr, voice_id);
-	_log("[CTextProcess] Voice_ID:\n %d, Label: %s", voice_id, fullstr.getBuffer());
+//	_log("[CTextProcess] Voice_ID:\n %d, Label: %s", voice_id, fullstr.getBuffer());
 
 	csFile << fullstr;	//fullstr即為輸出的Label內容
 	//csFile.close();
+
+	if (voice_id == -2){
+		return fullstr;
+	}
+
 	if (pcsFile2 != NULL)
 	{	// ky add: write out mono labels if needed
 		(*pcsFile2) << monostr;
 		//*pcsFile2.close();
 	}
 	monostr += tempstr;
-	printf("7_fullstr:\n %s\n", fullstr.getBuffer());
-	printf("7_monostr:\n %s\n", monostr.getBuffer());
+//	printf("7_fullstr:\n %s\n", fullstr.getBuffer());
+//	printf("7_monostr:\n %s\n", monostr.getBuffer());fullstr
 	return fullstr, monostr;
 }
 

@@ -97,9 +97,8 @@ int CController::onInitial(void* szConfPath)
 		}
 		delete config;
 	}
-
+	sleep(2);
 //	//----------
-//	sleep(2);
 //	CString filepath;
 //	CString filename;
 //	CString csTargetFileName;
@@ -165,7 +164,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	JSONObject jsonResp;
 	TTS_REQ ttsReq;
 	CString strWave;
+	CString strZip;
+	CString strData;
 	string strResponseWav;
+	string strResponseLabel;
 	jsonReq.load(szData);
 	ttsReq.user_id = jsonReq.getString("user_id");
 	ttsReq.voice_id = jsonReq.getInt("voice_id");
@@ -174,6 +176,9 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.fm = jsonReq.getString("fm");
 	ttsReq.b = jsonReq.getString("b");
 	ttsReq.r = jsonReq.getString("r");
+	ttsReq.id = jsonReq.getString("id");
+	ttsReq.total = jsonReq.getInt("total");
+	ttsReq.sequence_num = jsonReq.getInt("sequence_num");
 
 //	ttsReq.user_id = "";                    //--- kris for test ---//
 //	ttsReq.voice_id = 103;
@@ -184,21 +189,51 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //	ttsReq.r = "";                         //---------------------//
 	jsonReq.release();
 
-	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s b: %s r: %s", nSocketFD, ttsReq.text.c_str(),
-			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.b.c_str(), ttsReq.r.c_str());
+	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s b: %s r: %s id: %s total: %d sequence_sum: %d", nSocketFD, ttsReq.text.c_str(),
+			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.b.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num);
 
 	jsonResp.create();
-	if (-1 == textProcess->processTheText(ttsReq, strWave))  //kris call by reference
+	if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))  //kris call by reference
 	{
 		jsonResp.put("status", 3);
 	}
 	else
 	{
-		_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
-		strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
-		jsonResp.put("status", 0);
-		jsonResp.put("wave", strResponseWav.c_str());
+		if (ttsReq.voice_id == -1 && ttsReq.sequence_num == ttsReq.total )  //kris call by reference
+		{
+			_log("[CController] onTTS processTheText return zip: %s", strZip.getBuffer());
+			strResponseLabel = strZip.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
+			jsonResp.put("status", 0);
+			jsonResp.put("label", strResponseLabel.c_str());
+		} else if(ttsReq.voice_id == -2){
+			_log("[CController] onTTS processTheText return data");
+			jsonResp.put("status", 0);
+			jsonResp.put("data", strData.getBuffer());
+		} else {
+			_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
+			strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
+			jsonResp.put("status", 0);
+			jsonResp.put("wave", strResponseWav.c_str());
+		}
 	}
+//	if (ttsReq.voice_id == -1 && ttsReq.sequence_num == ttsReq.total )  //kris call by reference
+//	{
+//		_log("[CController] onTTS processTheText return zip: %s", strZip.getBuffer());
+//		strResponseLabel = strZip.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
+//		jsonResp.put("status", 0);
+//		jsonResp.put("label", strResponseLabel.c_str());
+//	}
+//	else if (ttsReq.voice_id >= 0)
+//	{
+//		_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
+//		strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
+//		jsonResp.put("status", 0);
+//		jsonResp.put("wave", strResponseWav.c_str());
+//	}
+//	else
+//	{
+//		jsonResp.put("status", 3);
+//	}
 
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
 	jsonResp.release();

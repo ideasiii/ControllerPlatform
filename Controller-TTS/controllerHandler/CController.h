@@ -22,6 +22,9 @@ typedef struct _TTS_REQ
 	std::string fm;
 	std::string b;
 	std::string r;
+	std::string id;
+	int total;
+	int sequence_num;
 } TTS_REQ;
 
 class CController: public CApplication

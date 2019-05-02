@@ -26,7 +26,7 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &test, CString &strWavePath);   //kris new processthetext call by reference
+	int processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
 	void loadModel();
 	void dumpWordData();
 	void dumpWordIndex();

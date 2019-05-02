@@ -84,6 +84,8 @@ checkdirs:
 	@mkdir -p gen
 	@mkdir -p bin/label
 	@mkdir -p bin/gen
+	@mkdir -p bin/labelrow
+	@mkdir -p bin/data
 	
 clean:
 	@for libName in ${MODULES} ; do \
