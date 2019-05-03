@@ -74,24 +74,25 @@ int CController::onInitial(void* szConfPath)
 			{
 				convertFromString(nPort, strPort);
 				nResult = cmpTTS->start(0, nPort, mnMsqKey);
-// standford auto connect
-				if (nResult > 0){
-					pid_t pid;
-					char *argv[] = { "sh", "-c", "/data/opt/DomainSocketServer/startup.sh", NULL };
-					int status;
-
-					status = posix_spawn(&pid, "/bin/sh", NULL, NULL, argv, environ);
-					if (status == 0) {
-					 _log("StanfordDomainSocketServer: Child pid: %d\n", pid);
-					 if (waitpid(pid, &status, 0) != -1) {
-					  _log("StanfordDomainSocketServer: Child exited with status %i\n", status);
-					 } else {
-					  _log("Error: StanfordDomainSocketServer: waitpid");
-					 }
-					} else {
-					 _log("StanfordDomainSocketServer: posix_spawn: %s\n", strerror(status));
-					}
-				}
+////-- standford auto connect
+//				if (nResult > 0){
+//					pid_t pid;
+//					char *argv[] = { "sh", "-c", "/data/opt/DomainSocketServer/startup.sh", NULL };
+//					int status;
+//
+//					status = posix_spawn(&pid, "/bin/sh", NULL, NULL, argv, environ);
+//					if (status == 0) {
+//					 _log("StanfordDomainSocketServer: Child pid: %d\n", pid);
+//					 if (waitpid(pid, &status, 0) != -1) {
+//					  _log("StanfordDomainSocketServer: Child exited with status %i\n", status);
+//					 } else {
+//					  _log("Error: StanfordDomainSocketServer: waitpid");
+//					 }
+//					} else {
+//					 _log("StanfordDomainSocketServer: posix_spawn: %s\n", strerror(status));
+//					}
+//				}
+////--
 			}
 
 		}
