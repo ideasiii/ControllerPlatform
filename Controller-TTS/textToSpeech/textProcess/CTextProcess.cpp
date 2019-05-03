@@ -176,6 +176,8 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 	int textNdx;
 	WORD_PACKAGE wordPackage;
 
+	int tempcount = 1;
+	idCount.insert(pair<string, int>(test.id.c_str(), tempcount));
 	int count = 1;
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
@@ -220,7 +222,9 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 
 	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
 	{
-		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, count);
+//		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, count);
+		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, idCount[test.id.c_str()]);
+
 		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
 		CString strBig5;
 		vector<int> PWCluster;
@@ -290,6 +294,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 			csLabFile.close();
 			PhoneSeq.removeAll();
 			count++;
+			(idCount[test.id.c_str()])++;
 		}else if(test.voice_id == -2){
 			_log("=============== 注音用Label檔 ===============");
 			ofstream csLabFile;
@@ -366,6 +371,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		 _log("mv: posix_spawn: %s\n", strerror(status2));
 		}
 		strLabelZip.format("%s%s.tar.gz", Label_PATH, test.id.c_str());
+		idCount.erase(test.id.c_str());
 		return 0;
 	} else {
 		_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());

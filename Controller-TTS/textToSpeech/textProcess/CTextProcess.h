@@ -39,6 +39,7 @@ public:
 	void ConcatenateLabel( std::string outfilename, char* dir, int iSentenceCnt ) ; // kris new test 2019/04/09
 	std::string FinalFileTitle; // kris new test 2019/04/09
 	CString strInput_test, strFileTitle_test; // kris new test 2019/04/12
+	std::map<std::string, int>idCount;
 
 private:
 
