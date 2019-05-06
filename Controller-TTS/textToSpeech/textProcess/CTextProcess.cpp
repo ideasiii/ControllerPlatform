@@ -29,6 +29,8 @@
 #include "dirent.h"  //kris 2019/04/08 read directory file
 #include <spawn.h>    //new 2019/03/19
 #include <wait.h>
+#include <curl/curl.h>
+#include <curl/easy.h>
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -58,9 +60,10 @@ using namespace std;
 #define max_size 1000
 
 #define Label_PATH         "/data/opt/tomcat/webapps/label/"
+#define Data_PATH         "/data/opt/tomcat/webapps/"
 #define LabelRow_PATH      "labelrow/"
 //#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
-#define bin_PATH  		   "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
+#define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},
@@ -157,6 +160,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 	CString LabelRowFile;
 	CString FinalRowPath;
 	CString ChineseLabel;
+	CString ChinesePath;
 	int nSypollCount;
 	int nIndex;
 	int nLen = 0;
@@ -179,19 +183,41 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(test.id.c_str(), tempcount));
-	int count = 1;
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
 	strLabelRowFile.format("labelrow/%s", test.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, test.id.c_str());
 	LabelRowZip.format("%s.tar.gz", test.id.c_str());
-	ChineseLabel.format("/data/%ld.lab", rawtime);
+	ChineseLabel.format("data/%ld.lab", rawtime);
 	AllBig5 = "";
 
 	_log("[CTextProcess] processTheText Input Text: %s", test.text.c_str());
 //	strInput = szText;
 	strInput = test.text.c_str();  //kris call by reference
 	strInput.trim();
+
+//	//-----test url
+//
+//    CURL *curl;
+//    FILE *fp;
+//    CURLcode res;
+//    char error[CURL_ERROR_SIZE];
+//    char url[50] = "http://www.google.com.tw/"; //要下載的網址
+//    char outfilename[FILENAME_MAX] = "index.html"; //存檔路徑
+//    curl_global_init(CURL_GLOBAL_ALL);
+//    curl = curl_easy_init();
+//    if (curl) {
+//        fp = fopen(outfilename,"wb");
+//        curl_easy_setopt(curl, CURLOPT_URL, url); //設定網址
+//        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+//        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+//        //如果有錯誤的話會將錯誤寫在這邊的error buffer
+//        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
+//        res = curl_easy_perform(curl);
+//        curl_easy_cleanup(curl);
+//        fclose(fp);
+//    }
+//	//-----
 
 	WordExchange(strInput);
 	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());
@@ -294,13 +320,12 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 					gduration_s, gduration_e, giSftIdx, test.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
-			count++;
 			(idCount[test.id.c_str()])++;
 		}else if(test.voice_id == -2){
 			_log("=============== 注音用Label檔 ===============");
 			ofstream csLabFile;
 			csLabFile.open(ChineseLabel.getBuffer(), ios::app);
-			strChineseData = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
+			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
 					gduration_s, gduration_e, giSftIdx, test.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
@@ -317,6 +342,29 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 	}
 
 	if(test.voice_id == -2){
+		ChinesePath.format("%s%s", bin_PATH, ChineseLabel.getBuffer());
+		char *ChineseFilePath = ChinesePath.getBuffer();
+		char cmd3[] = "mv";
+		char endRoot2[] = "/data/opt/tomcat/webapps/data/";				//mkdir label for different user
+		char *args2[4];
+		args2[0] = cmd3;
+		args2[1] = ChineseFilePath;
+		args2[2] = endRoot2;
+		args2[3] = NULL;
+		pid_t pid3;
+		int status3;
+		status3 = posix_spawn(&pid3, "/bin/mv", NULL, NULL, args2, environ);
+		if (status3 == 0) {
+		 _log("mv: Child pid: %d\n", pid3);
+		 if (waitpid(pid3, &status3, 0) != -1) {
+		  _log("mv: Child exited with status %i\n", status3);
+		 } else {
+		  _log("Error: waitpid");
+		 }
+		} else {
+		 _log("mv: posix_spawn: %s\n", strerror(status3));
+		}
+		strChineseData.format("%s%s", Data_PATH, ChineseLabel.getBuffer());
 		return 0;
 	}
 
@@ -362,8 +410,8 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		int status2;
 		status2 = posix_spawn(&pid2, "/bin/mv", NULL, NULL, args2, environ);
 		if (status2 == 0) {
-		 _log("mv: Child pid: %d\n", pid);
-		 if (waitpid(pid, &status, 0) != -1) {
+		 _log("mv: Child pid: %d\n", pid2);
+		 if (waitpid(pid2, &status2, 0) != -1) {
 		  _log("mv: Child exited with status %i\n", status2);
 		 } else {
 		  _log("Error: waitpid");
