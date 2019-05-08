@@ -80,3 +80,5 @@ bin/
 # Visual Studio project file
 *.vcxproj
 *.vcxproj.user
+
+*/.settings/language.settings.xml
