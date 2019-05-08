@@ -134,7 +134,6 @@ package:
 	apt-get -y install libmongoc-dev
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
-	apt-get -y install scons
 	apt-get -y install libcurl4-openssl-dev
 	apt-get -y install libcrypto++-dev
 	apt-get -y install libtinyxml2-dev
