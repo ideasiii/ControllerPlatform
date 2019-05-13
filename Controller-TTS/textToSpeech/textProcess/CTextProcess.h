@@ -26,9 +26,9 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
+	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
 	void loadModel();
-	int loadModelfromHTTP(std::string url);
+	int loadWordfromHTTP(std::string url);
 	void dumpWordData();
 	void dumpWordIndex();
 	void dumpPhone();
@@ -39,10 +39,10 @@ public:
 	int* gduration_e;   // kris new test 2019/04/03
 	void ConcatenateLabel( std::string outfilename, char* dir, int iSentenceCnt ) ; // kris new test 2019/04/09
 	std::string FinalFileTitle; // kris new test 2019/04/09
-	CString strInput_test, strFileTitle_test; // kris new test 2019/04/12
+	CString strInput_gen, strFileTitle_gen; // kris new test 2019/04/12
 	std::map<std::string, int>idCount;
-private:
 
+private:
 	void releaseModel();
 	int CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
 			std::vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
@@ -50,12 +50,13 @@ private:
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int giSftIdx, int voice_id);
 	CString Phone2Ph97(char* phone, int tone);
-	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &test2);
+	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2);
 	void WordExchange(CString &strText);
 	CString filterLabel(CString fullstr, int voice_id);  // kris filterLabel 2019/03/07
 	CString filterLabelLine(char* SplitLabel); // kris filterLabel 2019/03/07
 	bool initrd(); //kris initrd 2019/04/02
 	bool timeinfo(int* duration_si,int* duration_ei); //kris timeinfo 2019/04/03
+
 private:
 	CART *CartModel;
 	CConvert *convert;

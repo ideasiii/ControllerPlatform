@@ -124,7 +124,6 @@ CTextProcess::CTextProcess() :
 		CartModel(new CART()), convert(new CConvert), word(new CWord)
 {
 	loadModel();
-
 }
 
 CTextProcess::~CTextProcess()
@@ -136,6 +135,7 @@ void CTextProcess::loadModel()
 {
 	CartModel->LoadCARTModel();
 	word->InitWord(WORD_MODEL);
+
 	FILE * file;
 	file = fopen("/data/opt/tomcat/webapps/data/tempWordDataUrl.txt", "r");
 	if (file){
@@ -148,7 +148,7 @@ void CTextProcess::loadModel()
 
 }
 
-int CTextProcess::loadModelfromHTTP(string url)
+int CTextProcess::loadWordfromHTTP(string url)
 {
 	word->InitWordfromHTTP(url.c_str());
 	return 0;
@@ -164,7 +164,7 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData)    //kris call by reference
+int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData)    //kris call by reference
 {
 
 	time_t rawtime;
@@ -199,18 +199,18 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 	WORD_PACKAGE wordPackage;
 
 	int tempcount = 1;
-	idCount.insert(pair<string, int>(test.id.c_str(), tempcount));
+	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
 	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
 	strLabelName.format("label/%ld.lab", rawtime);
-	strLabelRowFile.format("labelrow/%s", test.id.c_str());
-	LabelRowFile.format("%slabelrow/%s", bin_PATH, test.id.c_str());
-	LabelRowZip.format("%s.tar.gz", test.id.c_str());
+	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
+	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
+	LabelRowZip.format("%s.tar.gz", ttsProcess.id.c_str());
 	ChineseLabel.format("data/%ld.lab", rawtime);
 	AllBig5 = "";
 
-	_log("[CTextProcess] processTheText Input Text: %s", test.text.c_str());
+	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());
 //	strInput = szText;
-	strInput = test.text.c_str();  //kris call by reference
+	strInput = ttsProcess.text.c_str();  //kris call by reference
 	strInput.trim();
 
 	WordExchange(strInput);
@@ -237,14 +237,14 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
 
-	if (test.voice_id == -1 && test.sequence_num == 1){
+	if (ttsProcess.voice_id == -1 && ttsProcess.sequence_num == 1){
 		mkdir(strLabelRowFile, 0777);
 	}
 
 	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
 	{
 //		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, count);
-		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, idCount[test.id.c_str()]);
+		strLabelRow.format("%s/%ld_%d.lab", strLabelRowFile.getBuffer(), rawtime, idCount[ttsProcess.id.c_str()]);
 
 		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
 		CString strBig5;
@@ -306,21 +306,21 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 				++k;
 			}
 		}
-		if(test.voice_id == -1){
+		if(ttsProcess.voice_id == -1){
 			_log("=============== 合成Label檔 %s===============", strLabelRow.getBuffer());
 			ofstream csLabFile;
 			csLabFile.open(strLabelRow.getBuffer(), ios::app);
 			CString full = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, test.voice_id);
+					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
-			(idCount[test.id.c_str()])++;
-		}else if(test.voice_id == -2){
+			(idCount[ttsProcess.id.c_str()])++;
+		}else if(ttsProcess.voice_id == -2){
 			_log("=============== 注音用Label檔 ===============");
 			ofstream csLabFile;
 			csLabFile.open(ChineseLabel.getBuffer(), ios::app);
 			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, test.voice_id);
+					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 
@@ -329,13 +329,13 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 			ofstream csLabFile;
 			csLabFile.open(strLabelName.getBuffer(), ios::app);
 			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, test.voice_id);
+					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 		}
 	}
 
-	if(test.voice_id == -2){
+	if(ttsProcess.voice_id == -2){
 		ChinesePath.format("%s%s", bin_PATH, ChineseLabel.getBuffer());
 		char *ChineseFilePath = ChinesePath.getBuffer();
 		char cmd3[] = "mv";
@@ -362,9 +362,9 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		return 0;
 	}
 
-	if(test.voice_id == -1 && test.sequence_num != test.total){
+	if(ttsProcess.voice_id == -1 && ttsProcess.sequence_num != ttsProcess.total){
 		return 0;
-	}else if(test.voice_id == -1 && test.sequence_num == test.total){
+	}else if(ttsProcess.voice_id == -1 && ttsProcess.sequence_num == ttsProcess.total){
 
 		char *LabelFileZipPath = strLabelRowFile.getBuffer();
 		char cmd[] = "tar";
@@ -391,7 +391,7 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		 _log("tar: posix_spawn: %s\n", strerror(status));
 		}
 
-		FinalRowPath.format("%s%s.tar.gz", bin_PATH, test.id.c_str());
+		FinalRowPath.format("%s%s.tar.gz", bin_PATH, ttsProcess.id.c_str());
 		char *LabelFileZipPath2 = FinalRowPath.getBuffer();
 		char cmd2[] = "mv";
 		char endRoot[] = "/data/opt/tomcat/webapps/label/";				//mkdir label for different user
@@ -413,17 +413,17 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 		} else {
 		 _log("mv: posix_spawn: %s\n", strerror(status2));
 		}
-		strLabelZip.format("%s%s.tar.gz", Label_PATH, test.id.c_str());
-		idCount.erase(test.id.c_str());
+		strLabelZip.format("%s%s.tar.gz", Label_PATH, ttsProcess.id.c_str());
+		idCount.erase(ttsProcess.id.c_str());
 		return 0;
 	} else {
 		_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
 		_log("=============== 合成聲音檔 %s===============",
 				strWavePath.getBuffer());
-		_log("[CTextProcess] Voice_ID: %d", test.voice_id);
-		_log("[CTextProcess] Model: %s", ModelMap[test.voice_id]);
-		return Synthesize(ModelMap[test.voice_id], strWavePath.getBuffer(),
-				strLabelName.getBuffer(), test);
+		_log("[CTextProcess] Voice_ID: %d", ttsProcess.voice_id);
+		_log("[CTextProcess] Model: %s", ModelMap[ttsProcess.voice_id]);
+		return Synthesize(ModelMap[ttsProcess.voice_id], strWavePath.getBuffer(),
+				strLabelName.getBuffer(), ttsProcess);
 	}
 }
 
@@ -458,7 +458,7 @@ void CTextProcess::genLabels(){
 //	}
 
 //	printf("FileTitle: %s\n", strFileTitle2.getBuffer());
-	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle_test.getBuffer());
+	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle_gen.getBuffer());
 	char *temp = 0;
 	temp = csTargetWavName.getBuffer();
 	printf("\npath %s\n", temp);
@@ -560,24 +560,24 @@ void CTextProcess::genLabels(){
 //	printf("info: %s\n", info.getBuffer());
 //	textInput.close();
 
-	strInput_test.trim();
-	WordExchange(strInput_test);
-	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput_test.getBuffer());
+	strInput_gen.trim();
+	WordExchange(strInput_gen);
+	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput_gen.getBuffer());
 
 	string strFinded;
-	while ((i = strInput_test.findOneOf(vWordWrap, strFinded)) != -1)
+	while ((i = strInput_gen.findOneOf(vWordWrap, strFinded)) != -1)
 	{
 		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
 		{
-			strInput_test.left(i).replace(vdel_it->c_str(), "");
+			strInput_gen.left(i).replace(vdel_it->c_str(), "");
 		}
-		SentenceArray.add(strInput_test.left(i));
-		strInput_test = strInput_test.right(strInput_test.getLength() - i - strFinded.length());
+		SentenceArray.add(strInput_gen.left(i));
+		strInput_gen = strInput_gen.right(strInput_gen.getLength() - i - strFinded.length());
 	}
 
-	if (0 >= SentenceArray.getSize() || 0 < strInput_test.getLength())
+	if (0 >= SentenceArray.getSize() || 0 < strInput_gen.getLength())
 	{
-		SentenceArray.add(strInput_test);
+		SentenceArray.add(strInput_gen);
 	}
 
 	for (i = 0; i < SentenceArray.getSize(); ++i)
@@ -648,7 +648,7 @@ void CTextProcess::genLabels(){
 		ofstream csLabFileFull;
 		ofstream csLabFileMono;
 		CString strFileName;
-		FinalFileTitle = strFileTitle_test.getBuffer();
+		FinalFileTitle = strFileTitle_gen.getBuffer();
 		string wav = ".wav";
 		FinalFileTitle = FinalFileTitle.replace(FinalFileTitle.find(wav), sizeof(wav), "");
 		strFileName.format("%s/train/full/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
@@ -726,7 +726,7 @@ bool CTextProcess::initrd()
 	giSftIdx = 0 ; // ky add
 	return true;
 }
-int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &test2)
+int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2)
 //int CTextProcess::Synthesize(const char szModelName, const char* szWaveName, const char* szLabel)
 {
 	int nResult;
@@ -744,16 +744,16 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[10] = const_cast<char*>("-r");
 	param[11] = const_cast<char*>("1.2");
 
-	if(strlen(test2.fm.c_str()) != 0){
-		param[7] = const_cast<char*>(test2.fm.c_str());
+	if(strlen(ttsprocess2.fm.c_str()) != 0){
+		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
 		_log("[CTextProcess] fm: %s", param[7]);
 	}
-	if(strlen(test2.b.c_str()) != 0){
-		param[9] = const_cast<char*>(test2.b.c_str());
+	if(strlen(ttsprocess2.b.c_str()) != 0){
+		param[9] = const_cast<char*>(ttsprocess2.b.c_str());
 		_log("[CTextProcess] b: %s", param[9]);
 	}
-	if(strlen(test2.r.c_str()) != 0){
-		param[11] = const_cast<char*>(test2.r.c_str());
+	if(strlen(ttsprocess2.r.c_str()) != 0){
+		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
 		_log("[CTextProcess] r: %s", param[11]);
 	}
 	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s fm: %s b: %s r: %s", szModelName, szWaveName, szLabel, param[7], param[9], param[11]);
