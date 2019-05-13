@@ -77,7 +77,7 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 	{
 		char * pch;
 		int nIndex;
-//		mapWordDictionary.clear();
+		mapWordDictionary.clear();
 		while (getline(file, str))
 		{
 			vector<WORD_DIC> vecWord;
