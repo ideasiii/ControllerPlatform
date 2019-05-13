@@ -5,6 +5,7 @@
  *      Author: jugo
  */
 
+/*
 #include <iostream>
 #include <set>
 #include <cstdlib>
@@ -13,7 +14,7 @@
 #include <memory>
 #include "common.h"
 #include "CMongoDBHandler.h"
-#include <bsoncxx/builder/stream/document.hpp>
+//#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
@@ -297,7 +298,7 @@ int CMongoDBHandler::query(string strDB, string strCollection, string strField, 
 	return TRUE;
 }
 
-/*
+
  int CMongoDBHandler::query(string strDB, string strCollection, BSONObj bsonobj, list<string> &listJSON)
  {
  if(!isValid())
