@@ -28,7 +28,7 @@ public:
 	virtual ~CTextProcess();
 	int processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
 	void loadModel();
-	int loadModeltest(std::string test);
+	int loadModelfromHTTP(std::string url);
 	void dumpWordData();
 	void dumpWordIndex();
 	void dumpPhone();

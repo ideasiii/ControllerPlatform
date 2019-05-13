@@ -148,9 +148,9 @@ void CTextProcess::loadModel()
 
 }
 
-int CTextProcess::loadModeltest(string test)
+int CTextProcess::loadModelfromHTTP(string url)
 {
-	word->InitWordfromHTTP(test.c_str());
+	word->InitWordfromHTTP(url.c_str());
 	return 0;
 }
 
