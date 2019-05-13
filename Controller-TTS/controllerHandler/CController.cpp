@@ -198,15 +198,9 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.b.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
 	jsonResp.create();
 	if (ttsReq.req_type == 1){
-		if (-1 == textProcess->loadModelfromHTTP(ttsReq.text.c_str()))
-		{
-			jsonResp.put("status", 3);
-			_log("[CController] change WordData error! %s:",  ttsReq.text.c_str());
-		} else {
 		textProcess->loadModelfromHTTP(ttsReq.text.c_str());
 		jsonResp.put("status", 0);
 		_log("[CController] change WordData success! %s:",  ttsReq.text.c_str());
-		}
 	} else if(ttsReq.req_type == 2) {
 		tempLabPath.format("%s%s", DATA_PATH, ttsReq.text.c_str());
 		remove(tempLabPath.getBuffer());
