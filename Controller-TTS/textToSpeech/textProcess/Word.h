@@ -11,6 +11,7 @@ public:
 	~CWord();
 
 	void InitWord(LPCTSTR dir);
+	void InitWordfromHTTP(string test);
 	void GetWord(WORD_PACKAGE &wordPackage);
 //	unsigned GetPhone(int ptr, char* txt);
 //	int IsNumberic(unsigned char *ch);
