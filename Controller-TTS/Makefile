@@ -32,7 +32,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
-			-lboost_program_options
+			-lboost_program_options \
+			-lcurl
 					
 vpath %.cpp $(SRC_DIR) ../Global
 

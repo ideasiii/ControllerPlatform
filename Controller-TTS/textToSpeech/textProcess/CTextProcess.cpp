@@ -115,15 +115,16 @@ const char *POStags[34] =
 				"DEC", "DEG", "DER", "DEV", "SP", "AS", "ETC", "MSP", "IJ", "ON", "PU", "JJ", "FW", "LB", "SB", "BA" };
 
 // kris 2019/04/03
-static std::vector<std::string> testsymbol = { "。", "？", "！", "；", "，"};
-static std::vector<std::string> testsymbol2 = { "：", "、", "（", "）", "「", "」"};
-static std::vector<std::string> testsymbol3 = { ":", ";", ",", "?", "!", "(", ")", "[", "]"};
+static vector<string> testsymbol = { "。", "？", "！", "；", "，"};
+static vector<string> testsymbol2 = { "：", "、", "（", "）", "「", "」"};
+static vector<string> testsymbol3 = { ":", ";", ",", "?", "!", "(", ")", "[", "]"};
 
 
 CTextProcess::CTextProcess() :
 		CartModel(new CART()), convert(new CConvert), word(new CWord)
 {
 	loadModel();
+
 }
 
 CTextProcess::~CTextProcess()
@@ -135,6 +136,22 @@ void CTextProcess::loadModel()
 {
 	CartModel->LoadCARTModel();
 	word->InitWord(WORD_MODEL);
+	FILE * file;
+	file = fopen("/data/opt/tomcat/webapps/data/tempWordDataUrl.txt", "r");
+	if (file){
+		char mystring [100];
+		char *a = fgets(mystring, 100, file);
+		string str(a);
+		word->InitWordfromHTTP(str.c_str());
+		fclose(file);
+	}
+
+}
+
+int CTextProcess::loadModeltest(string test)
+{
+	word->InitWordfromHTTP(test.c_str());
+	return 0;
 }
 
 void CTextProcess::releaseModel()
@@ -195,29 +212,6 @@ int CTextProcess::processTheText(TTS_REQ &test, CString &strWavePath, CString &s
 //	strInput = szText;
 	strInput = test.text.c_str();  //kris call by reference
 	strInput.trim();
-
-//	//-----test url
-//
-//    CURL *curl;
-//    FILE *fp;
-//    CURLcode res;
-//    char error[CURL_ERROR_SIZE];
-//    char url[50] = "http://www.google.com.tw/"; //要下載的網址
-//    char outfilename[FILENAME_MAX] = "index.html"; //存檔路徑
-//    curl_global_init(CURL_GLOBAL_ALL);
-//    curl = curl_easy_init();
-//    if (curl) {
-//        fp = fopen(outfilename,"wb");
-//        curl_easy_setopt(curl, CURLOPT_URL, url); //設定網址
-//        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-//        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-//        //如果有錯誤的話會將錯誤寫在這邊的error buffer
-//        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
-//        res = curl_easy_perform(curl);
-//        curl_easy_cleanup(curl);
-//        fclose(fp);
-//    }
-//	//-----
 
 	WordExchange(strInput);
 	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());

@@ -118,12 +118,16 @@ int main(int argc, char* argv[])
 			{
 				JSONObject jsonWord;
 				jsonWord.put("user_id", "1");
-				jsonWord.put("voice_id", 9);
+				jsonWord.put("voice_id", 1);
 				jsonWord.put("emotion", 1);
 				jsonWord.put("text", strInput);
 				jsonWord.put("fm", "1");
 				jsonWord.put("b", "0.0");
 				jsonWord.put("r", "1.25");
+				jsonWord.put("id", "a1");
+				jsonWord.put("total", 2);
+				jsonWord.put("sequence_num", 1);
+				jsonWord.put("req_type", 0);
 				cmpTest->sendRequest(tts_request, jsonWord.toString().c_str());
 				jsonWord.release();
 			}

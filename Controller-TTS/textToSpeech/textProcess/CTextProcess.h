@@ -28,6 +28,7 @@ public:
 	virtual ~CTextProcess();
 	int processTheText(TTS_REQ &test, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
 	void loadModel();
+	int loadModeltest(std::string test);
 	void dumpWordData();
 	void dumpWordIndex();
 	void dumpPhone();
@@ -40,7 +41,6 @@ public:
 	std::string FinalFileTitle; // kris new test 2019/04/09
 	CString strInput_test, strFileTitle_test; // kris new test 2019/04/12
 	std::map<std::string, int>idCount;
-
 private:
 
 	void releaseModel();

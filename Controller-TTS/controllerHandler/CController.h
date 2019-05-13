@@ -25,6 +25,7 @@ typedef struct _TTS_REQ
 	std::string id;
 	int total;
 	int sequence_num;
+	int req_type;
 } TTS_REQ;
 
 class CController: public CApplication

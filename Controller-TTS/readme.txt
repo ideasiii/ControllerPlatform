@@ -37,7 +37,13 @@
 			2：Voice ID 錯誤
 			3：WAVE 產生失敗
 			4：系統錯誤
-				
+		voice_ id:
+			-1: zip	
+			-2: new temp lab (tomcat...)
+			>=0: different model
+		req_type:
+			1: delete tmp lab (tomcat...)
+			2: Update WordData
 			
 //=====================RAW to WAV ================================//
 sox -t raw -b 16 -e signed-integer -r 16000 -c 1 *.raw duck.wav
