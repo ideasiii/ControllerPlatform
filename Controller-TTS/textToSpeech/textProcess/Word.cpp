@@ -105,8 +105,8 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 			count2++;
 		}
 		file.close();
-//		_log("[total size] %d", mapWordDictionary.size());
-//		_log("[total sequence] %d", count2);
+		_log("[key count] %d", mapWordDictionary.size());
+		_log("[line count] %d", count2);
 #ifdef DEBUG
 		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
 				it != mapWordDictionary.end(); ++it)
