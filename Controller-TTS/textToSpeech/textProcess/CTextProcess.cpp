@@ -62,8 +62,8 @@ using namespace std;
 #define Label_PATH         "/data/opt/tomcat/webapps/label/"
 #define Data_PATH         "/data/opt/tomcat/webapps/"
 #define LabelRow_PATH      "labelrow/"
-//#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
-#define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
+#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
+//#define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},
@@ -83,6 +83,7 @@ static std::map<int, const char*> ModelMap = {
 		{19,  "model/hmm_19.htsvoice"},
 		{20,  "model/hmm_20.htsvoice"},
 		{21,  "model/hmm_21.htsvoice"},
+		{22,  "model/hmm_22.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
@@ -140,7 +141,7 @@ void CTextProcess::loadModel()
 	CartModel->LoadCARTModel();
 	word->InitWord(WORD_MODEL);
 
-	FILE * file;
+	FILE *file;
 	file = fopen("/data/opt/tomcat/webapps/data/tempWordDataUrl.txt", "r");
 	if (file){
 		char mystring [100];
@@ -730,6 +731,7 @@ bool CTextProcess::initrd()
 	giSftIdx = 0 ; // ky add
 	return true;
 }
+
 int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2)
 //int CTextProcess::Synthesize(const char szModelName, const char* szWaveName, const char* szLabel)
 {

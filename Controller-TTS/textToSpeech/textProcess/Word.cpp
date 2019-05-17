@@ -66,7 +66,6 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
         fclose(fp);
     }
 	//-----
-	FILE* f;
 	CString cs;
 	int len;
 	//==================== 載入字詞字典檔 =======================//
@@ -75,7 +74,7 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 	int count2 = 1;
 	if (file.is_open())
 	{
-		char * pch;
+		char *pch;
 		int nIndex;
 		mapWordDictionary.erase(mapWordDictionary.begin(), mapWordDictionary.end());
 		while (getline(file, str))
@@ -103,7 +102,9 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 				mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)].push_back(worddic);
 			}
 			count2++;
+			_log("[word]106.........");
 		}
+		_log("[word]109.........");
 		file.close();
 		_log("[key count] %d", mapWordDictionary.size());
 		_log("[line count] %d", count2);
@@ -124,7 +125,7 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 #endif
 	}
 	_log("[CWord] InitWordforHTTP success :%s", url);
-	FILE* tempWordDataRecord;
+	FILE *tempWordDataRecord;
 	string datapath = "/data/opt/tomcat/webapps/data/tempWordDataUrl.txt";
 	tempWordDataRecord = fopen(datapath.c_str(), "w");
 	fwrite(wordDataUrl.c_str(), 1, wordDataUrl.size(), tempWordDataRecord);
