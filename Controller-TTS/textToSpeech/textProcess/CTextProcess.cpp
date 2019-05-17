@@ -62,8 +62,8 @@ using namespace std;
 #define Label_PATH         "/data/opt/tomcat/webapps/label/"
 #define Data_PATH         "/data/opt/tomcat/webapps/"
 #define LabelRow_PATH      "labelrow/"
-#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
-//#define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
+//#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
+#define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 static std::map<int, const char*> ModelMap = {
 		{0,   "model/hmm_adapt.htsvoice"},

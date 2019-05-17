@@ -102,9 +102,7 @@ void CWord::InitWordfromHTTP(string wordDataUrl)
 				mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)].push_back(worddic);
 			}
 			count2++;
-			_log("[word]106.........");
 		}
-		_log("[word]109.........");
 		file.close();
 		_log("[key count] %d", mapWordDictionary.size());
 		_log("[line count] %d", count2);
