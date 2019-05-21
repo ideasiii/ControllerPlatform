@@ -84,6 +84,7 @@ static std::map<int, const char*> ModelMap = {
 		{20,  "model/hmm_20.htsvoice"},
 		{21,  "model/hmm_21.htsvoice"},
 		{22,  "model/hmm_22.htsvoice"},
+		{23,  "model/hmm_23.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
