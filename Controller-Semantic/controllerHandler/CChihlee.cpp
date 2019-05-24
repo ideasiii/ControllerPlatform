@@ -27,19 +27,48 @@
 #include "LogHandler.h"
 #include "CResponsePacket.h"
 #include "CFileHandler.h"
+#include "CMysqlHandler.h"
+#include "common.h"
 
 using namespace std;
 
-CChihlee::CChihlee()
+#define MYSQL_IP		"140.92.142.22"
+
+CChihlee::CChihlee() :
+		mysql(new CMysqlHandler())
 {
 
 }
 
 CChihlee::~CChihlee()
 {
-
+	delete mysql;
 }
 
+void CChihlee::init()
+{
+	if (TRUE == mysql->connect(MYSQL_IP, "chihlee", "chihlee", "Chihlee123!", "5"))
+	{
+		_log("[CChihlee] init: Mysql Connect Success");
+		listKeyWord.clear();
+		mysql->query("select intent_id,word from keyWord", listKeyWord);
+
+		string strField;
+		string strValue;
+		map<string, string> mapItem;
+		int nCount = 0;
+		for (list<map<string, string> >::iterator i = listKeyWord.begin(); i != listKeyWord.end(); ++i, ++nCount)
+		{
+			mapItem = *i;
+			for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+			{
+				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+			}
+		}
+
+		mysql->close();
+	}
+}
 void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 {
 	CFileHandler file;
@@ -48,6 +77,33 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	CString strText;
 	CString strSound;
 	CString strScreen;
+
+	if (TRUE == mysql->connect(MYSQL_IP, "chihlee", "chihlee", "Chihlee123!", "5") && 0 < listKeyWord.size())
+	{
+		_log("[CChihlee] runAnalysis: Mysql Connect Success");
+
+		string strField;
+		string strValue;
+		map<string, string> mapItem;
+		int nCount = 0;
+		for (list<map<string, string> >::iterator i = listKeyWord.begin(); i != listKeyWord.end(); ++i, ++nCount)
+		{
+			mapItem = *i;
+			for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+			{
+				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+				if((*j).first.compare("word") == 0)
+				{
+					if(0 <= strWord.find((*j).second.c_str()))
+					{
+						printf("word march intent_id: %s : %s\n", mapItem["intent_id"].c_str(), (*j).second.c_str());
+					}
+				}
+			}
+		}
+
+		mysql->close();
+	}
 
 	strWord.replace("笑訊", "校訓");
 	strWord.replace("校去", "校訓");

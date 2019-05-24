@@ -90,14 +90,14 @@ int CController::onInitial(void* szConfPath)
 
 	semanticJudge->loadAnalysis();
 
-	mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
-
+	//mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
+	chihlee->init();
 	return nResult;
 }
 
 int CController::onFinish(void* nMsqKey)
 {
-	mysql->close();
+	//mysql->close();
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
@@ -128,7 +128,6 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		chihlee->runAnalysis(strWord.getBuffer(), jsonResp);
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
-		recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
 		jsonResp.release();
 		return;
 	}
@@ -184,7 +183,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	}
 	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 			jsonResp.put("id", nId).toJSON().c_str());
-	recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
+	//recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
 	jsonResp.release();
 }
 
