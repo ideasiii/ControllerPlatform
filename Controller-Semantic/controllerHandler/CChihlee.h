@@ -24,6 +24,10 @@ public:
 
 private:
 	void playSound(const char *szWav);
+	void intent(int nIntent, int nType, const char* szWord,JSONObject &jsonResp);
+	std::string course(int nType, const char* szWord);
+	std::string office(int nType, const char* szWord);
+
 
 private:
 	CMysqlHandler *mysql;

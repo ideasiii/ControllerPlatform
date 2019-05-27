@@ -51,7 +51,7 @@ void CChihlee::init()
 	{
 		_log("[CChihlee] init: Mysql Connect Success");
 		listKeyWord.clear();
-		mysql->query("select intent_id,word from keyWord", listKeyWord);
+		mysql->query("select intent_id,type,word from keyWord", listKeyWord);
 
 		string strField;
 		string strValue;
@@ -78,11 +78,16 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	CString strSound;
 	CString strScreen;
 
+	strWord.replace("笑訊", "校訓");
+	strWord.replace("校去", "校訓");
+	strWord.replace("治理", "致理");
+	strWord.trim();
 	if (TRUE == mysql->connect(MYSQL_IP, "chihlee", "chihlee", "Chihlee123!", "5") && 0 < listKeyWord.size())
 	{
 		_log("[CChihlee] runAnalysis: Mysql Connect Success");
 
 		int nIntent = -1;
+		int nType = 0;
 		string strField;
 		string strValue;
 		map<string, string> mapItem;
@@ -96,34 +101,21 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
 				if ((*j).first.compare("word") == 0)
 				{
-					if (0 <= strWord.find((*j).second.c_str()))
+					if (0 <= strWord.find(j->second.c_str()))
 					{
-						printf("word march intent_id: %s : %s\n", mapItem["intent_id"].c_str(), (*j).second.c_str());
+						printf("word march intent_id: %s type: %s word: %s\n", mapItem["intent_id"].c_str(),
+								mapItem["type"].c_str(), (*j).second.c_str());
 						nIntent = atoi(mapItem["intent_id"].c_str());
-						break;
+						nType = atoi(mapItem["type"].c_str());
+						intent(nIntent, nType, (*j).second.c_str(), jsonResp);
+						mysql->close();
+						return;
 					}
 				}
 			}
 		}
-
-		// Intent search
-		switch(nIntent)
-		{
-		case 1:
-			break;
-		case 2:
-			break;
-		default:
-			break;
-		}
-
-
 		mysql->close();
 	}
-
-	strWord.replace("笑訊", "校訓");
-	strWord.replace("校去", "校訓");
-	strWord.replace("治理", "致理");
 
 	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
 	strText.format("%s\n          \n          ", szInput);
@@ -190,10 +182,10 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	}
 
 	file.copyFile(strScreen.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
-	playSound(strSound.getBuffer());
+	//playSound(strSound.getBuffer());
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
-			"").format(jsonResp);
+			"無法找到相關的資訊").format(jsonResp);
 }
 
 void CChihlee::playSound(const char *szWav)
@@ -223,5 +215,104 @@ void CChihlee::playSound(const char *szWav)
 			_log("[CChihlee] playSound Error posix_spawn: %s", strerror(status));
 		}
 	}
+}
+
+/**
+ * intent:
+ * 1 : course
+ * 2 : office
+ */
+void CChihlee::intent(int nIntent, int nType, const char* szWord, JSONObject &jsonResp)
+{
+	CResponsePacket respPacket;
+	std::string strWord;
+
+	// Intent search
+	switch (nIntent)
+	{
+	case 1: // use course table
+		strWord = course(nType, szWord);
+		break;
+	case 2: // use office table
+		strWord = office(nType, szWord);
+		break;
+	default: // unknow intent
+		strWord = "無法理解您的問題";
+		break;
+	}
+
+	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
+			strWord.c_str()).format(jsonResp);
+}
+
+/**
+ * course:
+ * 1 : 授課名稱
+ * 2 : 授課老師
+ * 3 : 授課地點
+ */
+string CChihlee::course(int nType, const char* szWord)
+{
+	std::string strResponse = "無法找到相關的課程資訊";
+	_log("[CChihlee] course type: %d", nType);
+
+	CString strSQL;
+
+	list<map<string, string> > listCourse;
+
+	switch (nType)
+	{
+	case 1:
+		strSQL.format("SELECT * FROM chihlee.course WHERE courseName like '%%%s%%';", szWord);
+		break;
+	case 2:
+		strSQL.format("SELECT * FROM chihlee.course WHERE teacher like '%%%s%%';", szWord);
+		break;
+	case 3:
+		strSQL.format("SELECT * FROM chihlee.course WHERE place like '%%%s%%';", szWord);
+		break;
+	}
+
+	_log("[CChihlee] course SQL : %s", strSQL.getBuffer());
+	mysql->query(strSQL.getBuffer(), listCourse);
+
+	string strField;
+	string strValue;
+	map<string, string> mapItem;
+
+	/*compulsory : 必修
+	 courseName : 物件導向程式設計(下)
+	 create_time : 0000-00-00 00:00:00
+	 credit : 3
+	 id : 2
+	 number : 234
+	 place : 圖書館602
+	 teacher : 林政錦
+	 weekDay : 一
+	 * */
+	CString strTemplate;
+	for (list<map<string, string> >::iterator i = listCourse.begin(); i != listCourse.end(); ++i)
+	{
+		if(i == listCourse.begin())
+			strResponse = "";
+		mapItem = *i;
+//		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
+//		{
+//			printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
+//		}
+
+		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
+				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
+		strResponse += strTemplate.toString();
+	}
+	//strResponse = strTemplate.toString();
+	return strResponse;
+}
+
+string CChihlee::office(int nType, const char* szWord)
+{
+	std::string strResponse = "無法找到相關的地點";
+	_log("[CChihlee] office type: %d", nType);
+	return strResponse;
 }
 
