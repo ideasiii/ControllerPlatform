@@ -82,25 +82,41 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	{
 		_log("[CChihlee] runAnalysis: Mysql Connect Success");
 
+		int nIntent = -1;
 		string strField;
 		string strValue;
 		map<string, string> mapItem;
 		int nCount = 0;
+		// key word 字典檔查關鍵字
 		for (list<map<string, string> >::iterator i = listKeyWord.begin(); i != listKeyWord.end(); ++i, ++nCount)
 		{
 			mapItem = *i;
 			for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
 			{
 				printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
-				if((*j).first.compare("word") == 0)
+				if ((*j).first.compare("word") == 0)
 				{
-					if(0 <= strWord.find((*j).second.c_str()))
+					if (0 <= strWord.find((*j).second.c_str()))
 					{
 						printf("word march intent_id: %s : %s\n", mapItem["intent_id"].c_str(), (*j).second.c_str());
+						nIntent = atoi(mapItem["intent_id"].c_str());
+						break;
 					}
 				}
 			}
 		}
+
+		// Intent search
+		switch(nIntent)
+		{
+		case 1:
+			break;
+		case 2:
+			break;
+		default:
+			break;
+		}
+
 
 		mysql->close();
 	}

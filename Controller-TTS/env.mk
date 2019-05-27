@@ -12,5 +12,6 @@ export DIR_APP_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Build Debug version use: -DDEBUG
 # Build Trace version use: -DTRACE
 # Build Release version use: -DRELEASE
+# Build GDB Debug version use: -DGDB
 #####################################
 export LOG=-DRELEASE
