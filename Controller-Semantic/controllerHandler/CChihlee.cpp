@@ -116,7 +116,6 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		mysql->close();
 	}
 
-	displayWord(strText.getBuffer());
 
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 
@@ -254,6 +253,7 @@ string CChihlee::course(int nType, const char* szWord)
 	_log("[CChihlee] course type: %d", nType);
 
 	CString strSQL;
+	std::string strDisplay;
 
 	list<map<string, string> > listCourse;
 
@@ -281,7 +281,15 @@ string CChihlee::course(int nType, const char* szWord)
 	for (list<map<string, string> >::iterator i = listCourse.begin(); i != listCourse.end(); ++i)
 	{
 		if (i == listCourse.begin())
+		{
 			strResponse = "";
+			strDisplay = mapItem["courseName"].c_str();
+		}
+		else
+		{
+			strDisplay += "\n";
+			strDisplay += mapItem["courseName"].c_str();
+		}
 		mapItem = *i;
 
 		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
@@ -289,6 +297,7 @@ string CChihlee::course(int nType, const char* szWord)
 		strResponse += strTemplate.toString();
 	}
 
+	displayWord(strDisplay.c_str());
 	return strResponse;
 }
 
