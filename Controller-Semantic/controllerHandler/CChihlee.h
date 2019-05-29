@@ -21,15 +21,20 @@ public:
 	virtual ~CChihlee();
 	void runAnalysis(const char *szInput, JSONObject &jsonResp);
 	void init();
+	void setMySQLIP(const char * szIP);
+	void setWordPath(const char * szPath);
 
 private:
 	void playSound(const char *szWav);
 	void intent(int nIntent, int nType, const char* szWord,JSONObject &jsonResp);
 	std::string course(int nType, const char* szWord);
 	std::string office(int nType, const char* szWord);
+	void displayWord(const char * szWord);
 
 
 private:
+	std::string m_strWordPath;
+	std::string m_strMySQLIP;
 	CMysqlHandler *mysql;
 	std::list<std::map<std::string, std::string> > listKeyWord;
 

@@ -67,7 +67,7 @@ int CController::onInitial(void* szConfPath)
 	int nCount;
 	int nPort;
 	string strConfPath;
-	string strPort;
+	string strConfig;
 	CConfig *config;
 
 	nResult = FALSE;
@@ -79,12 +79,17 @@ int CController::onInitial(void* szConfPath)
 	config = new CConfig();
 	if (config->loadConfig(strConfPath))
 	{
-		strPort = config->getValue("SERVER WORD", "port");
-		if (!strPort.empty())
+		strConfig = config->getValue("SERVER WORD", "port");
+		if (!strConfig.empty())
 		{
-			convertFromString(nPort, strPort);
+			convertFromString(nPort, strConfig);
 			nResult = cmpword->start(0, nPort, mnMsqKey);
 		}
+		strConfig = config->getValue("MYSQL","ip");
+		chihlee->setMySQLIP(strConfig.c_str());
+
+		strConfig = config->getValue("OBS", "word_path");
+		chihlee->setWordPath(strConfig.c_str());
 	}
 	delete config;
 

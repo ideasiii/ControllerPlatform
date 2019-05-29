@@ -32,10 +32,8 @@
 
 using namespace std;
 
-#define MYSQL_IP		"140.92.142.22"
-
 CChihlee::CChihlee() :
-		mysql(new CMysqlHandler())
+		mysql(new CMysqlHandler()), m_strMySQLIP("127.0.0.1")
 {
 
 }
@@ -47,7 +45,7 @@ CChihlee::~CChihlee()
 
 void CChihlee::init()
 {
-	if (TRUE == mysql->connect(MYSQL_IP, "chihlee", "chihlee", "Chihlee123!", "5"))
+	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5"))
 	{
 		_log("[CChihlee] init: Mysql Connect Success");
 		listKeyWord.clear();
@@ -82,7 +80,8 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	strWord.replace("校去", "校訓");
 	strWord.replace("治理", "致理");
 	strWord.trim();
-	if (TRUE == mysql->connect(MYSQL_IP, "chihlee", "chihlee", "Chihlee123!", "5") && 0 < listKeyWord.size())
+	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5")
+			&& 0 < listKeyWord.size())
 	{
 		_log("[CChihlee] runAnalysis: Mysql Connect Success");
 
@@ -117,10 +116,8 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		mysql->close();
 	}
 
-	ofstream csWordFile("/chihlee/jetty/webapps/chihlee/Text.txt", ios::trunc);
-	strText.format("%s\n          \n          ", szInput);
-	csWordFile << strText.getBuffer() << endl;
-	csWordFile.close();
+	displayWord(strText.getBuffer());
+
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 
 	//=============== 校園導覽 =================================//
@@ -280,39 +277,77 @@ string CChihlee::course(int nType, const char* szWord)
 	string strValue;
 	map<string, string> mapItem;
 
-	/*compulsory : 必修
-	 courseName : 物件導向程式設計(下)
-	 create_time : 0000-00-00 00:00:00
-	 credit : 3
-	 id : 2
-	 number : 234
-	 place : 圖書館602
-	 teacher : 林政錦
-	 weekDay : 一
-	 * */
 	CString strTemplate;
 	for (list<map<string, string> >::iterator i = listCourse.begin(); i != listCourse.end(); ++i)
 	{
-		if(i == listCourse.begin())
+		if (i == listCourse.begin())
 			strResponse = "";
 		mapItem = *i;
-//		for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
-//		{
-//			printf("%s : %s\n", (*j).first.c_str(), (*j).second.c_str());
-//		}
 
 		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
 				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
 		strResponse += strTemplate.toString();
 	}
-	//strResponse = strTemplate.toString();
+
 	return strResponse;
 }
 
 string CChihlee::office(int nType, const char* szWord)
 {
+	string strField;
+	string strValue;
+	map<string, string> mapItem;
+	CString strSQL;
+	list<map<string, string> > listOffice;
+	CString strTemplate;
 	std::string strResponse = "無法找到相關的地點";
 	_log("[CChihlee] office type: %d", nType);
+
+	switch (nType)
+	{
+	case 1:
+		strSQL.format("SELECT * FROM chihlee.office WHERE officeName like '%%%s%%';", szWord);
+		break;
+	}
+
+	_log("[CChihlee] office SQL : %s", strSQL.getBuffer());
+	mysql->query(strSQL.getBuffer(), listOffice);
+
+	for (list<map<string, string> >::iterator i = listOffice.begin(); i != listOffice.end(); ++i)
+	{
+		if (i == listOffice.begin())
+			strResponse = "";
+		mapItem = *i;
+
+		strTemplate.format("看, %s在%s%s樓,,", mapItem["officeName"].c_str(), mapItem["building"].c_str(),
+				mapItem["floor"].c_str());
+		strResponse += strTemplate.toString();
+	}
+
 	return strResponse;
+}
+
+void CChihlee::setMySQLIP(const char * szIP)
+{
+	if (0 == szIP)
+		return;
+	m_strMySQLIP = szIP;
+}
+
+void CChihlee::displayWord(const char * szWord)
+{
+	_log("[CChihlee] displayWord path: %s  word: %s", m_strWordPath.c_str(), szWord);
+	CString strText;
+	ofstream csWordFile(m_strWordPath.c_str(), ios::trunc);
+	strText.format("%s\n          \n          ", szWord);
+	csWordFile << strText.getBuffer() << endl;
+	csWordFile.close();
+}
+
+void CChihlee::setWordPath(const char * szPath)
+{
+	if (0 == szPath)
+		return;
+	m_strWordPath = szPath;
 }
 
