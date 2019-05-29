@@ -33,7 +33,7 @@
 using namespace std;
 
 CChihlee::CChihlee() :
-		mysql(new CMysqlHandler()), m_strMySQLIP("127.0.0.1")
+		m_strMySQLIP("127.0.0.1"),mysql(new CMysqlHandler())
 {
 
 }
@@ -283,18 +283,19 @@ string CChihlee::course(int nType, const char* szWord)
 		if (i == listCourse.begin())
 		{
 			strResponse = "";
-			strDisplay = mapItem["courseName"].c_str();
+			strDisplay = "";
 		}
 		else
 		{
 			strDisplay += "\n";
-			strDisplay += mapItem["courseName"].c_str();
 		}
 		mapItem = *i;
 
 		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
 				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
 		strResponse += strTemplate.toString();
+		//strDisplay += "\n";
+		strDisplay += mapItem["courseName"].c_str();
 	}
 
 	displayWord(strDisplay.c_str());
