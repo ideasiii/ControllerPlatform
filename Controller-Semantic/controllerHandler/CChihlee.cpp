@@ -294,8 +294,11 @@ string CChihlee::course(int nType, const char* szWord)
 		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
 				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
 		strResponse += strTemplate.toString();
-		//strDisplay += "\n";
+
 		strDisplay += mapItem["courseName"].c_str();
+		strDisplay += "\n由";
+		strDisplay += mapItem["teacher"].c_str();
+		strDisplay += "授課";
 	}
 
 	displayWord(strDisplay.c_str());
