@@ -30,7 +30,7 @@ private:
 	std::string course(int nType, const char* szWord);
 	std::string office(int nType, const char* szWord);
 	void displayWord(const char * szWord);
-	void
+	void fuzzyWord(std::string &strWord);
 
 
 private:
@@ -38,5 +38,6 @@ private:
 	std::string m_strMySQLIP;
 	CMysqlHandler *mysql;
 	std::list<std::map<std::string, std::string> > listKeyWord;
+	std::map<std::string,std::string> mapFuzzyWord;
 
 };

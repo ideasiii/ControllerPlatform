@@ -64,6 +64,9 @@ void CChihlee::init()
 			}
 		}
 
+		// init fuzzy word table
+		mapFuzzyWord.clear();
+		mysql->query("select intent_id,type,word from keyWord", listKeyWord);
 		mysql->close();
 	}
 }
@@ -362,5 +365,10 @@ void CChihlee::setWordPath(const char * szPath)
 	if (0 == szPath)
 		return;
 	m_strWordPath = szPath;
+}
+
+void CChihlee::fuzzyWord(std::string &strWord)
+{
+
 }
 
