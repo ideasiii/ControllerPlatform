@@ -30,6 +30,7 @@ private:
 	std::string course(int nType, const char* szWord);
 	std::string office(int nType, const char* szWord);
 	void displayWord(const char * szWord);
+	void
 
 
 private:
