@@ -317,7 +317,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 			ofstream csLabFile;
 			csLabFile.open(strLabelRow.getBuffer(), ios::app);
 			CString full = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
+					gduration_s, gduration_e,ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 			(idCount[ttsProcess.id.c_str()])++;
@@ -326,7 +326,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 			ofstream csLabFile;
 			csLabFile.open(ChineseLabel.getBuffer(), ios::app);
 			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
+					gduration_s, gduration_e, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 
@@ -335,7 +335,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 			ofstream csLabFile;
 			csLabFile.open(strLabelName.getBuffer(), ios::app);
 			GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e, giSftIdx, ttsProcess.voice_id);
+					gduration_s, gduration_e, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 		}
@@ -467,9 +467,9 @@ void CTextProcess::genLabels(){
 	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle_gen.getBuffer());
 	char *temp = 0;
 	temp = csTargetWavName.getBuffer();
-	printf("\npath %s\n", temp);
+	_log("[CTextProcess]path %s\n", temp);
 
-	//	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle2.getBuffer());
+//	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle2.getBuffer());
 
 
 	ifstream cf(temp, std::ifstream::binary);
@@ -500,16 +500,16 @@ void CTextProcess::genLabels(){
 
 	int nTotalCue = (unsigned int) totalcues;// total # cue tags in the wav file, including tags of all sentences.
 //	printf("total %d\n", nTotalCue);
-	unsigned long data2;
+//	unsigned long data2;
 	char head2[40];
 	char *wavebuffer2 = NULL;
 	ifstream cf2(temp, std::ifstream::binary);
 	free(temp);
 	cf2.seekg(0, cf2.beg);
 	cf2.read(reinterpret_cast<char*>(&head2), 40);
-	cf2.read(reinterpret_cast<char*>(&data2), 4);
-	wavebuffer2 = new char[data2];
-	cf2.read(wavebuffer2, data2);
+	cf2.read(reinterpret_cast<char*>(&data), 4);
+	wavebuffer2 = new char[data];
+	cf2.read(wavebuffer2, data);
 //	printf("data2 :%d\n", data2);
 	free(wavebuffer2);
 	wavebuffer2 = NULL;
@@ -520,26 +520,30 @@ void CTextProcess::genLabels(){
 	UINT *cuelength2 = new UINT[nTotalCue + 1];	//cue length
 
 	cf2.seekg(12, cf2.cur);
-	for (unsigned int i = 0; i < nTotalCue; i++) {
+	for ( int i = 0; i < nTotalCue; i++) {
 		cf2.seekg(4, cf2.cur);
-		cf2.read(reinterpret_cast<char*>(&data2), 4);
+		cf2.read(reinterpret_cast<char*>(&data), 4);
 		cf2.seekg(16, cf2.cur);
-		cuestart[i] = (unsigned int) data2;
+		cuestart[i] = (unsigned int) data;
 	}
 	cf2.seekg(12, cf2.cur);
 
-	for (unsigned int j = 0; j < nTotalCue; j++) {
+	for ( int j = 0; j < nTotalCue; j++) {
 		cf2.seekg(12, cf2.cur);
-		cf2.read(reinterpret_cast<char*>(&data2), 4);
+		cf2.read(reinterpret_cast<char*>(&data), 4);
 		cf2.seekg(12, cf2.cur);
-		cuelength[j] = (unsigned int) data2;
+		cuelength[j] = (unsigned int) data;
 	}
 
 	for (int i = 0; i < nTotalCue; i++) { // convert unit to sample-point based.
 		cuestart2[i + 1] = cuestart[i] * 1000 / 1.6;
 		cuelength2[i + 1] = cuestart2[i + 1] + cuelength[i] * 1000 / 1.6;
-//		printf("cuestart2: %d\n", cuestart2[i + 1]);
-//		printf("cuelength2: %d\n", cuelength2[i + 1]);
+
+		_log("[CTextProcess]cuestart: %d\n", cuestart[i]);
+		_log("[CTextProcess]cuelength: %d\n", cuelength[i]);
+		_log("[CTextProcess]cuestart2: %d\n", cuestart2[i + 1]);
+		_log("[CTextProcess]cuelength2: %d\n", cuelength2[i + 1]);
+		_log("[CTextProcess]---------------------------------------");
 	}
 
 
@@ -565,6 +569,7 @@ void CTextProcess::genLabels(){
 //	CString info = textinfo;
 //	printf("info: %s\n", info.getBuffer());
 //	textInput.close();
+
 
 	strInput_gen.trim();
 	WordExchange(strInput_gen);
@@ -663,7 +668,7 @@ void CTextProcess::genLabels(){
 		csLabFileMono.open(strFileName.getBuffer(), ios::app);
 		timeinfo((int*)cuestart2,(int*)cuelength2);
 		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
-				gduration_s, gduration_e, giSftIdx, 1);
+				gduration_s, gduration_e, 1);
 
 		csLabFileFull.close();
 		csLabFileMono.close();
@@ -1141,7 +1146,7 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 
 CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[],
 		const int pBound[], const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
-		int *gduration_s, int *gduration_e, int giSftIdx, int voice_id)
+		int *gduration_s, int *gduration_e,int voice_id)
 {
 
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
