@@ -48,7 +48,7 @@ private:
 			std::vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
 	CString GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
-			int *gduration_s, int *gduration_e, int giSftIdx, int voice_id);
+			int *gduration_s, int *gduration_e, int voice_id);
 	CString Phone2Ph97(char* phone, int tone);
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2);
 	void WordExchange(CString &strText);

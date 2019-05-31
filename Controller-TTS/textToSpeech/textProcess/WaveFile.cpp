@@ -30,7 +30,6 @@ unsigned int CWaveFile::GetTotalCue()
 	this->read(reinterpret_cast<char*>(&data), 4);				//位址 40 , 值為 資料長度
 
 	wavebuffer = new char[data];
-	printf("data :%d\n", data);
 //	test.read(wavebuffer, data);
 	this->read(wavebuffer, data);		// read data into wavebuffer
 	free(wavebuffer);
