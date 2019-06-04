@@ -33,18 +33,19 @@
 using namespace std;
 
 CChihlee::CChihlee() :
-		m_strMySQLIP("127.0.0.1"), mysql(new CMysqlHandler())
+		m_strMySQLIP("127.0.0.1")
 {
 
 }
 
 CChihlee::~CChihlee()
 {
-	delete mysql;
+	//delete mysql;
 }
 
 void CChihlee::init()
 {
+	CMysqlHandler *mysql = new CMysqlHandler();
 	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5"))
 	{
 		_log("[CChihlee] init: Mysql Connect Success");
@@ -77,6 +78,7 @@ void CChihlee::init()
 		}
 
 		mysql->close();
+		delete mysql;
 	}
 }
 void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
@@ -98,6 +100,7 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		strWord.replace(it->first.c_str(), it->second.c_str());
 	}
 
+	CMysqlHandler *mysql = new CMysqlHandler();
 	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5")
 			&& 0 < listKeyWord.size())
 	{
@@ -124,14 +127,16 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 								mapItem["type"].c_str(), (*j).second.c_str());
 						nIntent = atoi(mapItem["intent_id"].c_str());
 						nType = atoi(mapItem["type"].c_str());
-						intent(nIntent, nType, (*j).second.c_str(), jsonResp);
+						intent(nIntent, nType, (*j).second.c_str(), jsonResp, mysql);
 						mysql->close();
+						delete mysql;
 						return;
 					}
 				}
 			}
 		}
 		mysql->close();
+		delete mysql;
 	}
 
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
@@ -235,7 +240,7 @@ void CChihlee::playSound(const char *szWav)
  * 1 : course
  * 2 : office
  */
-void CChihlee::intent(int nIntent, int nType, const char* szWord, JSONObject &jsonResp)
+void CChihlee::intent(int nIntent, int nType, const char* szWord, JSONObject &jsonResp, CMysqlHandler*& mysql)
 {
 	CResponsePacket respPacket;
 	std::string strWord;
@@ -244,10 +249,10 @@ void CChihlee::intent(int nIntent, int nType, const char* szWord, JSONObject &js
 	switch (nIntent)
 	{
 	case 1: // use course table
-		strWord = course(nType, szWord);
+		strWord = course(nType, szWord, mysql);
 		break;
 	case 2: // use office table
-		strWord = office(nType, szWord);
+		strWord = office(nType, szWord, mysql);
 		break;
 	default: // unknow intent
 		strWord = "無法理解您的問題";
@@ -264,13 +269,16 @@ void CChihlee::intent(int nIntent, int nType, const char* szWord, JSONObject &js
  * 2 : 授課老師
  * 3 : 授課地點
  */
-string CChihlee::course(int nType, const char* szWord)
+string CChihlee::course(int nType, const char* szWord, CMysqlHandler* & mysql)
 {
 	std::string strResponse = "無法找到相關的課程資訊";
 	_log("[CChihlee] course type: %d", nType);
 
 	CString strSQL;
 	std::string strDisplay;
+	CFileHandler file;
+	CString strScreen;
+	CString picName;
 
 	list<map<string, string> > listCourse;
 
@@ -308,7 +316,7 @@ string CChihlee::course(int nType, const char* szWord)
 		}
 		mapItem = *i;
 
-		strTemplate.format("%s在每週%s第%s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
+		strTemplate.format("%s在每週%s %s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
 				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
 		strResponse += strTemplate.toString();
 
@@ -319,10 +327,26 @@ string CChihlee::course(int nType, const char* szWord)
 	}
 
 	displayWord(strDisplay.c_str());
+
+	if (2 == nType)
+	{
+		listCourse.clear();
+		strSQL.format("SELECT * FROM chihlee.teacher WHERE teacher like '%%%s%%';", szWord);
+		_log("[CChihlee] course SQL : %s", strSQL.getBuffer());
+		mysql->query(strSQL.getBuffer(), listCourse);
+		for (list<map<string, string> >::iterator i = listCourse.begin(); i != listCourse.end(); ++i)
+		{
+			mapItem = *i;
+			picName.format("/opt/chihlee/jetty/webapps/chihlee/img/pic_teacher/%s", mapItem["picName"].c_str());
+			file.copyFile(picName.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
+			_log("[CChihlee] course 老師課程表 : %s", picName.getBuffer());
+		}
+
+	}
 	return strResponse;
 }
 
-string CChihlee::office(int nType, const char* szWord)
+string CChihlee::office(int nType, const char* szWord, CMysqlHandler*& mysql)
 {
 	string strField;
 	string strValue;

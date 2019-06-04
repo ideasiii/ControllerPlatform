@@ -26,9 +26,9 @@ public:
 
 private:
 	void playSound(const char *szWav);
-	void intent(int nIntent, int nType, const char* szWord,JSONObject &jsonResp);
-	std::string course(int nType, const char* szWord);
-	std::string office(int nType, const char* szWord);
+	void intent(int nIntent, int nType, const char* szWord,JSONObject &jsonResp, CMysqlHandler*& mysql);
+	std::string course(int nType, const char* szWord, CMysqlHandler*& mysql);
+	std::string office(int nType, const char* szWord, CMysqlHandler*& mysql);
 	void displayWord(const char * szWord);
 	void fuzzyWord(std::string &strWord);
 
@@ -36,7 +36,7 @@ private:
 private:
 	std::string m_strWordPath;
 	std::string m_strMySQLIP;
-	CMysqlHandler *mysql;
+	//CMysqlHandler *mysql;
 	std::list<std::map<std::string, std::string> > listKeyWord;
 	std::map<std::string,std::string> mapFuzzyWord; // fuzzy ---> correct
 
