@@ -326,7 +326,7 @@ string CChihlee::course(int nType, const char* szWord, CMysqlHandler* & mysql)
 			{
 				mapItem = *i;
 				picName.format("/opt/chihlee/jetty/webapps/chihlee/img/pic_classroom/%s", mapItem["picName"].c_str());
-				file.copyFile(picName.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
+				file.copyFile(picName.getBuffer(), "/opt/chihlee/jetty/webapps/chihlee/img/map.jpg");
 				_log("[CChihlee] course classroom : %s", picName.getBuffer());
 				break;
 			}
