@@ -33,7 +33,7 @@
 using namespace std;
 
 CChihlee::CChihlee() :
-		m_strMySQLIP("127.0.0.1"),mysql(new CMysqlHandler())
+		m_strMySQLIP("127.0.0.1"), mysql(new CMysqlHandler())
 {
 
 }
@@ -54,8 +54,8 @@ void CChihlee::init()
 		string strField;
 		string strValue;
 		map<string, string> mapItem;
-		int nCount = 0;
-		for (list<map<string, string> >::iterator i = listKeyWord.begin(); i != listKeyWord.end(); ++i, ++nCount)
+
+		for (list<map<string, string> >::iterator i = listKeyWord.begin(); i != listKeyWord.end(); ++i)
 		{
 			mapItem = *i;
 			for (map<string, string>::iterator j = mapItem.begin(); j != mapItem.end(); ++j)
@@ -66,7 +66,16 @@ void CChihlee::init()
 
 		// init fuzzy word table
 		mapFuzzyWord.clear();
-		mysql->query("select intent_id,type,word from keyWord", listKeyWord);
+		list<map<string, string> > listFuzzy;
+		mysql->query("select fuzzyWord,correctWord from fuzzyWord", listFuzzy);
+
+		for (list<map<string, string> >::iterator i = listFuzzy.begin(); i != listFuzzy.end(); ++i)
+		{
+			mapItem = *i;
+			mapFuzzyWord[mapItem["fuzzyWord"]] = mapItem["correctWord"];
+			printf("%s : %s\n", mapItem["fuzzyWord"].c_str(), mapItem["correctWord"].c_str());
+		}
+
 		mysql->close();
 	}
 }
@@ -83,6 +92,12 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 	strWord.replace("校去", "校訓");
 	strWord.replace("治理", "致理");
 	strWord.trim();
+
+	for (map<string, string>::iterator it = mapFuzzyWord.begin(); it != mapFuzzyWord.end(); ++it)
+	{
+		strWord.replace(it->first.c_str(), it->second.c_str());
+	}
+
 	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5")
 			&& 0 < listKeyWord.size())
 	{
@@ -118,7 +133,6 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		}
 		mysql->close();
 	}
-
 
 	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
 

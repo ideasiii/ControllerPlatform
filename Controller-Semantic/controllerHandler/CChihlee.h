@@ -38,6 +38,6 @@ private:
 	std::string m_strMySQLIP;
 	CMysqlHandler *mysql;
 	std::list<std::map<std::string, std::string> > listKeyWord;
-	std::map<std::string,std::string> mapFuzzyWord;
+	std::map<std::string,std::string> mapFuzzyWord; // fuzzy ---> correct
 
 };
