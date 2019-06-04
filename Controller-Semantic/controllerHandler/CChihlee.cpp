@@ -50,7 +50,7 @@ void CChihlee::init()
 	{
 		_log("[CChihlee] init: Mysql Connect Success");
 		listKeyWord.clear();
-		mysql->query("select intent_id,type,word from keyWord", listKeyWord);
+		mysql->query("select intent_id,type,word from keyWord order by wordLen desc", listKeyWord);
 
 		string strField;
 		string strValue;
@@ -291,7 +291,7 @@ string CChihlee::course(int nType, const char* szWord, CMysqlHandler* & mysql)
 		strSQL.format("SELECT * FROM chihlee.course WHERE teacher like '%%%s%%';", szWord);
 		break;
 	case 3:
-		strSQL.format("SELECT * FROM chihlee.course WHERE place like '%%%s%%';", szWord);
+		strSQL.format("SELECT * FROM chihlee.classroom WHERE classroom like '%%%s%%';", szWord);
 		break;
 	}
 
@@ -316,14 +316,33 @@ string CChihlee::course(int nType, const char* szWord, CMysqlHandler* & mysql)
 		}
 		mapItem = *i;
 
-		strTemplate.format("%s在每週%s %s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
-				mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
+		if (3 == nType)
+		{
+			strTemplate.format("瞧這間教室的課表如圖");
+			CString strDis;
+			strDis.format("%s的課表",szWord);
+			strDisplay = strDis.toString();
+			for (list<map<string, string> >::iterator i = listCourse.begin(); i != listCourse.end(); ++i)
+			{
+				mapItem = *i;
+				picName.format("/opt/chihlee/jetty/webapps/chihlee/img/pic_classroom/%s", mapItem["picName"].c_str());
+				file.copyFile(picName.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
+				_log("[CChihlee] course classroom : %s", picName.getBuffer());
+				break;
+			}
+		}
+		else
+		{
+			strTemplate.format("%s在每週%s %s節,由%s老師在%s授課,,", mapItem["courseName"].c_str(), mapItem["weekDay"].c_str(),
+					mapItem["credit"].c_str(), mapItem["teacher"].c_str(), mapItem["place"].c_str());
+			strDisplay += mapItem["courseName"].c_str();
+			strDisplay += "\n由";
+			strDisplay += mapItem["teacher"].c_str();
+			strDisplay += "授課";
+		}
+
 		strResponse += strTemplate.toString();
 
-		strDisplay += mapItem["courseName"].c_str();
-		strDisplay += "\n由";
-		strDisplay += mapItem["teacher"].c_str();
-		strDisplay += "授課";
 	}
 
 	displayWord(strDisplay.c_str());
