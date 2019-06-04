@@ -100,6 +100,16 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		strWord.replace(it->first.c_str(), it->second.c_str());
 	}
 
+    //================ 謝謝你的解說=====================//
+	if (0 <= strWord.find("謝謝") || 0 <= strWord.find("感謝") || 0 <= strWord.find("掰掰") || 0 <= strWord.find("拜拜")
+			|| 0 <= strWord.find("謝啦") || 0 <= strWord.find("謝拉"))
+	{
+		remove("/opt/chihlee/jetty/webapps/chihlee/img/map.jpg");
+		respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
+			"謝謝您的使用").format(jsonResp);
+        return;
+	}
+
 	CMysqlHandler *mysql = new CMysqlHandler();
 	if (TRUE == mysql->connect(m_strMySQLIP.c_str(), "chihlee", "chihlee", "Chihlee123!", "5")
 			&& 0 < listKeyWord.size())
@@ -139,68 +149,7 @@ void CChihlee::runAnalysis(const char *szInput, JSONObject &jsonResp)
 		delete mysql;
 	}
 
-	remove("/chihlee/jetty/webapps/chihlee/map.jpg");
-
-	//=============== 校園導覽 =================================//
-	if (0 <= strWord.find("導覽") || 0 <= strWord.find("地圖") || 0 <= strWord.find("參觀") || 0 <= strWord.find("校園"))
-	{
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_1.wav";
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/map.jpg";
-	}
-
-	//=============== 廁所怎麼走 =================================//
-	if (0 <= strWord.find("廁所") || 0 <= strWord.find("洗手間") || 0 <= strWord.find("大便") || 0 <= strWord.find("小便")
-			|| 0 <= strWord.find("方便間"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/wc_map.jpg";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_2.wav";
-	}
-
-	//=============== 我想找電動輪椅充電 =================================//
-	if (0 <= strWord.find("電動輪椅") || 0 <= strWord.find("輪椅充電") || 0 <= strWord.find("充電") || 0 <= strWord.find("沒電"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/wc_map.jpg";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_3.wav";
-	}
-
-	//=============== 圖書館怎麼走 =================================//
-	if (0 <= strWord.find("圖書館") || 0 <= strWord.find("圖館") || 0 <= strWord.find("書館") || 0 <= strWord.find("看書"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/wc_map.jpg";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_4.wav";
-	}
-
-	//=============== 校訓 =================================//
-	if (0 <= strWord.find("校訓") || 0 <= strWord.find("誠信") || 0 <= strWord.find("致理科大"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/motto.png";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_5.wav";
-	}
-
-	//=============== 吉祥物 =================================//
-	if (0 <= strWord.find("吉祥物") || 0 <= strWord.find("喜鵲"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/character.jpg";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_6.wav";
-	}
-
-	//=============== 校歌 =================================//
-	if (0 <= strWord.find("校歌") || 0 <= strWord.find("學生活動"))
-	{
-		strScreen = "/chihlee/jetty/webapps/chihlee/img/song.jpg";
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_7.wav";
-	}
-
-	//================ 謝謝你的解說=====================//
-	if (0 <= strWord.find("謝謝") || 0 <= strWord.find("感謝") || 0 <= strWord.find("掰掰") || 0 <= strWord.find("拜拜")
-			|| 0 <= strWord.find("謝啦") || 0 <= strWord.find("謝拉"))
-	{
-		remove("/chihlee/jetty/webapps/chihlee/map.jpg");
-		strSound = "/chihlee/jetty/webapps/chihlee/wav/wav_8.wav";
-	}
-
-	file.copyFile(strScreen.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
-	//playSound(strSound.getBuffer());
+	remove("/opt/chihlee/jetty/webapps/chihlee/img/map.jpg");
 
 	respPacket.setActivity<int>("type", RESP_TTS).setActivity<const char*>("lang", "zh").setActivity<const char*>("tts",
 			"無法找到相關的資訊").format(jsonResp);
@@ -357,7 +306,7 @@ string CChihlee::course(int nType, const char* szWord, CMysqlHandler* & mysql)
 		{
 			mapItem = *i;
 			picName.format("/opt/chihlee/jetty/webapps/chihlee/img/pic_teacher/%s", mapItem["picName"].c_str());
-			file.copyFile(picName.getBuffer(), "/chihlee/jetty/webapps/chihlee/map.jpg");
+			file.copyFile(picName.getBuffer(), "/opt/chihlee/jetty/webapps/chihlee/img/map.jpg");
 			_log("[CChihlee] course 老師課程表 : %s", picName.getBuffer());
 		}
 
