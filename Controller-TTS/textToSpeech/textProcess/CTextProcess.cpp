@@ -17,7 +17,6 @@
 #include "Phone.h"
 #include "HTS_engine.h"
 #include "CString.h"
-#include "HTS_engine.h"
 #include "hts_engine.h"
 #include "CConvert.h"
 #include "utility.h"
@@ -85,6 +84,7 @@ static std::map<int, const char*> ModelMap = {
 		{21,  "model/hmm_21.htsvoice"},
 		{22,  "model/hmm_22.htsvoice"},
 		{23,  "model/hmm_23.htsvoice"},
+		{24,  "model/hmm_24.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
