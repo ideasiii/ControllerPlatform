@@ -130,8 +130,8 @@ int CController::onInitial(void* szConfPath)
 //		getline(test,datain);
 //		printf("datain : %s\n", datain.c_str());
 //		test.close();
-//		textProcess->strFileTitle_test = FinalTitle2.c_str();
-//		textProcess->strInput_test = datain;
+//		textProcess->strFileTitle_gen = FinalTitle2.c_str();
+//		textProcess->strInput_gen = datain;
 //		textProcess->genLabels();
 //	}
 //	//------------

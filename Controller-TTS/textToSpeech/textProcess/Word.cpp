@@ -174,7 +174,7 @@ void CWord::InitWord(LPCTSTR dir)
 		}
 		file.close();
 //		_log("[total size] %d", mapWordDictionary.size());
-//		_log("[total sequence] %d", count);
+		_log("[total sequence] %d", count);
 #ifdef DEBUG
 		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
 				it != mapWordDictionary.end(); ++it)
