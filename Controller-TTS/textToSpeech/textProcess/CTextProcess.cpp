@@ -824,6 +824,11 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 	int valFeatureLW;
 	int valFeaturePOS;
 	_log("[CTextProcess] CartPrediction sentence: %s  wnum: %d", sentence.getBuffer(), wordPackage.wnum);
+	if (wordPackage.wnum <= 0) {
+		// Avoid calling Stanford Domain Socket Server with empty Socket input. (Ex: " ")
+		_log("[CTextProcess] wordPackage.wnum <= 0 :-->return -1");
+		return -1;
+	}
 
     //***** domain socket connect *****//
 	struct sockaddr_un addr;
