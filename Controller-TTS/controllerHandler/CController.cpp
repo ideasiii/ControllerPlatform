@@ -30,6 +30,7 @@
 #define GEN_PATH            "/data/opt/tomcat/webapps/genlabel"     //kris 2019/04/11 read directory file
 #define DATA_PATH			"/data/opt/tomcat/webapps/data/"
 
+#define WAV_PATH            "/data/opt/tomcat/webapps/tts"
 
 using namespace std;
 
@@ -177,7 +178,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.emotion = jsonReq.getInt("emotion");
 	ttsReq.text = jsonReq.getString("text");
 	ttsReq.fm = jsonReq.getString("fm");
-	ttsReq.b = jsonReq.getString("b");
+	ttsReq.g = jsonReq.getString("g");
 	ttsReq.r = jsonReq.getString("r");
 	ttsReq.id = jsonReq.getString("id");
 	ttsReq.total = jsonReq.getInt("total");
@@ -194,8 +195,8 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 	jsonReq.release();
 
-	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s b: %s r: %s id: %s total: %d sequence_sum: %d req_type: %d", nSocketFD, ttsReq.text.c_str(),
-			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.b.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
+	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s g: %s r: %s id: %s total: %d sequence_sum: %d req_type: %d", nSocketFD, ttsReq.text.c_str(),
+			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.g.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
 	jsonResp.create();
 	if (ttsReq.req_type == 1){
 		textProcess->loadWordfromHTTP(ttsReq.text.c_str());
@@ -231,6 +232,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	}
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
 	jsonResp.release();
+
 }
 
 void CController::onHandleMessage(Message &message)

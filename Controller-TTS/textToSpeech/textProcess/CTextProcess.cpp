@@ -752,7 +752,7 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[5] = const_cast<char*>(szLabel);
 	param[6] = const_cast<char*>("-fm");
 	param[7] = const_cast<char*>("1");
-	param[8] = const_cast<char*>("-b");
+	param[8] = const_cast<char*>("-g");
 	param[9] = const_cast<char*>("0.0");
 	param[10] = const_cast<char*>("-r");
 	param[11] = const_cast<char*>("1.2");
@@ -761,15 +761,15 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
 		_log("[CTextProcess] fm: %s", param[7]);
 	}
-	if(strlen(ttsprocess2.b.c_str()) != 0){
-		param[9] = const_cast<char*>(ttsprocess2.b.c_str());
-		_log("[CTextProcess] b: %s", param[9]);
+	if(strlen(ttsprocess2.g.c_str()) != 0){
+		param[9] = const_cast<char*>(ttsprocess2.g.c_str());
+		_log("[CTextProcess] g: %s", param[9]);
 	}
 	if(strlen(ttsprocess2.r.c_str()) != 0){
 		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
 		_log("[CTextProcess] r: %s", param[11]);
 	}
-	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s fm: %s b: %s r: %s", szModelName, szWaveName, szLabel, param[7], param[9], param[11]);
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s fm: %s g: %s r: %s", szModelName, szWaveName, szLabel, param[7], param[9], param[11]);
 	nResult = htsSynthesize(12, param);
 	delete param;
 	return nResult;

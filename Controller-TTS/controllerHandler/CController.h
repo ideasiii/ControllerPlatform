@@ -20,7 +20,7 @@ typedef struct _TTS_REQ
 	int emotion;
 	std::string text;
 	std::string fm;
-	std::string b;
+	std::string g;
 	std::string r;
 	std::string id;
 	int total;
