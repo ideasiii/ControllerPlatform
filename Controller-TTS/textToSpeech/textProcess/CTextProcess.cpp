@@ -86,6 +86,7 @@ static std::map<int, const char*> ModelMap = {
 		{23,  "model/hmm_23.htsvoice"},
 		{24,  "model/hmm_24.htsvoice"},
 		{25,  "model/hmm_25.htsvoice"},
+		{26,  "model/hmm_26.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
@@ -830,27 +831,29 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		return -1;
 	}
 
-    //***** domain socket connect *****//
-	struct sockaddr_un addr;
-	int fd;
-	char receiveMessage[max_size];
+    //***** Stanford domain socket connect *****//
 
-	if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-		perror("socket error");
-		exit(-1);
-	}
-	memset(&addr, 0, sizeof(addr));
-	addr.sun_family = AF_UNIX;
-	if (*socket_path == '\0') {
-		*addr.sun_path = '\0';
-	  strncpy(addr.sun_path+1, socket_path+1, sizeof(addr.sun_path)-2);
-	} else {
-	  strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
-	}
-	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-	  perror("connect error");
-	  exit(-1);
-	}
+//	struct sockaddr_un addr;
+//	int fd;
+//	char receiveMessage[max_size];
+//
+//	if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+//		perror("socket error");
+//		exit(-1);
+//	}
+//	memset(&addr, 0, sizeof(addr));
+//	addr.sun_family = AF_UNIX;
+//	if (*socket_path == '\0') {
+//		*addr.sun_path = '\0';
+//	  strncpy(addr.sun_path+1, socket_path+1, sizeof(addr.sun_path)-2);
+//	} else {
+//	  strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+//	}
+//	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+//	  perror("connect error");
+//	  exit(-1);
+//	}
+
 	//********************************//
 
 	for (i = 0; i < wordPackage.wnum; ++i)
@@ -889,18 +892,19 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 
 		strBig5 = strBig5 + wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + wordPackage.vecWordInfo[i].strSentence ;
-		cstemp = cstemp + " ";
+		cstemp = cstemp + "/X" + " ";
+//		cstemp = cstemp + " ";
 	}
 
 	//***** domain socket *****//
 
-	memset(receiveMessage, 0, sizeof(receiveMessage));
-	write(fd, cstemp, cstemp.getLength());
-	_log("[CTextProcess] Socket input: %s", cstemp.getBuffer());
-	read(fd,receiveMessage,sizeof(receiveMessage));
-	_log("[CTextProcess] Socket receive: %s", receiveMessage);
-	CString cstring = receiveMessage;
-	cstemp = cstring;
+//	memset(receiveMessage, 0, sizeof(receiveMessage));
+//	write(fd, cstemp, cstemp.getLength());
+//	_log("[CTextProcess] Socket input: %s", cstemp.getBuffer());
+//	read(fd,receiveMessage,sizeof(receiveMessage));
+//	_log("[CTextProcess] Socket receive: %s", receiveMessage);
+//	CString cstring = receiveMessage;
+//	cstemp = cstring;
 
 	//************************//
 
