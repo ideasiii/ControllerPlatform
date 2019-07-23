@@ -101,6 +101,7 @@ int CController::onInitial(void* szConfPath)
 	}
 	sleep(2);
 //	// gen label ----------
+
 //	CString filepath;
 //	CString filename;
 //	CString csTargetFileName;
@@ -119,22 +120,24 @@ int CController::onInitial(void* szConfPath)
 //		if (entry->d_name[0] == '.')
 //			continue;
 //		filename = entry->d_name;
-//		printf("%s\n", entry->d_name);
-//		printf("filename: %s\n", filename.getBuffer());
+//		_log("CController]fileName: %s", filename.getBuffer());
 //		std::string FinalTitle = filename.getBuffer();
 //		std::string FinalTitle2 = FinalTitle;
 //		string wav = ".wav";
 //		FinalTitle = FinalTitle.replace(FinalTitle.find(wav), sizeof(wav), "");
 //		csTargetFileName.format("%s/txt/%s.txt",GEN_PATH,FinalTitle.c_str());
-//		printf("csTargetFileName: %s\n", csTargetFileName.getBuffer());
+//		_log("CController]csTargetFileName: %s\n", csTargetFileName.getBuffer());
 //		ifstream test(csTargetFileName, std::ifstream::in);
+//		_log("[CController]131");
 //		getline(test,datain);
-//		printf("datain : %s\n", datain.c_str());
+//		_log("CController]dataIn : %s", datain.c_str());
 //		test.close();
 //		textProcess->strFileTitle_gen = FinalTitle2.c_str();
 //		textProcess->strInput_gen = datain;
 //		textProcess->genLabels();
+//
 //	}
+
 //	//------------
 
 	//textProcess->dumpWordData();
@@ -206,7 +209,18 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		tempLabPath.format("%s%s", DATA_PATH, ttsReq.text.c_str());
 		remove(tempLabPath.getBuffer());
 		jsonResp.put("status", 0);
-	} else {
+	} else if(ttsReq.req_type == 3) {
+	    time_t t = time(0);
+		long int n = static_cast<long int>(t);
+		struct tm p = *localtime((time_t *)&n);
+		char s[100];
+		strftime(s, sizeof(s), "%Y%m%d %H:%M:%S", &p);
+		string currentTime = s;
+		currentTime = currentTime.assign(currentTime, 0, 8);
+		jsonResp.put("status", 0);
+		jsonResp.put("data", currentTime.c_str());
+		_log("[CController] onTTS processTheText return currentTime: %s", currentTime.c_str());
+	}else {
 		if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))  //kris call by reference
 		{
 			jsonResp.put("status", 3);
