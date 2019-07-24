@@ -210,16 +210,17 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		remove(tempLabPath.getBuffer());
 		jsonResp.put("status", 0);
 	} else if(ttsReq.req_type == 3) {
-	    time_t t = time(0);
-		long int n = static_cast<long int>(t);
-		struct tm p = *localtime((time_t *)&n);
-		char s[100];
-		strftime(s, sizeof(s), "%Y%m%d %H:%M:%S", &p);
-		string currentTime = s;
-		currentTime = currentTime.assign(currentTime, 0, 8);
+//	    time_t currentTime = time(0);
+//		long int timeInteger = (long int)currentTime;
+//		struct tm *timeFormat = localtime(&timeInteger);
+//		char tempTime[100];
+//		strftime(tempTime, sizeof(tempTime), "%Y%m%d", timeFormat);
+//		string strCurrentTime = tempTime;
+//		strCurrentTime = strCurrentTime.assign(strCurrentTime, 0, 8);
+		string strCurrentTime = "20200101";
 		jsonResp.put("status", 0);
-		jsonResp.put("data", currentTime.c_str());
-		_log("[CController] onTTS processTheText return currentTime: %s", currentTime.c_str());
+		jsonResp.put("data", strCurrentTime.c_str());
+		_log("[CController] onTTS processTheText return currentTime: %s", strCurrentTime.c_str());
 	}else {
 		if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))  //kris call by reference
 		{
