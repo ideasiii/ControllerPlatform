@@ -210,14 +210,13 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		remove(tempLabPath.getBuffer());
 		jsonResp.put("status", 0);
 	} else if(ttsReq.req_type == 3) {
-//	    time_t currentTime = time(0);
-//		long int timeInteger = (long int)currentTime;
-//		struct tm *timeFormat = localtime(&timeInteger);
-//		char tempTime[100];
-//		strftime(tempTime, sizeof(tempTime), "%Y%m%d", timeFormat);
-//		string strCurrentTime = tempTime;
-//		strCurrentTime = strCurrentTime.assign(strCurrentTime, 0, 8);
-		//
+	    time_t currentTime = time(0);
+		long int timeInteger = (long int)currentTime;
+		struct tm *timeFormat = localtime(&timeInteger);
+		char tempTime[100];
+		strftime(tempTime, sizeof(tempTime), "%Y%m%d", timeFormat);
+		string strCurrentTime = tempTime;
+		strCurrentTime = strCurrentTime.assign(strCurrentTime, 0, 8);
 		string strCurrentTime = "20200101";
 		jsonResp.put("status", 0);
 		jsonResp.put("data", strCurrentTime.c_str());
