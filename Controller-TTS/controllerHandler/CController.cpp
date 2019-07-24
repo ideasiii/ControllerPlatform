@@ -217,6 +217,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //		strftime(tempTime, sizeof(tempTime), "%Y%m%d", timeFormat);
 //		string strCurrentTime = tempTime;
 //		strCurrentTime = strCurrentTime.assign(strCurrentTime, 0, 8);
+		//
 		string strCurrentTime = "20200101";
 		jsonResp.put("status", 0);
 		jsonResp.put("data", strCurrentTime.c_str());
