@@ -10,9 +10,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <CController.h>   //kris add
+#include <CController.h>
 #include <CString.h>
 
+using namespace std;
 
 class CString;
 class CStringArray;
@@ -26,36 +27,37 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData);   //kris new processthetext call by reference
+	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData);
 	void loadModel();
-	int loadWordfromHTTP(std::string url);
+	int loadWordfromHTTP(string url);
 	void dumpWordData();
 	void dumpWordIndex();
 	void dumpPhone();
 
-	void genLabels();   // kris new test 2019/04/02
-	int giSftIdx ; 		// kris new test 2019/04/03
-	int* gduration_s;   // kris new test 2019/04/03
-	int* gduration_e;   // kris new test 2019/04/03
-	void ConcatenateLabel( std::string outfilename, char* dir, int iSentenceCnt ) ; // kris new test 2019/04/09
-	std::string FinalFileTitle; // kris new test 2019/04/09
-	CString strInput_gen, strFileTitle_gen; // kris new test 2019/04/12
-	std::map<std::string, int>idCount;
+	void genLabels();
+	int giSftIdx ;
+	int* gduration_s;
+	int* gduration_e;
+	void ConcatenateLabel(string outfilename, char* dir, int iSentenceCnt) ;
+	string FinalFileTitle;
+	CString strInput_gen, strFileTitle_gen;
+	map<string, int>idCount;
+	vector<string> splitSentence(string &input);
 
 private:
 	void releaseModel();
-	int CartPrediction(CString &sentence, CString &strBig5, std::vector<int>& allPWCluster,
-			std::vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
+	int CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
+			vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
 	CString GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
-			const int sCount, const int wCount, const int pCount, std::ofstream& csFile, std::ofstream *pcsFile2,
+			const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int voice_id);
 	CString Phone2Ph97(char* phone, int tone);
 	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2);
 	void WordExchange(CString &strText);
-	CString filterLabel(CString fullstr, int voice_id);  // kris filterLabel 2019/03/07
-	CString filterLabelLine(char* SplitLabel); // kris filterLabel 2019/03/07
-	bool initrd(); //kris initrd 2019/04/02
-	bool timeinfo(int* duration_si,int* duration_ei); //kris timeinfo 2019/04/03
+	CString filterLabel(CString fullstr, int voice_id);
+	CString filterLabelLine(char* SplitLabel);
+	bool initrd();
+	bool timeinfo(int* duration_si,int* duration_ei);
 
 private:
 	CART *CartModel;

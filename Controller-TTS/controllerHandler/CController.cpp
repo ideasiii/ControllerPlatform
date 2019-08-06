@@ -221,11 +221,11 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		jsonResp.put("data", strCurrentTime.c_str());
 		_log("[CController] onTTS processTheText return currentTime: %s", strCurrentTime.c_str());
 	}else {
-		if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))  //kris call by reference
+		if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))
 		{
 			jsonResp.put("status", 3);
 		}else{
-			if (ttsReq.voice_id == -1 && ttsReq.sequence_num == ttsReq.total )  //kris call by reference
+			if (ttsReq.voice_id == -1 && ttsReq.sequence_num == ttsReq.total )
 			{
 				_log("[CController] onTTS processTheText return zip: %s", strZip.getBuffer());
 				strResponseLabel = strZip.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
