@@ -27,7 +27,7 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData);
+	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, string &input);
 	void loadModel();
 	int loadWordfromHTTP(string url);
 	void dumpWordData();
@@ -42,23 +42,29 @@ public:
 	string FinalFileTitle;
 	CString strInput_gen, strFileTitle_gen;
 	map<string, int>idCount;
+	bool checkEnglish(string &input);
+	int processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, string &input);
 	vector<string> splitSentence(string &input);
+
 
 private:
 	void releaseModel();
 	int CartPrediction(CString &sentence, CString &strBig5, vector<int>& allPWCluster,
 			vector<int>& allPPCluster, WORD_PACKAGE &wordPackage);
+	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2);
 	CString GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[], const int pBound[],
 			const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
 			int *gduration_s, int *gduration_e, int voice_id);
 	CString Phone2Ph97(char* phone, int tone);
-	int Synthesize(const char* szModelName, const char* szWaveName, const char* szLabel, TTS_REQ &ttsprocess2);
-	void WordExchange(CString &strText);
 	CString filterLabel(CString fullstr, int voice_id);
 	CString filterLabelLine(char* SplitLabel);
 	bool initrd();
 	bool timeinfo(int* duration_si,int* duration_ei);
+	int fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2);
+	void WordExchange(CString &strText); // 舊版數字交換 有誤 改用WordExchange2
 
+	string num2Spell(string &num);
+	string num2Chinese(string &num);
 private:
 	CART *CartModel;
 	CConvert *convert;

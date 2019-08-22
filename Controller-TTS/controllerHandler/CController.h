@@ -9,9 +9,12 @@
 #pragma once
 
 #include "CApplication.h"
+#include <vector>
 
 class CTextProcess;
 class CCmpTTS;
+
+using namespace std;
 
 typedef struct _TTS_REQ
 {
@@ -34,6 +37,9 @@ public:
 	CController();
 	virtual ~CController();
 	void onTTS(const int nSocketFD, const int nSequence, const char *szData);
+	vector<string> splitSentence(string &input);
+	bool checkEnglish(string &input);
+
 
 protected:
 	int onCreated(void* nMsqKey);
