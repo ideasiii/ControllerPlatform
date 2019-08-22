@@ -306,3 +306,12 @@ static std::map<std::string, std::string> mapWordExchange3 = create_map<std::str
 static std::vector<std::map<std::string, std::string> > vecMaps =
 		{ mapWordExchange1, mapWordExchange2, mapWordExchange3 };
 
+static std::map<std::string, std::string> multipleExchange = create_map<std::string, std::string>("0", "零")("1", "一")(
+				"2", "二")("3", "三")("4", "四")("5", "五")("6", "六")("7", "七")("8", "八")("9", "九")("．", "點");
+
+//========================= 單位量詞===============================//
+static std::vector<std::string> vWordUnit = { "斤", "分", "歲", "元", "噸", "吋", "磅", "盎司", "秒", "本", "樓", "次", "份", "台", "點", "棟",
+		"輛", "隻", "支", "張", "個", "雙", "匹", "艘", "塊", "件", "名", "顆", "棵", "架", "頭", "戶", "套", "頂", "朵", "疊", "里", "坪"};
+
+static std::vector<std::string> vWordUnitDouble = { "公克", "公斤", "公升", "公里", "公尺", "公分", "公頃", "英呎", "英尺", "英吋", "英寸", "台幣", "日幣", "美金"};
+
