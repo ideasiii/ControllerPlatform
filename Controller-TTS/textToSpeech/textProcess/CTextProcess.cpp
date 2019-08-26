@@ -29,7 +29,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <regex>
-//#include "flite_hts_engine.h"
+#include "flite_hts_engine.h"
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -103,6 +103,7 @@ static std::map<int, const char*> ModelMap = {
 		{24,  "model/hmm_24.htsvoice"},
 		{25,  "model/hmm_25.htsvoice"},
 		{26,  "model/hmm_26.htsvoice"},
+		{27,  "model/hmm_27.htsvoice"},
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
@@ -489,8 +490,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 //	return fliteSynthesize(model_Path_En, wave_Path_En,
 //			strTxtName.getBuffer(), ttsProcess);
 //	}
-//
-//
+
+
 //int fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
 //	int nResult;
 //	char** param = new char*[12];
