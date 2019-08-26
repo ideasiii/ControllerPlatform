@@ -29,7 +29,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <regex>
-#include "flite_hts_engine.h"
+//#include "flite_hts_engine.h"
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
