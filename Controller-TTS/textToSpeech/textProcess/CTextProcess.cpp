@@ -185,7 +185,7 @@ void CTextProcess::releaseModel()
 
 
 
-int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, string &input)
+int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData)
 {
 
 	time_t rawtime;
@@ -229,22 +229,21 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 	ChineseLabel.format("data/%ld.lab", rawtime);
 	AllBig5 = "";
 
-//	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());
-	_log("[CTextProcess] processTheText Input Text: %s", input.c_str());
-
-//	strInput = ttsProcess.text.c_str();
-	strInput = input.c_str();
+	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());
+	strInput = ttsProcess.text.c_str();
 	strInput.trim();
-	string temp;
-	temp = strInput.getBuffer();
+	_log("[CTextProcess] strInput: %s", strInput.getBuffer());
 
-	string strAAA;
-	vector<string> splitData = splitSentence(temp);
+	string input;
+	input = strInput.getBuffer();
+
+	string outSplit;
+	vector<string> splitData = splitSentence(input);
 	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i){
-		strAAA = strAAA + *i;
+		outSplit = outSplit + *i;
 	}
-	strInput = strAAA.c_str();
-	_log("[CTextProcess] strInput2: %s", strInput.getBuffer());
+	strInput = outSplit.c_str();
+	_log("[CTextProcess] splite text: %s", strInput.getBuffer());
 
 	string strFinded;
 
@@ -490,8 +489,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 //	return fliteSynthesize(model_Path_En, wave_Path_En,
 //			strTxtName.getBuffer(), ttsProcess);
 //	}
-
-
+//
+//
 //int fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
 //	int nResult;
 //	char** param = new char*[12];
@@ -1759,6 +1758,7 @@ vector<string> CTextProcess::splitSentence(string &input){
 	string splitWordEn = "";
 	string splitWordCh = "";
 	regex pattern("[A-Za-z0-9]");
+	regex patternBlank("[ \f\n\r\t\v]");
 	regex patternCh("\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏");
 	CString temp;
 	CString temp2;
@@ -1770,10 +1770,14 @@ vector<string> CTextProcess::splitSentence(string &input){
 		if((chr & 0x80) == 0)  //english
 		{
 			checkSymbolEn = input.substr(i,1);
-			if(!regex_match(checkSymbolEn, pattern)){
+			if(regex_match(checkSymbolEn, patternBlank)){
+				checkSymbolEn.empty();
+			}else if(!regex_match(checkSymbolEn, pattern)){
 				checkSymbolEn = blank;
+				reSentence += checkSymbolEn;
+			}else{
+				reSentence += checkSymbolEn;
 			}
-			reSentence += checkSymbolEn;
 			++i;
 		}else if((chr & 0xE0) == 0xE0)  //chinese
 		{

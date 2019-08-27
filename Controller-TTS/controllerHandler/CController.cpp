@@ -289,10 +289,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.sequence_num = jsonReq.getInt("sequence_num");
 	ttsReq.req_type = jsonReq.getInt("req_type");
 
-	string strFinded;
-
-	strFinded = ttsReq.text.c_str();
-
 //	ttsReq.user_id = "";                    //--- kris for test ---//
 //	ttsReq.voice_id = 103;
 //	ttsReq.emotion = 2;
@@ -349,7 +345,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //			//-------------------------------------------------//
 
 
-				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData, strFinded))
+				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData))
 				{
 					jsonResp.put("status", 3);
 				}

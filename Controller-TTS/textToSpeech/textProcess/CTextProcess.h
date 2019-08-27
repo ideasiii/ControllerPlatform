@@ -27,7 +27,7 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, string &input);
+	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData);
 	void loadModel();
 	int loadWordfromHTTP(string url);
 	void dumpWordData();
