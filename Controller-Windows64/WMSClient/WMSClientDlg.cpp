@@ -10,7 +10,7 @@
 #include "packet.h"
 #include <winsock2.h>
 #include <iphlpapi.h>
-
+#include <memory>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -55,6 +55,7 @@ END_MESSAGE_MAP()
 
 CWMSClientDlg::CWMSClientDlg(CWnd* pParent /*=NULL*/)
 : CDialogEx(CWMSClientDlg::IDD, pParent), pWinSocket(new CWinSocket)
+, m_rbCommand(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	pWinSocket->pCWMSClientDlg = this;
@@ -66,10 +67,9 @@ void CWMSClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_STATUS, listBoxStatus);
 	DDX_Control(pDX, IDC_IPADDRESS_WMS, ipCtlIP);
 	DDX_Control(pDX, IDC_EDIT_PORT, editPort);
-	DDX_Control(pDX, IDC_CHECK_PORT1, chkPort1);
-	DDX_Control(pDX, IDC_CHECK_PORT2, chkPort2);
-	DDX_Control(pDX, IDC_CHECK_PORT3, chkPort3);
-	DDX_Control(pDX, IDC_CHECK_PORT4, chkPort4);
+	DDX_Control(pDX, IDC_EDIT_DATA, m_editData);
+	DDX_Radio(pDX, IDC_RADIO_ENQUIRE_LINK, m_rbCommand);
+	DDV_MinMaxInt(pDX, m_rbCommand, 0, INT_MAX);
 }
 
 BEGIN_MESSAGE_MAP(CWMSClientDlg, CDialogEx)
@@ -79,14 +79,8 @@ BEGIN_MESSAGE_MAP(CWMSClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CWMSClientDlg::OnBnClickedButtonConnect)
 	ON_BN_CLICKED(IDC_BUTTON_DISCONNECT, &CWMSClientDlg::OnBnClickedButtonDisconnect)
 	ON_BN_CLICKED(IDOK, &CWMSClientDlg::OnBnClickedOk)
-	ON_BN_CLICKED(IDC_BUTTON_BIND, &CWMSClientDlg::OnBnClickedButtonBind)
 	ON_BN_CLICKED(IDCANCEL, &CWMSClientDlg::OnBnClickedCancel)
-	ON_BN_CLICKED(IDC_BUTTON_UNBIND, &CWMSClientDlg::OnBnClickedButtonUnbind)
-	ON_BN_CLICKED(IDC_BUTTON_AUTHENTICATION, &CWMSClientDlg::OnBnClickedButtonAuthentication)
-	ON_BN_CLICKED(IDC_BUTTON_ENQUIRE_LINK, &CWMSClientDlg::OnBnClickedButtonEnquireLink)
-	ON_BN_CLICKED(IDC_BUTTON_ACCESS_LOG, &CWMSClientDlg::OnBnClickedButtonAccessLog)
-	ON_BN_CLICKED(IDC_BUTTON_ACCESS_LOG_RESP, &CWMSClientDlg::OnBnClickedButtonAccessLogResp)
-	ON_BN_CLICKED(IDC_BUTTON_POWER_SET, &CWMSClientDlg::OnBnClickedButtonPowerSet)
+	ON_BN_CLICKED(IDC_BUTTON_SEND, &CWMSClientDlg::OnBnClickedButtonSend)
 END_MESSAGE_MAP()
 
 
@@ -122,12 +116,17 @@ BOOL CWMSClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 設定小圖示
 
 	// TODO:  在此加入額外的初始設定
-//	GetDlgItem(IDC_EDIT_PORT)->SetWindowText(_T("3588"));
-//	GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(_T("10.240.189.87"));
+	GetDlgItem(IDC_EDIT_PORT)->SetWindowText(_T("1414"));
+	GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(_T("140.92.142.125"));
+	GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(false);
 //	GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(_T("10.0.129.21"));
 //	GetDlgItem(IDC_EDIT_CLIENT_MAC)->SetWindowTextW(_T("00:00:00:00:00:00"));
 
-	optionEnable(0);
+	//optionEnable(0);
+
+
+	
+
 
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
@@ -202,7 +201,7 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 	if (pWinSocket->Connect(unPort, csIpAddress))
 	{
 		addStatus(_T("Socket Connect Success"));
-		optionEnable(1);
+		GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(true);
 	}
 	else
 	{
@@ -215,8 +214,9 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 void CWMSClientDlg::OnBnClickedButtonDisconnect()
 {
 	// TODO:  在此加入控制項告知處理常式程式碼
+	GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(false);
 	pWinSocket->Close();
-	optionEnable(0);
+	
 }
 
 
@@ -224,183 +224,74 @@ void CWMSClientDlg::OnBnClickedOk()
 {
 	// TODO:  在此加入控制項告知處理常式程式碼
 	
-	CDialogEx::OnOK();
+	//CDialogEx::OnOK();
 }
 
 void CWMSClientDlg::addStatus(LPCTSTR strMsg)
 {
 	listBoxStatus.AddString(strMsg);
+	listBoxStatus.SetTopIndex(listBoxStatus.GetCount() - 1);
+
+	CString str;
+	CSize sz;
+	int dx = 0;
+	CDC* pDC = listBoxStatus.GetDC();
+	for (int i = 0; i < listBoxStatus.GetCount(); ++i)
+	{
+		listBoxStatus.GetText(i, str);
+		sz = pDC->GetTextExtent(str);
+
+		if (sz.cx > dx)
+			dx = sz.cx;
+	}
+	listBoxStatus.ReleaseDC(pDC);
+
+	if (listBoxStatus.GetHorizontalExtent() < dx)
+	{
+		listBoxStatus.SetHorizontalExtent(dx);
+		ASSERT(listBoxStatus.GetHorizontalExtent() == dx);
+	}
 }
 
 
-void CWMSClientDlg::OnBnClickedButtonBind()
+int CWMSClientDlg::formatPacket(int nCommand, void **pPacket )
 {
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(bind_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[bind_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("Bind request Fail"));
-	
-}
-
-CString CWMSClientDlg::GetMACaddress()
-{
-	CString strMAC = _T("00:00:00:00:00:00");
-/*	unsigned char MACData[6];
-
-	UUID uuid;
-	UuidCreateSequential(&uuid);    // Ask OS to create UUID
-
-	for (int i = 2; i<8; i++)  // Bytes 2 through 7 inclusive 
-		// are MAC address
-		MACData[i - 2] = uuid.Data4[i];
-
-	char mac_address[18];
-	sprintf_s(mac_address, "%02X:%02X:%02X:%02X:%02X:%02X", uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5], uuid.Data4[6], uuid.Data4[7]);
-	strMAC = mac_address;
-*/
-	return strMAC;
-}
-
-int CWMSClientDlg::formatPacket(int nCommand, void **pPacket, int nSequence)
-{
-	CString strClientMAC;
-	int nLen = 0;
-	CString strDeviceMAC = _T("0");
-	CString strWire = _T("1");
-	GetDlgItem(IDC_EDIT_DEVICE_MAC)->GetWindowText(strDeviceMAC);
-	if (0 >= strDeviceMAC.GetLength())
-	{
-		strDeviceMAC = _T("00:00:00:00:00:00");
-	}
-
-	GetDlgItem(IDC_EDIT_WIRE)->GetWindowText(strWire);
-	if (0 >= strWire.GetLength())
-	{
-		strWire = _T("1");
-	}
-
-	int nport1 = chkPort1.GetCheck();
-	int nport2 = chkPort2.GetCheck();
-	int nport3 = chkPort3.GetCheck();
-	int nport4 = chkPort4.GetCheck();
-	CString strPort;
-	strPort.Format(_T("%d%d%d%d"), nport1, nport2, nport3, nport4);
-
+	int nLen;
 	int nBody_len = 0;
 	int nTotal_len;
 	static int seqnum = 0x00000001;
-	WMP_PACKET packet;
+	CMP_PACKET packet;
 	char * pIndex;
+	CString strData;
 
 	if (0x7FFFFFFF <= seqnum)
 		seqnum = 0x00000001;
 
-	packet.wmpHeader.command_id = htonl(nCommand);
-	packet.wmpHeader.command_status = htonl(0);
-	if (0 < nSequence)
-		packet.wmpHeader.sequence_number = htonl(nSequence);
-	else
-		packet.wmpHeader.sequence_number = htonl(++seqnum);
+	packet.cmpHeader.command_id = htonl(nCommand);
+	packet.cmpHeader.command_status = htonl(0);
+	packet.cmpHeader.sequence_number = htonl(++seqnum);
 
-	pIndex = packet.wmpBody.wmpdata;
-	memset(packet.wmpBody.wmpdata, 0, sizeof(packet.wmpBody.wmpdata));
+	pIndex = packet.cmpBody.cmpdata;
+	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
 
-	switch (nCommand)
+	UpdateData();
+	m_editData.GetWindowTextW(strData);
+	nLen = strData.GetLength();
+
+	if (0 < nLen)
 	{
-	case bind_request:
-		nLen = strDeviceMAC.GetLength();
-		memcpy(pIndex, (LPCSTR)CT2A(strDeviceMAC), nLen);
+		memcpy(pIndex, (LPCSTR)CT2A(strData), nLen);
 		pIndex += nLen;
 		nBody_len += nLen;
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case power_port_request:
-		memcpy(pIndex, (LPCSTR)CT2A(strWire), 1);
-		++pIndex;
-		++nBody_len;
-		memcpy(pIndex, (LPCSTR)CT2A(strPort), 4);
-		pIndex += 4;
-		nBody_len += 4;
-		memcpy(pIndex, "\0", 1);
-		++pIndex;
-		++nBody_len;
-		break;
-	case authentication_request:
-		GetDlgItem(IDC_EDIT_CLIENT_MAC)->GetWindowText(strClientMAC);
-		nLen = strClientMAC.GetLength();
-		memcpy(pIndex, (LPCSTR)CT2A(strClientMAC), nLen);
-		pIndex += nLen;
-		nBody_len += nLen;
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case enquire_link_request:
-		break;
-	case access_log_request:
-	case access_log_response:
-		nLen = strDeviceMAC.GetLength();
-		memcpy(pIndex, (LPCSTR)CT2A(strDeviceMAC), nLen);
-		pIndex += nLen;
-		nBody_len += nLen;
-		memcpy(pIndex, " ", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		GetDlgItem(IDC_EDIT_CLIENT_MAC)->GetWindowText(strClientMAC);
-		nLen = strClientMAC.GetLength();
-		memcpy(pIndex, (LPCSTR)CT2A(strClientMAC), nLen);
-		pIndex += nLen;
-		nBody_len += nLen;
-		memcpy(pIndex, " ", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		memcpy(pIndex, "172.10.11.11", 12);			//	ipv4_dst_addr
-		pIndex += 12;
-		nBody_len += 12;
-		memcpy(pIndex, " ", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		memcpy(pIndex, "8080", 4);						//	l4_dst_port
-		pIndex += 4;
-		nBody_len += 4;
-		memcpy(pIndex, " ", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		memcpy(pIndex, "https://m.senao.com", 19);
-		pIndex += 19;
-		nBody_len += 19;
-		memcpy(pIndex, "\0", 1);
-		pIndex += 1;
-		nBody_len += 1;
-		break;
-	case unbind_request:
-		break;
 	}
 
-	nTotal_len = sizeof(WMP_HEADER)+nBody_len;
-	packet.wmpHeader.command_length = htonl(nTotal_len);
+	memcpy(pIndex, "\0", 1);
+	pIndex += 1;
+	nBody_len += 1;
+
+	nTotal_len = sizeof(CMP_HEADER)+nBody_len;
+	packet.cmpHeader.command_length = htonl(nTotal_len);
+
 	memcpy(*pPacket, &packet, nTotal_len);
 
 	return nTotal_len;
@@ -427,32 +318,29 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 	char * pBody;
 	char temp[MAX_DATA_LEN];
 
-	if (sizeof(WMP_HEADER) <= (unsigned int)buflen)
+	if (sizeof(CMP_HEADER) <= (unsigned int)buflen)
 	{
-		WMP_HEADER *pHeader;
-		pHeader = (WMP_HEADER *)pbuf;
+		CMP_HEADER*pHeader;
+		pHeader = (CMP_HEADER*)pbuf;
 		int nCommand = ntohl(pHeader->command_id);
 		nLength = ntohl(pHeader->command_length);
 		int nStatus = ntohl(pHeader->command_status);
 		int nSequence = ntohl(pHeader->sequence_number);
 		
 
-		pBody = (char*)((char *) const_cast<void*>(pbuf)+sizeof(WMP_HEADER));
+		pBody = (char*)((char *) const_cast<void*>(pbuf)+sizeof(CMP_HEADER));
 
 		switch (nCommand)
 		{
 		case bind_response:	
 			if (0 == nStatus)
 			{
-				optionEnable(2);
+				//optionEnable(2);
 			}
 			strMsg.Format(_T("[bind_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
 			break;
-		case power_port_response:
-			strMsg.Format(_T("[power_port_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			break;
+	
 		case authentication_response:
 			strMsg.Format(_T("[authentication_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
@@ -487,7 +375,7 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 		case unbind_response:
 			if (0 == nStatus)
 			{
-				optionEnable(3);
+				//optionEnable(3);
 			}
 			strMsg.Format(_T("[unbind_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
@@ -497,8 +385,8 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 			addStatus(strMsg);
 			
 			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(enquire_link_response, &pbuff, nSequence);
-			if (sizeof(WMP_HEADER) <= nLength)
+			nLength = formatPacket(enquire_link_response, &pbuff);
+			if (sizeof(CMP_HEADER) <= nLength)
 			{
 				nLength = pWinSocket->Send(pbuff, nLength);
 				nCommand = ntohl(pHeader->command_id);
@@ -527,8 +415,8 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 				addStatus(strMsg);
 			}
 			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(update_response, &pbuff, nSequence);
-			if (sizeof(WMP_HEADER) <= nLength)
+			nLength = formatPacket(update_response, &pbuff);
+			if (sizeof(CMP_HEADER) <= nLength)
 			{
 				pWinSocket->Send(pbuff, nLength);
 				nCommand = ntohl(pHeader->command_id);
@@ -539,21 +427,12 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 				addStatus(strMsg);
 			}
 			break;
-		case access_log_request:
-			strMsg.Format(_T("[get_wireless_access_log_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			for (int i = 0; i < 200; ++i)
-			{
-				OnBnClickedButtonAccessLogResp();
-			}
-			nRun = 1;
-			break;
 		case reboot_request:
 			strMsg.Format(_T("[client_reboot_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
 			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(reboot_response, &pbuff, nSequence);
-			if (sizeof(WMP_HEADER) <= nLength)
+			nLength = formatPacket(reboot_response, &pbuff);
+			if (sizeof(CMP_HEADER) <= nLength)
 			{
 				pWinSocket->Send(pbuff, nLength);
 				nCommand = ntohl(pHeader->command_id);
@@ -605,7 +484,7 @@ void CWMSClientDlg::OnBnClickedCancel()
 	CDialogEx::OnCancel();
 }
 
-
+/*
 void CWMSClientDlg::OnBnClickedButtonUnbind()
 {
 	// TODO:  在此加入控制項告知處理常式程式碼
@@ -695,16 +574,14 @@ void CWMSClientDlg::OnBnClickedButtonEnquireLink()
 	addStatus(_T("[enquire_link_request]: Fail"));
 }
 
-
-void CWMSClientDlg::OnBnClickedButtonAccessLog()
+void CWMSClientDlg::OnBnClickedButtonBind()
 {
-	// TODO:  在此加入控制項告知處理常式程式碼
 	char buf[MAX_DATA_LEN];
 	void *pbuf;
 	pbuf = buf;
 
 	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(access_log_request, &pbuf);
+	int nPacketLen = formatPacket(bind_request, &pbuf);
 	if (sizeof(WMP_HEADER) <= nPacketLen)
 	{
 		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
@@ -717,115 +594,34 @@ void CWMSClientDlg::OnBnClickedButtonAccessLog()
 			int nStatus = ntohl(pHeader->command_status);
 			int nSequence = ntohl(pHeader->sequence_number);
 			CString strMsg;
-			strMsg.Format(_T("[wirless_access_log_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
+			strMsg.Format(_T("[bind_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
 			return;
 		}
 	}
-	addStatus(_T("[wirless_access_log_request]: Fail"));
+	addStatus(_T("Bind request Fail"));
+
 }
+*/
 
-void CWMSClientDlg::optionEnable(int nLevel)
+
+void CWMSClientDlg::OnBnClickedButtonSend()
 {
-	CWnd *btnConnect = GetDlgItem(IDC_BUTTON_CONNECT);
-	CWnd *btnDisconnect = GetDlgItem(IDC_BUTTON_DISCONNECT);
-	CWnd *btnBind = GetDlgItem(IDC_BUTTON_BIND);
-	CWnd *btnUnbind = GetDlgItem(IDC_BUTTON_UNBIND);
-	CWnd *btnAuthentication = GetDlgItem(IDC_BUTTON_AUTHENTICATION);
-	CWnd *btnEnquireLink = GetDlgItem(IDC_BUTTON_ENQUIRE_LINK);
-	CWnd *btnAccessLog = GetDlgItem(IDC_BUTTON_ACCESS_LOG);
-	CWnd *btnPowerSet = GetDlgItem(IDC_BUTTON_POWER_SET);
+	// TODO: 在此加入控制項告知處理常式程式碼
+	CString strMsg;
+	UpdateData();
+	int nCommand;
 
-	switch (nLevel)
+	switch (m_rbCommand)
 	{
-	case 0: // just enable connect
-		btnConnect->EnableWindow(TRUE);
-		btnDisconnect->EnableWindow(FALSE);
-		btnBind->EnableWindow(FALSE);
-		btnUnbind->EnableWindow(FALSE);
-		btnAuthentication->EnableWindow(FALSE);
-		btnEnquireLink->EnableWindow(FALSE);
-		btnAccessLog->EnableWindow(FALSE);
-		btnPowerSet->EnableWindow(FALSE);
+	case ENQUIRE:
+		nCommand = enquire_link_request;
 		break;
-	case 1: // connect success
-		btnConnect->EnableWindow(FALSE);
-		btnDisconnect->EnableWindow(TRUE);
-		btnBind->EnableWindow(TRUE);
+	case DEIDENTIFY:
 		break;
-	case 2: // bind success
-		btnBind->EnableWindow(FALSE);
-		btnUnbind->EnableWindow(TRUE);
-		btnAuthentication->EnableWindow(TRUE);
-		btnEnquireLink->EnableWindow(TRUE);
-		btnAccessLog->EnableWindow(TRUE);
-		btnPowerSet->EnableWindow(TRUE);
-		break;
-	case 3: // unbind success
-		btnBind->EnableWindow(TRUE);
-		btnUnbind->EnableWindow(FALSE);
-		btnAuthentication->EnableWindow(FALSE);
-		btnEnquireLink->EnableWindow(FALSE);
-		btnAccessLog->EnableWindow(FALSE);
-		btnPowerSet->EnableWindow(FALSE);
+	case SEMANTIC:
 		break;
 	}
-}
-
-
-void CWMSClientDlg::OnBnClickedButtonAccessLogResp()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(access_log_response, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[get_wireless_access_log_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("[wirless_access_log_request]: Fail"));
-}
-
-
-void CWMSClientDlg::OnBnClickedButtonPowerSet()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(power_port_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[power_port_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("Power Port request Fail"));
+	strMsg.Format(_T("Command Select : %d"), m_rbCommand);
+	addStatus(strMsg);
 }
