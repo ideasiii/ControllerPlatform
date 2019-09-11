@@ -32,7 +32,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_system \
 			-lboost_filesystem \
 			-lboost_regex \
-			-lboost_program_options
+			-lboost_program_options \
+			-lcurl
 					
 vpath %.cpp $(SRC_DIR) ../Global
 
@@ -84,6 +85,8 @@ checkdirs:
 	@mkdir -p gen
 	@mkdir -p bin/label
 	@mkdir -p bin/gen
+	@mkdir -p bin/labelrow
+	@mkdir -p bin/data
 	
 clean:
 	@for libName in ${MODULES} ; do \

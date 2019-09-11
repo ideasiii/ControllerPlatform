@@ -105,6 +105,7 @@ clean:
 	@rm -rf $(DIR_APP_ROOT)bin
 	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0;
 	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1;
+	@rm -Rf $(DIR_APP_ROOT)extLibs/*.tgz;
 
 cleanAll: clean
 	@rm -rf $(DIR_APP_ROOT)libs
@@ -134,7 +135,6 @@ package:
 	apt-get -y install libmongoc-dev
 	apt-get -y install libpq-dev
 	apt-get -y install libmysqld-dev
-	apt-get -y install scons
 	apt-get -y install libcurl4-openssl-dev
 	apt-get -y install libcrypto++-dev
 	apt-get -y install libtinyxml2-dev
@@ -151,11 +151,13 @@ debug:
 mongodb:
 	@mkdir -p libs
 	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0;
+	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1;
+	@cp ../Packages/mongo*.tgz $(DIR_APP_ROOT)extLibs
 	@cd $(DIR_APP_ROOT)extLibs && tar zxvf mongo-c-driver-1.13.0.tgz;
 	@cd $(DIR_APP_ROOT)extLibs/mongo-c-driver-1.13.0/build && cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && make && make install;
-	@rm -Rf $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1;
 	@cd $(DIR_APP_ROOT)extLibs && tar zxvf mongo-cxx-driver-r3.3.1.tgz;
 	@cd $(DIR_APP_ROOT)extLibs/mongo-cxx-driver-r3.3.1/build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local .. && make && make install;
+	@rm -f $(DIR_APP_ROOT)extLibs/mongo*.tgz
 	@echo -ne '\n###### MongoDB Build Done. ######\n'
 	@echo "\n"
 	

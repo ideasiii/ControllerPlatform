@@ -3,6 +3,10 @@
 #include <vector>
 #include <fstream>
 #include <stdio.h>
+#include <iostream>
+#include "WordInfo.h"
+
+using namespace std;
 
 typedef struct CART_DATA
 {
@@ -41,7 +45,7 @@ public:
 	// constructor and de-constructor
 	CART();
 	~CART();
-	bool LoadCARTModel(CString csfile);
+	bool LoadCARTModel(int cartModel, CString csfile);
 	bool LoadCARTModel();
 	CART_NODE *cnRoot;		// for model/CART_Model.bin
 	CART_NODE *cnRoot2;		// for model/CART_Model2.bin
@@ -49,12 +53,19 @@ public:
 	// test
 	void TEST(CART_DATA *cdData);
 	void TEST2(CART_DATA *cdData);
+	//string CJIEBA(int i, WORD_PACKAGE &wordPackage); kris 2019/01/24 未使用
+
 
 private:
+
+	CART_NODE* LOAD(void); //kris
+
 	bool ConstructCART(int nodeID, CART_NODE *pNode);
 	bool ConstructCART2(int nodeID, CART_NODE *pNode);
 	bool ConstructCART(int nodeID, std::vector<int>& IDArray, std::vector<CART_NODE*>& pNodeData, CART_NODE *pNode);
 	std::vector<CART_NODE*> gnodeArray;
+	std::vector<CART_NODE*> gnodeArray2;
 	void TEST(CART_DATA *cdData, CART_NODE *cnNode);
+	void TEST2(CART_DATA *cdData, CART_NODE *cnNode);
 	bool DeleteNode(CART_NODE *cnNode);
 };

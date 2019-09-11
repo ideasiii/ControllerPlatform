@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include "common.h"
 #include "CCartData.h"
+#include <iostream>
+#include <fstream>
+#include "WordInfo.h"
 
 using namespace std;
 
@@ -44,6 +47,8 @@ CART::~CART()
 {
 	for(int i = 0; i < (int) gnodeArray.size(); i++)
 		delete gnodeArray[i];
+	for(int i = 0; i < (int) gnodeArray2.size(); i++)
+		delete gnodeArray2[i];
 }
 
 void CART::TEST(CART_DATA *cdData)
@@ -53,7 +58,7 @@ void CART::TEST(CART_DATA *cdData)
 
 void CART::TEST2(CART_DATA *cdData)
 {
-	TEST(cdData, cnRoot2);
+	TEST2(cdData, cnRoot2);
 }
 
 void CART::TEST(CART_DATA *cdData, CART_NODE *cnNode)
@@ -81,6 +86,36 @@ void CART::TEST(CART_DATA *cdData, CART_NODE *cnNode)
 	else
 	{
 		cdData->clu = cnNode->clu;
+//		cout << "cdData->clu: " << cdData->clu << endl;
+	}
+}
+
+void CART::TEST2(CART_DATA *cdData, CART_NODE *cnNode)
+{
+	bool flag = false;
+	if(cnNode->Lchild)
+	{
+		for(int i = 0; i < (int) cnNode->cuiaQuestion.size(); ++i)
+		{
+			if(cnNode->cuiaQuestion[i] == cdData->Att_Catagory[cnNode->dim])
+			{
+				flag = true;
+				break;
+			}
+		}
+		if(flag)
+		{
+			TEST2(cdData, cnNode->Lchild);
+		}
+		else
+		{
+			TEST2(cdData, cnNode->Rchild);
+		}
+	}
+	else
+	{
+		cdData->clu = cnNode->clu;
+//		cout << "cdData->clu: " << cdData->clu << endl;
 	}
 }
 
@@ -107,8 +142,8 @@ bool CART::LoadCARTModel()
 {
 	DeleteNode(cnRoot);
 	DeleteNode(cnRoot2);
-	ConstructCART(1, cnRoot);
-	ConstructCART2(1, cnRoot2);
+	LoadCARTModel(1, "model/CART_Model.bin");
+	LoadCARTModel(2, "model/CART_Model2.bin");
 	return true;
 }
 
@@ -121,7 +156,7 @@ bool CART::ConstructCART(int nodeID, CART_NODE *pNode)
 
 	for(index = 0; index < (int) vcartData.size(); ++index)
 	{
-		if(vcartData[index].nodeID == lid)
+		if(vcartData[index].nodeID == lid)           //nodeID, node->clu, node->dim, size
 		{
 			CART_NODE *node = new CART_NODE();
 			node->clu = vcartData[index].clu;
@@ -164,16 +199,16 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 	int index;
 	CString strTmp = "";
 
-	for(index = 0; index < (int) vcartData.size(); ++index)
+	for(index = 0; index < (int) vcartData2.size(); ++index)
 	{
-		if(vcartData[index].nodeID == lid)
+		if(vcartData2[index].nodeID == lid)
 		{
 			CART_NODE *node = new CART_NODE();
-			node->clu = vcartData[index].clu;
-			node->dim = vcartData[index].dim;
-			for(int i = 0; i < vcartData[index].size; ++i)
+			node->clu = vcartData2[index].clu;
+			node->dim = vcartData2[index].dim;
+			for(int i = 0; i < vcartData2[index].size; ++i)
 			{
-				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+				node->cuiaQuestion.push_back(vcartData2[index].cuiaQuestion[i]);
 			}
 			pNode->Lchild = node;
 //			_log("[CART] ConstructCART Lchild: %d,%d,%d,%d", lid, pNode->Lchild->clu, pNode->Lchild->dim,vcartData[index].size);
@@ -182,16 +217,16 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 		}
 	}
 
-	for(index = 0; index < (int) vcartData.size(); ++index)
+	for(index = 0; index < (int) vcartData2.size(); ++index)
 	{
-		if(vcartData[index].nodeID == rid)
+		if(vcartData2[index].nodeID == rid)
 		{
 			CART_NODE *node = new CART_NODE();
-			node->clu = vcartData[index].clu;
-			node->dim = vcartData[index].dim;
-			for(int i = 0; i < vcartData[index].size; ++i)
+			node->clu = vcartData2[index].clu;
+			node->dim = vcartData2[index].dim;
+			for(int i = 0; i < vcartData2[index].size; ++i)
 			{
-				node->cuiaQuestion.push_back(vcartData[index].cuiaQuestion[i]);
+				node->cuiaQuestion.push_back(vcartData2[index].cuiaQuestion[i]);
 			}
 			pNode->Rchild = node;
 //			_log("[CART] ConstructCART Rchild: %d,%d,%d,%d", rid, pNode->Rchild->clu, pNode->Rchild->dim,vcartData[index].size);
@@ -205,9 +240,8 @@ bool CART::ConstructCART2(int nodeID, CART_NODE *pNode)
 /**
  * 讀取外部模組檔案
  */
-bool CART::LoadCARTModel(CString csfile)
+bool CART::LoadCARTModel(int cartModel, CString csfile)
 {
-	DeleteNode(cnRoot);
 
 	int i, fend;
 	vector<int> nodeIDArray;
@@ -216,7 +250,8 @@ bool CART::LoadCARTModel(CString csfile)
 	cf.seekg(0, cf.end);
 	fend = cf.tellg();
 	cf.seekg(0, cf.beg);
-	_log("CART_Model size=%d", fend);
+	//	if want to see fend _log("CART_Model size=%d", fend); kris
+
 	CString strData = "";
 	CString strQues;
 	CString strTmp;
@@ -250,17 +285,27 @@ bool CART::LoadCARTModel(CString csfile)
 		strData = strData + strQues + "},";
 
 		nodeIDArray.push_back(nodeID);
-		gnodeArray.push_back(node); // for avoiding lose of nodes that are not added to tree
+	    if (cartModel == 1)
+	    	gnodeArray.push_back(node); // for avoiding lose of nodes that are not added to tree
+	    if (cartModel == 2)
+	    	gnodeArray2.push_back(node); // for avoiding lose of nodes that are not added to tree
 	}
 	cf.close();
 
-//	_log("CART NODE: %s", strData.getBuffer());
+	//_log("CART NODE: %s", strData.getBuffer()); kris
+	if(cartModel == 1){
+		if(cnRoot != NULL) // cnRoot is assigned a new CART_NODE in constructor
+			delete cnRoot;
+		cnRoot = gnodeArray[0];
+		ConstructCART(1, nodeIDArray, gnodeArray, cnRoot);
+	}
 
-	if(cnRoot != NULL) // cnRoot is assigned a new CART_NODE in constructor
-		delete cnRoot;
-	cnRoot = gnodeArray[0];
-	ConstructCART(1, nodeIDArray, gnodeArray, cnRoot);
-
+	if(cartModel == 2){
+		if(cnRoot2 != NULL) // cnRoot is assigned a new CART_NODE in constructor
+			delete cnRoot2;
+		cnRoot2 = gnodeArray2[0];
+		ConstructCART(1, nodeIDArray, gnodeArray2, cnRoot2);
+	}
 	return true;
 }
 

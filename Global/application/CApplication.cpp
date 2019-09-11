@@ -47,7 +47,7 @@ CApplication::~CApplication()
 int CApplication::callback(int nMsg, void* param)
 {
 	map<int, MemFn>::iterator iter;
-	if(mapFunc.end() != (iter = mapFunc.find(nMsg)))
+	if (mapFunc.end() != (iter = mapFunc.find(nMsg)))
 	{
 		return (this->*this->mapFunc[nMsg])(param);
 	}
@@ -90,10 +90,10 @@ inline string initLogPath()
 	string strPath = "controller.log";
 	CConfig *config = new CConfig();
 	string *pstrConf = new string(getConfName(__progname));
-	if(config->loadConfig(*pstrConf))
+	if (config->loadConfig(*pstrConf))
 	{
 		strPath = config->getValue("LOG", "log");
-		if(strPath.empty())
+		if (strPath.empty())
 			strPath = "controller.log";
 		_setLogPath(strPath.c_str());
 	}
@@ -114,7 +114,7 @@ void runService(int nMsqKey)
 	CController *controller = new CController();
 	nControllerMsqKey = controller->callback(MSG_ON_CREATED, &nMsqKey);
 
-	if(0 < controller->initMessage(nControllerMsqKey, "Controller"))
+	if (0 < controller->initMessage(nControllerMsqKey, "Controller"))
 	{
 		initLogPath();
 		_log("\n<============= (◕‿‿◕｡) ... %s Service Start Run ... ԅ(¯﹃¯ԅ) =============>\n", __progname);
@@ -133,6 +133,12 @@ void runService(int nMsqKey)
 
 int main(int argc, char* argv[])
 {
+#ifdef GDB
+	_log("\n<============= ^_____^ Run GDB Mode~~~~~~~~~ =============>\n", __progname);
+	runService(clock());
+	return 0;
+#endif
+
 	return process(runService, clock());
 	terminate();
 }

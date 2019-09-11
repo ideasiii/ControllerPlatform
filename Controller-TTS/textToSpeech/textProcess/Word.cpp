@@ -7,6 +7,10 @@
 #include <fstream>
 #include <stdio.h>
 #include "utf8.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include <CController.h>   //kris add
+#include<iostream>
 
 //#define WORD_FILE "WORD.DAT"
 //#define WORD_INDEX_FILE "WORD.NDX"
@@ -20,7 +24,7 @@ using namespace std;
 
 unsigned char numberic[][4] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "萬", "億", "兆", "半",
 		"幾", "多", "少", "壹", "貳", "參", "肆", "伍", "陸", "柒", "捌", "玖", "拾", "佰", "仟", "廿" };
-static int num = 33;
+//static int num = 33;
 
 CWord::CWord()
 {
@@ -32,12 +36,105 @@ CWord::~CWord()
 
 }
 
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
+
+void CWord::InitWordfromHTTP(string wordDataUrl)
+{
+
+	//-----test url
+    CURL *curl;
+    FILE *fp;
+    CURLcode res;
+    char error[CURL_ERROR_SIZE];
+//  "http://www.more.org.tw/ttsWordData/WordData_linuxOnline_test333.txt";
+    const char *url = wordDataUrl.c_str();
+    char outfilename[FILENAME_MAX] = "tempWordData.txt"; //存檔路徑
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+    if (curl) {
+        fp = fopen(outfilename,"wb");
+        curl_easy_setopt(curl, CURLOPT_URL, url); //設定網址
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        //如果有錯誤的話會將錯誤寫在這邊的error buffer
+        curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, error);
+        res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        fclose(fp);
+    }
+	//-----
+	CString cs;
+	int len;
+	//==================== 載入字詞字典檔 =======================//
+	ifstream file("tempWordData.txt");
+	string str;
+	int count2 = 1;
+	if (file.is_open())
+	{
+		char *pch;
+		int nIndex;
+		mapWordDictionary.erase(mapWordDictionary.begin(), mapWordDictionary.end());
+		while (getline(file, str))
+		{
+			vector<WORD_DIC> vecWord;
+			WORD_DIC worddic;
+			pch = strtok(const_cast<char*>(str.c_str()), ","); // 抓字
+			if (NULL != pch)
+			{
+				worddic.strWord = pch;
+				if (mapWordDictionary.end() == mapWordDictionary.find(utf8_substr(worddic.strWord, 0, 1)))
+				{
+//					_log("%s\n", utf8_substr(worddic.strWord, 0, 1).c_str());
+					mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)] = vecWord;
+				}
+
+				pch = strtok( NULL, ",");
+				nIndex = 0;
+				while (pch != NULL)
+				{
+					worddic.strPhone[nIndex] = pch;
+					pch = strtok( NULL, ",");
+					++nIndex;
+				}
+				mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)].push_back(worddic);
+			}
+			count2++;
+		}
+		file.close();
+		_log("[key count] %d", mapWordDictionary.size());
+		_log("[line count] %d", count2);
+#ifdef DEBUG
+		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
+				it != mapWordDictionary.end(); ++it)
+		{
+			_log("<==================== %s =====================>", it->first.c_str());
+			vector<WORD_DIC> vecDic = it->second;
+			for (vector<WORD_DIC>::iterator vecit = it->second.begin(); it->second.end() != vecit; ++vecit)
+			{
+				_log("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", vecit->strWord.c_str(), vecit->strPhone[0].c_str(),
+						vecit->strPhone[1].c_str(), vecit->strPhone[2].c_str(), vecit->strPhone[3].c_str(),
+						vecit->strPhone[4].c_str(), vecit->strPhone[5].c_str(), vecit->strPhone[6].c_str(),
+						vecit->strPhone[7].c_str(), vecit->strPhone[8].c_str(), vecit->strPhone[9].c_str());
+			}
+		}
+#endif
+	}
+	_log("[CWord] InitWordforHTTP success :%s", url);
+	FILE *tempWordDataRecord;
+	string datapath = "/data/opt/tomcat/webapps/data/tempWordDataUrl.txt";
+	tempWordDataRecord = fopen(datapath.c_str(), "w");
+	fwrite(wordDataUrl.c_str(), 1, wordDataUrl.size(), tempWordDataRecord);
+	fclose(tempWordDataRecord);
+}
 void CWord::InitWord(LPCTSTR dir)
 {
 	FILE* f;
 	CString cs;
 	int len;
-
+	int count = 1;
 	//==================== 載入字詞字典檔 =======================//
 	ifstream file("model/WordData.txt");
 	string str;
@@ -51,11 +148,14 @@ void CWord::InitWord(LPCTSTR dir)
 			vector<WORD_DIC> vecWord;
 			WORD_DIC worddic;
 			pch = strtok(const_cast<char*>(str.c_str()), ","); // 抓字
+//			_log("[word] pch = %s", pch);
 			if (NULL != pch)
 			{
 				worddic.strWord = pch;
 				if (mapWordDictionary.end() == mapWordDictionary.find(utf8_substr(worddic.strWord, 0, 1)))
 				{
+//					_log("%s\n", utf8_substr(worddic.strWord, 0, 1).c_str());
+					string s = utf8_substr(worddic.strWord, 0, 1).c_str();
 					mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)] = vecWord;
 				}
 
@@ -70,10 +170,11 @@ void CWord::InitWord(LPCTSTR dir)
 
 				mapWordDictionary[utf8_substr(worddic.strWord, 0, 1)].push_back(worddic);
 			}
-
+			count++;
 		}
 		file.close();
-
+//		_log("[total size] %d", mapWordDictionary.size());
+		_log("[total sequence] %d", count);
 #ifdef DEBUG
 		for (map<std::string, vector<WORD_DIC> >::iterator it = mapWordDictionary.begin();
 				it != mapWordDictionary.end(); ++it)
@@ -171,287 +272,3 @@ void CWord::GetWord(WORD_PACKAGE &wordPackage)
 			break;
 	}
 }
-
-//unsigned CWord::GetPhone(int ptr, char *txt)
-///* return 0 if not a voice_able  word */
-///* return 1 ~ 27965 if a chinese voice_able word */
-///* return 30000 if a english word */
-//{
-//	UCHAR buf[22];
-////unsigned best=0,offset ;
-//	SNDID sid[10];
-//
-//	buf[0] = txt[ptr * 2];
-//	buf[1] = txt[ptr * 2 + 1];
-//	buf[2] = 0;
-//	if (buf[0] < 0xa4 || buf[0] > 0xf9)
-//		return SD_PUNC;
-//// buf是斷出來的一個個的詞
-//// 例如"我為人人，人人為我"中的"我"
-//	Big52SID(buf, sid);
-//	return sid[0];
-//}
-
-/*
- int CWord::GetSentence(UCHAR * from, int *textNdx, WORD_PACKAGE &wordPackage)
- {
- unsigned char ch[3];
- int len = 0;
- char *p;
-
- ch[2] = 0;
- _log("[CWord] GetSentence text: %s", from);
- while ((ch[0] = from[(*textNdx)++]) != 0)
- {
- //_log("[CWord] GetSentence ch[0]: %hhx", ch[0]);
- if (ch[0] == 0x1A) // 0X1A经过读取之后被处理成0XFF（即EOF（-1））
- {
- if (len == 0)
- len = -1;
- goto ret;
- }
- if (ch[0] == 0x0D)
- {
- if ((ch[1] = from[(*textNdx)++]) != 0x0A)
- _log("error: 0x0d not followed 0x0a");
- continue;
- }
- if (ch[0] < 128) // English letter
- {
- if (ch[0] < 0x20)
- ch[0] = 0x20;
-
- memcpy(&wordPackage.txt[len * 2], symbol[ch[0] - 0x20], 2);
- memcpy(ch, &wordPackage.txt[len * 2], 2);
- ch[2] = 0;
-
- if (ch[0] == 0xa1 && ch[1] == 0x40) // 0xa1，说明输入的是汉字。因为汉字的内码是从0xa1开始编码的
- continue;
-
- p = strstr((char*) tail_symbol, (char*) ch);
- if ((p != NULL) && (((char*) p - (char*) tail_symbol) % 2 == 0))
- {
- len++;
- goto ret;
- }
-
- if (len > WORD_LEN2)
- if (wordPackage.txt[len * 2] == 0xA1)
- if ((wordPackage.txt[len * 2 + 1] >= 0x40) && (wordPackage.txt[len * 2 + 1] <= 0x7F))
- {
- len++;
- goto ret;
- }
-
- len++;
- if (len > WORD_LEN2)
- goto ret;
- continue;
- }
-
- ch[1] = from[(*textNdx)++];
-
- memcpy(&wordPackage.txt[len * 2], ch, 2);
-
- ch[2] = 0;
- if (len && ch[0] == 0xa1 && ch[1] == 0x40 && wordPackage.txt[len * 2 - 2] == 0xa1
- && wordPackage.txt[len * 2 - 1] == 0x40)
- continue;
- p = strstr((char*) tail_symbol, (char*) ch);
- if (p != NULL)
- {
- if (((char*) p - (char*) tail_symbol) % 2 == 0)
- {
- len++;
- goto ret;
- }
- }
-
- if (len > WORD_LEN2 * 2)
- if (wordPackage.txt[len * 2] == 0xA1)
- if ((wordPackage.txt[len * 2 + 1] > 0x40) && (wordPackage.txt[len * 2 + 1] < 0x7F)) // symbol
- {
- len++;
- goto ret;
- }
- len++;
- if (len > WORD_LEN2 * 2)
- goto ret;
- }
-
- (*textNdx)--;
- _log("[CWord] GetSentence txt_len: %d", len);
- ret: wordPackage.txt_len = len;
-
- if (len > 0)
- {
- wordPackage.txt[len * 2] = 0;
- return len;
- }
- return (-1);
- }
- */
-/*
-int CWord::IsNumberic(unsigned char *ch)
-{
-	int i;
-
-	for (i = 0; i < num; i++)
-	{
-		if (memcmp(numberic[i], ch, 2) == 0)
-			break;
-	}
-	if (i != num)
-		return (1);
-	else
-		return (0);
-}
-*/
-//void CWord::SetTone(int wno, int ndx, USHORT new_tone, WORD_PACKAGE &wordPackage)
-//{
-//	wordPackage.vecWordInfo[wno].phone[ndx] = wordPackage.vecWordInfo[wno].phone[ndx] / 10 * 10 + new_tone;
-//}
-
-//BOOL CCsame(UCHAR * s, char* esi); //one Chinese Character Comparison
-//BOOL CCsame(UCHAR * s, char* esi)
-//{
-
-/*
- asm
- (
- "mov eax,dword ptr [esi]"
- "mov eax,[eax]"
- "and eax,0xffff"
- "xchg ah,al"
- "cmp eax,dword ptr [esi]"
- "je same"
- );*/
-//return 0;
-//same: return 1;
-//}
-/*
- const char *Pohin[][2] = { { "石", "ㄉㄢˋ" }, { "任", "ㄖㄣˋ" }, { "曲", "ㄑㄩˇ" }, { "行", "ㄏㄤˊ" }, { "更", "ㄍㄥ" },
- { "度", "ㄉㄨˋ" }, { "省", "ㄕㄥˇ" }, { "重", "ㄔㄨㄥˊ" }, { "校", "ㄒㄧㄠˋ" }, { "處", "ㄔㄨˋ" }, { "著", "ㄓㄠ" }, { "載", "ㄗㄞˇ" },
- { "種", "ㄓㄨㄥˇ" }, { "擔", "ㄉㄢˋ" }, { "子", "ㄗˇ" }, { "角", "ㄐㄧㄠˇ" }, { "卷", "ㄐㄩㄢˇ" },
- { "刻", "ㄎㄜˋ" }, //num
- { "宿", "ㄒㄧㄡˇ" }, //num
- { "朝", "ㄓㄠ" }, //num
- { "間", "ㄐㄧㄢ" }, { "剎", "ㄔㄚˋ" }, { "吐", "ㄊㄨˇ" }, { "畜", "ㄔㄨˋ" }, { "較", "ㄐㄧㄠˋ" }, { "說", "ㄕㄨㄛ" },
- { "轉", "ㄓㄨㄢˇ" }, { "騎", "ㄐㄧˋ" }, { "鵠", "ㄏㄨˊ" }, { "覺", "ㄐㄧㄠˋ" }, { "勺", "ㄕㄠˊ" }, { "種", "ㄓㄨㄥˇ" },
- //{"分" , "ㄈㄣ"},
- //{"匹" , "ㄆㄧ"    , "ㄆㄧˇ"  },
- { 0, 0 } };
- */
-/**/
-/**/
-/**************************************2007 09 19 fable*****/
-/*假設資料庫中資料全部為正確的資料						   */
-/*所以對斷出來的詞不再做sandhi rule的轉變				   */
-/*只針對詞與詞之間做sandhi rule的轉換					   */
-/**************************************2007 09 19 fable*****/
-/*
- void CWord::ChangePhone(WORD_PACKAGE &wordPackage)
- {
- int n, tone, prev_tone;
- WORD_INFO *pwi;
- UCHAR *first_char;
- UCHAR tmp = 0;
- bool flag;   //for 一
-
- prev_tone = -1;
- flag = false;
- first_char = &tmp;
- for (n = wordPackage.wnum - 1; n >= 0; n--)
- {
- pwi = &wordPackage.vecWordInfo[n];
- //3+3 rule between phones
- tone = Tone(pwi->phone[pwi->wlen - 1]);
- if (prev_tone == 3 && tone == 3)
- {
- SetTone(n, pwi->wlen - 1, 2, wordPackage);
- }
-
- if (pwi->wlen == 1)
- {
- //數字+ 種 個
- if (IsNumberic(pwi->big5))
- {
- if (CCsame(first_char, "種"))
- {
- SetTone(n + 1, 0, 3, wordPackage);
- prev_tone = 3;
- }
- if (CCsame(first_char, "個"))
- {
- SetTone(n + 1, 0, 5, wordPackage);
- prev_tone = 5;
- }
- }
- //一's rule
- if (flag)   //數字 非 兆 億 萬 千 百+一
- {
- if (IsNumberic(pwi->big5))
- SetTone(n + 1, 0, 1, wordPackage);
- flag = false;
- }
-
- if (CCsame(pwi->big5, "一"))
- {
- //一在最後時
- if (n == wordPackage.wnum - 1)
- {
- SetTone(n, 0, 1, wordPackage);
- continue;
- }
- //+(4 || 5)=>ㄧˊ      ex 一次 一個
- //+(1 || 2 || 3)=>ㄧˋ ex 一支 一人 一把
- if (prev_tone == 4 || prev_tone == 5)
- SetTone(n, 0, 2, wordPackage);
- else
- SetTone(n, 0, 4, wordPackage);
-
- if (!IsNumberic(first_char))
- {
- flag = true;				//標記上一個字為一+非數字時的情況 用以數字+一+非數字時改調
- }
- else				//一後面是數字時  非 兆 億 萬 千 百
- {
- if (CCsame(first_char, "兆") || CCsame(first_char, "億") || CCsame(first_char, "萬")
- || CCsame(first_char, "千") || CCsame(first_char, "百"))
- continue;
- SetTone(n, 0, 1, wordPackage);
- flag = false;
- }
- }
- //不
- //+(4)=>ㄅㄨˊ
- //+(1 || 2 || 3)=> ㄅㄨˋ
- if (CCsame(pwi->big5, "不"))
- {
- if (prev_tone == 4 || prev_tone == 5)
- SetTone(n, 0, 2, wordPackage);
- else
- SetTone(n, 0, 4, wordPackage);
- }
- if (CCsame(pwi->big5, "教"))
- {
- SetTone(n, 0, 1, wordPackage);
- }
- if (CCsame(pwi->big5, "種"))
- {
- SetTone(n, 0, 4, wordPackage);
- }
- if (CCsame(first_char, "正"))
- {
- if (CCsame(pwi->big5, "圓") || CCsame(pwi->big5, "元"))
- {
- SetTone(n + 1, 0, 3, wordPackage);
- }
- }
- }
-
- first_char = &pwi->big5[0];
- prev_tone = Tone(pwi->phone[0]);
- }
- }
- */

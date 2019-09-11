@@ -13,6 +13,7 @@ class CSemanticJudge;
 class CCmpWord;
 class CPenReader;
 class CMysqlHandler;
+class CChihlee;
 
 class CController: public CApplication
 {
@@ -37,4 +38,5 @@ private:
 	CSemanticJudge *semanticJudge;
 	CPenReader *penreader;
 	CMysqlHandler *mysql;
+	CChihlee *chihlee;
 };

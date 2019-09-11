@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 				jsonWord.put("word", strInput);
 				jsonWord.put("total", 0);
 				jsonWord.put("number", 0);
-				jsonWord.put("device_id", "AJSB_8979_OIYG_1234");
+				jsonWord.put("device_id", "chihlee");
 				if (mbPressure)
 				{
 					while (1)
@@ -121,6 +121,13 @@ int main(int argc, char* argv[])
 				jsonWord.put("voice_id", 1);
 				jsonWord.put("emotion", 1);
 				jsonWord.put("text", strInput);
+				jsonWord.put("fm", "1");
+				jsonWord.put("b", "0.0");
+				jsonWord.put("r", "1.25");
+				jsonWord.put("id", "a1");
+				jsonWord.put("total", 2);
+				jsonWord.put("sequence_num", 1);
+				jsonWord.put("req_type", 0);
 				cmpTest->sendRequest(tts_request, jsonWord.toString().c_str());
 				jsonWord.release();
 			}

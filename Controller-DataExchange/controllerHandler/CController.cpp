@@ -5,38 +5,36 @@
  *      Author: Louis Ju
  */
 
-#include <string>
-#include <map>
 #include "CController.h"
 #include "common.h"
 #include "event.h"
 #include "packet.h"
 #include "utility.h"
 #include "CConfig.h"
+#include "CFileHandler.h"
+#include "CString.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <set>
-#include <bsoncxx/builder/stream/document.hpp>
-#include <mongocxx/instance.hpp>
-#include "CFileHandler.h"
-#include "CString.h"
-
+#include <thread>
+#include <map>
+#include <unistd.h>
+#include <signal.h>
 #include <cstdint>
-#include <iostream>
 #include <vector>
-#include <bsoncxx/json.hpp>
-#include <mongocxx/client.hpp>
-#include <mongocxx/stdx.hpp>
-#include <mongocxx/uri.hpp>
-
-using bsoncxx::builder::stream::close_array;
-using bsoncxx::builder::stream::close_document;
-using bsoncxx::builder::stream::document;
-using bsoncxx::builder::stream::finalize;
-using bsoncxx::builder::stream::open_array;
-using bsoncxx::builder::stream::open_document;
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <iostream>     // std::streambuf, std::cout
+#include <fstream>      // std::ofstream
+#include <algorithm>    // std::remove
 
 #define PATH_FOLDER		"/data/arx"
+#define PATH_FINISH		"/data/arx/finished"
+
 using namespace std;
 
 CController::CController() :
@@ -71,8 +69,6 @@ int CController::onInitial(void* szConfPath)
 	if (strConfPath.empty())
 		return FALSE;
 
-	mongocxx::instance instance { }; // This should be done only once.
-
 	setTimer(666, 3, 3);
 
 	return nRet;
@@ -93,57 +89,73 @@ void CController::accessFile()
 		_log("[CController] accessFile File name: %s", strPath.getBuffer());
 		vCsv.clear();
 		fileHandler.readAllLine(strPath.getBuffer(), vCsv);
-		if (vCsv.size())
+		if (1 < vCsv.size())
 		{
-			insertDB(vCsv);
+			if (0 == importDB(strPath))
+			{
+				moveFile(vecit->c_str());
+			}
 		}
 	}
-
-	//=======  insert data to monogodb =========//
-//	mongocxx::instance inst { };
-//	mongocxx::client conn { mongocxx::uri { } };
-//
-//	bsoncxx::builder::stream::document document { };
-//
-//	auto collection = conn["testdb"]["testcollection"];
-
-//	document << "hello" << "world";
-//	coll.insert_one(document.view());
-//	auto cursor = collection.find( { });
-//
-//	for (auto&& doc : cursor)
-//	{
-//		std::cout << bsoncxx::to_json(doc) << std::endl;
-//	}
-
 }
 
-void CController::insertDB(std::vector<std::string> & vDataList)
+int CController::importDB(const char * szPath)
 {
-	mongocxx::uri uri("mongodb://localhost:27017");
-	mongocxx::client client(uri);
-	mongocxx::database db = client["findata"];
-	mongocxx::collection collection = db["csv"];
-	vector<bsoncxx::document::value> documents;
+	pid_t pid;
+	int status = -1;
 
-	string strColumn = vDataList[0];
-	_log("[CController] insertDB get Columns: %s", strColumn.c_str());
+	if (szPath)
+	{
+		char *arg_list[] = { const_cast<char*>("mongoimport"), const_cast<char*>("--db"), const_cast<char*>("findata"),
+				const_cast<char*>("--collection"), const_cast<char*>("csv"), const_cast<char*>("--type"),
+				const_cast<char*>("csv"), const_cast<char*>("--headerline"), const_cast<char*>("--ignoreBlanks"),
+				const_cast<char*>("--file"), const_cast<char*>(szPath), NULL };
 
-//	for (int i = 0; i < 100; i++)
-//	{
-//		documents.push_back(bsoncxx::builder::stream::document { } << "i" << i << "j" << i + 1 << finalize);
-//	}
-//	collection.insert_many(documents);
+		status = posix_spawn(&pid, "/usr/bin/mongoimport", NULL, NULL, arg_list, environ);
+		if (status == 0)
+		{
+			_log("[CController] importDB posix_spawn Child pid: %i", pid);
+			if (waitpid(pid, &status, 0) != -1)
+			{
+				_log("[CController] importDB Child exited with status %i", status);
+			}
+			else
+			{
+				_log("[CController] importDB waitpid Error");
+			}
+		}
+		else
+		{
+			_log("[CController] importDB Error posix_spawn: %s", strerror(status));
+		}
+	}
+	return status;
+}
+
+void CController::moveFile(const char * szPath)
+{
+	CString strOld;
+	CString strNew;
+
+	time_t rawtime;
+	time(&rawtime);
+	strOld.format("%s/%s", PATH_FOLDER, szPath);
+	strNew.format("%s/%ld_%s", PATH_FINISH, rawtime, szPath);
+
+	ifstream ifs(strOld.getBuffer(), ios::in | ios::binary);
+	ofstream ofs(strNew.getBuffer(), ios::out | ios::binary);
+	ofs << ifs.rdbuf();
+	std::remove(strOld.getBuffer());
 }
 
 void CController::onTimer(int nId)
 {
-	switch (nId)
+	if (666 == nId)
 	{
-	case 666:
-		killTimer(666);
+		killTimer(nId);
 		accessFile();
-		break;
+		setTimer(666, 1, 3);
+		return;
 	}
 }
 

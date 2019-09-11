@@ -7,6 +7,7 @@
 
 #pragma once
 #include <vector>
+#include <string>
 #include "CApplication.h"
 
 class CController: public CApplication
@@ -14,6 +15,8 @@ class CController: public CApplication
 public:
 	explicit CController();
 	virtual ~CController();
+	int importDB(const char * szPath);
+	void moveFile(const char * szPath);
 
 protected:
 	int onCreated(void* nMsqKey);
@@ -25,7 +28,6 @@ protected:
 private:
 	void accessFile();
 	void foldScan(const char * szFolderPath, std::vector<std::string> & vFileList);
-	void insertDB(std::vector<std::string> & vDataList);
 
 private:
 	int mnMsqKey;

@@ -5,6 +5,7 @@
  *      Author: Jugo
  */
 #include <string>
+#include<fstream>
 #include <iostream>
 #include <utility>
 #include <thread>
@@ -12,6 +13,9 @@
 #include <functional>
 #include <atomic>
 #include <set>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "CController.h"
 #include "CCmpWord.h"
 #include "common.h"
@@ -29,13 +33,14 @@
 #include "CString.h"
 #include "CStory.h"
 #include "CParticiple.h"
+#include "CChihlee.h"
 
 #define STORY_FILE_PATH			"/data/opt/tomcat/webapps/story/"
 
 using namespace std;
 
 CController::CController() :
-		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0), mysql(0)
+		mnMsqKey(-1), cmpword(0), semanticJudge(0), penreader(0), mysql(0), chihlee(0)
 {
 
 }
@@ -52,7 +57,7 @@ int CController::onCreated(void* nMsqKey)
 	cmpword = new CCmpWord(this);
 //	penreader = new CPenReader;
 	mysql = new CMysqlHandler();
-
+	chihlee = new CChihlee();
 	return mnMsqKey;
 }
 
@@ -62,37 +67,42 @@ int CController::onInitial(void* szConfPath)
 	int nCount;
 	int nPort;
 	string strConfPath;
-	string strPort;
+	string strConfig;
 	CConfig *config;
 
 	nResult = FALSE;
 	strConfPath = reinterpret_cast<const char*>(szConfPath);
 	_log("[CController] onInitial Config File: %s", strConfPath.c_str());
-	if(strConfPath.empty())
+	if (strConfPath.empty())
 		return nResult;
 
 	config = new CConfig();
-	if(config->loadConfig(strConfPath))
+	if (config->loadConfig(strConfPath))
 	{
-		strPort = config->getValue("SERVER WORD", "port");
-		if(!strPort.empty())
+		strConfig = config->getValue("SERVER WORD", "port");
+		if (!strConfig.empty())
 		{
-			convertFromString(nPort, strPort);
+			convertFromString(nPort, strConfig);
 			nResult = cmpword->start(0, nPort, mnMsqKey);
 		}
+		strConfig = config->getValue("MYSQL","ip");
+		chihlee->setMySQLIP(strConfig.c_str());
+
+		strConfig = config->getValue("OBS", "word_path");
+		chihlee->setWordPath(strConfig.c_str());
 	}
 	delete config;
 
 	semanticJudge->loadAnalysis();
 
-	mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
-
+	//mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5");
+	chihlee->init();
 	return nResult;
 }
 
 int CController::onFinish(void* nMsqKey)
 {
-	mysql->close();
+	//mysql->close();
 	cmpword->stop();
 	delete cmpword;
 	delete semanticJudge;
@@ -116,9 +126,21 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	strDevice_id = jsonReq.getString("device_id");
 	jsonReq.release();
 
+	//=================== chihlee start===================================//
+	_log("device id: %s ===============================", strDevice_id.getBuffer());
+	if (0 == strDevice_id.Compare("chihlee")) // 致理科大導覽系統
+	{
+		chihlee->runAnalysis(strWord.getBuffer(), jsonResp);
+		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
+				jsonResp.put("id", nId).toJSON().c_str());
+		jsonResp.release();
+		return;
+	}
+	//======================= chihlee end ===================================//
+
 	_log("[CController] onSemanticWordRequest device_id: %s word: %s", strDevice_id.getBuffer(), strWord.getBuffer());
 
-	if(!strWord.Compare("分析垃圾"))
+	if (!strWord.Compare("分析垃圾"))
 	{
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
@@ -128,7 +150,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		return;
 	}
 
-	if(!strWord.Compare("emotion"))
+	if (!strWord.Compare("emotion"))
 	{
 		cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 				jsonResp.put("id", nId).toJSON().c_str());
@@ -140,7 +162,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 		return;
 	}
 
-	switch(nType)
+	switch (nType)
 	{
 	case TYPE_REQ_NODEFINE: // 語意判斷
 		semanticJudge->runAnalysis(strWord.getBuffer(), jsonResp);
@@ -166,7 +188,7 @@ void CController::onSemanticWordRequest(const int nSocketFD, const int nSequence
 	}
 	cmpword->response(nSocketFD, semantic_word_request, STATUS_ROK, nSequence,
 			jsonResp.put("id", nId).toJSON().c_str());
-	recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
+	//recordResponse(strDevice_id.getBuffer(), 0, nType, jsonResp.toJSON().c_str());
 	jsonResp.release();
 }
 
@@ -174,9 +196,9 @@ void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int
 {
 	CString strSQL;
 
-	if(!mysql->isValid())
+	if (!mysql->isValid())
 	{
-		if(!mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5"))
+		if (!mysql->connect("127.0.0.1", "edubot", "edubot", "ideas123!", "5"))
 		{
 			_log("[CController] recordResponse mysql invalid, can't record response: %s", szData);
 			return;
@@ -190,7 +212,7 @@ void CController::recordResponse(const char * szDevice_id, int nSemantic_id, int
 
 void CController::onHandleMessage(Message &message)
 {
-	switch(message.what)
+	switch (message.what)
 	{
 	case semantic_word_request:
 		// Lambda Expression
