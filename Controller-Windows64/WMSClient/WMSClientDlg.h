@@ -28,6 +28,7 @@ public:
 // 程式碼實作
 public:
 	void addStatus(LPCTSTR strMsg);
+	void closeSocket();
 
 protected:
 	HICON m_hIcon;

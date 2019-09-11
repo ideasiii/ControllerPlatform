@@ -15,6 +15,8 @@
 #include <map>
 #include <string>
 #include "container.h"
+#include <afx.h>
+#include <tchar.h>
 
 using namespace std;
 /*
@@ -123,6 +125,8 @@ struct CMP_PACKET
 #define semantic_word_response							0x80000057
 #define tts_request										0x00000058
 #define tts_response									0x80000058
+#define deidentify_request								0x00000059
+#define deidentify_response								0x80000059
 #define controller_die_request							0x000000FE
 #define controller_die_response							0x800000FE
 
@@ -194,7 +198,7 @@ smart_building_appversion_response, "smart_building_appversion_response")(smart_
 		"smart_building_wireless_power_charge_response")(semantic_word_request, "semantic_word_request")(
 semantic_word_response, "semantic_word_response")(tts_request, "tts_request")(tts_response, "tts_response")(
 		controller_die_request, "controller_die_request")(
-controller_die_response, "controller_die_response");
+controller_die_response, "controller_die_response")(deidentify_request, "deidentify_request")(deidentify_response, "deidentify_response");
 
 static map<int, std::string> mapStatus = create_map<int, std::string>( STATUS_ROK, "No Error")( STATUS_RINVMSGLEN,
 		"Message Length is invalid")(
@@ -205,19 +209,12 @@ STATUS_RBINDFAIL, "Bind Failed")( STATUS_RINVBODY, "Invalid Packet Body Data")(
 STATUS_RINVCTRLID, "Invalid Controller ID")(
 STATUS_RINVJSON, "Invalid JSON Data")(STATUS_RSYSBUSY, "System Busy");
 
- inline static CString printPacket(int nCommand, int nStatus, int nSequence, int nLength,
-		const char * szDesc, int nClienFD = 0)
+ inline static CString printPacket(int nCommand, int nStatus, int nSequence, int nLength)
 {
 	 CString strMsg;
-	char szCmd[48];
-	char szSta[32];
-	memset(szCmd, 0, sizeof(szCmd));
-	memset(szSta, 0, sizeof(szSta));
 
-	strcpy(szCmd, mapCommand[nCommand].c_str());
-	strcpy(szSta, mapStatus[nStatus].c_str());
+	strMsg.Format(L"Command=%hs Status=%hs Sequence=%d Length=%d", mapCommand[nCommand].c_str(), mapStatus[nStatus].c_str(), nSequence,	nLength);
 
-	strMsg.Format(_T("%s CMP : Command=%-20s Status=%-20s Sequence=%d Length=%d [Socket FD=%d]"), szDesc, szCmd, szSta, nSequence,	nLength, nClienFD);
 	return strMsg;
 }
 

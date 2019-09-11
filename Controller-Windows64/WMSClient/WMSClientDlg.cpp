@@ -184,9 +184,9 @@ HCURSOR CWMSClientDlg::OnQueryDragIcon()
 
 void CWMSClientDlg::OnBnClickedButtonConnect()
 {
-	// TODO:  在此加入控制項告知處理常式程式碼
-	CString strMsg = TEXT("");
 
+	GetDlgItem(IDC_BUTTON_CONNECT)->EnableWindow(false);
+	
 	UpdateData();
 
 	CString csIpAddress, csPort;
@@ -195,9 +195,7 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 	
 	UINT unPort = _ttoi(csPort);
 
-	strMsg.Format(_T("Connect IP : %s Port : %d"), csIpAddress, unPort);
-	listBoxStatus.AddString(strMsg);
-
+	closeSocket();
 	if (pWinSocket->Connect(unPort, csIpAddress))
 	{
 		addStatus(_T("Socket Connect Success"));
@@ -206,6 +204,7 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 	else
 	{
 		addStatus(_T("Socket Connect Fail"));
+		GetDlgItem(IDC_BUTTON_CONNECT)->EnableWindow(true);
 	}
 
 }
@@ -213,12 +212,15 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 
 void CWMSClientDlg::OnBnClickedButtonDisconnect()
 {
-	// TODO:  在此加入控制項告知處理常式程式碼
-	GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(false);
-	pWinSocket->Close();
-	
+	closeSocket();
 }
 
+void CWMSClientDlg::closeSocket()
+{
+	GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(false);
+	GetDlgItem(IDC_BUTTON_CONNECT)->EnableWindow(true);
+	pWinSocket->Close();
+}
 
 void CWMSClientDlg::OnBnClickedOk()
 {
@@ -259,17 +261,14 @@ int CWMSClientDlg::formatPacket(int nCommand, void **pPacket )
 	int nLen;
 	int nBody_len = 0;
 	int nTotal_len;
-	static int seqnum = 0x00000001;
 	CMP_PACKET packet;
 	char * pIndex;
 	CString strData;
-
-	if (0x7FFFFFFF <= seqnum)
-		seqnum = 0x00000001;
+	CString strMsg;
 
 	packet.cmpHeader.command_id = htonl(nCommand);
 	packet.cmpHeader.command_status = htonl(0);
-	packet.cmpHeader.sequence_number = htonl(++seqnum);
+	packet.cmpHeader.sequence_number = htonl(getSequence());
 
 	pIndex = packet.cmpBody.cmpdata;
 	memset(packet.cmpBody.cmpdata, 0, sizeof(packet.cmpBody.cmpdata));
@@ -280,41 +279,46 @@ int CWMSClientDlg::formatPacket(int nCommand, void **pPacket )
 
 	if (0 < nLen)
 	{
+		strData.Replace(_T("\r"), _T(""));
+		strData.Replace(_T("\n"),_T( ""));
+		strData.Replace(_T(" "), _T(""));
+		nLen = strData.GetLength();
 		memcpy(pIndex, (LPCSTR)CT2A(strData), nLen);
 		pIndex += nLen;
 		nBody_len += nLen;
+		memcpy(pIndex, "\0", 1);
+		pIndex += 1;
+		nBody_len += 1;
 	}
-
-	memcpy(pIndex, "\0", 1);
-	pIndex += 1;
-	nBody_len += 1;
 
 	nTotal_len = sizeof(CMP_HEADER)+nBody_len;
 	packet.cmpHeader.command_length = htonl(nTotal_len);
 
 	memcpy(*pPacket, &packet, nTotal_len);
 
+	strMsg = printPacket(nCommand, 0, ntohl(packet.cmpHeader.sequence_number), nTotal_len);
+	addStatus(strMsg);
+	if (0 < strData.GetLength())
+	{
+		addStatus(strData);
+	}
 	return nTotal_len;
 }
 
 int CWMSClientDlg::Receive(char **buf, int buflen)
 {
 	static int nRun = 0;
-
-	void *pbuf;
-	pbuf = *buf;
-
 	CString strMsg;
-
-	char buff[1024];
-	void *pbuff = buff;
+	void *pbuf;
+	
+	pbuf = *buf;
+	
 
 	int nLength = 0;
 	int nCount = 0;
 
 	vector<string> vData;
 	
-	std::string buffAsStdStr = buff;
 	char * pBody;
 	char temp[MAX_DATA_LEN];
 
@@ -330,17 +334,11 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 
 		pBody = (char*)((char *) const_cast<void*>(pbuf)+sizeof(CMP_HEADER));
 
+		strMsg = printPacket(nCommand, nStatus, nSequence, nLength);
+		addStatus(strMsg);
+
 		switch (nCommand)
 		{
-		case bind_response:	
-			if (0 == nStatus)
-			{
-				//optionEnable(2);
-			}
-			strMsg.Format(_T("[bind_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			break;
-	
 		case authentication_response:
 			strMsg.Format(_T("[authentication_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
 			addStatus(strMsg);
@@ -359,87 +357,8 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 				wchar_t * pwstr2 = new wchar_t[nLen];
 				mbstowcs_s(&converted, pwstr2, nLen, vData[1].c_str(), _TRUNCATE);
 				strMsg.Format(_T("Client MAC:%s Auth_status:%s"), pwstr, pwstr2);
-				delete pwstr;
-				delete pwstr2;
-				addStatus(strMsg);
-			}
-			break;
-		case enquire_link_response:
-			strMsg.Format(_T("[enquire_link_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			break;
-		case access_log_response:
-			strMsg.Format(_T("[wirless_access_log_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			break;
-		case unbind_response:
-			if (0 == nStatus)
-			{
-				//optionEnable(3);
-			}
-			strMsg.Format(_T("[unbind_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			break;
-		case enquire_link_request:
-			strMsg.Format(_T("[enquire_link_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			
-			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(enquire_link_response, &pbuff);
-			if (sizeof(CMP_HEADER) <= nLength)
-			{
-				nLength = pWinSocket->Send(pbuff, nLength);
-				nCommand = ntohl(pHeader->command_id);
-				nLength = ntohl(pHeader->command_length);
-				nStatus = ntohl(pHeader->command_status);
-				nSequence = ntohl(pHeader->sequence_number);
-				strMsg.Format(_T("[enquire_link_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-				addStatus(strMsg);
-			}
-			break;
-		case update_request:
-			strMsg.Format(_T("[firmware_update_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-
-			memset(temp, 0, sizeof(temp));
-			strcpy_s(temp, pBody);
-			nCount = parseBody(temp, vData);
-			if (0 < nCount)
-			{
-				size_t nLen = _mbstrlen(vData[0].c_str()) + 1;
-				size_t converted = 0;
-				wchar_t * pwstr = new wchar_t[nLen];
-				mbstowcs_s(&converted, pwstr, nLen, vData[0].c_str(), _TRUNCATE);
-				strMsg.Format(_T("Firmware URL:%s"), pwstr);
-				delete pwstr;
-				addStatus(strMsg);
-			}
-			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(update_response, &pbuff);
-			if (sizeof(CMP_HEADER) <= nLength)
-			{
-				pWinSocket->Send(pbuff, nLength);
-				nCommand = ntohl(pHeader->command_id);
-				nLength = ntohl(pHeader->command_length);
-				nStatus = ntohl(pHeader->command_status);
-				nSequence = ntohl(pHeader->sequence_number);
-				strMsg.Format(_T("[firmware_update_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-				addStatus(strMsg);
-			}
-			break;
-		case reboot_request:
-			strMsg.Format(_T("[client_reboot_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			memset(buff, 0, sizeof(buff));
-			nLength = formatPacket(reboot_response, &pbuff);
-			if (sizeof(CMP_HEADER) <= nLength)
-			{
-				pWinSocket->Send(pbuff, nLength);
-				nCommand = ntohl(pHeader->command_id);
-				nLength = ntohl(pHeader->command_length);
-				nStatus = ntohl(pHeader->command_status);
-				nSequence = ntohl(pHeader->sequence_number);
-				strMsg.Format(_T("[client_reboot_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
+				delete [] pwstr;
+				delete [] pwstr2;
 				addStatus(strMsg);
 			}
 			break;
@@ -448,15 +367,15 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 	}
 	else
 	{
+		// 不是CMP封包
 		pBody = (char*)((char *) const_cast<void*>(pbuf));
-
 		size_t nLen = buflen + 1;
 		size_t converted = 0;
 		wchar_t * pwstr = new wchar_t[nLen];
 		mbstowcs_s(&converted, pwstr, nLen, pBody, _TRUNCATE);
 		strMsg.Format(_T("%s"), pwstr);
 		addStatus(strMsg);
-		delete pwstr;
+		delete [] pwstr;
 	}
 
 	return nLength;
@@ -607,10 +526,15 @@ void CWMSClientDlg::OnBnClickedButtonBind()
 
 void CWMSClientDlg::OnBnClickedButtonSend()
 {
-	// TODO: 在此加入控制項告知處理常式程式碼
-	CString strMsg;
 	UpdateData();
 	int nCommand;
+	int nPacketLen;
+	int nSendLen;
+	char buf[MAX_DATA_LEN];
+	void* pbuf;
+	CString strMsg;
+
+	pbuf = buf;
 
 	switch (m_rbCommand)
 	{
@@ -618,10 +542,20 @@ void CWMSClientDlg::OnBnClickedButtonSend()
 		nCommand = enquire_link_request;
 		break;
 	case DEIDENTIFY:
+		nCommand = deidentify_request;
 		break;
 	case SEMANTIC:
+		nCommand = semantic_word_request;
+		break;
+	default:
+		nCommand = enquire_link_request;
 		break;
 	}
-	strMsg.Format(_T("Command Select : %d"), m_rbCommand);
-	addStatus(strMsg);
+
+	nPacketLen = formatPacket(nCommand, &pbuf);
+	nSendLen = pWinSocket->Send(pbuf, nPacketLen);
+	if (nSendLen == nPacketLen)
+	{
+		addStatus(_T("Data Send Success!!"));
+	}
 }
