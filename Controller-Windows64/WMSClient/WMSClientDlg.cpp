@@ -8,13 +8,17 @@
 #include "afxdialogex.h"
 #include "WinSocket.h"
 #include "packet.h"
+#include "CConfig.h"
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <memory>
+#include <fstream>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+#define FILE_CONF		"setting.conf"
 
 using namespace std;
 
@@ -116,17 +120,34 @@ BOOL CWMSClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 設定小圖示
 
 	// TODO:  在此加入額外的初始設定
-	GetDlgItem(IDC_EDIT_PORT)->SetWindowText(_T("1414"));
-	GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(_T("140.92.142.125"));
+	CConfig config;
+	string strConf;
+	CString strTmp;
+	if (config.fileExists(FILE_CONF))
+	{
+		if (config.loadConfig(FILE_CONF))
+		{
+			strConf = config.getValue("WINDOW", "IP");
+			if (!strConf.empty())
+			{
+				 CString cs(strConf.c_str());
+				GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(cs);
+			}
+			strConf = config.getValue("WINDOW", "PORT");
+			if (!strConf.empty())
+			{
+				CString cs(strConf.c_str());
+				GetDlgItem(IDC_EDIT_PORT)->SetWindowText(cs);
+			}
+		}
+	}
+	else
+	{
+		fstream fs;
+		fs.open(FILE_CONF, fstream::in | fstream::out | fstream::app);
+	}
+
 	GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(false);
-//	GetDlgItem(IDC_IPADDRESS_WMS)->SetWindowText(_T("10.0.129.21"));
-//	GetDlgItem(IDC_EDIT_CLIENT_MAC)->SetWindowTextW(_T("00:00:00:00:00:00"));
-
-	//optionEnable(0);
-
-
-	
-
 
 	return TRUE;  // 傳回 TRUE，除非您對控制項設定焦點
 }
@@ -200,6 +221,12 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 	{
 		addStatus(_T("Socket Connect Success"));
 		GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(true);
+		GetDlgItem(IDC_BUTTON_CONNECT)->EnableWindow(false);
+	//	CConfig config;
+	//	config.loadConfig(FILE_CONF);
+	//	CT2CA pszConvertedAnsiString(csIpAddress);
+	//	std::string strStd(pszConvertedAnsiString);
+	//	config.setConfig("WINDOW", "IP", strStd);
 	}
 	else
 	{
@@ -255,6 +282,21 @@ void CWMSClientDlg::addStatus(LPCTSTR strMsg)
 	}
 }
 
+inline CStringA ConvertUnicodeToUTF8(const CStringW& uni)
+{
+	if (uni.IsEmpty()) return ""; // nothing to do
+	CStringA utf8;
+	int cc = 0;
+	// get length (cc) of the new multibyte string excluding the \0 terminator first
+	if ((cc = WideCharToMultiByte(CP_UTF8, 0, uni, -1, NULL, 0, 0, 0) - 1) > 0)
+	{
+		// convert
+		char* buf = utf8.GetBuffer(cc);
+		if (buf) WideCharToMultiByte(CP_UTF8, 0, uni, -1, buf, cc, 0, 0);
+		utf8.ReleaseBuffer();
+	}
+	return utf8;
+}
 
 int CWMSClientDlg::formatPacket(int nCommand, void **pPacket )
 {
@@ -282,8 +324,11 @@ int CWMSClientDlg::formatPacket(int nCommand, void **pPacket )
 		strData.Replace(_T("\r"), _T(""));
 		strData.Replace(_T("\n"),_T( ""));
 		strData.Replace(_T(" "), _T(""));
-		nLen = strData.GetLength();
-		memcpy(pIndex, (LPCSTR)CT2A(strData), nLen);
+	
+		CStringA strUtf8 = ConvertUnicodeToUTF8(strData);
+
+		nLen = strUtf8.GetLength();
+		memcpy(pIndex,strUtf8.GetBuffer(), nLen);
 		pIndex += nLen;
 		nBody_len += nLen;
 		memcpy(pIndex, "\0", 1);
@@ -313,14 +358,14 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 	
 	pbuf = *buf;
 	
-
 	int nLength = 0;
 	int nCount = 0;
+	size_t nLen;
+	size_t converted;
 
 	vector<string> vData;
 	
 	char * pBody;
-	char temp[MAX_DATA_LEN];
 
 	if (sizeof(CMP_HEADER) <= (unsigned int)buflen)
 	{
@@ -331,52 +376,31 @@ int CWMSClientDlg::Receive(char **buf, int buflen)
 		int nStatus = ntohl(pHeader->command_status);
 		int nSequence = ntohl(pHeader->sequence_number);
 		
-
-		pBody = (char*)((char *) const_cast<void*>(pbuf)+sizeof(CMP_HEADER));
-
 		strMsg = printPacket(nCommand, nStatus, nSequence, nLength);
 		addStatus(strMsg);
-
-		switch (nCommand)
+		
+		if(sizeof(CMP_HEADER)  ==  (unsigned int)buflen)
 		{
-		case authentication_response:
-			strMsg.Format(_T("[authentication_response]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			memset(temp, 0, sizeof(temp));
-			strcpy_s(temp, pBody);
-			nCount = parseBody(temp, vData);
-			if (0 < nCount)
-			{
-				size_t nLen = _mbstrlen(vData[0].c_str()) + 1;
-				size_t converted = 0;
-				wchar_t * pwstr = new wchar_t[nLen];
-				mbstowcs_s(&converted, pwstr, nLen, vData[0].c_str(), _TRUNCATE);
-
-				nLen = _mbstrlen(vData[1].c_str()) + 1;
-				converted = 0;
-				wchar_t * pwstr2 = new wchar_t[nLen];
-				mbstowcs_s(&converted, pwstr2, nLen, vData[1].c_str(), _TRUNCATE);
-				strMsg.Format(_T("Client MAC:%s Auth_status:%s"), pwstr, pwstr2);
-				delete [] pwstr;
-				delete [] pwstr2;
-				addStatus(strMsg);
-			}
-			break;
+			return nLength;
 		}
 		
+		pBody = (char*)((char*) const_cast<void*>(pbuf) + sizeof(CMP_HEADER));
+		nLen = nLength - sizeof(CMP_HEADER) + 1;
 	}
 	else
 	{
 		// 不是CMP封包
 		pBody = (char*)((char *) const_cast<void*>(pbuf));
-		size_t nLen = buflen + 1;
-		size_t converted = 0;
-		wchar_t * pwstr = new wchar_t[nLen];
-		mbstowcs_s(&converted, pwstr, nLen, pBody, _TRUNCATE);
-		strMsg.Format(_T("%s"), pwstr);
-		addStatus(strMsg);
-		delete [] pwstr;
+		nLen = buflen + 1;
 	}
+
+	converted = 0;
+	wchar_t* pwstr = new wchar_t[nLen];
+	mbstowcs_s(&converted, pwstr, nLen, pBody, _TRUNCATE);
+	strMsg.Format(_T("%s"), pwstr);
+	addStatus(strMsg);
+	delete[] pwstr;
+
 
 	return nLength;
 }
@@ -398,130 +422,9 @@ int CWMSClientDlg::parseBody(char *pData, vector<string> &vData)
 
 void CWMSClientDlg::OnBnClickedCancel()
 {
-	// TODO:  在此加入控制項告知處理常式程式碼
 	pWinSocket->Close();
 	CDialogEx::OnCancel();
 }
-
-/*
-void CWMSClientDlg::OnBnClickedButtonUnbind()
-{
-	// TODO:  在此加入控制項告知處理常式程式碼
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(unbind_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[unbind_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("[unbind_request]: Fail"));
-}
-
-
-void CWMSClientDlg::OnBnClickedButtonAuthentication()
-{
-	// TODO:  在此加入控制項告知處理常式程式碼
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(authentication_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[authentication_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("[authentication_request]: Fail"));
-}
-
-
-void CWMSClientDlg::OnBnClickedButtonEnquireLink()
-{
-	// TODO:  在此加入控制項告知處理常式程式碼
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(enquire_link_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[enquire_link_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("[enquire_link_request]: Fail"));
-}
-
-void CWMSClientDlg::OnBnClickedButtonBind()
-{
-	char buf[MAX_DATA_LEN];
-	void *pbuf;
-	pbuf = buf;
-
-	memset(buf, 0, sizeof(buf));
-	int nPacketLen = formatPacket(bind_request, &pbuf);
-	if (sizeof(WMP_HEADER) <= nPacketLen)
-	{
-		int nSendLen = pWinSocket->Send(pbuf, nPacketLen);
-		if (nSendLen == nPacketLen)
-		{
-			WMP_HEADER *pHeader;
-			pHeader = (WMP_HEADER *)pbuf;
-			int nCommand = ntohl(pHeader->command_id);
-			int nLength = ntohl(pHeader->command_length);
-			int nStatus = ntohl(pHeader->command_status);
-			int nSequence = ntohl(pHeader->sequence_number);
-			CString strMsg;
-			strMsg.Format(_T("[bind_request]: length=%d command=%x status=%d sequence=%d"), nLength, nCommand, nStatus, nSequence);
-			addStatus(strMsg);
-			return;
-		}
-	}
-	addStatus(_T("Bind request Fail"));
-
-}
-*/
 
 
 void CWMSClientDlg::OnBnClickedButtonSend()

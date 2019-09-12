@@ -42,6 +42,15 @@
     <ClInclude Include="container.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="utility.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="CConfigHandler.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
+    <ClInclude Include="CConfig.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WMSClient.cpp">
@@ -54,6 +63,12 @@
       <Filter>原始程式檔</Filter>
     </ClCompile>
     <ClCompile Include="WinSocket.cpp">
+      <Filter>原始程式檔</Filter>
+    </ClCompile>
+    <ClCompile Include="CConfigHandler.cpp">
+      <Filter>原始程式檔</Filter>
+    </ClCompile>
+    <ClCompile Include="CConfig.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
   </ItemGroup>
