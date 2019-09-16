@@ -13,7 +13,7 @@ class CWinSocket;
 // CWMSClientDlg 對話方塊
 class CWMSClientDlg : public CDialogEx
 {
-	enum {ENQUIRE=0,DEIDENTIFY,SEMANTIC};
+	enum {ENQUIRE=0,DEIDENTIFY,SEMANTIC,STATUS,OPTION};
 // 建構
 public:
 	CWMSClientDlg(CWnd* pParent = NULL);	// 標準建構函式

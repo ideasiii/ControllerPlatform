@@ -222,11 +222,6 @@ void CWMSClientDlg::OnBnClickedButtonConnect()
 		addStatus(_T("Socket Connect Success"));
 		GetDlgItem(IDC_BUTTON_SEND)->EnableWindow(true);
 		GetDlgItem(IDC_BUTTON_CONNECT)->EnableWindow(false);
-	//	CConfig config;
-	//	config.loadConfig(FILE_CONF);
-	//	CT2CA pszConvertedAnsiString(csIpAddress);
-	//	std::string strStd(pszConvertedAnsiString);
-	//	config.setConfig("WINDOW", "IP", strStd);
 	}
 	else
 	{
@@ -449,6 +444,12 @@ void CWMSClientDlg::OnBnClickedButtonSend()
 		break;
 	case SEMANTIC:
 		nCommand = semantic_word_request;
+		break;
+	case STATUS:
+		nCommand = status_request;
+		break;
+	case OPTION:
+		nCommand = option_request;
 		break;
 	default:
 		nCommand = enquire_link_request;
