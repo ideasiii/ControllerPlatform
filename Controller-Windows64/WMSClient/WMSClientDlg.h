@@ -13,6 +13,7 @@ class CWinSocket;
 // CWMSClientDlg 對話方塊
 class CWMSClientDlg : public CDialogEx
 {
+	enum {ENQUIRE=0,DEIDENTIFY,SEMANTIC,STATUS,OPTION};
 // 建構
 public:
 	CWMSClientDlg(CWnd* pParent = NULL);	// 標準建構函式
@@ -27,6 +28,7 @@ public:
 // 程式碼實作
 public:
 	void addStatus(LPCTSTR strMsg);
+	void closeSocket();
 
 protected:
 	HICON m_hIcon;
@@ -44,27 +46,17 @@ public:
 
 private:
 	CWinSocket *pWinSocket;
-	int formatPacket(int nCommand, void **pPacket, int nSequence = 0);
+	int formatPacket(int nCommand, void **pPacket );
 	int parseBody(char *pData, std::vector<std::string> &vData);
-	CString GetMACaddress();
-	void optionEnable(int nLevel);
 
 public:
 	CIPAddressCtrl ipCtlIP;
 	CEdit editPort;
 	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedButtonBind();
 	int Receive(char **buf, int buflen);
 	afx_msg void OnBnClickedCancel();
-	afx_msg void OnBnClickedButton3();
-	afx_msg void OnBnClickedButtonUnbind();
-	afx_msg void OnBnClickedButtonAuthentication();
-	afx_msg void OnBnClickedButtonEnquireLink();
-	afx_msg void OnBnClickedButtonAccessLog();
-	afx_msg void OnBnClickedButtonAccessLogResp();
-	afx_msg void OnBnClickedButtonPowerSet();
-	CButton chkPort1;
-	CButton chkPort2;
-	CButton chkPort3;
-	CButton chkPort4;
+	CEdit m_editData;
+	// CMP Command ID
+	int m_rbCommand;
+	afx_msg void OnBnClickedButtonSend();
 };

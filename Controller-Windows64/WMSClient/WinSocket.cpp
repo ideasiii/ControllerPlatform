@@ -8,7 +8,7 @@
 
 // CWinSocket
 
-CWinSocket::CWinSocket() :m_bConnect(FALSE)
+CWinSocket::CWinSocket() :pCWMSClientDlg(0),m_bConnect(FALSE)
 {
 }
 
@@ -27,6 +27,7 @@ void CWinSocket::OnClose(int nErrorCode)
 	m_bConnect = FALSE;
 	AfxMessageBox(_T("Socket Close"));
 	CSocket::OnClose(nErrorCode);
+	pCWMSClientDlg->closeSocket();
 }
 
 
@@ -114,7 +115,7 @@ int CWinSocket::Connect(UINT nSocketPort, LPCTSTR lpszSocketAddress)
 		return FALSE;
 	}
 
-//	AfxMessageBox(_T("connected"));
+
 	m_bConnect = TRUE;
 	
 	return m_bConnect;
@@ -127,6 +128,7 @@ int CWinSocket::getConnectStatus()
 
 void CWinSocket::Close()
 {
+	m_bConnect = false;
 	CSocket::Close();
 }
 
