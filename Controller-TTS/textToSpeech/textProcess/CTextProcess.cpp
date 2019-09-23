@@ -29,7 +29,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <regex>
-//#include "flite_hts_engine.h"
+#include "flite_english.h"
 
 //*****for domain socket client*****//
 #include <sys/socket.h>
@@ -65,7 +65,8 @@ using namespace std;
 #define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 #define model_Path_En "model/cmu_us_arctic_slt.htsvoice"
-#define wave_Path_En  "/data/opt/tomcat/webapps/tts_en/"
+//#define wave_Path_En  "/data/opt/tomcat/webapps/tts_en/"
+#define wave_Path_En  "/data/opt/tomcat/webapps/tts/"
 
 #define CHAR_ZERO   CHAR_NUM[0]
 
@@ -183,9 +184,7 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-
-
-int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData)
+int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count)
 {
 
 	time_t rawtime;
@@ -221,8 +220,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
-	strWavePath.format("%s%ld.wav", PATH_WAVE, rawtime);
-	strLabelName.format("label/%ld.lab", rawtime);
+	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, rawtime, count);
+	strLabelName.format("label/%ld_%d.lab", rawtime, count);
 	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
 	LabelRowZip.format("%s.tar.gz", ttsProcess.id.c_str());
@@ -234,16 +233,16 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 	strInput.trim();
 	_log("[CTextProcess] strInput: %s", strInput.getBuffer());
 
-	string input;
-	input = strInput.getBuffer();
-
-	string outSplit;
-	vector<string> splitData = splitSentence(input);
-	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i){
-		outSplit = outSplit + *i;
-	}
-	strInput = outSplit.c_str();
-	_log("[CTextProcess] splite text: %s", strInput.getBuffer());
+//	string input;
+//	input = strInput.getBuffer();
+//
+//	string outSplit;
+//	vector<string> splitData = splitSentence(input);
+//	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i){
+//		outSplit = outSplit + *i;
+//	}
+//	strInput = outSplit.c_str();
+//	_log("[CTextProcess] splite text: %s", strInput.getBuffer());
 
 	string strFinded;
 
@@ -457,74 +456,72 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 	}
 }
 
-//int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, string &input)
-//{
-//
-//	time_t rawtime;
-//	time(&rawtime);
-//
-//	CString enWavePath;
-//	CString strInput;
-//	CString strTxtName;
-//	strTxtName.format("label/%ld.txt", rawtime);
-//	strWavePath.format("%s%ld.wav", wave_Path_En, rawtime);
-//	WORD_PACKAGE wordPackage;
-//
-//	_log("[CTextProcess] processTheText Input Text: %s", input.c_str());
-//	strInput = input.c_str();
-//	strInput.trim();
-//
-//	WordExchange(strInput);
-//	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());
-//
-//	_log("=============== 合成輸入檔 %s===============", strTxtName.getBuffer());
-//	ofstream txtFile;
-//	txtFile.open(strTxtName.getBuffer(), ios::app);
-//	txtFile << strInput.getBuffer();
-//	txtFile.close();
-//	_log("=============== 合成聲音檔 %s===============",
-//			strWavePath.getBuffer());
-//	_log("[CTextProcess] Voice_ID: %d", ttsProcess.voice_id);
-//	_log("[CTextProcess] Model: %s", ModelMap[ttsProcess.voice_id]);
-//	return fliteSynthesize(model_Path_En, wave_Path_En,
-//			strTxtName.getBuffer(), ttsProcess);
-//	}
-//
-//
-//int fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
-//	int nResult;
-//	char** param = new char*[12];
-//	param[0] = const_cast<char*>("flite_hts_engine");
-//	param[1] = const_cast<char*>("-m");
-//	param[2] = const_cast<char*>(enModelName);
-//	param[3] = const_cast<char*>("-o");
-//	param[4] = const_cast<char*>(enWaveName);
-//	param[5] = const_cast<char*>(enInputName);
-//	param[6] = const_cast<char*>("-fm");
-//	param[7] = const_cast<char*>("1");
-//	param[8] = const_cast<char*>("-g");
-//	param[9] = const_cast<char*>("0.0");
-//	param[10] = const_cast<char*>("-r");
-//	param[11] = const_cast<char*>("1.2");
-//
-//	if(strlen(ttsprocess2.fm.c_str()) != 0){
-//		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
-//		_log("[CTextProcess] fm: %s", param[7]);
-//	}
-//	if(strlen(ttsprocess2.g.c_str()) != 0){
-//		param[9] = const_cast<char*>(ttsprocess2.g.c_str());
-//		_log("[CTextProcess] g: %s", param[9]);
-//	}
-//	if(strlen(ttsprocess2.r.c_str()) != 0){
-//		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
-//		_log("[CTextProcess] r: %s", param[11]);
-//	}
-//	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s fm: %s g: %s r: %s", enModelName, enWaveName, param[7], param[9], param[11]);
-//	nResult = fliteHtsSynthesize(12, param);
-//	delete param;
-//	return nResult;
-//
-//}
+int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count)
+{
+
+	time_t rawtime;
+	time(&rawtime);
+
+	CString enWavePath;
+	CString strInput;
+	CString strTxtName;
+	strTxtName.format("label_En/%ld_%d.txt", rawtime, count);
+	strWavePath.format("%s%ld_%d.wav", wave_Path_En, rawtime, count);
+	WORD_PACKAGE wordPackage;
+
+	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());
+	strInput = ttsProcess.text.c_str();
+	strInput.trim();
+
+	WordExchange(strInput);
+	_log("[CTextProcess] processTheText SpanExcluding and Word Exchange Text: %s", strInput.getBuffer());
+
+	_log("=============== 合成輸入檔 %s===============", strTxtName.getBuffer());
+	ofstream txtFile;
+	txtFile.open(strTxtName.getBuffer(), ios::app);
+	txtFile << strInput.getBuffer();
+	txtFile.close();
+	_log("=============== 合成聲音檔 %s===============",
+			strWavePath.getBuffer());
+	return fliteSynthesize(model_Path_En, strWavePath.getBuffer(),
+			strTxtName.getBuffer(), ttsProcess);
+	}
+
+
+int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
+	int nResult;
+	char** param = new char*[12];
+	param[0] = const_cast<char*>("flite_hts_engine");
+	param[1] = const_cast<char*>("-m");
+	param[2] = const_cast<char*>(enModelName);
+	param[3] = const_cast<char*>("-o");
+	param[4] = const_cast<char*>(enWaveName);
+	param[5] = const_cast<char*>(enInputName);
+	param[6] = const_cast<char*>("-fm");
+	param[7] = const_cast<char*>("1");
+	param[8] = const_cast<char*>("-g");
+	param[9] = const_cast<char*>("0.0");
+	param[10] = const_cast<char*>("-r");
+	param[11] = const_cast<char*>("1");
+
+	if(strlen(ttsprocess2.fm.c_str()) != 0){
+		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
+		_log("[CTextProcess] fm: %s", param[7]);
+	}
+	if(strlen(ttsprocess2.g.c_str()) != 0){
+		param[9] = const_cast<char*>(ttsprocess2.g.c_str());
+		_log("[CTextProcess] g: %s", param[9]);
+	}
+	if(strlen(ttsprocess2.r.c_str()) != 0){
+		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
+		_log("[CTextProcess] r: %s", param[11]);
+	}
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s fm: %s g: %s r: %s", enModelName, enWaveName, param[7], param[9], param[11]);
+	nResult = fliteHtsSynthesize(12, param);
+	delete param;
+	return nResult;
+
+}
 
 
 void CTextProcess::genLabels(){
@@ -816,7 +813,6 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	nResult = htsSynthesize(12, param);
 	delete param;
 	return nResult;
-
 	//=============windows version========================//
 	int i;
 	CString command;
@@ -1753,8 +1749,8 @@ vector<string> CTextProcess::splitSentence(string &input){
 	string reSentence = "";
 	string checkSymbolEn = "";
 	string checkSymbolCh = "";
-	string checkBlankEn;
-	string checkBlankCh;
+	string checkBlankEn = "";
+	string checkBlankCh = "";
 	string splitWordEn = "";
 	string splitWordCh = "";
 	regex pattern("[A-Za-z0-9]");

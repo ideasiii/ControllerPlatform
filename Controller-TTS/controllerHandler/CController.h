@@ -39,7 +39,10 @@ public:
 	void onTTS(const int nSocketFD, const int nSequence, const char *szData);
 	vector<string> splitSentence(string &input);
 	bool checkEnglish(string &input);
-
+	string num2Spell(string &num);
+	string num2Chinese(string &num);
+	string num2English(int val);
+	string convert(string &num);
 
 protected:
 	int onCreated(void* nMsqKey);
