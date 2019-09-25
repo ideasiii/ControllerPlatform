@@ -220,8 +220,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
-	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, rawtime, count);
-	strLabelName.format("label/%ld_%d.lab", rawtime, count);
+	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, count, rawtime);
+	strLabelName.format("label/%ld_%d.lab", count, rawtime);
 	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
 	LabelRowZip.format("%s.tar.gz", ttsProcess.id.c_str());
@@ -465,8 +465,8 @@ int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, C
 	CString enWavePath;
 	CString strInput;
 	CString strTxtName;
-	strTxtName.format("label_En/%ld_%d.txt", rawtime, count);
-	strWavePath.format("%s%ld_%d.wav", wave_Path_En, rawtime, count);
+	strTxtName.format("label_En/%ld_%d.txt", count, rawtime);
+	strWavePath.format("%s%ld_%d.wav", wave_Path_En, count, rawtime);
 	WORD_PACKAGE wordPackage;
 
 	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());

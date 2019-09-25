@@ -54,4 +54,6 @@ private:
 	int mnMsqKey;
 	CTextProcess *textProcess;
 	CCmpTTS *cmpTTS;
+	int count = 1;
+
 };

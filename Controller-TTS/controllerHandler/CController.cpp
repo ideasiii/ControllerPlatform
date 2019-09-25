@@ -669,7 +669,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	else
 	{
 
-		int count = 1;
 //			//----------- TODO: 從vector提取string 先暫時註解 ----------//
 		for (vector<string>::iterator i = splitData2.begin(); i != splitData2.end(); ++i)
 		{
