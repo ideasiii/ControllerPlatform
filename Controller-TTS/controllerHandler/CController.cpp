@@ -26,7 +26,7 @@
 #include <regex>
 #include "WordInfo.h"
 #include <spawn.h>
-#include "CutMusicWav.h"
+//#include "CutMusicWav.h"
 
 #include <fstream>
 #include <dirent.h>
@@ -605,6 +605,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	ttsReq.req_type = jsonReq.getInt("req_type");
 
 	CString wavPath;
+	CString outputPath;
+
+	time_t rawtime;
+	time(&rawtime);
 
 //	ttsReq.user_id = "";                    //--- kris for test ---//
 //	ttsReq.voice_id = 103;
@@ -668,7 +672,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	}
 	else
 	{
-
 //			//----------- TODO: 從vector提取string 先暫時註解 ----------//
 		for (vector<string>::iterator i = splitData2.begin(); i != splitData2.end(); ++i)
 		{
@@ -734,12 +737,14 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 //			//----------- TODO: 從vector提取string 先暫時註解(550-552行相同)----------//
 		}
+		count = 1;
 //			//-------------------------------------------------//
 
 		wavPath.format("%s*.wav", WAV_PATH);
+		outputPath.format("%s0_%ld.wav", WAV_PATH, rawtime);
 		char *wavPathChar = wavPath.getBuffer();
 		char cmd[] = "sox";
-		char end[] = "/data/opt/tomcat/webapps/tts/output.wav";
+		char *end = outputPath.getBuffer();
 		char *args[4];
 		args[0] = cmd;
 		args[1] = wavPathChar;
