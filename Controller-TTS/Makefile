@@ -15,8 +15,8 @@ SRC_DIR   := $(addprefix $(DIR_APP_ROOT),$(MODULES))
 BUILD_DIR := $(addprefix $(DIR_APP_ROOT)build/,$(MODULES))
 SRC       := $(filter-out %/main.cpp, $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c*)))
 OBJ       := $(patsubst $(DIR_APP_ROOT)%.cpp,$(DIR_APP_ROOT)build/%.o,$(SRC))
-INCLUDES  := $(addprefix -I,$(SRC_DIR))
-CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -std=c++11 -g -fno-stack-protector
+INCLUDES  := $(addprefix -I,$(SRC_DIR)) -I /home/kris/ControllerPlatform/Controller-TTS/textToSpeech/hts_engine
+CXXFLAGS  := -Wall -Wno-unused-variable -fno-strict-aliasing $(LOG) -std=c++11 -g -fno-stack-protector 
 EXT_INCLUDES := $(addprefix -I,$(addprefix $(DIR_APP_ROOT),$(EXT_MODULES))) 
 
 LDLIBS    :=-L$(DIR_APP_ROOT)libs \
@@ -33,8 +33,8 @@ LDLIBS    :=-L$(DIR_APP_ROOT)libs \
 			-lboost_filesystem \
 			-lboost_regex \
 			-lboost_program_options \
-			-lcurl
-					
+			-lcurl \
+			-lflhtse
 vpath %.cpp $(SRC_DIR) ../Global
 
 define make-goal
@@ -87,6 +87,7 @@ checkdirs:
 	@mkdir -p bin/gen
 	@mkdir -p bin/labelrow
 	@mkdir -p bin/data
+	@mkdir -p bin/label_En
 	
 clean:
 	@for libName in ${MODULES} ; do \
