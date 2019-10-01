@@ -43,6 +43,7 @@ public:
 	string num2Chinese(string &num);
 	string num2English(int val);
 	string convert(string &num);
+	void removeFile(char *path);
 
 protected:
 	int onCreated(void* nMsqKey);

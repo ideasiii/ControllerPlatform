@@ -65,7 +65,6 @@ using namespace std;
 #define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
 
 #define model_Path_En "model/cmu_us_arctic_slt.htsvoice"
-//#define wave_Path_En  "/data/opt/tomcat/webapps/tts_en/"
 #define wave_Path_En  "/data/opt/tomcat/webapps/tts/"
 
 #define CHAR_ZERO   CHAR_NUM[0]
@@ -220,8 +219,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
-	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, count, rawtime);
-	strLabelName.format("label/%ld_%d.lab", count, rawtime);
+	strWavePath.format("%s%d_%ld.wav", PATH_WAVE, count, rawtime);
+	strLabelName.format("label/%d_%ld.lab", count, rawtime);
 	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
 	LabelRowZip.format("%s.tar.gz", ttsProcess.id.c_str());

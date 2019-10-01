@@ -252,7 +252,7 @@ vector<string> CController::splitSentence(string &input){
 					if(checkBlankEn == "\0"|| !regex_match(checkBlankEn, pattern)){ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
 						temp = strCharCh.c_str();
 						temp2 = strCharChDouble.c_str();
-						if ((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){ //TODO: 數字單位是否匹配
+						if((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){ //TODO: 數字單位是否匹配
 							splitWordEn = num2Spell(splitWordEn);
 							wordData.push_back(splitWordEn);
 							splitWordEn = "";
@@ -573,6 +573,28 @@ string CController::convert(string &num){
 	return result;
 }
 
+void CController::removeFile(char *path)
+{
+    struct dirent *entry = NULL;
+    DIR *dir = NULL;
+    dir = opendir(path);
+    while(entry = readdir(dir))
+    {
+        FILE *file = NULL;
+        char* abs_path = new char[256];
+        if (*(entry->d_name) != '.')
+        {
+            sprintf(abs_path, "%s/%s", path, entry->d_name);
+                if(file = fopen(abs_path, "r"))
+                {
+                    fclose(file);
+                    remove(abs_path);
+                }
+        }
+        delete[] abs_path;
+    }
+}
+
 /*
  * "user_id":"",
  "voice_id":0,
@@ -623,7 +645,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s g: %s r: %s id: %s total: %d sequence_sum: %d req_type: %d", nSocketFD, ttsReq.text.c_str(),
 			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.g.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
 
-
+	removeFile(WAV_PATH);
 
 //	//----------- TODO: 先把數字轉中字 ----------//
 	vector<string> splitData = splitSentence(ttsReq.text);
@@ -650,6 +672,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 
 	jsonResp.create();
+
 	if (ttsReq.req_type == 1){
 		textProcess->loadWordfromHTTP(ttsReq.text.c_str());
 		jsonResp.put("status", 0);
@@ -709,8 +732,8 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 					{ //TODO: 中文合音
 						_log("[CController] onTTS processTheText return wav: %s", strWave.getBuffer());
 						strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
-						jsonResp.put("status", 0);
-						jsonResp.put("wave", strResponseWav.c_str());
+//						jsonResp.put("status", 0);
+//						jsonResp.put("wave", strResponseWav.c_str());
 					}
 				}
 
@@ -727,8 +750,8 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 				{	//TODO: 英文合音
 					_log("[CController] onTTS processTheText_en return wav: %s", strWave.getBuffer());
 					strResponseWav = strWave.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
-					jsonResp.put("status", 0);
-					jsonResp.put("waveEN", strResponseWav.c_str());
+//					jsonResp.put("status", 0);
+//					jsonResp.put("waveEN", strResponseWav.c_str());
 				}
 			}
 //			//-------------------------------------------------//
@@ -763,6 +786,9 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		} else {
 		 _log("sox: posix_spawn: %s\n", strerror(status));
 		}
+
+		jsonResp.put("status", 0);
+		jsonResp.put("wave", outputPath.getBuffer());
 
 	}
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
