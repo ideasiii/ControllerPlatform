@@ -787,6 +787,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		 _log("sox: posix_spawn: %s\n", strerror(status));
 		}
 
+		outputPath = outputPath.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
 		jsonResp.put("status", 0);
 		jsonResp.put("wave", outputPath.getBuffer());
 
