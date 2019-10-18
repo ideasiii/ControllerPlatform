@@ -31,6 +31,12 @@ typedef struct _TTS_REQ
 	int req_type;
 } TTS_REQ;
 
+typedef struct _to_word
+{
+	int type;
+	std::string text;
+} toWord;
+
 class CController: public CApplication
 {
 public:
@@ -44,6 +50,10 @@ public:
 	string num2English(int val);
 	string convert(string &num);
 	void removeFile(char *path);
+	vector<string> parseSentence(string &sentence);
+	vector<toWord> toWords(string &sentence);
+	vector<string> phase(vector<toWord> &data);
+	vector<string> parseArticle(string &sentence);
 
 protected:
 	int onCreated(void* nMsqKey);

@@ -26,10 +26,10 @@
 #include <regex>
 #include "WordInfo.h"
 #include <spawn.h>
-//#include "CutMusicWav.h"
-
+#include <ctype.h>
 #include <fstream>
 #include <dirent.h>
+
 #define TTS_HOST				"http://175.98.119.122"
 #define GEN_PATH            "/data/opt/tomcat/webapps/genlabel"     //kris 2019/04/11 read directory file
 #define DATA_PATH			"/data/opt/tomcat/webapps/data/"
@@ -47,7 +47,6 @@ const string CHAR_NUM[] = {"零", "一", "二", "三", "四", "五", "六", "七
 const string CHAR_SI[] = {"十", "百", "千"};
 // big interval
 const string CHAR_BI[] = {"萬", "億", "兆", "京"};
-
 
 const string DictA[]={
 	"Zero", "One", "Two", "Three", "Four",
@@ -185,7 +184,160 @@ int CController::onFinish(void* nMsqKey)
 	delete cmpTTS;
 	return nKey;
 }
-vector<string> CController::splitSentence(string &input){
+
+vector<string> CController::parseArticle(string &sentence)
+{
+	vector<string> articleList;
+	string strChar = "";
+	string output = "";
+	string checkEn = "";
+	string checkCh = "";
+	regex pattern("[A-Za-z0-9]");
+	regex patternCh("[\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏]");
+	regex patternBlank("[ ]");
+
+	for(int i = 0; sentence[i] != '\0';)
+	{
+		char chr = sentence[i];
+		if((chr & 0x80) == 0){
+			strChar = sentence.substr(i ,1);
+			checkEn = sentence.substr(i+1 ,1);
+			++i;
+			output += strChar;
+			_log("[CController] 207");
+			if(checkEn == "\0" || (!regex_match(checkEn, pattern) && !regex_match(checkEn, patternBlank))){
+				_log("[CController] 209");
+				articleList.push_back(output);
+				_log("[CController] 211");
+				output = "";
+				_log("[CController] 213");
+//				++i;
+				_log("[CController] 215");
+			}
+			_log("[CController] 217");
+			_log("[CController] processTheText output: %s", output.c_str());
+		}else if((chr & 0xE0) == 0xE0){
+			_log("[CController] 212");
+			strChar = sentence.substr(i, 3);
+			checkCh = sentence.substr(i+3, 1);
+			checkEn = sentence.substr(i+1 ,1);
+			i+=3;
+			output += strChar;
+			_log("[CController] processTheText output2: %s", output.c_str());
+			_log("[CController] 218");
+			if(checkCh == "\0" || regex_match(checkCh, patternCh)){
+				articleList.push_back(output);
+				output = "";
+//				i+=3;
+			}
+			_log("[CController] 224");
+		}
+
+	}
+	for (int i = 0; i < articleList.size(); ++i)
+	{
+		_log("[CController] processTheText articleList vector: %s", articleList.at(i).c_str());
+	}
+	return articleList;
+}
+
+vector<string> CController::parseSentence(string &sentence)
+{
+	vector<string> wordData;
+	vector<toWord> wordData2;
+
+	_log("[CController] sentence: %s", sentence.c_str());
+
+	wordData2 = toWords(sentence);
+	wordData = phase(wordData2);
+	return wordData;
+
+}
+
+vector<toWord> CController::toWords(string &sentence)
+{
+	vector<toWord> wordData;
+	toWord toword;
+	string strChar = "";
+	string splitWordEn = "";
+	string checkBlankEn = "";
+	regex patternEn("[A-Za-z]");
+	regex patternBlank("[ ]");
+
+	for(int i = 0; sentence[i] != '\0';)
+	{
+		char chr = sentence[i];
+		if((chr & 0xE0) == 0xE0){
+
+			strChar = sentence.substr(i, 3);
+			i+=3;
+			toword.text = strChar;
+			toword.type = 1;
+			wordData.push_back(toword);
+			strChar = "";
+		}else if((chr & 0x80) == 0){
+
+			strChar = sentence.substr(i, 1);
+			checkBlankEn = sentence.substr(i+1, 1);
+			++i;
+			splitWordEn += strChar;
+			if(!regex_match(checkBlankEn, patternEn) && !regex_match(checkBlankEn, patternBlank)){
+				toword.text = splitWordEn;
+				toword.type = 2;
+				wordData.push_back(toword);
+				splitWordEn = "";
+			}
+		}
+	}
+
+	for (int i = 0; i < wordData.size(); ++i)
+	{
+		_log("[CController] processTheText wordData.at(i).text.c_str() vector: %s", wordData.at(i).text.c_str());
+	}
+	return wordData;
+
+}
+
+vector<string> CController::phase(vector<toWord> &data)
+{
+	vector<string> output;
+	string temp;
+	string tempEn;
+	for (int i = 0; i < data.size(); ++i)
+	{
+		if(data.at(i).type == 1){
+			temp += data.at(i).text.c_str();
+//			_log("[CController] temp: %s", temp.c_str());
+
+			if( (i+1) == data.size()){
+				output.push_back(temp);
+				temp = "";
+				continue;
+			}
+
+			if(data.at(i+1).type == 2){
+				output.push_back(temp);
+				temp = "";
+			}
+
+		}else if(data.at(i).type == 2){
+			tempEn = data.at(i).text.c_str();
+//			_log("[CController] tempEn: %s", tempEn.c_str());
+			output.push_back(tempEn);
+			tempEn = "";
+		}
+	}
+
+	for (int i = 0; i < output.size(); ++i)
+	{
+		_log("[CController] processTheText output: %s", output.at(i).c_str());
+	}
+
+	return output;
+}
+
+vector<string> CController::splitSentence(string &input)
+{
 	vector<string> wordData;
 	string strChar = "";
 	string strCharCh = "";
@@ -206,33 +358,6 @@ vector<string> CController::splitSentence(string &input){
 	CString temp;
 	CString temp2;
 	string check;
-
-	//TODO: 將空白去掉 並將標點符號轉換成空白
-//	for(int i = 0; input[i] != '\0';){
-//		char chr = input[i];
-//		if((chr & 0x80) == 0)  //english
-//		{
-//			checkSymbolEn = input.substr(i,1);
-//			if(regex_match(checkSymbolEn, patternBlank)){
-//				reSentence += checkSymbolEn;
-//			}else if(!regex_match(checkSymbolEn, pattern)){
-//				checkSymbolEn = blank;
-//				reSentence += checkSymbolEn;
-//			}else{
-//				reSentence += checkSymbolEn;
-//			}
-//			++i;
-//		}else if((chr & 0xE0) == 0xE0)  //chinese
-//		{
-//			checkSymbolCh = input.substr(i,3);
-//			if(regex_match(checkSymbolCh, patternCh)){
-//				checkSymbolCh = blank;
-//			}
-//			reSentence += checkSymbolCh;
-//			i+=3;
-//		}
-//	}
-//	_log("[CController] processTheText reSentence: %s", reSentence.c_str());
 
 	//TODO: 依據空格斷句
 	for(int i = 0; input[i] != '\0';)
@@ -308,131 +433,9 @@ vector<string> CController::splitSentence(string &input){
 	}
 	return wordData;
 }
-//vector<string> CController::splitSentence(string &input){
-//	vector<string> wordData;
-//	string strChar = "";
-//	string strCharCh = "";
-//	string strCharChDouble = "";
-//	string blank = " ";
-//	string comma = ",";
-//	string reSentence = "";
-//	string checkSymbolEn = "";
-//	string checkSymbolCh = "";
-//	string checkBlankEn = "";
-//	string checkBlankCh = "";
-//	string splitWordEn = "";
-//	string splitWordCh = "";
-//	regex pattern("[A-Za-z0-9]");
-//	regex patternEn("[A-Za-z]");
-//	regex patternBlank("[ \f\n\r\t\v]");
-//	regex patternCh("\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏");
-//	CString temp;
-//	CString temp2;
-//	string check;
-//
-//	//TODO: 將空白去掉 並將標點符號轉換成空白
-//	for(int i = 0; input[i] != '\0';){
-//		char chr = input[i];
-//		if((chr & 0x80) == 0)  //english
-//		{
-//			checkSymbolEn = input.substr(i,1);
-//			if(regex_match(checkSymbolEn, patternBlank)){
-//				checkSymbolEn.empty();
-//			}else if(!regex_match(checkSymbolEn, pattern)){
-//				checkSymbolEn = blank;
-//				reSentence += checkSymbolEn;
-//			}else{
-//				reSentence += checkSymbolEn;
-//			}
-//			++i;
-//		}else if((chr & 0xE0) == 0xE0)  //chinese
-//		{
-//			checkSymbolCh = input.substr(i,3);
-//			if(regex_match(checkSymbolCh, patternCh)){
-//				checkSymbolCh = blank;
-//			}
-//			reSentence += checkSymbolCh;
-//			i+=3;
-//		}
-//	}
-//	_log("[CController] processTheText reSentence: %s", reSentence.c_str());
-//
-//	//TODO: 依據空格斷句
-//	for(int i = 0; reSentence[i] != '\0';)
-//	{
-//		char chr = reSentence[i];
-//		//英文 chr是0xxx xxxx，即ascii碼
-//		if((chr & 0x80) == 0)
-//		{
-//			strChar = reSentence.substr(i,1);
-//			checkBlankEn = reSentence.substr(i+1, 1);
-//			strCharCh = reSentence.substr(i+1, 3);
-//			strCharChDouble = reSentence.substr(i+1, 6);
-//			++i;
-//			if(!strChar.empty() && strChar != blank){ //TODO: 判斷字詞是否空白
-//				if(checkBlankEn != blank){
-//					splitWordEn += strChar;
-//					if(checkBlankEn == "\0"|| !regex_match(checkBlankEn, pattern)){ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
-//						temp = strCharCh.c_str();
-//						temp2 = strCharChDouble.c_str();
-//						if ((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){ //TODO: 數字單位是否匹配
-//							splitWordEn = num2Spell(splitWordEn);
-//							wordData.push_back(splitWordEn);
-//							splitWordEn = "";
-//					}else{
-//						if(regex_match(strChar, patternEn)){ //TODO: 判斷字詞是否為英文
-//							wordData.push_back(splitWordEn);
-//							splitWordEn = "";
-//						}else{
-//							splitWordEn = convert(splitWordEn);
-//							wordData.push_back(splitWordEn);
-//							splitWordEn = "";
-//						}
-//					}
-//					}
-//				}else{
-//					splitWordEn += strChar;
-//					wordData.push_back(splitWordEn);
-//					splitWordEn = "";
-//				}
-//			}else{
-//				strChar = comma;
-//				splitWordEn += strChar;
-//				wordData.push_back(splitWordEn);
-//				splitWordEn = "";
-//			}
-//		}//中文 chr是111x xxxx
-//		else if((chr & 0xE0) == 0xE0)
-//		{
-//			strChar = reSentence.substr(i, 3);
-//			checkBlankCh = reSentence.substr(i+3, 1);
-//			checkBlankEn = reSentence.substr(i+1, 1);
-//
-//			i+=3;
-//			if(!strChar.empty() && strChar != blank){
-//				if(checkBlankCh != blank){
-//					splitWordCh += strChar;
-//					if(checkBlankCh == "\0" || regex_match(checkBlankCh, pattern)){
-//						wordData.push_back(splitWordCh);
-//						splitWordCh = "";
-//					}
-//				}else{
-//					splitWordCh += strChar;
-//					wordData.push_back(splitWordCh);
-//					splitWordCh = "";
-//				}
-//			}
-//		}
-//	}
-//
-//	for (int i = 0; i < wordData.size(); ++i)
-//	{
-//		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
-//	}
-//	return wordData;
-//}
 
-bool CController::checkEnglish(string &input){
+bool CController::checkEnglish(string &input)
+{
 	for(int i = 0; input[i] != '\0';){
 		char chr;
 		chr = input[i];
@@ -445,22 +448,20 @@ bool CController::checkEnglish(string &input){
 	}
 	return 0;
 }
+
 string CController::num2Chinese(string &num)
 {
 	size_t sz = num.size();
 	string ret;
 	int val;
-	if (sz > MAX_LEN)
-	{
+	if (sz > MAX_LEN){
 		throw string("Exceeded max length");
 	}
-	if ("0" == num)
-	{
+	if ("0" == num){
 		return CHAR_ZERO;
 	}
 
-	for (size_t i = 0; i != sz; ++i)
-	{
+	for (size_t i = 0; i != sz; ++i){
 		val = num[i] - '0';
 		ret += CHAR_NUM[val];
 	}
@@ -476,16 +477,16 @@ string CController::num2Spell(string &num)
     string ret;
 
     // limit the size
-    if (sz > MAX_LEN) {
+    if (sz > MAX_LEN){
         throw string("Exceeded max length");
     }
 
     // special numbers
-    if ("0" == num) {
+    if ("0" == num){
         return CHAR_ZERO;
     }
 
-    for (size_t i = 0; i != sz; ++i) {
+    for (size_t i = 0; i != sz; ++i){
         revi = (sz - 1) - i;
         bi = revi / INTERVAL;
         si = revi % INTERVAL;
@@ -533,7 +534,8 @@ string CController::num2Spell(string &num)
     return ret;
 }
 
-string CController::num2English(int val){
+string CController::num2English(int val)
+{
 	string s = "";
 	unsigned int v = val % 100;
 	if(v <= 19){
@@ -558,7 +560,8 @@ string CController::num2English(int val){
 	return s;
 }
 
-string CController::convert(string &num){
+string CController::convert(string &num)
+{
 	int val = atoi(num.c_str());
 	string result = "";
 		int i=0;
@@ -601,6 +604,7 @@ void CController::removeFile(char *path)
  "emotion":0,
  "text":"多型態角色語音智慧平台"
  */
+
 void CController::onTTS(const int nSocketFD, const int nSequence, const char *szData)
 {
 	JSONObject jsonReq;
@@ -647,21 +651,34 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 	removeFile(WAV_PATH);
 
-//	//----------- TODO: 先把數字轉中字 ----------//
-	vector<string> splitData = splitSentence(ttsReq.text);
-	ttsReq.text = "";
-//	//---------------------//
+//	vector<string> splitData4 = parseArticle(ttsReq.text);  10/18
 
-	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+	vector<string> splitData3 = parseSentence(ttsReq.text);
+	ttsReq.text = "";
+
+	for (vector<string>::iterator i = splitData3.begin(); i != splitData3.end(); ++i)
 	{
 		ttsReq.text = ttsReq.text + *i;
 	}
-	_log("[CController] ttsReq.text: %s",  ttsReq.text.c_str());
+	_log("[CController] ttsReq.text testtt: %s",  ttsReq.text.c_str());
 
-//	//----------- TODO: 中英分詞 ----------//
-	vector<string> splitData2 = splitSentence(ttsReq.text);
-	ttsReq.text = "";
-//	//---------------------//
+//              10/16
+////	//----------- TODO: 先把數字轉中字 ----------//
+//	vector<string> splitData = splitSentence(ttsReq.text);
+//	ttsReq.text = "";
+////	//---------------------//
+//
+//	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+//	{
+//		ttsReq.text = ttsReq.text + *i;
+//	}
+//	_log("[CController] ttsReq.text: %s",  ttsReq.text.c_str());
+//
+////	//----------- TODO: 中英分詞 ----------//
+//	vector<string> splitData2 = splitSentence(ttsReq.text);
+//	ttsReq.text = "";
+////	//---------------------//
+//
 
 	// 暫時註解 - 因為整併整句會無法產中英句
 //	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
@@ -695,11 +712,15 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	}
 	else
 	{
-//			//----------- TODO: 從vector提取string 先暫時註解 ----------//
-		for (vector<string>::iterator i = splitData2.begin(); i != splitData2.end(); ++i)
+//			//----------- TODO: 從vector提取string 先註解 10/16 ----------//
+//		for (vector<string>::iterator i = splitData2.begin(); i != splitData2.end(); ++i)
+//		{
+//			ttsReq.text = *i;
+//			//-------------------------------------------------//
+
+		for (vector<string>::iterator i = splitData3.begin(); i != splitData3.end(); ++i)
 		{
 			ttsReq.text = *i;
-//			//-------------------------------------------------//
 
 //			//----------- TODO: 檢查是否為英文 先暫時註解 ----------//
 			if (!checkEnglish(ttsReq.text))
