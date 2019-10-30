@@ -62,7 +62,6 @@ private:
 	bool timeinfo(int* duration_si,int* duration_ei);
 	int fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2);
 	void WordExchange(CString &strText); // 舊版數字交換 有誤 改用WordExchange2
-
 	string num2Spell(string &num);
 	string num2Chinese(string &num);
 private:

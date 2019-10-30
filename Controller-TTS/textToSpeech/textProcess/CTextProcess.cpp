@@ -51,22 +51,18 @@ using namespace std;
 #define HMM_MODEL2				"model/hmm_original.htsvoice"
 #define WORD_MODEL			"model/"
 #define PATH_WAVE					"/data/opt/tomcat/webapps/tts/"
-
 #define GEN_PATH            "/data/opt/tomcat/webapps/genlabel"
 #define GEN_WAV_PATH 		"/data/opt/tomcat/webapps/genlabel/wav/"
 #define GEN_TEXT_PATH       "/data/opt/tomcat/webapps/genlabel/txt/"
 #define _MAX_PATH   260
 #define max_size 1000
-
-#define Label_PATH         "/data/opt/tomcat/webapps/label/"
+#define Label_PATH        "/data/opt/tomcat/webapps/label/"
 #define Data_PATH         "/data/opt/tomcat/webapps/"
 #define LabelRow_PATH      "labelrow/"
 //#define bin_PATH  		   "/home/kris/ControllerPlatform/Controller-TTS/bin/"       //modified for different user
 #define bin_PATH  	       "/data/opt/ControllerPlatform/Controller-TTS/bin/"       //for tts server
-
 #define model_Path_En "model/cmu_us_arctic_slt.htsvoice"
 #define wave_Path_En  "/data/opt/tomcat/webapps/tts/"
-
 #define CHAR_ZERO   CHAR_NUM[0]
 
 const int MAX_LEN = 20;
@@ -108,7 +104,9 @@ static std::map<int, const char*> ModelMap = {
 		{101, "model/hmm_101.htsvoice"},
 		{102, "model/hmm_102.htsvoice"},
 		{103, "model/hmm_103.htsvoice"},
-		{104, "model/hmm_104.htsvoice"}
+		{104, "model/hmm_104.htsvoice"},
+		{301, "model/hmm_301.htsvoice"},
+		{302, "model/hmm_302.htsvoice"}
 };
 
 // ==================  注意順序不要改變!!!!  ==========================
@@ -487,7 +485,6 @@ int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, C
 			strTxtName.getBuffer(), ttsProcess);
 	}
 
-
 int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
 	int nResult;
 	char** param = new char*[12];
@@ -522,7 +519,6 @@ int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveNam
 	return nResult;
 
 }
-
 
 void CTextProcess::genLabels(){
 
@@ -559,7 +555,7 @@ void CTextProcess::genLabels(){
 	cf.read(wavebuffer, data);		// read data into wavebuffer
 	free(wavebuffer);
 	wavebuffer = NULL;
-//	printf("data :%d\n", data);
+	printf("data :%d\n", data);
 
 	cf.read(shortdata, 4);			//開始 read 最後 cue 資料
 	shortdata[4] = '\0';
@@ -572,7 +568,7 @@ void CTextProcess::genLabels(){
 	}
 
 	int nTotalCue = (unsigned int) totalcues;// total # cue tags in the wav file, including tags of all sentences.
-//	printf("total %d\n", nTotalCue);
+	printf("total %d\n", nTotalCue);
 //	unsigned long data2;
 	char head2[40];
 	char *wavebuffer2 = NULL;
@@ -583,7 +579,7 @@ void CTextProcess::genLabels(){
 	cf2.read(reinterpret_cast<char*>(&data), 4);
 	wavebuffer2 = new char[data];
 	cf2.read(wavebuffer2, data);
-//	printf("data2 :%d\n", data2);
+	printf("data2 :%d\n", data);
 	free(wavebuffer2);
 	wavebuffer2 = NULL;
 
@@ -1094,6 +1090,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 // Ph97: Extended initial + final
 // 三個部分: part1: Extended initial
 //			 		 part2 and part3: 含tone的tonal final or 單獨存在的 tonal initial
+
 CString CTextProcess::Phone2Ph97(char* phone, int tone)
 {
 	CString result, tmp, whatever;
@@ -1552,8 +1549,8 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 }
 
 CString CTextProcess::filterLabel(CString fullstr, int voice_id) {  //-----  filterlabel modified 2019/03/20/ -----//
-	if (voice_id <= 100)
-		return fullstr;
+	 if (voice_id <= 100 || voice_id >= 301)
+		 return fullstr;
 	_log("[CTextProcess] Filter Label: %d", voice_id);
 	string strfullstr = fullstr.toString();
 	char* labels = strdup(strfullstr.c_str());
