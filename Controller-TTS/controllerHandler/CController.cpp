@@ -5,7 +5,6 @@
  *      Author: Jugo
  */
 #include "CController.h"
-
 #include <stdio.h>
 #include <string>
 #include <typeinfo>
@@ -36,8 +35,9 @@
 
 #define WAV_PATH            "/data/opt/tomcat/webapps/tts/"
 
-#define CHAR_ZERO   CHAR_NUM[0]
+//----------- TODO: 如要genlabel 註解此處 ----------//
 
+#define CHAR_ZERO   CHAR_NUM[0]
 const int MAX_LEN = 20;
 const int INTERVAL = 4;
 // chinese numerals
@@ -59,6 +59,9 @@ const string DictB[]={
 const string DictC[]={
 	"", "Thousand", "Million", "Billion", "Trillion"
 	"Thousand Trillion", "Million Trillion", "Billion Trillion"};
+
+//--------------------------------------------------//
+
 
 using namespace std;
 
@@ -103,7 +106,7 @@ int CController::onInitial(void* szConfPath)
 			{
 				convertFromString(nPort, strPort);
 				nResult = cmpTTS->start(0, nPort, mnMsqKey);
-////-- standford auto connect
+////-- standford auto connect not use
 //				if (nResult > 0){
 //					pid_t pid;
 //					char *argv[] = { "sh", "-c", "/data/opt/DomainSocketServer/startup.sh", NULL };
@@ -185,6 +188,8 @@ int CController::onFinish(void* nMsqKey)
 	return nKey;
 }
 
+//----------- TODO: 如要genlabel 註解此處 ----------//
+
 vector<string> CController::parseArticle(string &sentence)
 {
 	vector<string> articleList;
@@ -261,7 +266,7 @@ vector<toWord> CController::toWords(string &sentence)
 	string strChar = "";
 	string splitWordEn = "";
 	string checkBlankEn = "";
-	regex patternEn("[A-Za-z]");
+	regex patternEn("[A-Za-z0-9]");
 	regex patternBlank("[ ]");
 
 	for(int i = 0; sentence[i] != '\0';)
@@ -431,6 +436,7 @@ vector<string> CController::splitSentence(string &input)
 	{
 		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
 	}
+
 	return wordData;
 }
 
@@ -576,6 +582,8 @@ string CController::convert(string &num)
 	return result;
 }
 
+//--------------------------------------------------//
+
 void CController::removeFile(char *path)
 {
     struct dirent *entry = NULL;
@@ -651,7 +659,31 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 	removeFile(WAV_PATH);
 
-//	vector<string> splitData4 = parseArticle(ttsReq.text);  10/18
+
+//	vector<string> splitData4 = parseArticle(ttsReq.text);
+
+
+//----------------- TODO: 如要genlabel 註解此處 -----------------//
+
+//	vector<string> splitData4 = parseSentence(ttsReq.text);
+//	ttsReq.text = "";
+//
+//	for (vector<string>::iterator i = splitData4.begin(); i != splitData4.end(); ++i)
+//	{
+//		ttsReq.text = ttsReq.text + *i;
+//	}
+//	_log("[CController] ttsReq.text testtt 11: %s",  ttsReq.text.c_str());
+
+	vector<string> splitData = splitSentence(ttsReq.text);
+	ttsReq.text = "";
+	//	//---------------------//
+
+	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+	{
+		ttsReq.text = ttsReq.text + *i;
+	}
+	_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
+
 
 	vector<string> splitData3 = parseSentence(ttsReq.text);
 	ttsReq.text = "";
@@ -660,7 +692,13 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	{
 		ttsReq.text = ttsReq.text + *i;
 	}
-	_log("[CController] ttsReq.text testtt: %s",  ttsReq.text.c_str());
+	_log("[CController] ttsReq.text testtt 33: %s",  ttsReq.text.c_str());
+
+//------------------------------------------------------------//
+
+
+
+//-------------------------------------------------------------------10/22 註解然後測試genlabel(舊的)
 
 //              10/16
 ////	//----------- TODO: 先把數字轉中字 ----------//
@@ -687,6 +725,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //	}
 //	_log("[CController] ttsReq.text:%s", ttsReq.text.c_str());
 
+//----------------------------------------------------------------------------------------
 
 	jsonResp.create();
 
@@ -718,15 +757,21 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //			ttsReq.text = *i;
 //			//-------------------------------------------------//
 
+
+
+//----------------- TODO: 如要genlabel 註解此處 -----------------//
+
 		for (vector<string>::iterator i = splitData3.begin(); i != splitData3.end(); ++i)
 		{
 			ttsReq.text = *i;
 
-//			//----------- TODO: 檢查是否為英文 先暫時註解 ----------//
+//			//----------- TODO: 檢查是否為英文  ----------//
 			if (!checkEnglish(ttsReq.text))
 			{
 				_log("[CTextProcess] strFinded is Chinese: %s", ttsReq.text.c_str());
 //			//-------------------------------------------------//
+
+//-------------------------------------------------------------//
 
 
 				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData, count))
@@ -757,9 +802,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //						jsonResp.put("wave", strResponseWav.c_str());
 					}
 				}
-
-//			//----------- TODO: 檢查是否為英文 先暫時註解 (344行-348行相同)----------//
 			}
+
+//----------------- TODO: 如要genlabel 註解此處 -----------------//
+
 			else
 			{
 				_log("[CTextProcess] strFinded is english: %s", ttsReq.text.c_str());
@@ -813,6 +859,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		jsonResp.put("wave", outputPath.getBuffer());
 
 	}
+
+//-------------------------------------------------------------//
+
+
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
 	jsonResp.release();
 
