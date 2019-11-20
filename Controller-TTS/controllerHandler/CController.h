@@ -55,6 +55,10 @@ public:
 	vector<string> phase(vector<toWord> &data);
 	vector<string> parseArticle(string &sentence);
 
+	vector<string> parseSentence2(vector<string> &sentence);
+	vector<toWord> toWords2(vector<string> &sentence);
+
+
 protected:
 	int onCreated(void* nMsqKey);
 	int onInitial(void* szConfPath);

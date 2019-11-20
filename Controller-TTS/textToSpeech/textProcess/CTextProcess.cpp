@@ -1094,7 +1094,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 
 CString CTextProcess::Phone2Ph97(char* phone, int tone)
 {
-	CString result, tmp, whatever;
+	CString result, tmp;
 	result = tmp = "";
 	char *buffer;
 	int i, j, find;

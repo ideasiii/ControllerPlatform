@@ -201,6 +201,7 @@ vector<string> CController::parseArticle(string &sentence)
 	regex patternCh("[\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏]");
 	regex patternBlank("[ ]");
 
+
 	for(int i = 0; sentence[i] != '\0';)
 	{
 		char chr = sentence[i];
@@ -239,10 +240,12 @@ vector<string> CController::parseArticle(string &sentence)
 		}
 
 	}
+
 	for (int i = 0; i < articleList.size(); ++i)
 	{
 		_log("[CController] processTheText articleList vector: %s", articleList.at(i).c_str());
 	}
+
 	return articleList;
 }
 
@@ -266,8 +269,14 @@ vector<toWord> CController::toWords(string &sentence)
 	string strChar = "";
 	string splitWordEn = "";
 	string checkBlankEn = "";
-	regex patternEn("[A-Za-z0-9]");
-	regex patternBlank("[ ]");
+	regex  patternEn("[A-Za-z0-9]");
+	regex  patternBlank("[ \f\n\r\t\v]");
+	string check;
+	regex  patternNum("[A-Za-z]");
+	CString temp;
+
+	string splitWordEn2;
+	string test;
 
 	for(int i = 0; sentence[i] != '\0';)
 	{
@@ -298,6 +307,27 @@ vector<toWord> CController::toWords(string &sentence)
 	for (int i = 0; i < wordData.size(); ++i)
 	{
 		_log("[CController] processTheText wordData.at(i).text.c_str() vector: %s", wordData.at(i).text.c_str());
+		test = wordData.at(i).text.c_str();
+		if(!regex_match(test, patternNum) && wordData.at(i).type == 2){
+			_log("[CController] 310");
+			temp = wordData.at(i+1).text.c_str();
+			_log("[CController] processTheText temp: %s", temp.getBuffer());
+			if((temp.findOneOf(vWordUnit, check)) != -1 || (temp.findOneOf(vWordUnitDouble, check)) != -1){
+				splitWordEn2 = num2Spell(wordData.at(i).text);
+				_log("[CController] splitWordEn2: %s", splitWordEn2.c_str());
+
+				wordData.at(i).text = splitWordEn2;
+			}else{
+				splitWordEn2 = num2Chinese(wordData.at(i).text);
+				_log("[CController] splitWordEn22: %s", splitWordEn2.c_str());
+
+				wordData.at(i).text = splitWordEn2;
+			}
+			_log("[CController] 315");
+		}
+
+		_log("[CController] processTheText articleList vector2: %s", wordData.at(i).text.c_str());
+
 	}
 	return wordData;
 
@@ -432,8 +462,17 @@ vector<string> CController::splitSentence(string &input)
 		}
 	}
 
+	CString tempStore;
+	CString tempBlank = " ";
 	for (int i = 0; i < wordData.size(); ++i)
 	{
+		tempStore = wordData.at(i).c_str();
+		_log("[CController] processTheText store: %s", tempStore.getBuffer());
+		if (tempStore == tempBlank){
+			_log("[CController] processTheText wordData vector");
+			tempStore.trim();
+			wordData.at(i) = tempStore.getBuffer();
+		}
 		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
 	}
 
@@ -477,8 +516,7 @@ string CController::num2Chinese(string &num)
 string CController::num2Spell(string &num)
 {
     size_t sz = num.size(), revi, si, bi;
-    bool lastZero = false,
-        lastNonZero = false;
+    bool lastZero = false, lastNonZero = false;
     int val;
     string ret;
 
@@ -498,6 +536,9 @@ string CController::num2Spell(string &num)
         si = revi % INTERVAL;
 
         val = num[i] - '0';
+
+		_log("[CController] val :%d", val);
+
         if (0 != val) {
             if (lastZero) {
                 // append a zero
@@ -536,6 +577,8 @@ string CController::num2Spell(string &num)
 
             lastNonZero = false;
         }
+    	_log("[CController] ret1 :%s", ret.c_str());
+
     }
     return ret;
 }
@@ -641,6 +684,8 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	CString wavPath;
 	CString outputPath;
 
+	CString outputDir;
+
 	time_t rawtime;
 	time(&rawtime);
 
@@ -658,74 +703,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.g.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
 
 	removeFile(WAV_PATH);
-
-
-//	vector<string> splitData4 = parseArticle(ttsReq.text);
-
-
-//----------------- TODO: 如要genlabel 註解此處 -----------------//
-
-//	vector<string> splitData4 = parseSentence(ttsReq.text);
-//	ttsReq.text = "";
-//
-//	for (vector<string>::iterator i = splitData4.begin(); i != splitData4.end(); ++i)
-//	{
-//		ttsReq.text = ttsReq.text + *i;
-//	}
-//	_log("[CController] ttsReq.text testtt 11: %s",  ttsReq.text.c_str());
-
-	vector<string> splitData = splitSentence(ttsReq.text);
-	ttsReq.text = "";
-	//	//---------------------//
-
-	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
-	{
-		ttsReq.text = ttsReq.text + *i;
-	}
-	_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
-
-
-	vector<string> splitData3 = parseSentence(ttsReq.text);
-	ttsReq.text = "";
-
-	for (vector<string>::iterator i = splitData3.begin(); i != splitData3.end(); ++i)
-	{
-		ttsReq.text = ttsReq.text + *i;
-	}
-	_log("[CController] ttsReq.text testtt 33: %s",  ttsReq.text.c_str());
-
-//------------------------------------------------------------//
-
-
-
-//-------------------------------------------------------------------10/22 註解然後測試genlabel(舊的)
-
-//              10/16
-////	//----------- TODO: 先把數字轉中字 ----------//
-//	vector<string> splitData = splitSentence(ttsReq.text);
-//	ttsReq.text = "";
-////	//---------------------//
-//
-//	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
-//	{
-//		ttsReq.text = ttsReq.text + *i;
-//	}
-//	_log("[CController] ttsReq.text: %s",  ttsReq.text.c_str());
-//
-////	//----------- TODO: 中英分詞 ----------//
-//	vector<string> splitData2 = splitSentence(ttsReq.text);
-//	ttsReq.text = "";
-////	//---------------------//
-//
-
-	// 暫時註解 - 因為整併整句會無法產中英句
-//	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
-//	{
-//		ttsReq.text = ttsReq.text + *i;
-//	}
-//	_log("[CController] ttsReq.text:%s", ttsReq.text.c_str());
-
-//----------------------------------------------------------------------------------------
 
 	jsonResp.create();
 
@@ -751,13 +728,27 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	}
 	else
 	{
-//			//----------- TODO: 從vector提取string 先註解 10/16 ----------//
-//		for (vector<string>::iterator i = splitData2.begin(); i != splitData2.end(); ++i)
-//		{
-//			ttsReq.text = *i;
-//			//-------------------------------------------------//
+
+//----------------- TODO: 如要genlabel 註解此處 ------------------//
+		vector<string> splitData = splitSentence(ttsReq.text);
+		ttsReq.text = "";
+
+		for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+		{
+			ttsReq.text = ttsReq.text + *i;
+		}
+		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
 
 
+		vector<string> splitData3 = parseSentence(ttsReq.text);
+		ttsReq.text = "";
+
+		for (vector<string>::iterator i = splitData3.begin(); i != splitData3.end(); ++i)
+		{
+			ttsReq.text = ttsReq.text + *i;
+		}
+		_log("[CController] ttsReq.text testtt 33: %s",  ttsReq.text.c_str());
+//-------------------------------------------------------------//
 
 //----------------- TODO: 如要genlabel 註解此處 -----------------//
 
@@ -769,10 +760,9 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 			if (!checkEnglish(ttsReq.text))
 			{
 				_log("[CTextProcess] strFinded is Chinese: %s", ttsReq.text.c_str());
-//			//-------------------------------------------------//
+			//-------------------------------------------------//
 
 //-------------------------------------------------------------//
-
 
 				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData, count))
 				{
@@ -821,6 +811,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 //					jsonResp.put("waveEN", strResponseWav.c_str());
 				}
 			}
+
 //			//-------------------------------------------------//
 
 			count++;
@@ -829,6 +820,11 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		}
 		count = 1;
 //			//-------------------------------------------------//
+
+		outputDir.format("%s%ld", WAV_PATH, rawtime);
+		mkdir(outputDir, 0777);
+
+
 
 		wavPath.format("%s*.wav", WAV_PATH);
 		outputPath.format("%s0_%ld.wav", WAV_PATH, rawtime);
@@ -876,6 +872,5 @@ void CController::onHandleMessage(Message &message)
 		thread([=]
 		{	onTTS( message.arg[0], message.arg[1],message.strData.c_str());}).detach();
 		break;
-
 	}
 }
