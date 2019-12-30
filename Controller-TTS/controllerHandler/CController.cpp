@@ -729,14 +729,15 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	{
 
 //----------------- TODO: 如要genlabel 註解此處 ------------------//
-		vector<string> splitData = splitSentence(ttsReq.text);
-		ttsReq.text = "";
 
-		for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
-		{
-			ttsReq.text = ttsReq.text + *i;
-		}
-		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
+//		vector<string> splitData = splitSentence(ttsReq.text);
+//		ttsReq.text = "";
+//
+//		for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+//		{
+//			ttsReq.text = ttsReq.text + *i;
+//		}
+//		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
 
 
 		vector<string> splitData3 = parseSentence(ttsReq.text);
