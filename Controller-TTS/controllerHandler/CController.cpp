@@ -419,10 +419,10 @@ vector<string> CController::splitSentence(string &input)
 								if(regex_match(strChar, patternEn)){ //TODO: 判斷字詞是否為英文
 									wordData.push_back(splitWordEn);
 									splitWordEn = "";
-								}else{
-									splitWordEn = num2Chinese(splitWordEn);
-									wordData.push_back(splitWordEn);
-									splitWordEn = "";
+									}else{
+										splitWordEn = num2Chinese(splitWordEn);
+										wordData.push_back(splitWordEn);
+										splitWordEn = "";
 								}
 							}
 						}
@@ -465,13 +465,13 @@ vector<string> CController::splitSentence(string &input)
 	CString tempBlank = " ";
 	for (int i = 0; i < wordData.size(); ++i)
 	{
-		tempStore = wordData.at(i).c_str();
-		_log("[CController] processTheText store: %s", tempStore.getBuffer());
-		if (tempStore == tempBlank){
-			_log("[CController] processTheText wordData vector");
-			tempStore.trim();
-			wordData.at(i) = tempStore.getBuffer();
-		}
+//		tempStore = wordData.at(i).c_str();
+//		_log("[CController] processTheText store: %s", tempStore.getBuffer());
+//		if (tempStore == tempBlank){
+//			_log("[CController] processTheText wordData vector");
+//			tempStore.trim();
+//			wordData.at(i) = tempStore.getBuffer();
+//		}
 		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
 	}
 
@@ -730,14 +730,14 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 //----------------- TODO: 如要genlabel 註解此處 ------------------//
 
-//		vector<string> splitData = splitSentence(ttsReq.text);
-//		ttsReq.text = "";
-//
-//		for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
-//		{
-//			ttsReq.text = ttsReq.text + *i;
-//		}
-//		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
+		vector<string> splitData = splitSentence(ttsReq.text);
+		ttsReq.text = "";
+
+		for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i)
+		{
+			ttsReq.text = ttsReq.text + *i;
+		}
+		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
 
 
 		vector<string> splitData3 = parseSentence(ttsReq.text);
