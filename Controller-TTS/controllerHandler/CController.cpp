@@ -139,7 +139,7 @@ int CController::onInitial(void* szConfPath)
 //	string datain;
 //
 //	filepath.format("%s/wav/",GEN_PATH);
-//	printf("\nfile %s\n", filepath.getBuffer());
+//	_log("[CController]nfile %s\n", filepath.getBuffer());
 //
 //	DIR *dp;
 //	struct dirent *entry;
@@ -151,17 +151,16 @@ int CController::onInitial(void* szConfPath)
 //		if (entry->d_name[0] == '.')
 //			continue;
 //		filename = entry->d_name;
-//		_log("CController]fileName: %s", filename.getBuffer());
+//		_log("[CController]fileName: %s", filename.getBuffer());
 //		std::string FinalTitle = filename.getBuffer();
 //		std::string FinalTitle2 = FinalTitle;
 //		string wav = ".wav";
 //		FinalTitle = FinalTitle.replace(FinalTitle.find(wav), sizeof(wav), "");
 //		csTargetFileName.format("%s/txt/%s.txt",GEN_PATH,FinalTitle.c_str());
-//		_log("CController]csTargetFileName: %s\n", csTargetFileName.getBuffer());
+//		_log("[CController]csTargetFileName: %s\n", csTargetFileName.getBuffer());
 //		ifstream test(csTargetFileName, std::ifstream::in);
-//		_log("[CController]131");
 //		getline(test,datain);
-//		_log("CController]dataIn : %s", datain.c_str());
+//		_log("[CController]dataIn : %s", datain.c_str());
 //		test.close();
 //		textProcess->strFileTitle_gen = FinalTitle2.c_str();
 //		textProcess->strInput_gen = datain;
@@ -306,26 +305,26 @@ vector<toWord> CController::toWords(string &sentence)
 
 	for (int i = 0; i < wordData.size(); ++i)
 	{
-		_log("[CController] processTheText wordData.at(i).text.c_str() vector: %s", wordData.at(i).text.c_str());
-		test = wordData.at(i).text.c_str();
-		if(!regex_match(test, patternNum) && wordData.at(i).type == 2){
-			_log("[CController] 310");
-			temp = wordData.at(i+1).text.c_str();
-			_log("[CController] processTheText temp: %s", temp.getBuffer());
-			if((temp.findOneOf(vWordUnit, check)) != -1 || (temp.findOneOf(vWordUnitDouble, check)) != -1){
-				splitWordEn2 = num2Spell(wordData.at(i).text);
-				_log("[CController] splitWordEn2: %s", splitWordEn2.c_str());
-
-				wordData.at(i).text = splitWordEn2;
-			}else{
-				splitWordEn2 = num2Chinese(wordData.at(i).text);
-				_log("[CController] splitWordEn22: %s", splitWordEn2.c_str());
-
-				wordData.at(i).text = splitWordEn2;
-			}
-			_log("[CController] 315");
-		}
-
+//		_log("[CController] processTheText wordData.at(i).text.c_str() vector: %s", wordData.at(i).text.c_str());
+//		test = wordData.at(i).text.c_str();
+//		if(!regex_match(test, patternNum) && wordData.at(i).type == 2){
+//			_log("[CController] 310");
+//			temp = wordData.at(i+1).text.c_str();
+//			_log("[CController] processTheText temp: %s", temp.getBuffer());
+//			if((temp.findOneOf(vWordUnit, check)) != -1 || (temp.findOneOf(vWordUnitDouble, check)) != -1){
+//				splitWordEn2 = num2Spell(wordData.at(i).text);
+//				_log("[CController] splitWordEn2: %s", splitWordEn2.c_str());
+//
+//				wordData.at(i).text = splitWordEn2;
+//			}else{
+//				splitWordEn2 = num2Chinese(wordData.at(i).text);
+//				_log("[CController] splitWordEn22: %s", splitWordEn2.c_str());
+//
+//				wordData.at(i).text = splitWordEn2;
+//			}
+//			_log("[CController] 315");
+//		}
+//
 		_log("[CController] processTheText articleList vector2: %s", wordData.at(i).text.c_str());
 
 	}
