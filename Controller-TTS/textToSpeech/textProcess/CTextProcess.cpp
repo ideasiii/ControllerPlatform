@@ -155,15 +155,15 @@ void CTextProcess::loadModel()
 	CartModel->LoadCARTModel();
 	word->InitWord(WORD_MODEL);
 
-	FILE *file;
-	file = fopen("/data/opt/tomcat/webapps/data/tempWordDataUrl.txt", "r");
-	if (file){
-		char mystring [100];
-		char *a = fgets(mystring, 100, file);
-		string str(a);
-		word->InitWordfromHTTP(str.c_str());
-		fclose(file);
-	}
+//	FILE *file;
+//	file = fopen("/data/opt/tomcat/webapps/data/tempWordDataUrl.txt", "r");
+//	if (file){
+//		char mystring [100];
+//		char *a = fgets(mystring, 100, file);
+//		string str(a);
+//		word->InitWordfromHTTP(str.c_str());
+//		fclose(file);
+//	}
 
 }
 
@@ -219,7 +219,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
-	strWavePath.format("%s%d_%ld.wav", PATH_WAVE, count, rawtime);
+	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, rawtime, count);
 	strLabelName.format("label/%d_%ld.lab", count, rawtime);
 	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
@@ -464,8 +464,8 @@ int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, C
 	CString enWavePath;
 	CString strInput;
 	CString strTxtName;
-	strTxtName.format("label_En/%ld_%d.txt", count, rawtime);
-	strWavePath.format("%s%ld_%d.wav", wave_Path_En, count, rawtime);
+	strTxtName.format("label_En/%d_%ld.txt", rawtime, count);
+	strWavePath.format("%s%d_%ld.wav", wave_Path_En, rawtime, count);
 	WORD_PACKAGE wordPackage;
 
 	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());
@@ -518,6 +518,146 @@ int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveNam
 	nResult = fliteHtsSynthesize(12, param);
 	delete param;
 	return nResult;
+
+}
+
+void CTextProcess::genLabels2(){
+
+	CString strTextTitle2;
+	CString strLabelName;
+	int SyllableBound[100];		// syllable邊界
+	int WordBound[100];			// word boundary, tts 斷詞結果
+	int PhraseBound[20];		// phrase boundary
+	int i, j, k, l, sIndex, wIndex, pIndex;
+	CStringArray SentenceArray;
+	CString AllBig5;
+	WORD_PACKAGE wordPackage;
+	initrd();
+
+	CWaveFile WaveFile;
+	char csTargetFileName[200];
+	sprintf(csTargetFileName, "%s%s", GEN_WAV_PATH,strFileTitle_gen.getBuffer());
+	_log("[CTextProcess genLabels2]path %s\n", csTargetFileName);
+	int nTotalCue = WaveFile.GetTotalCue();
+
+	UINT *cuestart = new UINT[nTotalCue];		//cue start
+	UINT *cuelength = new UINT[nTotalCue];		//cue length
+	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
+	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
+	WaveFile.GetCueParameter(cuestart, cuelength);
+	for (int i=0;i<nTotalCue;i++) {  // convert unit to sample-point based.
+		cuestart2[i+1]=cuestart[i]*1000/1.6;
+		cuelength2[i+1]=cuestart2[i+1]+cuelength[i]*1000/1.6;
+	}
+
+	strInput_gen.trim();
+	WordExchange(strInput_gen);
+	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput_gen.getBuffer());
+
+	string strFinded;
+	while ((i = strInput_gen.findOneOf(vWordWrap, strFinded)) != -1)
+	{
+		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
+		{
+			strInput_gen.left(i).replace(vdel_it->c_str(), "");
+		}
+		SentenceArray.add(strInput_gen.left(i));
+		strInput_gen = strInput_gen.right(strInput_gen.getLength() - i - strFinded.length());
+	}
+
+	if (0 >= SentenceArray.getSize() || 0 < strInput_gen.getLength())
+	{
+		SentenceArray.add(strInput_gen);
+	}
+
+	for (i = 0; i < SentenceArray.getSize(); ++i)
+	{
+		_log("[CTextProcess] genlabel processTheText Sentence: %s", SentenceArray[i].getBuffer());
+	}
+
+	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
+	{
+		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
+		CString strBig5;
+		vector<int> PWCluster;
+		vector<int> PPCluster;
+
+		_log("initial boundaries and indexes for a sentence");
+		sIndex = wIndex = pIndex = 0;
+		SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
+		for (i = 1; i < 100; ++i)
+			SyllableBound[i] = WordBound[i] = 0;
+		for (i = 1; i < 20; ++i)
+			PhraseBound[i] = 0;
+
+		wordPackage.clear();
+		wordPackage.strText = SentenceArray[lcount].getBuffer();
+		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
+
+		_log("[CTextProcess] genlabel Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
+		if(wordPackage.txt_len == 0){
+			continue;
+		}
+		word->GetWord(wordPackage);
+
+		if (-1 == CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage))
+			continue;
+		AllBig5 += strBig5;
+
+		k = l = 0;
+		for (i = 0; i < wordPackage.wnum; ++i) // 字詞數
+		{
+			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)   // 詞的字數
+			{
+				_log("[CTextProcess] genlabel processTheText Text: %s Phone: %s", wordPackage.vecWordInfo[i].strSentence.c_str(),
+						wordPackage.vecWordInfo[i].strPhone[j].c_str());
+
+				vector<string> vData;
+				spliteData(const_cast<char *>(wordPackage.vecWordInfo[i].strPhone[j].c_str()), " ", vData);
+
+				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)  // 因素分解
+				{
+					PhoneSeq.add(*it);
+				}
+				++sIndex;
+
+				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
+				//_log("======================> SyllableBound[%d] = %d", sIndex, SyllableBound[sIndex]);
+
+				if (!PWCluster.empty() && PWCluster[k] == 1)
+				{
+					WordBound[++wIndex] = SyllableBound[sIndex];
+					if (PPCluster[l] == 2)
+						PhraseBound[++pIndex] = WordBound[wIndex];
+					++l;
+				}
+				++k;
+			}
+		}
+		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
+		ofstream csLabFileFull;
+		ofstream csLabFileMono;
+		CString strFileName;
+		FinalFileTitle = strFileTitle_gen.getBuffer();
+		string wav = ".wav";
+		FinalFileTitle = FinalFileTitle.replace(FinalFileTitle.find(wav), sizeof(wav), "");
+		strFileName.format("%s/train/full/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
+		csLabFileFull.open(strFileName.getBuffer(), ios::app);
+		strFileName.format("%s/train/mono/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
+		csLabFileMono.open(strFileName.getBuffer(), ios::app);
+		timeinfo((int*)cuestart2,(int*)cuelength2);
+		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
+				gduration_s, gduration_e, 1);
+		csLabFileFull.close();
+		csLabFileMono.close();
+	}
+	CString strFileName;
+	strFileName.format("%s/train", GEN_PATH );
+	ConcatenateLabel( FinalFileTitle.c_str(), strFileName.getBuffer(), SentenceArray.getSize() ) ;
+	delete [] cuestart;
+	delete [] cuelength;
+	delete [] cuestart2;
+	delete [] cuelength2;
 
 }
 

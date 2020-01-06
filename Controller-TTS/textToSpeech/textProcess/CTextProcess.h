@@ -46,6 +46,7 @@ public:
 	int processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count);
 	vector<string> splitSentence(string &input);
 
+	void genLabels2();
 
 private:
 	void releaseModel();
