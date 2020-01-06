@@ -405,56 +405,106 @@ vector<string> CController::splitSentence(string &input)
 			strCharCh = input.substr(i+1, 3);
 			strCharChDouble = input.substr(i+1, 6);
 			++i;
+			_log("[CController] 408");
 			if(!strChar.empty() && strChar != blank){ //TODO: 判斷字詞是否空白
+				_log("[CController] 410");
 				if(checkBlankEn != blank){
+					_log("[CController] 412");
 					splitWordEn += strChar;
+					_log("[CController] 414. splitWordEn %s", splitWordEn.c_str());
+
+//					if(!regex_match(splitWordEn, patternEn)){
+//						splitWordEn = blank;
+//					}
+//					_log("[CController] 41x. splitWordEn %s", splitWordEn.c_str());
+
 					if(checkBlankEn == "\0"|| !regex_match(checkBlankEn, pattern)){ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
+						_log("[CController] 416");
 						temp = strCharCh.c_str();
 						temp2 = strCharChDouble.c_str();
+						_log("[CController] 419");
 						if((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){ //TODO: 數字單位是否匹配
+							_log("[CController] 421");
 							splitWordEn = num2Spell(splitWordEn);
+							_log("[CController] 423. splitWordEn %s", splitWordEn.c_str());
 							wordData.push_back(splitWordEn);
+							_log("[CController] 425");
 							splitWordEn = "";
+							_log("[CController] 427");
 							}else{
 								if(regex_match(strChar, patternEn)){ //TODO: 判斷字詞是否為英文
+									_log("[CController] 430");
 									wordData.push_back(splitWordEn);
+									_log("[CController] 432");
 									splitWordEn = "";
 									}else{
+										_log("[CController] 435");
 										splitWordEn = num2Chinese(splitWordEn);
+										_log("[CController] 437. splitWordEn %s", splitWordEn.c_str());
 										wordData.push_back(splitWordEn);
+										_log("[CController] 439");
 										splitWordEn = "";
 								}
 							}
 						}
 				}else{
-					splitWordEn += strChar;
-					wordData.push_back(splitWordEn);
-					splitWordEn = "";
+					if(regex_match(strChar, patternEn))
+					{
+						_log("[CController] a 445");
+						splitWordEn += strChar;
+						_log("[CController] a 447. splitWordEn %s", splitWordEn.c_str());
+						wordData.push_back(splitWordEn);
+						_log("[CController] a 449");
+						splitWordEn = "";
+					}else{
+						_log("[CController] 445");
+						splitWordEn += strChar;
+
+						splitWordEn = num2Spell(splitWordEn);
+
+						_log("[CController] 447. splitWordEn %s", splitWordEn.c_str());
+						wordData.push_back(splitWordEn);
+						_log("[CController] 449");
+						splitWordEn = "";
+					}
 				}
 			}else{
 				strChar = blank;
+				_log("[CController] 454");
+//				continue;
 				splitWordEn += strChar;
+				_log("[CController] 456. splitWordEn %s", splitWordEn.c_str());
 				wordData.push_back(splitWordEn);
 				splitWordEn = "";
 			}
 		}//中文 chr是111x xxxx
 		else if((chr & 0xE0) == 0xE0)
 		{
+			_log("[CController] 463");
 			strChar = input.substr(i, 3);
 			checkBlankCh = input.substr(i+3, 1);
 			checkBlankEn = input.substr(i+1, 1);
-
+			_log("[CController] 467");
 			i+=3;
 			if(!strChar.empty() && strChar != blank){
+				_log("[CController] 470");
 				if(checkBlankCh != blank){
+					_log("[CController] 472");
 					splitWordCh += strChar;
+					_log("[CController] 474. splitWordCh %s", splitWordCh.c_str());
+					wordData.push_back(splitWordCh);
+					splitWordCh = "";
 					if(checkBlankCh == "\0" || regex_match(checkBlankCh, pattern)){
+						_log("[CController] 475");
 						wordData.push_back(splitWordCh);
 						splitWordCh = "";
+						_log("[CController] 478");
 					}
 				}else{
 					splitWordCh += strChar;
+					_log("[CController] 482. splitWordCh %s", splitWordCh.c_str());
 					wordData.push_back(splitWordCh);
+					_log("[CController] 484");
 					splitWordCh = "";
 				}
 			}
@@ -827,7 +877,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 
 		wavPath.format("%s*.wav", WAV_PATH);
-		outputPath.format("%s0_%ld.wav", WAV_PATH, rawtime);
+		outputPath.format("%s%ld_0.wav", WAV_PATH, rawtime);
 		char *wavPathChar = wavPath.getBuffer();
 		char cmd[] = "sox";
 		char *end = outputPath.getBuffer();
