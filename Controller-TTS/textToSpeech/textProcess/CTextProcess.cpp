@@ -183,7 +183,7 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count)
+int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir)
 {
 
 	time_t rawtime;
@@ -219,7 +219,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 
 	int tempcount = 1;
 	idCount.insert(pair<string, int>(ttsProcess.id.c_str(), tempcount));
-	strWavePath.format("%s%ld_%d.wav", PATH_WAVE, rawtime, count);
+	strWavePath.format("%s/%ld_%d.wav", outputDir.getBuffer(), rawtime, count);
 	strLabelName.format("label/%d_%ld.lab", count, rawtime);
 	strLabelRowFile.format("labelrow/%s", ttsProcess.id.c_str());
 	LabelRowFile.format("%slabelrow/%s", bin_PATH, ttsProcess.id.c_str());
@@ -455,7 +455,7 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 	}
 }
 
-int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count)
+int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir)
 {
 
 	time_t rawtime;
@@ -465,7 +465,7 @@ int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, C
 	CString strInput;
 	CString strTxtName;
 	strTxtName.format("label_En/%d_%ld.txt", rawtime, count);
-	strWavePath.format("%s%d_%ld.wav", wave_Path_En, rawtime, count);
+	strWavePath.format("%s/%d_%ld.wav", outputDir.getBuffer(), rawtime, count);
 	WORD_PACKAGE wordPackage;
 
 	_log("[CTextProcess] processTheText Input Text: %s", ttsProcess.text.c_str());

@@ -27,7 +27,7 @@ class CTextProcess
 public:
 	explicit CTextProcess();
 	virtual ~CTextProcess();
-	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count);
+	int processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir);
 	void loadModel();
 	int loadWordfromHTTP(string url);
 	void dumpWordData();
@@ -43,7 +43,7 @@ public:
 	CString strInput_gen, strFileTitle_gen;
 	map<string, int>idCount;
 	bool checkEnglish(string &input);
-	int processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count);
+	int processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir);
 	vector<string> splitSentence(string &input);
 
 	void genLabels2();

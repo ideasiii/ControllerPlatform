@@ -755,6 +755,9 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 	jsonResp.create();
 
+	outputDir.format("%s%ld", WAV_PATH, rawtime);
+	mkdir(outputDir, 0777);
+
 	if (ttsReq.req_type == 1){
 		textProcess->loadWordfromHTTP(ttsReq.text.c_str());
 		jsonResp.put("status", 0);
@@ -814,7 +817,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 //-------------------------------------------------------------//
 
-				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData, count))
+				if (-1 == textProcess->processTheText(ttsReq, strWave, strZip, strData, count, outputDir))
 				{
 					jsonResp.put("status", 3);
 				}
@@ -849,7 +852,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 			else
 			{
 				_log("[CTextProcess] strFinded is english: %s", ttsReq.text.c_str());
-				if (-1 == textProcess->processTheText_EN(ttsReq, strWave, strZip, strData, count))
+				if (-1 == textProcess->processTheText_EN(ttsReq, strWave, strZip, strData, count, outputDir))
 				{
 					jsonResp.put("status", 3);
 				}
@@ -871,13 +874,13 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		count = 1;
 //			//-------------------------------------------------//
 
-		outputDir.format("%s%ld", WAV_PATH, rawtime);
-		mkdir(outputDir, 0777);
+//		outputDir.format("%s%ld", WAV_PATH, rawtime);
+//		mkdir(outputDir, 0777);
 
 
 
-		wavPath.format("%s*.wav", WAV_PATH);
-		outputPath.format("%s%ld_0.wav", WAV_PATH, rawtime);
+		wavPath.format("%s/*.wav", outputDir.getBuffer());
+		outputPath.format("%s/%ld_0.wav", outputDir.getBuffer(), rawtime);
 		char *wavPathChar = wavPath.getBuffer();
 		char cmd[] = "sox";
 		char *end = outputPath.getBuffer();
