@@ -381,39 +381,50 @@ vector<string> CController::splitSentence(string &input)
 			{ //TODO: 判斷字詞是否空白
 				if (checkBlankEn != blank)
 				{
-					splitWordEn += strChar;
-					_log("[CController] 385 splitWordEn %s", splitWordEn.c_str());
+					if (!regex_match(strChar, pattern))
+					{
+						splitWordEn += strChar;
+						_log("[CController] 385 splitWordEn %s", splitWordEn.c_str());
+						wordData.push_back(splitWordEn);
+						splitWordEn = "";
+					}
+					else
+					{
+						splitWordEn += strChar;
+						_log("[CController] 385 splitWordEn %s", splitWordEn.c_str());
 
-					if (checkBlankEn == "\0" || !regex_match(checkBlankEn, pattern))
-					{ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
-						temp = strCharCh.c_str();
-						temp2 = strCharChDouble.c_str();
-						if ((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1)
-						{ //TODO: 數字單位是否匹配
-							splitWordEn = num2Spell(splitWordEn);
-							_log("[CController] 394 splitWordEn %s", splitWordEn.c_str());
-							wordData.push_back(splitWordEn);
-							splitWordEn = "";
-						}
-						else
-						{
-							if (regex_match(strChar, patternEn))
-							{ //TODO: 判斷字詞是否為英文
-								wordData.push_back(splitWordEn);
-								splitWordEn = "";
-							}
-							else if (regex_match(strChar, patternPer))
-							{
-								splitWordEn = percent;
+						if (checkBlankEn == "\0" || !regex_match(checkBlankEn, pattern))
+						{ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
+							temp = strCharCh.c_str();
+							temp2 = strCharChDouble.c_str();
+							if ((temp.findOneOf(vWordUnit, check)) != -1
+									|| (temp2.findOneOf(vWordUnitDouble, check)) != -1)
+							{ //TODO: 數字單位是否匹配
+								splitWordEn = num2Spell(splitWordEn);
+								_log("[CController] 394 splitWordEn %s", splitWordEn.c_str());
 								wordData.push_back(splitWordEn);
 								splitWordEn = "";
 							}
 							else
 							{
-								splitWordEn = num2Chinese(splitWordEn);
-								_log("[CController] 414 splitWordEn %s", splitWordEn.c_str());
-								wordData.push_back(splitWordEn);
-								splitWordEn = "";
+								if (regex_match(strChar, patternEn))
+								{ //TODO: 判斷字詞是否為英文
+									wordData.push_back(splitWordEn);
+									splitWordEn = "";
+								}
+								else if (regex_match(strChar, patternPer))
+								{
+									splitWordEn = percent;
+									wordData.push_back(splitWordEn);
+									splitWordEn = "";
+								}
+								else
+								{
+									splitWordEn = num2Chinese(splitWordEn);
+									_log("[CController] 414 splitWordEn %s", splitWordEn.c_str());
+									wordData.push_back(splitWordEn);
+									splitWordEn = "";
+								}
 							}
 						}
 					}
