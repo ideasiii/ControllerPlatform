@@ -68,47 +68,23 @@ using namespace std;
 const int MAX_LEN = 20;
 const int INTERVAL = 4;
 // chinese numerals
-const string CHAR_NUM[] = {"零", "一", "二", "三", "四", "五", "六", "七",
-"八", "九"};
+const string CHAR_NUM[] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九" };
 // small interval
-const string CHAR_SI[] = {"十", "百", "千"};
+const string CHAR_SI[] = { "十", "百", "千" };
 // big interval
-const string CHAR_BI[] = {"萬", "億", "兆", "京"};
+const string CHAR_BI[] = { "萬", "億", "兆", "京" };
 
-
-static std::map<int, const char*> ModelMap = {
-		{0,   "model/hmm_adapt.htsvoice"},
-		{1,   "model/hmm_adapt.htsvoice"},
-		{2,   "model/hmm_adapt.htsvoice"},
-		{3,   "model/hmm_adapt.htsvoice"},
-		{9,   "model/hmm_9.htsvoice"},
-		{10,  "model/hmm_10.htsvoice"},
-		{11,  "model/hmm_11.htsvoice"},
-		{12,  "model/hmm_12.htsvoice"},
-		{13,  "model/hmm_13.htsvoice"},
-		{14,  "model/hmm_14.htsvoice"},
-		{15,  "model/hmm_15.htsvoice"},
-		{16,  "model/hmm_16.htsvoice"},
-		{17,  "model/hmm_17.htsvoice"},
-		{18,  "model/hmm_18.htsvoice"},
-		{19,  "model/hmm_19.htsvoice"},
-		{20,  "model/hmm_20.htsvoice"},
-		{21,  "model/hmm_21.htsvoice"},
-		{22,  "model/hmm_22.htsvoice"},
-		{23,  "model/hmm_23.htsvoice"},
-		{24,  "model/hmm_24.htsvoice"},
-		{25,  "model/hmm_25.htsvoice"},
-		{26,  "model/hmm_26.htsvoice"},
-		{27,  "model/hmm_27.htsvoice"},
-		{28,  "model/hmm_28.htsvoice"},
-		{30,  "model/hmm_30.htsvoice"},
-		{101, "model/hmm_101.htsvoice"},
-		{102, "model/hmm_102.htsvoice"},
-		{103, "model/hmm_103.htsvoice"},
-		{104, "model/hmm_104.htsvoice"},
-		{301, "model/hmm_301.htsvoice"},
-		{302, "model/hmm_302.htsvoice"}
-};
+static std::map<int, const char*> ModelMap = { { 0, "model/hmm_adapt.htsvoice" }, { 1, "model/hmm_adapt.htsvoice" }, {
+		2, "model/hmm_adapt.htsvoice" }, { 3, "model/hmm_adapt.htsvoice" }, { 9, "model/hmm_9.htsvoice" }, { 10,
+		"model/hmm_10.htsvoice" }, { 11, "model/hmm_11.htsvoice" }, { 12, "model/hmm_12.htsvoice" }, { 13,
+		"model/hmm_13.htsvoice" }, { 14, "model/hmm_14.htsvoice" }, { 15, "model/hmm_15.htsvoice" }, { 16,
+		"model/hmm_16.htsvoice" }, { 17, "model/hmm_17.htsvoice" }, { 18, "model/hmm_18.htsvoice" }, { 19,
+		"model/hmm_19.htsvoice" }, { 20, "model/hmm_20.htsvoice" }, { 21, "model/hmm_21.htsvoice" }, { 22,
+		"model/hmm_22.htsvoice" }, { 23, "model/hmm_23.htsvoice" }, { 24, "model/hmm_24.htsvoice" }, { 25,
+		"model/hmm_25.htsvoice" }, { 26, "model/hmm_26.htsvoice" }, { 27, "model/hmm_27.htsvoice" }, { 28,
+		"model/hmm_28.htsvoice" }, { 30, "model/hmm_30.htsvoice" }, { 101, "model/hmm_101.htsvoice" }, { 102,
+		"model/hmm_102.htsvoice" }, { 103, "model/hmm_103.htsvoice" }, { 104, "model/hmm_104.htsvoice" }, { 301,
+		"model/hmm_301.htsvoice" }, { 302, "model/hmm_302.htsvoice" } };
 
 // ==================  注意順序不要改變!!!!  ==========================
 
@@ -183,7 +159,8 @@ void CTextProcess::releaseModel()
 		delete word;
 }
 
-int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir)
+int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip,
+		CString &strChineseData, int count, CString &outputDir)
 {
 
 	time_t rawtime;
@@ -232,17 +209,6 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 	strInput.trim();
 	_log("[CTextProcess] strInput: %s", strInput.getBuffer());
 
-//	string input;
-//	input = strInput.getBuffer();
-//
-//	string outSplit;
-//	vector<string> splitData = splitSentence(input);
-//	for (vector<string>::iterator i = splitData.begin(); i != splitData.end(); ++i){
-//		outSplit = outSplit + *i;
-//	}
-//	strInput = outSplit.c_str();
-//	_log("[CTextProcess] splite text: %s", strInput.getBuffer());
-
 	string strFinded;
 
 	while ((i = strInput.findOneOf(vWordWrap, strFinded)) != -1)
@@ -265,7 +231,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		_log("[CTextProcess] processTheText Sentence: %s", SentenceArray[i].getBuffer());
 	}
 
-	if (ttsProcess.voice_id == -1 && ttsProcess.sequence_num == 1){
+	if (ttsProcess.voice_id == -1 && ttsProcess.sequence_num == 1)
+	{
 		mkdir(strLabelRowFile, 0777);
 	}
 
@@ -291,8 +258,9 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
 
 		//----- 2019/03/04 fix multiple symbols error -----//
-		_log("[CTextProcess] Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
-		if(wordPackage.txt_len == 0){
+		_log("[CTextProcess] Word = %s, Number = %d", wordPackage.strText.c_str(), wordPackage.txt_len);
+		if (wordPackage.txt_len == 0)
+		{
 			continue;
 		}
 		//-------------------------------------------------//
@@ -333,17 +301,20 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 				++k;
 			}
 		}
-		if(ttsProcess.voice_id == -1){
+		if (ttsProcess.voice_id == -1)
+		{
 			_log("=============== 合成Label檔 %s===============", strLabelRow.getBuffer());
 			ofstream csLabFile;
 			csLabFile.open(strLabelRow.getBuffer(), ios::app);
-			CString full = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFile, NULL,
-					gduration_s, gduration_e,ttsProcess.voice_id);
+			CString full = GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex,
+					csLabFile, NULL, gduration_s, gduration_e, ttsProcess.voice_id);
 			csLabFile.close();
 			PhoneSeq.removeAll();
 			(idCount[ttsProcess.id.c_str()])++;
 
-		}else if(ttsProcess.voice_id == -2){
+		}
+		else if (ttsProcess.voice_id == -2)
+		{
 			_log("=============== 注音用Label檔 ===============");
 			ofstream csLabFile;
 			csLabFile.open(ChineseLabel.getBuffer(), ios::app);
@@ -352,7 +323,9 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 			csLabFile.close();
 			PhoneSeq.removeAll();
 
-		}else{
+		}
+		else
+		{
 			_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
 			ofstream csLabFile;
 			csLabFile.open(strLabelName.getBuffer(), ios::app);
@@ -363,7 +336,8 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		}
 	}
 
-	if(ttsProcess.voice_id == -2){
+	if (ttsProcess.voice_id == -2)
+	{
 		ChinesePath.format("%s%s", bin_PATH, ChineseLabel.getBuffer());
 		char *ChineseFilePath = ChinesePath.getBuffer();
 		char cmd3[] = "mv";
@@ -376,23 +350,32 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		pid_t pid3;
 		int status3;
 		status3 = posix_spawn(&pid3, "/bin/mv", NULL, NULL, args2, environ);
-		if (status3 == 0) {
-		 _log("mv: Child pid: %d\n", pid3);
-		 if (waitpid(pid3, &status3, 0) != -1) {
-		  _log("mv: Child exited with status %i\n", status3);
-		 } else {
-		  _log("Error: waitpid");
-		 }
-		} else {
-		 _log("mv: posix_spawn: %s\n", strerror(status3));
+		if (status3 == 0)
+		{
+			_log("mv: Child pid: %d\n", pid3);
+			if (waitpid(pid3, &status3, 0) != -1)
+			{
+				_log("mv: Child exited with status %i\n", status3);
+			}
+			else
+			{
+				_log("Error: waitpid");
+			}
+		}
+		else
+		{
+			_log("mv: posix_spawn: %s\n", strerror(status3));
 		}
 		strChineseData.format("%s%s", Data_PATH, ChineseLabel.getBuffer());
 		return 0;
 	}
 
-	if(ttsProcess.voice_id == -1 && ttsProcess.sequence_num != ttsProcess.total){
+	if (ttsProcess.voice_id == -1 && ttsProcess.sequence_num != ttsProcess.total)
+	{
 		return 0;
-	}else if(ttsProcess.voice_id == -1 && ttsProcess.sequence_num == ttsProcess.total){
+	}
+	else if (ttsProcess.voice_id == -1 && ttsProcess.sequence_num == ttsProcess.total)
+	{
 
 		char *LabelFileZipPath = strLabelRowFile.getBuffer();
 		char cmd[] = "tar";
@@ -408,15 +391,21 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		int status;
 		status = posix_spawn(&pid, "/bin/tar", NULL, NULL, args, environ);
 
-		if (status == 0) {
-		 _log("tar: Child pid: %d\n", pid);
-		 if (waitpid(pid, &status, 0) != -1) {
-		  _log("tar: Child exited with status %i\n", status);
-		 } else {
-		  _log("Error: waitpid");
-		 }
-		} else {
-		 _log("tar: posix_spawn: %s\n", strerror(status));
+		if (status == 0)
+		{
+			_log("tar: Child pid: %d\n", pid);
+			if (waitpid(pid, &status, 0) != -1)
+			{
+				_log("tar: Child exited with status %i\n", status);
+			}
+			else
+			{
+				_log("Error: waitpid");
+			}
+		}
+		else
+		{
+			_log("tar: posix_spawn: %s\n", strerror(status));
 		}
 
 		FinalRowPath.format("%s%s.tar.gz", bin_PATH, ttsProcess.id.c_str());
@@ -431,31 +420,38 @@ int CTextProcess::processTheText(TTS_REQ &ttsProcess, CString &strWavePath, CStr
 		pid_t pid2;
 		int status2;
 		status2 = posix_spawn(&pid2, "/bin/mv", NULL, NULL, args2, environ);
-		if (status2 == 0) {
-		 _log("mv: Child pid: %d\n", pid2);
-		 if (waitpid(pid2, &status2, 0) != -1) {
-		  _log("mv: Child exited with status %i\n", status2);
-		 } else {
-		  _log("Error: waitpid");
-		 }
-		} else {
-		 _log("mv: posix_spawn: %s\n", strerror(status2));
+		if (status2 == 0)
+		{
+			_log("mv: Child pid: %d\n", pid2);
+			if (waitpid(pid2, &status2, 0) != -1)
+			{
+				_log("mv: Child exited with status %i\n", status2);
+			}
+			else
+			{
+				_log("Error: waitpid");
+			}
+		}
+		else
+		{
+			_log("mv: posix_spawn: %s\n", strerror(status2));
 		}
 		strLabelZip.format("%s%s.tar.gz", Label_PATH, ttsProcess.id.c_str());
 		idCount.erase(ttsProcess.id.c_str());
 		return 0;
-	} else {
+	}
+	else
+	{
 		_log("[CTextProcess] processTheText AllBig5: %s", AllBig5.getBuffer());
-		_log("=============== 合成聲音檔 %s===============",
-				strWavePath.getBuffer());
+		_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
 		_log("[CTextProcess] Voice_ID: %d", ttsProcess.voice_id);
 		_log("[CTextProcess] Model: %s", ModelMap[ttsProcess.voice_id]);
-		return Synthesize(ModelMap[ttsProcess.voice_id], strWavePath.getBuffer(),
-				strLabelName.getBuffer(), ttsProcess);
+		return Synthesize(ModelMap[ttsProcess.voice_id], strWavePath.getBuffer(), strLabelName.getBuffer(), ttsProcess);
 	}
 }
 
-int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip, CString &strChineseData, int count, CString &outputDir)
+int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, CString &strLabelZip,
+		CString &strChineseData, int count, CString &outputDir)
 {
 
 	time_t rawtime;
@@ -480,13 +476,13 @@ int CTextProcess::processTheText_EN(TTS_REQ &ttsProcess, CString &strWavePath, C
 	txtFile.open(strTxtName.getBuffer(), ios::app);
 	txtFile << strInput.getBuffer();
 	txtFile.close();
-	_log("=============== 合成聲音檔 %s===============",
-			strWavePath.getBuffer());
-	return fliteSynthesize(model_Path_En, strWavePath.getBuffer(),
-			strTxtName.getBuffer(), ttsProcess);
-	}
+	_log("=============== 合成聲音檔 %s===============", strWavePath.getBuffer());
+	return fliteSynthesize(model_Path_En, strWavePath.getBuffer(), strTxtName.getBuffer(), ttsProcess);
+}
 
-int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName, TTS_REQ &ttsprocess2){
+int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveName, const char* enInputName,
+		TTS_REQ &ttsprocess2)
+{
 	int nResult;
 	char** param = new char*[12];
 	param[0] = const_cast<char*>("flite_hts_engine");
@@ -502,166 +498,31 @@ int CTextProcess::fliteSynthesize(const char* enModelName, const char* enWaveNam
 	param[10] = const_cast<char*>("-r");
 	param[11] = const_cast<char*>("1");
 
-	if(strlen(ttsprocess2.fm.c_str()) != 0){
+	if (strlen(ttsprocess2.fm.c_str()) != 0)
+	{
 		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
 		_log("[CTextProcess] fm: %s", param[7]);
 	}
-	if(strlen(ttsprocess2.g.c_str()) != 0){
+	if (strlen(ttsprocess2.g.c_str()) != 0)
+	{
 		param[9] = const_cast<char*>(ttsprocess2.g.c_str());
 		_log("[CTextProcess] g: %s", param[9]);
 	}
-	if(strlen(ttsprocess2.r.c_str()) != 0){
+	if (strlen(ttsprocess2.r.c_str()) != 0)
+	{
 		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
 		_log("[CTextProcess] r: %s", param[11]);
 	}
-	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s fm: %s g: %s r: %s", enModelName, enWaveName, param[7], param[9], param[11]);
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s fm: %s g: %s r: %s", enModelName, enWaveName, param[7],
+			param[9], param[11]);
 	nResult = fliteHtsSynthesize(12, param);
 	delete param;
 	return nResult;
 
 }
 
-void CTextProcess::genLabels2(){
-
-	CString strTextTitle2;
-	CString strLabelName;
-	int SyllableBound[100];		// syllable邊界
-	int WordBound[100];			// word boundary, tts 斷詞結果
-	int PhraseBound[20];		// phrase boundary
-	int i, j, k, l, sIndex, wIndex, pIndex;
-	CStringArray SentenceArray;
-	CString AllBig5;
-	WORD_PACKAGE wordPackage;
-	initrd();
-
-	CWaveFile WaveFile;
-	char csTargetFileName[200];
-	sprintf(csTargetFileName, "%s%s", GEN_WAV_PATH,strFileTitle_gen.getBuffer());
-	_log("[CTextProcess genLabels2]path %s\n", csTargetFileName);
-	int nTotalCue = WaveFile.GetTotalCue();
-
-	UINT *cuestart = new UINT[nTotalCue];		//cue start
-	UINT *cuelength = new UINT[nTotalCue];		//cue length
-	UINT *cuestart2 = new UINT[nTotalCue+1];	//cue start
-	UINT *cuelength2 = new UINT[nTotalCue+1];	//cue length
-	WaveFile.GetCueParameter(cuestart, cuelength);
-	for (int i=0;i<nTotalCue;i++) {  // convert unit to sample-point based.
-		cuestart2[i+1]=cuestart[i]*1000/1.6;
-		cuelength2[i+1]=cuestart2[i+1]+cuelength[i]*1000/1.6;
-	}
-
-	strInput_gen.trim();
-	WordExchange(strInput_gen);
-	_log("[CTextProcess] genlabel processTheText SpanExcluding and Word Exchange Text: %s", strInput_gen.getBuffer());
-
-	string strFinded;
-	while ((i = strInput_gen.findOneOf(vWordWrap, strFinded)) != -1)
-	{
-		for (vector<string>::iterator vdel_it = vWordDel.begin(); vWordDel.end() != vdel_it; ++vdel_it)
-		{
-			strInput_gen.left(i).replace(vdel_it->c_str(), "");
-		}
-		SentenceArray.add(strInput_gen.left(i));
-		strInput_gen = strInput_gen.right(strInput_gen.getLength() - i - strFinded.length());
-	}
-
-	if (0 >= SentenceArray.getSize() || 0 < strInput_gen.getLength())
-	{
-		SentenceArray.add(strInput_gen);
-	}
-
-	for (i = 0; i < SentenceArray.getSize(); ++i)
-	{
-		_log("[CTextProcess] genlabel processTheText Sentence: %s", SentenceArray[i].getBuffer());
-	}
-
-	for (int lcount = 0; lcount < (int) SentenceArray.getSize(); ++lcount)
-	{
-		CStringArray PhoneSeq;	// 紀錄整個utterance的phone model sequence  音節  音素
-		CString strBig5;
-		vector<int> PWCluster;
-		vector<int> PPCluster;
-
-		_log("initial boundaries and indexes for a sentence");
-		sIndex = wIndex = pIndex = 0;
-		SyllableBound[0] = WordBound[0] = PhraseBound[0] = -1;
-		for (i = 1; i < 100; ++i)
-			SyllableBound[i] = WordBound[i] = 0;
-		for (i = 1; i < 20; ++i)
-			PhraseBound[i] = 0;
-
-		wordPackage.clear();
-		wordPackage.strText = SentenceArray[lcount].getBuffer();
-		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
-
-		_log("[CTextProcess] genlabel Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
-		if(wordPackage.txt_len == 0){
-			continue;
-		}
-		word->GetWord(wordPackage);
-
-		if (-1 == CartPrediction(SentenceArray[lcount], strBig5, PWCluster, PPCluster, wordPackage))
-			continue;
-		AllBig5 += strBig5;
-
-		k = l = 0;
-		for (i = 0; i < wordPackage.wnum; ++i) // 字詞數
-		{
-			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)   // 詞的字數
-			{
-				_log("[CTextProcess] genlabel processTheText Text: %s Phone: %s", wordPackage.vecWordInfo[i].strSentence.c_str(),
-						wordPackage.vecWordInfo[i].strPhone[j].c_str());
-
-				vector<string> vData;
-				spliteData(const_cast<char *>(wordPackage.vecWordInfo[i].strPhone[j].c_str()), " ", vData);
-
-				for (vector<string>::iterator it = vData.begin(); vData.end() != it; ++it)  // 因素分解
-				{
-					PhoneSeq.add(*it);
-				}
-				++sIndex;
-
-				SyllableBound[sIndex] = PhoneSeq.getSize() - 1;
-				//_log("======================> SyllableBound[%d] = %d", sIndex, SyllableBound[sIndex]);
-
-				if (!PWCluster.empty() && PWCluster[k] == 1)
-				{
-					WordBound[++wIndex] = SyllableBound[sIndex];
-					if (PPCluster[l] == 2)
-						PhraseBound[++pIndex] = WordBound[wIndex];
-					++l;
-				}
-				++k;
-			}
-		}
-		_log("=============== 合成音標檔 %s===============", strLabelName.getBuffer());
-		ofstream csLabFileFull;
-		ofstream csLabFileMono;
-		CString strFileName;
-		FinalFileTitle = strFileTitle_gen.getBuffer();
-		string wav = ".wav";
-		FinalFileTitle = FinalFileTitle.replace(FinalFileTitle.find(wav), sizeof(wav), "");
-		strFileName.format("%s/train/full/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
-		csLabFileFull.open(strFileName.getBuffer(), ios::app);
-		strFileName.format("%s/train/mono/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
-		csLabFileMono.open(strFileName.getBuffer(), ios::app);
-		timeinfo((int*)cuestart2,(int*)cuelength2);
-		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
-				gduration_s, gduration_e, 1);
-		csLabFileFull.close();
-		csLabFileMono.close();
-	}
-	CString strFileName;
-	strFileName.format("%s/train", GEN_PATH );
-	ConcatenateLabel( FinalFileTitle.c_str(), strFileName.getBuffer(), SentenceArray.getSize() ) ;
-	delete [] cuestart;
-	delete [] cuelength;
-	delete [] cuestart2;
-	delete [] cuelength2;
-
-}
-
-void CTextProcess::genLabels(){
+void CTextProcess::genLabels()
+{
 
 	CString strTextTitle2;
 	CString strLabelName;
@@ -677,7 +538,7 @@ void CTextProcess::genLabels(){
 	CString csTargetWavName;  // filename of wav file with absolute path
 	CString csTargetTxtName;  // filename of wav file with absolute path
 
-	csTargetWavName.format("%s%s", GEN_WAV_PATH ,strFileTitle_gen.getBuffer());
+	csTargetWavName.format("%s%s", GEN_WAV_PATH, strFileTitle_gen.getBuffer());
 	char *temp = 0;
 	temp = csTargetWavName.getBuffer();
 	_log("[CTextProcess]path %s\n", temp);
@@ -701,14 +562,17 @@ void CTextProcess::genLabels(){
 	cf.read(shortdata, 4);			//開始 read 最後 cue 資料
 	shortdata[4] = '\0';
 	//先檢查是否有 cue 資料
-	if (strcmp(shortdata, "cue ") != 0) {
+	if (strcmp(shortdata, "cue ") != 0)
+	{
 		cf.close();
-	} else {
+	}
+	else
+	{
 		cf.seekg(4, cf.cur);
-		cf.read(reinterpret_cast<char*>(&totalcues), 4);// how many cues in the wave file
+		cf.read(reinterpret_cast<char*>(&totalcues), 4);			// how many cues in the wave file
 	}
 
-	int nTotalCue = (unsigned int) totalcues;// total # cue tags in the wav file, including tags of all sentences.
+	int nTotalCue = (unsigned int) totalcues;	// total # cue tags in the wav file, including tags of all sentences.
 	printf("total %d\n", nTotalCue);
 //	unsigned long data2;
 	char head2[40];
@@ -730,7 +594,8 @@ void CTextProcess::genLabels(){
 	UINT *cuelength2 = new UINT[nTotalCue + 1];	//cue length
 
 	cf2.seekg(12, cf2.cur);
-	for ( int i = 0; i < nTotalCue; i++) {
+	for (int i = 0; i < nTotalCue; i++)
+	{
 		cf2.seekg(4, cf2.cur);
 		cf2.read(reinterpret_cast<char*>(&data), 4);
 		cf2.seekg(16, cf2.cur);
@@ -738,14 +603,16 @@ void CTextProcess::genLabels(){
 	}
 	cf2.seekg(12, cf2.cur);
 
-	for ( int j = 0; j < nTotalCue; j++) {
+	for (int j = 0; j < nTotalCue; j++)
+	{
 		cf2.seekg(12, cf2.cur);
 		cf2.read(reinterpret_cast<char*>(&data), 4);
 		cf2.seekg(12, cf2.cur);
 		cuelength[j] = (unsigned int) data;
 	}
 
-	for (int i = 0; i < nTotalCue; i++) { // convert unit to sample-point based.
+	for (int i = 0; i < nTotalCue; i++)
+	{ // convert unit to sample-point based.
 		cuestart2[i + 1] = cuestart[i] * 1000 / 1.6;
 		cuelength2[i + 1] = cuestart2[i + 1] + cuelength[i] * 1000 / 1.6;
 
@@ -795,8 +662,9 @@ void CTextProcess::genLabels(){
 		wordPackage.strText = SentenceArray[lcount].getBuffer();
 		wordPackage.txt_len = utf8len(wordPackage.strText.c_str());
 
-		_log("[CTextProcess] genlabel Word = %s, Number = %d",wordPackage.strText.c_str(), wordPackage.txt_len);
-		if(wordPackage.txt_len == 0){
+		_log("[CTextProcess] genlabel Word = %s, Number = %d", wordPackage.strText.c_str(), wordPackage.txt_len);
+		if (wordPackage.txt_len == 0)
+		{
 			continue;
 		}
 		word->GetWord(wordPackage);
@@ -810,8 +678,8 @@ void CTextProcess::genLabels(){
 		{
 			for (j = 0; j < wordPackage.vecWordInfo[i].wlen; ++j)   // 詞的字數
 			{
-				_log("[CTextProcess] genlabel processTheText Text: %s Phone: %s", wordPackage.vecWordInfo[i].strSentence.c_str(),
-						wordPackage.vecWordInfo[i].strPhone[j].c_str());
+				_log("[CTextProcess] genlabel processTheText Text: %s Phone: %s",
+						wordPackage.vecWordInfo[i].strSentence.c_str(), wordPackage.vecWordInfo[i].strPhone[j].c_str());
 
 				vector<string> vData;
 				spliteData(const_cast<char *>(wordPackage.vecWordInfo[i].strPhone[j].c_str()), " ", vData);
@@ -846,58 +714,60 @@ void CTextProcess::genLabels(){
 		csLabFileFull.open(strFileName.getBuffer(), ios::app);
 		strFileName.format("%s/train/mono/temp_%s_%d.lab", GEN_PATH, FinalFileTitle.c_str(), lcount);
 		csLabFileMono.open(strFileName.getBuffer(), ios::app);
-		timeinfo((int*)cuestart2,(int*)cuelength2);
-		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull, &csLabFileMono,
-				gduration_s, gduration_e, 1);
+		timeinfo((int*) cuestart2, (int*) cuelength2);
+		GenerateLabelFile(PhoneSeq, SyllableBound, WordBound, PhraseBound, sIndex, wIndex, pIndex, csLabFileFull,
+				&csLabFileMono, gduration_s, gduration_e, 1);
 		csLabFileFull.close();
 		csLabFileMono.close();
 	}
 	CString strFileName;
-	strFileName.format("%s/train", GEN_PATH );
-	ConcatenateLabel( FinalFileTitle.c_str(), strFileName.getBuffer(), SentenceArray.getSize() ) ;
-	delete [] cuestart;
-	delete [] cuelength;
-	delete [] cuestart2;
-	delete [] cuelength2;
+	strFileName.format("%s/train", GEN_PATH);
+	ConcatenateLabel(FinalFileTitle.c_str(), strFileName.getBuffer(), SentenceArray.getSize());
+	delete[] cuestart;
+	delete[] cuelength;
+	delete[] cuestart2;
+	delete[] cuelength2;
 
 }
 
-void CTextProcess::ConcatenateLabel( string outfilename, char* dir, int iSentenceCnt )
+void CTextProcess::ConcatenateLabel(string outfilename, char* dir, int iSentenceCnt)
 {
 	FILE *fpMono;
 	FILE *fpFull;
 	char output[_MAX_PATH];
-	char cBuf[1024] ;
-	sprintf(output,"%s/mono/%s.lab",dir,outfilename.c_str());
-	fpMono=fopen(output,"w+");
-	sprintf(output,"%s/full/%s.lab",dir,outfilename.c_str());
-	fpFull=fopen(output,"w+");
-	for( int i = 0 ; i < iSentenceCnt ; i++ ){
-		sprintf(output,"%s/mono/temp_%s_%d.lab",dir,outfilename.c_str(), i );
-		FILE *fp = fopen( output, "r" ) ;
-		while( !feof(fp) ) {
-			cBuf[0]=0 ;
-			fgets(cBuf,1024,fp) ;
-			if( strlen(cBuf) == 0 )
-				continue ;
-			fprintf( fpMono, "%s", cBuf ) ;
+	char cBuf[1024];
+	sprintf(output, "%s/mono/%s.lab", dir, outfilename.c_str());
+	fpMono = fopen(output, "w+");
+	sprintf(output, "%s/full/%s.lab", dir, outfilename.c_str());
+	fpFull = fopen(output, "w+");
+	for (int i = 0; i < iSentenceCnt; i++)
+	{
+		sprintf(output, "%s/mono/temp_%s_%d.lab", dir, outfilename.c_str(), i);
+		FILE *fp = fopen(output, "r");
+		while (!feof(fp))
+		{
+			cBuf[0] = 0;
+			fgets(cBuf, 1024, fp);
+			if (strlen(cBuf) == 0)
+				continue;
+			fprintf(fpMono, "%s", cBuf);
 		}
-		fclose(fp) ;
+		fclose(fp);
 
-
-		sprintf(output,"%s/full/temp_%s_%d.lab",dir,outfilename.c_str(), i);
-		fp = fopen( output, "r" ) ;
-		while( !feof(fp) ) {
-			cBuf[0]=0 ;
-			fgets(cBuf,1024,fp) ;
-			if( strlen(cBuf) == 0 )
-				continue ;
-			fprintf( fpFull, "%s", cBuf ) ;
+		sprintf(output, "%s/full/temp_%s_%d.lab", dir, outfilename.c_str(), i);
+		fp = fopen(output, "r");
+		while (!feof(fp))
+		{
+			cBuf[0] = 0;
+			fgets(cBuf, 1024, fp);
+			if (strlen(cBuf) == 0)
+				continue;
+			fprintf(fpFull, "%s", cBuf);
 		}
-		fclose(fp) ;
+		fclose(fp);
 	}
-	fclose(fpMono) ;
-	fclose(fpFull) ;
+	fclose(fpMono);
+	fclose(fpFull);
 }
 
 bool CTextProcess::timeinfo(int* duration_si, int* duration_ei)
@@ -913,7 +783,7 @@ bool CTextProcess::initrd()
 {
 	gduration_s = NULL;
 	gduration_e = NULL;
-	giSftIdx = 0 ; // ky add
+	giSftIdx = 0; // ky add
 	return true;
 }
 
@@ -934,19 +804,23 @@ int CTextProcess::Synthesize(const char* szModelName, const char* szWaveName, co
 	param[10] = const_cast<char*>("-r");
 	param[11] = const_cast<char*>("1.2");
 
-	if(strlen(ttsprocess2.fm.c_str()) != 0){
+	if (strlen(ttsprocess2.fm.c_str()) != 0)
+	{
 		param[7] = const_cast<char*>(ttsprocess2.fm.c_str());
 		_log("[CTextProcess] fm: %s", param[7]);
 	}
-	if(strlen(ttsprocess2.g.c_str()) != 0){
+	if (strlen(ttsprocess2.g.c_str()) != 0)
+	{
 		param[9] = const_cast<char*>(ttsprocess2.g.c_str());
 		_log("[CTextProcess] g: %s", param[9]);
 	}
-	if(strlen(ttsprocess2.r.c_str()) != 0){
+	if (strlen(ttsprocess2.r.c_str()) != 0)
+	{
 		param[11] = const_cast<char*>(ttsprocess2.r.c_str());
 		_log("[CTextProcess] r: %s", param[11]);
 	}
-	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s fm: %s g: %s r: %s", szModelName, szWaveName, szLabel, param[7], param[9], param[11]);
+	_log("[CTextProcess] Synthesize Model Name: %s Wave Name: %s Label Name: %s fm: %s g: %s r: %s", szModelName,
+			szWaveName, szLabel, param[7], param[9], param[11]);
 	nResult = htsSynthesize(12, param);
 	delete param;
 	return nResult;
@@ -1000,12 +874,13 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 	int valFeatureLW;
 	int valFeaturePOS;
 	_log("[CTextProcess] CartPrediction sentence: %s  wnum: %d", sentence.getBuffer(), wordPackage.wnum);
-	if (wordPackage.wnum <= 0) {
+	if (wordPackage.wnum <= 0)
+	{
 		// Avoid calling Stanford Domain Socket Server with empty Socket input. (Ex: " ")
 		_log("[CTextProcess] wordPackage.wnum <= 0 :-->return -1");
 		return -1;
 	}
-    //***** Stanford domain socket connect *****//
+	//***** Stanford domain socket connect *****//
 
 //	struct sockaddr_un addr;
 //	int fd;
@@ -1063,7 +938,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 			break;
 		}
 		strBig5 += wordPackage.vecWordInfo[i].strSentence;
-		cstemp += wordPackage.vecWordInfo[i].strSentence ;
+		cstemp += wordPackage.vecWordInfo[i].strSentence;
 		cstemp = cstemp + "/X" + " ";
 //		cstemp = cstemp + " ";
 	}
@@ -1103,7 +978,8 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		ulIndex = it->find("/", 0);
 		ulLength = it->length();
 		tempPOS.format("%s", it->substr(ulIndex + 1, ulLength).c_str());
-		if (!tempPOS.Compare("X")){      // no pos
+		if (!tempPOS.Compare("X"))
+		{      // no pos
 			tempPOS.format("%s", "DEC"); // X -> DEC
 		}
 		ulIndex /= 3;
@@ -1113,14 +989,14 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 			if (!tempPOS.Compare(POStags[j]))
 			{
 
+				pos.push_back(j);
+				for (k = 1; k < (int) ulIndex; ++k)
+				{
 					pos.push_back(j);
-					for (k = 1; k < (int) ulIndex; ++k)
-								{
-									pos.push_back(j);
-								}
+				}
 
-					bAdded = true;
-					break;
+				bAdded = true;
+				break;
 
 			}
 			if (bAdded)
@@ -1128,7 +1004,6 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		}
 
 	}
-
 
 //	_log("============== CART_Model =================");
 	_log("[CTextProcess] CartPrediction syllpos size: %d", (int) syllpos.size());
@@ -1152,8 +1027,6 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 		pcdData->Att_Catagory.push_back(i);	// Position in sentence (Forward)
 		pcdData->Att_Catagory.push_back(syllpos.size() - i);	// Position in sentence (Backward)
 		pcdData->Att_Catagory.push_back(syllpos[i]);	// Position in lexicon word
-
-
 
 		for (j = 2; j >= -2; --j)
 		{
@@ -1208,7 +1081,7 @@ int CTextProcess::CartPrediction(CString &sentence, CString &strBig5, vector<int
 			if (((k - j) >= 0) && ((k - j) < (int) pwBoundary.size()))
 				valFeaturePOS = pos[pwBoundary[k - j]];
 			pcdData->Att_Catagory.push_back(valFeaturePOS);
-					//_log("valFeaturePOS: %d", valFeaturePOS);
+			//_log("valFeaturePOS: %d", valFeaturePOS);
 		}
 //		_log("CART TEST2");
 		CartModel->TEST2(pcdData);
@@ -1328,7 +1201,7 @@ CString CTextProcess::Phone2Ph97(char* phone, int tone)
 
 CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound[], const int wBound[],
 		const int pBound[], const int sCount, const int wCount, const int pCount, ofstream& csFile, ofstream *pcsFile2,
-		int *gduration_s, int *gduration_e,int voice_id)
+		int *gduration_s, int *gduration_e, int voice_id)
 {
 
 	CString fullstr, tempstr; // fullstr: store all lines for full labels
@@ -1642,7 +1515,6 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 //		printf("5_monostr: %s\n", monostr.getBuffer());
 	}
 
-
 	tempstr.format("%s^%s-pau+x=x@x_x/A:%d/B:x@x-x&x-x/C:0", sequence[index - 1].getBuffer(),
 			sequence[index].getBuffer(), sBound[sIndex] - sBound[sIndex - 1]);
 	fullstr += tempstr;
@@ -1674,7 +1546,8 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	csFile << fullstr;	//fullstr即為輸出的Label內容
 	//csFile.close();
 
-	if (voice_id == -2){
+	if (voice_id == -2)
+	{
 		return fullstr;
 	}
 
@@ -1689,9 +1562,10 @@ CString CTextProcess::GenerateLabelFile(CStringArray& sequence, const int sBound
 	return fullstr, monostr;
 }
 
-CString CTextProcess::filterLabel(CString fullstr, int voice_id) {  //-----  filterlabel modified 2019/03/20/ -----//
-	 if (voice_id <= 100 || voice_id >= 301)
-		 return fullstr;
+CString CTextProcess::filterLabel(CString fullstr, int voice_id)
+{  //-----  filterlabel modified 2019/03/20/ -----//
+	if (voice_id <= 100 || voice_id >= 301)
+		return fullstr;
 	_log("[CTextProcess] Filter Label: %d", voice_id);
 	string strfullstr = fullstr.toString();
 	char* labels = strdup(strfullstr.c_str());
@@ -1701,16 +1575,19 @@ CString CTextProcess::filterLabel(CString fullstr, int voice_id) {  //-----  fil
 
 	SplitLabel = strtok(labels, "\n");
 	FinalLabel = filterLabelLine(SplitLabel);
-	while (SplitLabel != NULL) {
+	while (SplitLabel != NULL)
+	{
 		SplitLabel = strtok(NULL, "\n");
-		if (SplitLabel != NULL) {
+		if (SplitLabel != NULL)
+		{
 			FinalLabel += filterLabelLine(SplitLabel);
 		}
 	}
 	return FinalLabel;
 }
 
-CString CTextProcess::filterLabelLine(char* SplitLabel) { //-----  filterlabel 2019/03/20/ -----//
+CString CTextProcess::filterLabelLine(char* SplitLabel)
+{ //-----  filterlabel 2019/03/20/ -----//
 	string StrSplitLabel;
 	CString CStrSplitLabel;
 	string empty = "";
@@ -1728,10 +1605,8 @@ CString CTextProcess::filterLabelLine(char* SplitLabel) { //-----  filterlabel 2
 	string seg_30 = firstStrSplitLabel.substr(idx_j0);
 	seg_30 = seg_30.substr(seg_30.find("+"));
 	string firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_10), seg_10.length(), empty);
-	firstfinalLabel = firstStrSplitLabel.replace(
-			firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
-	firstfinalLabel = firstStrSplitLabel.replace(
-			firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
+	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_20), seg_20.length(), empty);
+	firstfinalLabel = firstStrSplitLabel.replace(firstStrSplitLabel.find(seg_30), seg_30.length(), empty);
 	fisrttempSplitLabel.format("%s", firstfinalLabel.c_str());
 	CStrSplitLabel = (fisrttempSplitLabel + "\n");
 	return CStrSplitLabel;
@@ -1863,223 +1738,5 @@ void CTextProcess::WordExchange(CString &strText)
 			}
 		}
 	}
-}
-
-bool CTextProcess::checkEnglish(string &input)
-{
-	for(int i; i < input.size(); i++){
-		char chr;
-		chr = input[i];
-		if((chr & 0x80) == 0){
-			return TRUE;
-		}
-	}
-	return 0;
-}
-
-vector<string> CTextProcess::splitSentence(string &input){
-	vector<string> wordData;
-	string strChar = "";
-	string strCharCh = "";
-	string strCharChDouble = "";
-	string blank = " ";
-	string comma = ",";
-	string reSentence = "";
-	string checkSymbolEn = "";
-	string checkSymbolCh = "";
-	string checkBlankEn = "";
-	string checkBlankCh = "";
-	string splitWordEn = "";
-	string splitWordCh = "";
-	regex pattern("[A-Za-z0-9]");
-	regex patternBlank("[ \f\n\r\t\v]");
-	regex patternCh("\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏");
-	CString temp;
-	CString temp2;
-	string check;
-
-	//TODO: 將標點符號轉換成空白
-	for(int i = 0; input[i] != '\0';){
-		char chr = input[i];
-		if((chr & 0x80) == 0)  //english
-		{
-			checkSymbolEn = input.substr(i,1);
-			if(regex_match(checkSymbolEn, patternBlank)){
-				checkSymbolEn.empty();
-			}else if(!regex_match(checkSymbolEn, pattern)){
-				checkSymbolEn = blank;
-				reSentence += checkSymbolEn;
-			}else{
-				reSentence += checkSymbolEn;
-			}
-			++i;
-		}else if((chr & 0xE0) == 0xE0)  //chinese
-		{
-			checkSymbolCh = input.substr(i,3);
-			if(regex_match(checkSymbolCh, patternCh)){
-				checkSymbolCh = blank;
-			}
-			reSentence += checkSymbolCh;
-			i+=3;
-		}
-	}
-	_log("[CController] processTheText reSentence: %s", reSentence.c_str());
-
-	//TODO: 依據空格斷句
-	for(int i = 0; reSentence[i] != '\0';)
-	{
-		char chr = reSentence[i];
-		//英文 chr是0xxx xxxx，即ascii碼
-		if((chr & 0x80) == 0)
-		{
-			strChar = reSentence.substr(i,1);
-			checkBlankEn = reSentence.substr(i+1, 1);
-			strCharCh = reSentence.substr(i+1, 3);
-			strCharChDouble = reSentence.substr(i+1, 6);
-			++i;
-			if(!strChar.empty() && strChar != blank){
-				if(checkBlankEn != blank){
-					splitWordEn += strChar;
-					if(checkBlankEn == "\0"|| !regex_match(checkBlankEn, pattern)){
-						temp = strCharCh.c_str();
-						temp2 = strCharChDouble.c_str();
-						if ((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){
-							splitWordEn = num2Spell(splitWordEn);
-							wordData.push_back(splitWordEn);
-							splitWordEn = "";
-					}else{
-						splitWordEn = num2Chinese(splitWordEn);
-						wordData.push_back(splitWordEn);
-						splitWordEn = "";
-					}
-					}
-				}else{
-					splitWordEn += strChar;
-					wordData.push_back(splitWordEn);
-					splitWordEn = "";
-				}
-			}else{
-				strChar = comma;
-				splitWordEn += strChar;
-				wordData.push_back(splitWordEn);
-				splitWordEn = "";
-			}
-		}//中文 chr是111x xxxx
-		else if((chr & 0xE0) == 0xE0)
-		{
-			strChar = reSentence.substr(i, 3);
-			checkBlankCh = reSentence.substr(i+3, 1);
-			checkBlankEn = reSentence.substr(i+1, 1);
-
-			i+=3;
-			if(!strChar.empty() && strChar != blank){
-				if(checkBlankCh != blank){
-					splitWordCh += strChar;
-					if(checkBlankCh == "\0" || regex_match(checkBlankCh, pattern)){
-						wordData.push_back(splitWordCh);
-						splitWordCh = "";
-					}
-				}else{
-					splitWordCh += strChar;
-					wordData.push_back(splitWordCh);
-					splitWordCh = "";
-				}
-			}
-		}
-	}
-
-	for (int i = 0; i < wordData.size(); ++i)
-	{
-		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
-	}
-	return wordData;
-}
-
-string CTextProcess::num2Chinese(string &num)
-{
-	size_t sz = num.size();
-	string ret;
-	int val;
-	if (sz > MAX_LEN)
-	{
-		throw string("Exceeded max length");
-	}
-	if ("0" == num)
-	{
-		return CHAR_ZERO;
-	}
-
-	for (size_t i = 0; i != sz; ++i)
-	{
-		val = num[i] - '0';
-		ret += CHAR_NUM[val];
-	}
-	return ret;
-}
-
-string CTextProcess::num2Spell(string &num)
-{
-    size_t sz = num.size(), revi, si, bi;
-    bool lastZero = false,
-        lastNonZero = false;
-    int val;
-    string ret;
-
-    // limit the size
-    if (sz > MAX_LEN) {
-        throw string("Exceeded max length");
-    }
-
-    // special numbers
-    if ("0" == num) {
-        return CHAR_ZERO;
-    }
-
-    for (size_t i = 0; i != sz; ++i) {
-        revi = (sz - 1) - i;
-        bi = revi / INTERVAL;
-        si = revi % INTERVAL;
-
-        val = num[i] - '0';
-        if (0 != val) {
-            if (lastZero) {
-                // append a zero
-                ret += CHAR_ZERO;
-            }
-
-            // append a numeral
-            if (1 == val && 1 == si) {
-                // ten
-                if (0 != i) {
-                    ret += CHAR_NUM[1];
-                }
-            } else {
-                ret += CHAR_NUM[val];
-            }
-
-            if (0 != si) {
-                // append a small interval char
-                ret += CHAR_SI[si - 1];
-            }
-
-            lastNonZero = true;
-            lastZero = false;
-        } else {
-            lastZero = true;
-        }
-
-        if (0 == si && 0 != bi) {
-            if (lastNonZero) {
-                // append a big interval char
-                ret += CHAR_BI[bi - 1];
-                // uncomment this to hide zero at rear of the big interval
-                // followed up by another one
-                //lastZero = false;
-            }
-
-            lastNonZero = false;
-        }
-    }
-    return ret;
 }
 

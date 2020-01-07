@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "CString.h"
-
+#include "LogHandler.h"
 using namespace std;
 class CWaveFile : public ifstream
 {

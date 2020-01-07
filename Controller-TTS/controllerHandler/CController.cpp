@@ -41,27 +41,19 @@
 const int MAX_LEN = 20;
 const int INTERVAL = 4;
 // chinese numerals
-const string CHAR_NUM[] = {"零", "一", "二", "三", "四", "五", "六", "七",
-"八", "九"};
+const string CHAR_NUM[] = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九" };
 // small interval
-const string CHAR_SI[] = {"十", "百", "千"};
+const string CHAR_SI[] = { "十", "百", "千" };
 // big interval
-const string CHAR_BI[] = {"萬", "億", "兆", "京"};
+const string CHAR_BI[] = { "萬", "億", "兆", "京" };
 
-const string DictA[]={
-	"Zero", "One", "Two", "Three", "Four",
-	"Five", "Six", "Seven", "Eight", "Nine",
-	"Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
-	"Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
-const string DictB[]={
-	"Zero", "Ten", "Twenty", "Thirty", "Forty",
-	"Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
-const string DictC[]={
-	"", "Thousand", "Million", "Billion", "Trillion"
-	"Thousand Trillion", "Million Trillion", "Billion Trillion"};
+const string DictA[] = { "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+		"Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+const string DictB[] = { "Zero", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+const string DictC[] = { "", "Thousand", "Million", "Billion", "Trillion"
+		"Thousand Trillion", "Million Trillion", "Billion Trillion" };
 
 //--------------------------------------------------//
-
 
 using namespace std;
 
@@ -170,12 +162,12 @@ int CController::onInitial(void* szConfPath)
 
 //	//------------
 
-	//textProcess->dumpWordData();
-	//textProcess->dumpWordIndex();
-	//textProcess->dumpPhone();
-	//CString strWav;
-	//textProcess->processTheText("你在說什麼?多型態角色語音智慧平台，我說一個故事給你們聽。要注意聽!千萬要注意聽，因為；如果沒聽到，你一定會問，你在說什麼?", strWav);
-	//_log("=====================憋魚酒氣了");
+//textProcess->dumpWordData();
+//textProcess->dumpWordIndex();
+//textProcess->dumpPhone();
+//CString strWav;
+//textProcess->processTheText("你在說什麼?多型態角色語音智慧平台，我說一個故事給你們聽。要注意聽!千萬要注意聽，因為；如果沒聽到，你一定會問，你在說什麼?", strWav);
+//_log("=====================憋魚酒氣了");
 	return nResult;
 }
 
@@ -200,17 +192,18 @@ vector<string> CController::parseArticle(string &sentence)
 	regex patternCh("[\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏]");
 	regex patternBlank("[ ]");
 
-
-	for(int i = 0; sentence[i] != '\0';)
+	for (int i = 0; sentence[i] != '\0';)
 	{
 		char chr = sentence[i];
-		if((chr & 0x80) == 0){
-			strChar = sentence.substr(i ,1);
-			checkEn = sentence.substr(i+1 ,1);
+		if ((chr & 0x80) == 0)
+		{
+			strChar = sentence.substr(i, 1);
+			checkEn = sentence.substr(i + 1, 1);
 			++i;
 			output += strChar;
 			_log("[CController] 207");
-			if(checkEn == "\0" || (!regex_match(checkEn, pattern) && !regex_match(checkEn, patternBlank))){
+			if (checkEn == "\0" || (!regex_match(checkEn, pattern) && !regex_match(checkEn, patternBlank)))
+			{
 				_log("[CController] 209");
 				articleList.push_back(output);
 				_log("[CController] 211");
@@ -221,16 +214,19 @@ vector<string> CController::parseArticle(string &sentence)
 			}
 			_log("[CController] 217");
 			_log("[CController] processTheText output: %s", output.c_str());
-		}else if((chr & 0xE0) == 0xE0){
+		}
+		else if ((chr & 0xE0) == 0xE0)
+		{
 			_log("[CController] 212");
 			strChar = sentence.substr(i, 3);
-			checkCh = sentence.substr(i+3, 1);
-			checkEn = sentence.substr(i+1 ,1);
-			i+=3;
+			checkCh = sentence.substr(i + 3, 1);
+			checkEn = sentence.substr(i + 1, 1);
+			i += 3;
 			output += strChar;
 			_log("[CController] processTheText output2: %s", output.c_str());
 			_log("[CController] 218");
-			if(checkCh == "\0" || regex_match(checkCh, patternCh)){
+			if (checkCh == "\0" || regex_match(checkCh, patternCh))
+			{
 				articleList.push_back(output);
 				output = "";
 //				i+=3;
@@ -268,33 +264,37 @@ vector<toWord> CController::toWords(string &sentence)
 	string strChar = "";
 	string splitWordEn = "";
 	string checkBlankEn = "";
-	regex  patternEn("[A-Za-z0-9]");
-	regex  patternBlank("[ \f\n\r\t\v]");
+	regex patternEn("[A-Za-z0-9]");
+	regex patternBlank("[ \f\n\r\t\v]");
 	string check;
-	regex  patternNum("[A-Za-z]");
+	regex patternNum("[A-Za-z]");
 	CString temp;
 
 	string splitWordEn2;
 	string test;
 
-	for(int i = 0; sentence[i] != '\0';)
+	for (int i = 0; sentence[i] != '\0';)
 	{
 		char chr = sentence[i];
-		if((chr & 0xE0) == 0xE0){
+		if ((chr & 0xE0) == 0xE0)
+		{
 
 			strChar = sentence.substr(i, 3);
-			i+=3;
+			i += 3;
 			toword.text = strChar;
 			toword.type = 1;
 			wordData.push_back(toword);
 			strChar = "";
-		}else if((chr & 0x80) == 0){
+		}
+		else if ((chr & 0x80) == 0)
+		{
 
 			strChar = sentence.substr(i, 1);
-			checkBlankEn = sentence.substr(i+1, 1);
+			checkBlankEn = sentence.substr(i + 1, 1);
 			++i;
 			splitWordEn += strChar;
-			if(!regex_match(checkBlankEn, patternEn) && !regex_match(checkBlankEn, patternBlank)){
+			if (!regex_match(checkBlankEn, patternEn) && !regex_match(checkBlankEn, patternBlank))
+			{
 				toword.text = splitWordEn;
 				toword.type = 2;
 				wordData.push_back(toword);
@@ -305,28 +305,7 @@ vector<toWord> CController::toWords(string &sentence)
 
 	for (int i = 0; i < wordData.size(); ++i)
 	{
-//		_log("[CController] processTheText wordData.at(i).text.c_str() vector: %s", wordData.at(i).text.c_str());
-//		test = wordData.at(i).text.c_str();
-//		if(!regex_match(test, patternNum) && wordData.at(i).type == 2){
-//			_log("[CController] 310");
-//			temp = wordData.at(i+1).text.c_str();
-//			_log("[CController] processTheText temp: %s", temp.getBuffer());
-//			if((temp.findOneOf(vWordUnit, check)) != -1 || (temp.findOneOf(vWordUnitDouble, check)) != -1){
-//				splitWordEn2 = num2Spell(wordData.at(i).text);
-//				_log("[CController] splitWordEn2: %s", splitWordEn2.c_str());
-//
-//				wordData.at(i).text = splitWordEn2;
-//			}else{
-//				splitWordEn2 = num2Chinese(wordData.at(i).text);
-//				_log("[CController] splitWordEn22: %s", splitWordEn2.c_str());
-//
-//				wordData.at(i).text = splitWordEn2;
-//			}
-//			_log("[CController] 315");
-//		}
-//
 		_log("[CController] processTheText articleList vector2: %s", wordData.at(i).text.c_str());
-
 	}
 	return wordData;
 
@@ -339,24 +318,27 @@ vector<string> CController::phase(vector<toWord> &data)
 	string tempEn;
 	for (int i = 0; i < data.size(); ++i)
 	{
-		if(data.at(i).type == 1){
+		if (data.at(i).type == 1)
+		{
 			temp += data.at(i).text.c_str();
-//			_log("[CController] temp: %s", temp.c_str());
 
-			if( (i+1) == data.size()){
+			if ((i + 1) == data.size())
+			{
 				output.push_back(temp);
 				temp = "";
 				continue;
 			}
 
-			if(data.at(i+1).type == 2){
+			if (data.at(i + 1).type == 2)
+			{
 				output.push_back(temp);
 				temp = "";
 			}
 
-		}else if(data.at(i).type == 2){
+		}
+		else if (data.at(i).type == 2)
+		{
 			tempEn = data.at(i).text.c_str();
-//			_log("[CController] tempEn: %s", tempEn.c_str());
 			output.push_back(tempEn);
 			tempEn = "";
 		}
@@ -394,36 +376,35 @@ vector<string> CController::splitSentence(string &input)
 	string check;
 
 	//TODO: 依據空格斷句
-	for(int i = 0; input[i] != '\0';)
+	for (int i = 0; input[i] != '\0';)
 	{
 		char chr = input[i];
 		//英文 chr是0xxx xxxx，即ascii碼
-		if((chr & 0x80) == 0)
+		if ((chr & 0x80) == 0)
 		{
-			strChar = input.substr(i,1);
-			checkBlankEn = input.substr(i+1, 1);
-			strCharCh = input.substr(i+1, 3);
-			strCharChDouble = input.substr(i+1, 6);
+			strChar = input.substr(i, 1);
+			checkBlankEn = input.substr(i + 1, 1);
+			strCharCh = input.substr(i + 1, 3);
+			strCharChDouble = input.substr(i + 1, 6);
 			++i;
 			_log("[CController] 408");
-			if(!strChar.empty() && strChar != blank){ //TODO: 判斷字詞是否空白
+			if (!strChar.empty() && strChar != blank)
+			{ //TODO: 判斷字詞是否空白
 				_log("[CController] 410");
-				if(checkBlankEn != blank){
+				if (checkBlankEn != blank)
+				{
 					_log("[CController] 412");
 					splitWordEn += strChar;
 					_log("[CController] 414. splitWordEn %s", splitWordEn.c_str());
 
-//					if(!regex_match(splitWordEn, patternEn)){
-//						splitWordEn = blank;
-//					}
-//					_log("[CController] 41x. splitWordEn %s", splitWordEn.c_str());
-
-					if(checkBlankEn == "\0"|| !regex_match(checkBlankEn, pattern)){ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
+					if (checkBlankEn == "\0" || !regex_match(checkBlankEn, pattern))
+					{ // TODO: 判斷檢查格是否為字串末位或不匹配英文數字
 						_log("[CController] 416");
 						temp = strCharCh.c_str();
 						temp2 = strCharChDouble.c_str();
 						_log("[CController] 419");
-						if((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1){ //TODO: 數字單位是否匹配
+						if ((temp.findOneOf(vWordUnit, check)) != -1 || (temp2.findOneOf(vWordUnitDouble, check)) != -1)
+						{ //TODO: 數字單位是否匹配
 							_log("[CController] 421");
 							splitWordEn = num2Spell(splitWordEn);
 							_log("[CController] 423. splitWordEn %s", splitWordEn.c_str());
@@ -431,24 +412,31 @@ vector<string> CController::splitSentence(string &input)
 							_log("[CController] 425");
 							splitWordEn = "";
 							_log("[CController] 427");
-							}else{
-								if(regex_match(strChar, patternEn)){ //TODO: 判斷字詞是否為英文
-									_log("[CController] 430");
-									wordData.push_back(splitWordEn);
-									_log("[CController] 432");
-									splitWordEn = "";
-									}else{
-										_log("[CController] 435");
-										splitWordEn = num2Chinese(splitWordEn);
-										_log("[CController] 437. splitWordEn %s", splitWordEn.c_str());
-										wordData.push_back(splitWordEn);
-										_log("[CController] 439");
-										splitWordEn = "";
-								}
+						}
+						else
+						{
+							if (regex_match(strChar, patternEn))
+							{ //TODO: 判斷字詞是否為英文
+								_log("[CController] 430");
+								wordData.push_back(splitWordEn);
+								_log("[CController] 432");
+								splitWordEn = "";
+							}
+							else
+							{
+								_log("[CController] 435");
+								splitWordEn = num2Chinese(splitWordEn);
+								_log("[CController] 437. splitWordEn %s", splitWordEn.c_str());
+								wordData.push_back(splitWordEn);
+								_log("[CController] 439");
+								splitWordEn = "";
 							}
 						}
-				}else{
-					if(regex_match(strChar, patternEn))
+					}
+				}
+				else
+				{
+					if (regex_match(strChar, patternEn))
 					{
 						_log("[CController] a 445");
 						splitWordEn += strChar;
@@ -456,7 +444,9 @@ vector<string> CController::splitSentence(string &input)
 						wordData.push_back(splitWordEn);
 						_log("[CController] a 449");
 						splitWordEn = "";
-					}else{
+					}
+					else
+					{
 						_log("[CController] 445");
 						splitWordEn += strChar;
 
@@ -468,7 +458,9 @@ vector<string> CController::splitSentence(string &input)
 						splitWordEn = "";
 					}
 				}
-			}else{
+			}
+			else
+			{
 				strChar = blank;
 				_log("[CController] 454");
 //				continue;
@@ -477,30 +469,35 @@ vector<string> CController::splitSentence(string &input)
 				wordData.push_back(splitWordEn);
 				splitWordEn = "";
 			}
-		}//中文 chr是111x xxxx
-		else if((chr & 0xE0) == 0xE0)
+		} //中文 chr是111x xxxx
+		else if ((chr & 0xE0) == 0xE0)
 		{
 			_log("[CController] 463");
 			strChar = input.substr(i, 3);
-			checkBlankCh = input.substr(i+3, 1);
-			checkBlankEn = input.substr(i+1, 1);
+			checkBlankCh = input.substr(i + 3, 1);
+			checkBlankEn = input.substr(i + 1, 1);
 			_log("[CController] 467");
-			i+=3;
-			if(!strChar.empty() && strChar != blank){
+			i += 3;
+			if (!strChar.empty() && strChar != blank)
+			{
 				_log("[CController] 470");
-				if(checkBlankCh != blank){
+				if (checkBlankCh != blank)
+				{
 					_log("[CController] 472");
 					splitWordCh += strChar;
 					_log("[CController] 474. splitWordCh %s", splitWordCh.c_str());
 					wordData.push_back(splitWordCh);
 					splitWordCh = "";
-					if(checkBlankCh == "\0" || regex_match(checkBlankCh, pattern)){
+					if (checkBlankCh == "\0" || regex_match(checkBlankCh, pattern))
+					{
 						_log("[CController] 475");
 						wordData.push_back(splitWordCh);
 						splitWordCh = "";
 						_log("[CController] 478");
 					}
-				}else{
+				}
+				else
+				{
 					splitWordCh += strChar;
 					_log("[CController] 482. splitWordCh %s", splitWordCh.c_str());
 					wordData.push_back(splitWordCh);
@@ -515,13 +512,6 @@ vector<string> CController::splitSentence(string &input)
 	CString tempBlank = " ";
 	for (int i = 0; i < wordData.size(); ++i)
 	{
-//		tempStore = wordData.at(i).c_str();
-//		_log("[CController] processTheText store: %s", tempStore.getBuffer());
-//		if (tempStore == tempBlank){
-//			_log("[CController] processTheText wordData vector");
-//			tempStore.trim();
-//			wordData.at(i) = tempStore.getBuffer();
-//		}
 		_log("[CController] processTheText wordData vector: %s", wordData.at(i).c_str());
 	}
 
@@ -530,10 +520,12 @@ vector<string> CController::splitSentence(string &input)
 
 bool CController::checkEnglish(string &input)
 {
-	for(int i = 0; input[i] != '\0';){
+	for (int i = 0; input[i] != '\0';)
+	{
 		char chr;
 		chr = input[i];
-		if((chr & 0x80) == 0){
+		if ((chr & 0x80) == 0)
+		{
 			string a = input.substr(i, 1);
 			_log("[CController] is english :%s", a.c_str());
 			return TRUE;
@@ -548,14 +540,17 @@ string CController::num2Chinese(string &num)
 	size_t sz = num.size();
 	string ret;
 	int val;
-	if (sz > MAX_LEN){
+	if (sz > MAX_LEN)
+	{
 		throw string("Exceeded max length");
 	}
-	if ("0" == num){
+	if ("0" == num)
+	{
 		return CHAR_ZERO;
 	}
 
-	for (size_t i = 0; i != sz; ++i){
+	for (size_t i = 0; i != sz; ++i)
+	{
 		val = num[i] - '0';
 		ret += CHAR_NUM[val];
 	}
@@ -564,97 +559,124 @@ string CController::num2Chinese(string &num)
 
 string CController::num2Spell(string &num)
 {
-    size_t sz = num.size(), revi, si, bi;
-    bool lastZero = false, lastNonZero = false;
-    int val;
-    string ret;
+	size_t sz = num.size(), revi, si, bi;
+	bool lastZero = false, lastNonZero = false;
+	int val;
+	string ret;
 
-    // limit the size
-    if (sz > MAX_LEN){
-        throw string("Exceeded max length");
-    }
+	// limit the size
+	if (sz > MAX_LEN)
+	{
+		throw string("Exceeded max length");
+	}
 
-    // special numbers
-    if ("0" == num){
-        return CHAR_ZERO;
-    }
+	// special numbers
+	if ("0" == num)
+	{
+		return CHAR_ZERO;
+	}
 
-    for (size_t i = 0; i != sz; ++i){
-        revi = (sz - 1) - i;
-        bi = revi / INTERVAL;
-        si = revi % INTERVAL;
+	for (size_t i = 0; i != sz; ++i)
+	{
+		revi = (sz - 1) - i;
+		bi = revi / INTERVAL;
+		si = revi % INTERVAL;
 
-        val = num[i] - '0';
+		val = num[i] - '0';
 
 		_log("[CController] val :%d", val);
 
-        if (0 != val) {
-            if (lastZero) {
-                // append a zero
-                ret += CHAR_ZERO;
-            }
+		if (0 != val)
+		{
+			if (lastZero)
+			{
+				// append a zero
+				ret += CHAR_ZERO;
+			}
 
-            // append a numeral
-            if (1 == val && 1 == si) {
-                // ten
-                if (0 != i) {
-                    ret += CHAR_NUM[1];
-                }
-            } else {
-                ret += CHAR_NUM[val];
-            }
+			// append a numeral
+			if (1 == val && 1 == si)
+			{
+				// ten
+				if (0 != i)
+				{
+					ret += CHAR_NUM[1];
+				}
+			}
+			else
+			{
+				ret += CHAR_NUM[val];
+			}
 
-            if (0 != si) {
-                // append a small interval char
-                ret += CHAR_SI[si - 1];
-            }
+			if (0 != si)
+			{
+				// append a small interval char
+				ret += CHAR_SI[si - 1];
+			}
 
-            lastNonZero = true;
-            lastZero = false;
-        } else {
-            lastZero = true;
-        }
+			lastNonZero = true;
+			lastZero = false;
+		}
+		else
+		{
+			lastZero = true;
+		}
 
-        if (0 == si && 0 != bi) {
-            if (lastNonZero) {
-                // append a big interval char
-                ret += CHAR_BI[bi - 1];
-                // uncomment this to hide zero at rear of the big interval
-                // followed up by another one
-                //lastZero = false;
-            }
+		if (0 == si && 0 != bi)
+		{
+			if (lastNonZero)
+			{
+				// append a big interval char
+				ret += CHAR_BI[bi - 1];
+				// uncomment this to hide zero at rear of the big interval
+				// followed up by another one
+				//lastZero = false;
+			}
 
-            lastNonZero = false;
-        }
-    	_log("[CController] ret1 :%s", ret.c_str());
+			lastNonZero = false;
+		}
+		_log("[CController] ret1 :%s", ret.c_str());
 
-    }
-    return ret;
+	}
+	return ret;
 }
 
 string CController::num2English(int val)
 {
 	string s = "";
 	unsigned int v = val % 100;
-	if(v <= 19){
-		if (v == 0){
+	if (v <= 19)
+	{
+		if (v == 0)
+		{
 			s = "";
-		}else{
+		}
+		else
+		{
 			s = DictA[v];
 		}
-	}else if(v > 19 && v % 10 == 0){
+	}
+	else if (v > 19 && v % 10 == 0)
+	{
 		s = DictB[v / 10];
 
-	}else{
-		s = ((v / 10)? DictB[v / 10] + "-" : "") + DictA[v % 10];
+	}
+	else
+	{
+		s = ((v / 10) ? DictB[v / 10] + "-" : "") + DictA[v % 10];
 
-	} if(val < 1000 && val%100 == 0){
-			if(val / 100 > 0){
-					s = DictA[val / 100] + " Hundred" + s;
-				}
-			}else{
-			s = ((val / 100)? DictA[val / 100] + " Hundred and " : "") + s;
+	}
+	if (val < 1000 && val % 100 == 0)
+	{
+		if (val / 100 > 0)
+		{
+			s = DictA[val / 100] + " Hundred" + s;
 		}
+	}
+	else
+	{
+		s = ((val / 100) ? DictA[val / 100] + " Hundred and " : "") + s;
+	}
 	return s;
 }
 
@@ -662,15 +684,17 @@ string CController::convert(string &num)
 {
 	int val = atoi(num.c_str());
 	string result = "";
-		int i=0;
-		do{
-			if(i != 0)
-				result = DictC[i] + " " +result;
-			result = num2English(val % 1000) + " " + result;
-			val = val / 1000;
+	int i = 0;
+	do
+	{
+		if (i != 0)
+			result = DictC[i] + " " + result;
+		result = num2English(val % 1000) + " " + result;
+		val = val / 1000;
 
-			++i;
-		}while(val != 0);
+		++i;
+	}
+	while (val != 0);
 	return result;
 }
 
@@ -678,24 +702,24 @@ string CController::convert(string &num)
 
 void CController::removeFile(char *path)
 {
-    struct dirent *entry = NULL;
-    DIR *dir = NULL;
-    dir = opendir(path);
-    while(entry = readdir(dir))
-    {
-        FILE *file = NULL;
-        char* abs_path = new char[256];
-        if (*(entry->d_name) != '.')
-        {
-            sprintf(abs_path, "%s/%s", path, entry->d_name);
-                if(file = fopen(abs_path, "r"))
-                {
-                    fclose(file);
-                    remove(abs_path);
-                }
-        }
-        delete[] abs_path;
-    }
+	struct dirent *entry = NULL;
+	DIR *dir = NULL;
+	dir = opendir(path);
+	while (entry = readdir(dir))
+	{
+		FILE *file = NULL;
+		char* abs_path = new char[256];
+		if (*(entry->d_name) != '.')
+		{
+			sprintf(abs_path, "%s/%s", path, entry->d_name);
+			if (file = fopen(abs_path, "r"))
+			{
+				fclose(file);
+				remove(abs_path);
+			}
+		}
+		delete[] abs_path;
+	}
 }
 
 /*
@@ -748,8 +772,10 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 
 	jsonReq.release();
 
-	_log("[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s g: %s r: %s id: %s total: %d sequence_sum: %d req_type: %d", nSocketFD, ttsReq.text.c_str(),
-			ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(), ttsReq.g.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
+	_log(
+			"[CController] onTTS socketFD: %d text: %s user: %s voice: %d emotion: %d fm: %s g: %s r: %s id: %s total: %d sequence_sum: %d req_type: %d",
+			nSocketFD, ttsReq.text.c_str(), ttsReq.user_id.c_str(), ttsReq.voice_id, ttsReq.emotion, ttsReq.fm.c_str(),
+			ttsReq.g.c_str(), ttsReq.r.c_str(), ttsReq.id.c_str(), ttsReq.total, ttsReq.sequence_num, ttsReq.req_type);
 
 	removeFile(WAV_PATH);
 
@@ -758,17 +784,22 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	outputDir.format("%s%ld", WAV_PATH, rawtime);
 	mkdir(outputDir, 0777);
 
-	if (ttsReq.req_type == 1){
+	if (ttsReq.req_type == 1)
+	{
 		textProcess->loadWordfromHTTP(ttsReq.text.c_str());
 		jsonResp.put("status", 0);
-		_log("[CController] change WordData success! %s:",  ttsReq.text.c_str());
-	} else if(ttsReq.req_type == 2) {
+		_log("[CController] change WordData success! %s:", ttsReq.text.c_str());
+	}
+	else if (ttsReq.req_type == 2)
+	{
 		tempLabPath.format("%s%s", DATA_PATH, ttsReq.text.c_str());
 		remove(tempLabPath.getBuffer());
 		jsonResp.put("status", 0);
-	} else if(ttsReq.req_type == 3) {
-	    time_t currentTime = time(0);
-		long int timeInteger = (long int)currentTime;
+	}
+	else if (ttsReq.req_type == 3)
+	{
+		time_t currentTime = time(0);
+		long int timeInteger = (long int) currentTime;
 		struct tm *timeFormat = localtime(&timeInteger);
 		char tempTime[100];
 		strftime(tempTime, sizeof(tempTime), "%Y%m%d", timeFormat);
@@ -782,7 +813,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 	{
 
 //----------------- TODO: 如要genlabel 註解此處 ------------------//
-
 		vector<string> splitData = splitSentence(ttsReq.text);
 		ttsReq.text = "";
 
@@ -790,8 +820,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		{
 			ttsReq.text = ttsReq.text + *i;
 		}
-		_log("[CController] ttsReq.text 22: %s",  ttsReq.text.c_str());
-
+		_log("[CController] ttsReq.text 22: %s", ttsReq.text.c_str());
 
 		vector<string> splitData3 = parseSentence(ttsReq.text);
 		ttsReq.text = "";
@@ -800,7 +829,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		{
 			ttsReq.text = ttsReq.text + *i;
 		}
-		_log("[CController] ttsReq.text testtt 33: %s",  ttsReq.text.c_str());
+		_log("[CController] ttsReq.text testtt 33: %s", ttsReq.text.c_str());
 //-------------------------------------------------------------//
 
 //----------------- TODO: 如要genlabel 註解此處 -----------------//
@@ -813,7 +842,7 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 			if (!checkEnglish(ttsReq.text))
 			{
 				_log("[CTextProcess] strFinded is Chinese: %s", ttsReq.text.c_str());
-			//-------------------------------------------------//
+				//-------------------------------------------------//
 
 //-------------------------------------------------------------//
 
@@ -874,11 +903,6 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		count = 1;
 //			//-------------------------------------------------//
 
-//		outputDir.format("%s%ld", WAV_PATH, rawtime);
-//		mkdir(outputDir, 0777);
-
-
-
 		wavPath.format("%s/*.wav", outputDir.getBuffer());
 		outputPath.format("%s/%ld_0.wav", outputDir.getBuffer(), rawtime);
 		char *wavPathChar = wavPath.getBuffer();
@@ -892,25 +916,28 @@ void CController::onTTS(const int nSocketFD, const int nSequence, const char *sz
 		pid_t pid;
 		int status;
 		status = posix_spawn(&pid, "/usr/bin/sox", NULL, NULL, args, environ);
-		if (status == 0) {
-		 _log("sox: Child pid: %d\n", pid);
-		 if (waitpid(pid, &status, 0) != -1) {
-		  _log("sox: Child exited with status %i\n", status);
-		 } else {
-		  _log("Error: waitpid");
-		 }
-		} else {
-		 _log("sox: posix_spawn: %s\n", strerror(status));
+		if (status == 0)
+		{
+			_log("sox: Child pid: %d\n", pid);
+			if (waitpid(pid, &status, 0) != -1)
+			{
+				_log("sox: Child exited with status %i\n", status);
+			}
+			else
+			{
+				_log("Error: waitpid");
+			}
 		}
-
+		else
+		{
+			_log("sox: posix_spawn: %s\n", strerror(status));
+		}
 		outputPath = outputPath.toString().replace(0, strlen("/data/opt/tomcat/webapps"), TTS_HOST);
 		jsonResp.put("status", 0);
 		jsonResp.put("wave", outputPath.getBuffer());
-
 	}
 
 //-------------------------------------------------------------//
-
 
 	cmpTTS->response(nSocketFD, tts_request, STATUS_ROK, nSequence, jsonResp.toJSON().c_str());
 	jsonResp.release();
