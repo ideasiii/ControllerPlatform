@@ -371,6 +371,8 @@ vector<string> CController::splitSentence(string &input)
 	regex patternEn("[A-Za-z]");
 	regex patternBlank("[ \f\n\r\t\v]");
 	regex patternCh("\，|\。|\！|\：|\；|\“|\”|\（|\）|\、|\？|\《|\ 》|\「|\」|\～|\—|\﹏");
+	regex patternPer("[\%]");
+	string percent = "百分比";
 	CString temp;
 	CString temp2;
 	string check;
@@ -445,13 +447,22 @@ vector<string> CController::splitSentence(string &input)
 						_log("[CController] a 449");
 						splitWordEn = "";
 					}
+					else if (regex_match(strChar, patternPer))
+					{
+						_log("[CController] c 451");
+						strChar = percent;
+						_log("[CController] c 454");
+						splitWordEn += strChar;
+						_log("[CController] c 456");
+						wordData.push_back(splitWordEn);
+						_log("[CController] c 458");
+						splitWordEn = "";
+					}
 					else
 					{
 						_log("[CController] 445");
 						splitWordEn += strChar;
-
 						splitWordEn = num2Spell(splitWordEn);
-
 						_log("[CController] 447. splitWordEn %s", splitWordEn.c_str());
 						wordData.push_back(splitWordEn);
 						_log("[CController] 449");
