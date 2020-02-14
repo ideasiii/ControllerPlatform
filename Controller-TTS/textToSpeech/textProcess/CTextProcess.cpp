@@ -82,7 +82,7 @@ static std::map<int, const char*> ModelMap = { { 0, "model/hmm_adapt.htsvoice" }
 		"model/hmm_19.htsvoice" }, { 20, "model/hmm_20.htsvoice" }, { 21, "model/hmm_21.htsvoice" }, { 22,
 		"model/hmm_22.htsvoice" }, { 23, "model/hmm_23.htsvoice" }, { 24, "model/hmm_24.htsvoice" }, { 25,
 		"model/hmm_25.htsvoice" }, { 26, "model/hmm_26.htsvoice" }, { 27, "model/hmm_27.htsvoice" }, { 28,
-		"model/hmm_28.htsvoice" }, { 30, "model/hmm_30.htsvoice" }, { 40, "model/hmm_40.htsvoice" }, { 101, "model/hmm_101.htsvoice" }, { 102,
+		"model/hmm_28.htsvoice" }, { 30, "model/hmm_30.htsvoice" }, { 40, "model/hmm_40.htsvoice" }, { 41, "model/hmm_41.htsvoice" }, { 101, "model/hmm_101.htsvoice" }, { 102,
 		"model/hmm_102.htsvoice" }, { 103, "model/hmm_103.htsvoice" }, { 104, "model/hmm_104.htsvoice" }, { 301,
 		"model/hmm_301.htsvoice" }, { 302, "model/hmm_302.htsvoice" } };
 
