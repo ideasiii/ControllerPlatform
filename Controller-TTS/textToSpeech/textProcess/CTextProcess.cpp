@@ -84,7 +84,7 @@ static std::map<int, const char*> ModelMap = { { 0, "model/hmm_adapt.htsvoice" }
 		"model/hmm_25.htsvoice" }, { 26, "model/hmm_26.htsvoice" }, { 27, "model/hmm_27.htsvoice" }, { 28,
 		"model/hmm_28.htsvoice" }, { 30, "model/hmm_30.htsvoice" }, { 40, "model/hmm_40.htsvoice" }, { 41, "model/hmm_41.htsvoice" }, { 51, "model/hmm_51.htsvoice" }, { 101, "model/hmm_101.htsvoice" }, { 102,
 		"model/hmm_102.htsvoice" }, { 103, "model/hmm_103.htsvoice" }, { 104, "model/hmm_104.htsvoice" }, { 301,
-		"model/hmm_301.htsvoice" }, { 302, "model/hmm_302.htsvoice" }, { 304, "model/hmm_304.htsvoice" } };
+		"model/hmm_301.htsvoice" }, { 302, "model/hmm_302.htsvoice" },{ 303, "model/hmm_303.htsvoice" }, { 304, "model/hmm_304.htsvoice" } };
 
 // ==================  注意順序不要改變!!!!  ==========================
 
